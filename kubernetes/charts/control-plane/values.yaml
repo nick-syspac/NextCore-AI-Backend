@@ -1,1 +1,102 @@
-# values stub
+# Default values for control-plane Helm chart
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/nick-syspac/nextcore-ai-cloud/control-plane
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: api.nextcore.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: control-plane-tls
+      hosts:
+        - api.nextcore.example.com
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - control-plane
+          topologyKey: kubernetes.io/hostname
+
+# Application Configuration
+config:
+  debug: "False"
+  allowedHosts: "api.nextcore.example.com"
+  database:
+    host: "postgresql.default.svc.cluster.local"
+    port: "5432"
+    name: "rto"
+  celery:
+    brokerUrl: "redis://redis.default.svc.cluster.local:6379/0"
+    resultBackend: "redis://redis.default.svc.cluster.local:6379/0"
+  redis:
+    url: "redis://redis.default.svc.cluster.local:6379/1"
+
+# Secrets (should be overridden or use external secrets)
+secrets:
+  djangoSecretKey: "change-me-in-production"
+  database:
+    user: "postgres"
+    password: "change-me-in-production"

@@ -5,8 +5,27 @@ services:
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: rto
+      POSTGRES_USER: postgres
     ports: [ "5432:5432" ]
-    volumes: [ "pgdata:/var/lib/postgresql/data" ]
+    volumes: 
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports: [ "6379:6379" ]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
 
   minio:
     image: minio/minio:RELEASE.2024-10-02T17-50-41Z
@@ -16,7 +35,72 @@ services:
       MINIO_ROOT_PASSWORD: minio123
     ports: [ "9000:9000", "9001:9001" ]
     volumes: [ "minio:/data" ]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  control-plane:
+    build:
+      context: ./apps/control-plane
+      dockerfile: Dockerfile
+    ports: [ "8000:8000" ]
+    environment:
+      - DJANGO_SECRET_KEY=dev-secret-key-change-in-production
+      - DJANGO_DEBUG=True
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=rto
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/1
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/control-plane:/app
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+
+  worker:
+    build:
+      context: ./apps/worker
+      dockerfile: Dockerfile
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=rto
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/worker:/app
+
+  ai-gateway:
+    build:
+      context: ./apps/ai-gateway
+      dockerfile: Dockerfile
+    ports: [ "8080:8080" ]
+    environment:
+      - REDIS_URL=redis://redis:6379/2
+      - CONTROL_PLANE_URL=http://control-plane:8000
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/ai-gateway:/app
 
 volumes:
   pgdata: {}
+  redis_data: {}
   minio: {}
