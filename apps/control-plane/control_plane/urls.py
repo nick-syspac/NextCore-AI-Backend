@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from django.http import JsonResponse
 
 def health(_):
@@ -6,4 +6,5 @@ def health(_):
 
 urlpatterns = [
     path("health", health),
+    path("api/", include("audit.urls")),
 ]
