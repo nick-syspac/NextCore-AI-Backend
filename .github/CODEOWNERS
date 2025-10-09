@@ -1,0 +1,9 @@
+# Code ownership mapping
+/apps/control-plane/   @platform-eng
+/apps/ai-gateway/      @data-ml @platform-eng
+/apps/web-portal/      @app-dev
+/infra/terraform/      @platform-eng
+/kubernetes/           @platform-eng
+/libs/common-py/       @platform-eng @app-dev
+/libs/common-js/       @app-dev
+/docs/compliance/      @compliance-audit

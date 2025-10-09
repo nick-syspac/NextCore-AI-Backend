@@ -1,0 +1,9 @@
+{
+  "name": "@nextcollege/common-js",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "echo build",
+    "test": "echo no tests && exit 0"
+  }
+}

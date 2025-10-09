@@ -1,0 +1,15 @@
+name: Container Scan
+on:
+  workflow_run:
+    workflows: ["Build Images"]
+    types: [completed]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: ghcr.io/${{ github.repository }}/control-plane:${{ github.sha }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true

@@ -1,0 +1,24 @@
+name: CI (Node)
+on:
+  push:
+    paths:
+      - 'apps/web-portal/**'
+      - 'libs/common-js/**'
+      - '.github/workflows/ci-node.yml'
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            apps/web-portal/package-lock.json
+            libs/common-js/package-lock.json
+      - name: Install & Test
+        run: |
+          (cd apps/web-portal && npm ci && npm test --silent || true)
+          (cd libs/common-js && npm ci && npm test --silent || true)

@@ -1,0 +1,27 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.8
+    hooks:
+      - id: ruff
+        args: [--fix]
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.41.0
+    hooks:
+      - id: markdownlint
+  - repo: https://github.com/bridgecrewio/checkov
+    rev: 3.2.372
+    hooks:
+      - id: checkov
+        files: ^infra/terraform/
+  - repo: https://github.com/terraform-linters/tflint
+    rev: v0.53.0
+    hooks:
+      - id: tflint

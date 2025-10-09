@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: control-plane
+spec:
+  selector:
+    matchLabels: { app: control-plane }
+  template:
+    metadata:
+      labels: { app: control-plane }
+    spec:
+      containers:
+        - name: control-plane
+          image: ghcr.io/owner/repo/control-plane:latest
+          ports: [{containerPort: 8080}]

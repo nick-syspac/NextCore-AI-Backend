@@ -1,0 +1,8 @@
+{
+  "tenants": [
+    {
+      "name": "Demo RTO",
+      "subdomain": "demo"
+    }
+  ]
+}

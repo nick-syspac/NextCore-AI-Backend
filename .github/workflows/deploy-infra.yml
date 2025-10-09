@@ -1,0 +1,30 @@
+name: Deploy Infra (Terraform)
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy'
+        required: true
+        type: choice
+        options: [dev, staging, prod]
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TERRAFORM }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Terraform Init/Plan/Apply
+        working-directory: infra/terraform
+        run: |
+          terraform init -upgrade
+          terraform plan -out=tfplan
+          terraform apply -auto-approve tfplan

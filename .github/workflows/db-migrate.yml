@@ -1,0 +1,26 @@
+name: DB Migrate (Tenant-aware)
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        required: true
+        type: choice
+        options: [dev, staging, prod]
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_DB_MIGRATE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Run migrator
+        run: |
+          python apps/control-plane/manage.py migrate_public
+          python apps/control-plane/manage.py migrate_tenants --batch-size 50 --retry 3

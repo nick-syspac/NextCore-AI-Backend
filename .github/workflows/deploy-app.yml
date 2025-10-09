@@ -1,0 +1,27 @@
+name: Deploy App (Reusable)
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_DEPLOY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: Rollout ${{ inputs.service }}
+        run: |
+          echo "Rollout strategy goes here (ECS/EKS/K8s Canary/Blue-Green) for ${{ inputs.service }}"
