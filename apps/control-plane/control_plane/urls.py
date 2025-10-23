@@ -28,6 +28,8 @@ def api_root(request):
                 "api_keys": f"{request.scheme}://{request.get_host()}/api/api-keys/",
                 "audit_events": f"{request.scheme}://{request.get_host()}/api/audit/events/",
                 "audit_verify": f"{request.scheme}://{request.get_host()}/api/audit/verify/",
+                "integrations": f"{request.scheme}://{request.get_host()}/api/tenants/{{tenant_slug}}/integrations/",
+                "tas": f"{request.scheme}://{request.get_host()}/api/tenants/{{tenant_slug}}/tas/",
             },
         },
         "documentation": "See API_DOCUMENTATION.md for complete API reference",

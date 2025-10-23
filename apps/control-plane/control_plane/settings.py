@@ -28,6 +28,8 @@ INSTALLED_APPS = [
     "audit",
     "tenants",
     "users",
+    "integrations",
+    "tas",
 ]
 
 MIDDLEWARE = [

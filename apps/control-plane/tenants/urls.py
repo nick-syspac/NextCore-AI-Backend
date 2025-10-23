@@ -12,4 +12,6 @@ router.register(r"api-keys", TenantAPIKeyViewSet, basename="api-key")
 
 urlpatterns = [
     path("", include(router.urls)),
+    path("tenants/<str:tenant_slug>/integrations/", include("integrations.urls")),
+    path("tenants/<str:tenant_slug>/tas/", include("tas.urls")),
 ]
