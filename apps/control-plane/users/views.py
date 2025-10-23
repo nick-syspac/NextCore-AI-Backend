@@ -11,6 +11,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from tenants.models import TenantUser
+from audit.models import Audit
 from .models import UserInvitation, EmailVerification
 from .serializers import (
     UserRegistrationSerializer,
@@ -45,6 +46,10 @@ class UserRegistrationView(generics.CreateAPIView):
         except Exception as e:
             # Log error but don't fail registration
             print(f"Failed to send verification email: {e}")
+        
+        # Create audit log for registration
+        # Note: For registration, we don't have a tenant yet, so we skip tenant_id
+        # This could be enhanced to log to a system-wide audit if needed
         
         return Response({
             'user': {
@@ -229,6 +234,28 @@ class UserInvitationListCreateView(generics.ListCreateAPIView):
         
         invitation = serializer.save(invited_by=self.request.user)
         
+        # Create audit log
+        Audit.objects.create(
+            tenant_id=str(tenant.id),
+            event_type='admin',
+            payload={
+                'actor_type': 'user',
+                'actor_id': str(self.request.user.id),
+                'actor_username': self.request.user.username,
+                'resource_type': 'invitation',
+                'resource_id': str(invitation.id),
+                'action': 'invitation_created',
+                'status': 'success',
+                'severity': 'info',
+                'ip_address': self.request.META.get('REMOTE_ADDR', 'unknown'),
+                'user_agent': self.request.META.get('HTTP_USER_AGENT', 'unknown'),
+                'details': {
+                    'invited_email': invitation.email,
+                    'role': invitation.role,
+                }
+            }
+        )
+        
         # Send invitation email
         self.send_invitation_email(invitation)
     
@@ -301,6 +328,28 @@ def accept_invitation(request):
         invitation.accepted_at = timezone.now()
         invitation.accepted_by = user
         invitation.save()
+        
+        # Create audit log
+        Audit.objects.create(
+            tenant_id=str(invitation.tenant.id),
+            event_type='admin',
+            payload={
+                'actor_type': 'user',
+                'actor_id': str(user.id),
+                'actor_username': user.username,
+                'resource_type': 'invitation',
+                'resource_id': str(invitation.id),
+                'action': 'invitation_accepted',
+                'status': 'success',
+                'severity': 'info',
+                'ip_address': request.META.get('REMOTE_ADDR', 'unknown'),
+                'user_agent': request.META.get('HTTP_USER_AGENT', 'unknown'),
+                'details': {
+                    'role': invitation.role,
+                    'invited_by': invitation.invited_by.username,
+                }
+            }
+        )
         
         return Response({
             'message': f'Successfully joined {invitation.tenant.name}',

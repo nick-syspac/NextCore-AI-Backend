@@ -196,6 +196,7 @@ class TenantAPIKey(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="api_keys")
     name = models.CharField(max_length=255, help_text="Key description")
+    description = models.TextField(blank=True, help_text="Optional description of key usage")
     key_prefix = models.CharField(max_length=16, editable=False)
     key_hash = models.CharField(max_length=128, editable=False)
     
@@ -223,3 +224,20 @@ class TenantAPIKey(models.Model):
     def is_valid(self) -> bool:
         """Check if the API key is valid for use."""
         return self.is_active and not self.is_expired()
+    
+    @staticmethod
+    def generate_key():
+        """Generate a new API key."""
+        import secrets
+        return f"nc_{secrets.token_urlsafe(32)}"
+    
+    @staticmethod
+    def hash_key(key: str) -> str:
+        """Hash an API key for storage."""
+        import hashlib
+        return hashlib.sha256(key.encode()).hexdigest()
+
+    def save(self, *args, **kwargs):
+        """Override save to generate key_prefix and key_hash if needed."""
+        # This is handled in the serializer's create method instead
+        super().save(*args, **kwargs)

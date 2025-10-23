@@ -147,12 +147,17 @@ class TenantUserSerializer(serializers.ModelSerializer):
 
 class TenantAPIKeySerializer(serializers.ModelSerializer):
     """Serializer for API keys."""
+    tenant = serializers.PrimaryKeyRelatedField(queryset=Tenant.objects.all(), write_only=True)
+    key = serializers.CharField(read_only=True, help_text="Full API key (only returned on creation)")
     
     class Meta:
         model = TenantAPIKey
         fields = [
             "id",
+            "tenant",
             "name",
+            "description",
+            "key",
             "key_prefix",
             "is_active",
             "created_at",
@@ -162,7 +167,45 @@ class TenantAPIKeySerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "key",
             "key_prefix",
             "created_at",
             "last_used_at",
         ]
+    
+    def create(self, validated_data):
+        """Create a new API key with generated key."""
+        # Generate the actual API key
+        api_key = TenantAPIKey.generate_key()
+        
+        # Extract the prefix (first 8 characters after "nc_")
+        key_prefix = api_key[:11]  # "nc_" + first 8 chars
+        
+        # Hash the key for storage
+        key_hash = TenantAPIKey.hash_key(api_key)
+        
+        # Create the API key object
+        api_key_obj = TenantAPIKey.objects.create(
+            **validated_data,
+            key_prefix=key_prefix,
+            key_hash=key_hash
+        )
+        
+        # Attach the plain key to the instance (not saved to DB)
+        # This allows us to return it once
+        api_key_obj._plain_key = api_key
+        
+        return api_key_obj
+    
+    def to_representation(self, instance):
+        """Include the plain key only when it's available (on creation)."""
+        representation = super().to_representation(instance)
+        
+        # If the instance has a _plain_key attribute, include it
+        if hasattr(instance, '_plain_key'):
+            representation['key'] = instance._plain_key
+        else:
+            # Remove the key field from response if not creating
+            representation.pop('key', None)
+        
+        return representation

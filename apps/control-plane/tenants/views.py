@@ -7,6 +7,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
+from audit.models import Audit
+
 from .models import Tenant, TenantUser, TenantQuota, TenantAPIKey
 from .serializers import (
     TenantSerializer,
@@ -142,12 +144,65 @@ class TenantAPIKeyViewSet(viewsets.ModelViewSet):
         # Users can only see API keys for their tenants
         return TenantAPIKey.objects.filter(tenant__users__user=user)
     
+    def perform_create(self, serializer):
+        """Create API key and log audit event."""
+        api_key = serializer.save()
+        
+        # Create audit log
+        Audit.objects.create(
+            tenant_id=str(api_key.tenant.id),
+            event_type='api',
+            payload={
+                'actor_type': 'user',
+                'actor_id': str(self.request.user.id),
+                'actor_username': self.request.user.username,
+                'resource_type': 'api_key',
+                'resource_id': str(api_key.id),
+                'action': 'api_key_created',
+                'status': 'success',
+                'severity': 'warning',
+                'ip_address': self.request.META.get('REMOTE_ADDR', 'unknown'),
+                'user_agent': self.request.META.get('HTTP_USER_AGENT', 'unknown'),
+                'details': {
+                    'key_name': api_key.name,
+                    'key_prefix': api_key.key_prefix,
+                }
+            }
+        )
+        
+        logger.info(
+            f"API key created: {api_key.name}",
+            extra={"api_key_id": str(api_key.id), "tenant_id": str(api_key.tenant.id)}
+        )
+    
     @action(detail=True, methods=["post"])
     def revoke(self, request, pk=None):
         """Revoke an API key."""
         api_key = self.get_object()
         api_key.is_active = False
         api_key.save()
+        
+        # Create audit log
+        Audit.objects.create(
+            tenant_id=str(api_key.tenant.id),
+            event_type='api',
+            payload={
+                'actor_type': 'user',
+                'actor_id': str(request.user.id),
+                'actor_username': request.user.username,
+                'resource_type': 'api_key',
+                'resource_id': str(api_key.id),
+                'action': 'api_key_revoked',
+                'status': 'success',
+                'severity': 'warning',
+                'ip_address': request.META.get('REMOTE_ADDR', 'unknown'),
+                'user_agent': request.META.get('HTTP_USER_AGENT', 'unknown'),
+                'details': {
+                    'key_name': api_key.name,
+                    'key_prefix': api_key.key_prefix,
+                }
+            }
+        )
         
         logger.info(
             f"API key revoked: {api_key.name}",
