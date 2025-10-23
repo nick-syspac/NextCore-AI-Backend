@@ -27,47 +27,47 @@ install: ## Install dependencies
 
 up: ## Start all services with docker-compose
 	@echo "Starting services..."
-	docker compose up -d
+	docker-compose up -d
 	@echo "Services started. Run 'make logs' to view logs"
 
 down: ## Stop all services
 	@echo "Stopping services..."
-	docker compose down
+	docker-compose down
 
 restart: ## Restart all services
 	@echo "Restarting services..."
-	docker compose restart
+	docker-compose restart
 
 build: ## Build docker images
 	@echo "Building images..."
-	docker compose build
+	docker-compose build
 
 logs: ## View logs from all services
-	docker compose logs -f
+	docker-compose logs -f
 
 logs-control-plane: ## View control-plane logs
-	docker compose logs -f control-plane
+	docker-compose logs -f control-plane
 
 logs-ai-gateway: ## View ai-gateway logs
-	docker compose logs -f ai-gateway
+	docker-compose logs -f ai-gateway
 
 logs-worker: ## View worker logs
-	docker compose logs -f worker
+	docker-compose logs -f worker
 
 shell: ## Open Django shell in control-plane
-	docker compose exec control-plane python manage.py shell
+	docker-compose exec control-plane python manage.py shell
 
 shell-db: ## Open PostgreSQL shell
-	docker compose exec db psql -U postgres -d rto
+	docker-compose exec db psql -U postgres -d rto
 
 migrate: ## Run Django migrations
-	docker compose exec control-plane python manage.py migrate
+	docker-compose exec control-plane python manage.py migrate
 
 makemigrations: ## Create new migrations
-	docker compose exec control-plane python manage.py makemigrations
+	docker-compose exec control-plane python manage.py makemigrations
 
 createsuperuser: ## Create Django superuser
-	docker compose exec control-plane python manage.py createsuperuser
+	docker-compose exec control-plane python manage.py createsuperuser
 
 test: ## Run all tests
 	@echo "Running tests..."
@@ -133,20 +133,20 @@ reset-db: ## Reset database (WARNING: destroys all data)
 	@read -p "Are you sure? [y/N] " -n 1 -r; \
 	echo; \
 	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-		docker compose down -v; \
-		docker compose up -d db redis; \
+		docker-compose down -v; \
+		docker-compose up -d db redis; \
 		sleep 5; \
-		docker compose up -d control-plane; \
+		docker-compose up -d control-plane; \
 		sleep 3; \
-		docker compose exec control-plane python manage.py migrate; \
+		docker-compose exec control-plane python manage.py migrate; \
 		echo "Database reset completed"; \
 	fi
 
 dev: ## Start development environment
 	@echo "Starting development environment..."
-	docker compose up
+	docker-compose up
 
 status: ## Show status of services
-	docker compose ps
+	docker-compose ps
 
 ps: status ## Alias for status

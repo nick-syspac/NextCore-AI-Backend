@@ -10,8 +10,13 @@ This worker processes:
 import os
 import sys
 
-# Add parent directory to path to import from control-plane
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "control-plane"))
+# Add control-plane directory to path
+# In Docker, it's mounted at /control-plane
+# In local dev, it's in ../control-plane
+control_plane_path = os.environ.get("CONTROL_PLANE_PATH", "/control-plane")
+if not os.path.exists(control_plane_path):
+    control_plane_path = os.path.join(os.path.dirname(__file__), "..", "control-plane")
+sys.path.insert(0, control_plane_path)
 
 from celery import Celery
 from celery.signals import worker_ready, worker_shutdown

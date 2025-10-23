@@ -12,7 +12,32 @@ def health(_):
     return JsonResponse({"status": "ok", "service": "control-plane"})
 
 
+def api_root(request):
+    """API root endpoint with available endpoints."""
+    return JsonResponse({
+        "service": "NextCore AI Cloud - Control Plane",
+        "version": "1.0.0",
+        "status": "operational",
+        "endpoints": {
+            "health": f"{request.scheme}://{request.get_host()}/health",
+            "admin": f"{request.scheme}://{request.get_host()}/admin/",
+            "api": {
+                "authentication": f"{request.scheme}://{request.get_host()}/api/auth/token/",
+                "tenants": f"{request.scheme}://{request.get_host()}/api/tenants/",
+                "tenant_users": f"{request.scheme}://{request.get_host()}/api/tenant-users/",
+                "api_keys": f"{request.scheme}://{request.get_host()}/api/api-keys/",
+                "audit_events": f"{request.scheme}://{request.get_host()}/api/audit/events/",
+                "audit_verify": f"{request.scheme}://{request.get_host()}/api/audit/verify/",
+            },
+        },
+        "documentation": "See API_DOCUMENTATION.md for complete API reference",
+    })
+
+
 urlpatterns = [
+    # Root
+    path("", api_root, name="api-root"),
+    
     # Admin
     path("admin/", admin.site.urls),
     
@@ -23,6 +48,7 @@ urlpatterns = [
     path("api/auth/token/", obtain_auth_token, name="api-token-auth"),
     
     # API endpoints
+    path("api/users/", include("users.urls")),
     path("api/audit/", include("audit.urls")),
     path("api/", include("tenants.urls")),
 ]

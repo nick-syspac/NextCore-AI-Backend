@@ -78,6 +78,8 @@ services:
       - DB_NAME=rto
       - DB_USER=postgres
       - DB_PASSWORD=postgres
+      - DJANGO_SECRET_KEY=dev-secret-key-change-in-production
+      - DJANGO_DEBUG=True
     depends_on:
       db:
         condition: service_healthy
@@ -85,6 +87,7 @@ services:
         condition: service_healthy
     volumes:
       - ./apps/worker:/app
+      - ./apps/control-plane:/control-plane
 
   ai-gateway:
     build:
