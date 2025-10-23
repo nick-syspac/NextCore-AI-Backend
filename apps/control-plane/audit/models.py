@@ -1,6 +1,7 @@
 import hashlib
 import json
 from django.db import models
+from django.utils import timezone
 
 def chain_hash(prev_hash: bytes|None, record: dict) -> bytes:
     m = hashlib.sha256()
@@ -12,7 +13,7 @@ class Audit(models.Model):
     tenant_id = models.CharField(max_length=255)
     event_type = models.CharField(max_length=255)
     payload = models.JSONField()
-    timestamp = models.DateTimeField(auto_now_add=True)
+    timestamp = models.DateTimeField()  # Removed auto_now_add to control timestamp in save()
     prev_hash = models.BinaryField(null=True, blank=True)
     hash = models.BinaryField()
 
@@ -20,16 +21,22 @@ class Audit(models.Model):
         ordering = ['timestamp']
 
     def save(self, *args, **kwargs):
-        last_event = Audit.objects.filter(tenant_id=self.tenant_id).last()
-        prev_hash = last_event.hash if last_event else None
-        self.prev_hash = prev_hash
-        record = {
-            "tenant_id": self.tenant_id,
-            "event_type": self.event_type,
-            "payload": self.payload,
-            "timestamp": self.timestamp.isoformat(),
-        }
-        self.hash = chain_hash(prev_hash, record)
+        # Always set timestamp before computing hash (removed auto_now_add to ensure consistency)
+        if not self.timestamp:
+            self.timestamp = timezone.now()
+            
+        # Don't compute hash if this is an update (already has a PK)
+        if not self.pk:
+            last_event = Audit.objects.filter(tenant_id=self.tenant_id).last()
+            prev_hash = last_event.hash if last_event else None
+            self.prev_hash = prev_hash
+            record = {
+                "tenant_id": self.tenant_id,
+                "event_type": self.event_type,
+                "payload": self.payload,
+                "timestamp": self.timestamp.isoformat(),
+            }
+            self.hash = chain_hash(prev_hash, record)
         super().save(*args, **kwargs)
 
 class Outbox(models.Model):

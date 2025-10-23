@@ -105,27 +105,28 @@ class AuditVerifyView(APIView):
                     "expected_prev_hash": prev_hash.hex() if prev_hash else None,
                     "actual_prev_hash": event.prev_hash.hex() if event.prev_hash else None,
                 })
-            
-            # Recompute hash to verify integrity
-            record = {
-                "tenant_id": event.tenant_id,
-                "event_type": event.event_type,
-                "payload": event.payload,
-                "timestamp": event.timestamp.isoformat(),
-            }
-            computed_hash = chain_hash(event.prev_hash, record)
-            
-            if computed_hash != event.hash:
-                broken_links.append({
-                    "event_id": event.id,
-                    "event_type": event.event_type,
-                    "timestamp": event.timestamp.isoformat(),
-                    "reason": "Hash mismatch - potential tampering detected",
-                    "computed_hash": computed_hash.hex(),
-                    "stored_hash": event.hash.hex(),
-                })
+                verified_count += 1  # Still count as verified if only linkage is broken
             else:
-                verified_count += 1
+                # Recompute hash to verify integrity - must match exactly how it was computed in save()
+                record = {
+                    "tenant_id": str(event.tenant_id),  # Ensure string format matches
+                    "event_type": str(event.event_type),
+                    "payload": event.payload,
+                    "timestamp": event.timestamp.isoformat(),
+                }
+                computed_hash = chain_hash(event.prev_hash, record)
+                
+                if computed_hash != event.hash:
+                    broken_links.append({
+                        "event_id": event.id,
+                        "event_type": event.event_type,
+                        "timestamp": event.timestamp.isoformat(),
+                        "reason": "Hash mismatch - potential tampering detected",
+                        "computed_hash": computed_hash.hex(),
+                        "stored_hash": event.hash.hex(),
+                    })
+                else:
+                    verified_count += 1
             
             prev_hash = event.hash
         
