@@ -16,4 +16,5 @@ urlpatterns = [
     path("tenants/<str:tenant_slug>/tas/", include("tas.urls")),
     path("tenants/<str:tenant_slug>/policy-comparator/", include("policy_comparator.urls")),
     path("tenants/<str:tenant_slug>/audit-assistant/", include("audit_assistant.urls")),
+    path("tenants/<str:tenant_slug>/continuous-improvement/", include("continuous_improvement.urls")),
 ]
