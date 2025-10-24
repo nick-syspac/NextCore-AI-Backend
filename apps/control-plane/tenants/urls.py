@@ -27,4 +27,5 @@ urlpatterns = [
     path("tenants/<str:tenant_slug>/authenticity-check/", include("authenticity_check.urls")),
     path("tenants/<str:tenant_slug>/risk-engine/", include("risk_engine.urls")),
     path("tenants/<str:tenant_slug>/adaptive-pathway/", include("adaptive_pathway.urls")),
+    path("tenants/<str:tenant_slug>/engagement-heatmap/", include("engagement_heatmap.urls")),
 ]

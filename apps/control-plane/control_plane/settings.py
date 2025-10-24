@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "authenticity_check",
     "risk_engine",
     "adaptive_pathway",
+    "engagement_heatmap",
 ]
 
 MIDDLEWARE = [
