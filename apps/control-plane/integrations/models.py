@@ -11,10 +11,29 @@ class Integration(models.Model):
     """
     
     INTEGRATION_TYPES = [
+        # Existing integrations
         ('axcelerate', 'Axcelerate'),
         ('canvas', 'Canvas LMS'),
         ('xero', 'Xero'),
         ('myob', 'MYOB'),
+        
+        # SMS/RTO Systems
+        ('readytech_jr', 'ReadyTech JR Plus / Ready Student'),
+        ('vettrak', 'VETtrak (ReadyTech)'),
+        ('eskilled', 'eSkilled SMS+LMS'),
+        
+        # LMS/Assessment Systems
+        ('cloudassess', 'CloudAssess'),
+        ('coursebox', 'Coursebox AI-LMS'),
+        ('moodle', 'Moodle'),
+        ('d2l_brightspace', 'D2L Brightspace'),
+        
+        # Accounting Systems
+        ('quickbooks', 'QuickBooks Online'),
+        ('sage_intacct', 'Sage Intacct'),
+        
+        # Payment Gateways
+        ('stripe', 'Stripe (AU)'),
     ]
     
     STATUS_CHOICES = [

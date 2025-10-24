@@ -13,6 +13,7 @@ from .serializers import (
     IntegrationMappingSerializer,
     IntegrationConfigSerializer,
 )
+from .connectors import get_connector
 
 
 class IntegrationViewSet(viewsets.ModelViewSet):
@@ -130,32 +131,58 @@ class IntegrationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def test_connection(self, request, tenant_slug=None, pk=None):
         """
-        Test integration connection
+        Test integration connection using actual connector
         """
         integration = self.get_object()
         
-        # Simulate connection test
-        # In production, this would make actual API calls
-        test_result = {
-            'success': True,
-            'message': 'Connection test successful',
-            'details': {
-                'integration_type': integration.integration_type,
-                'api_reachable': True,
-                'credentials_valid': True,
+        try:
+            # Get the appropriate connector
+            connector = get_connector(integration)
+            
+            # Test the connection
+            success, message = connector.test_connection()
+            
+            test_result = {
+                'success': success,
+                'message': message,
+                'details': {
+                    'integration_type': integration.integration_type,
+                    'integration_name': integration.get_integration_type_display(),
+                    'tested_at': timezone.now().isoformat(),
+                }
             }
-        }
-        
-        # Log test
-        IntegrationLog.objects.create(
-            integration=integration,
-            action='config_update',
-            status='success',
-            message=f'Connection test performed',
-            details=test_result
-        )
-        
-        return Response(test_result)
+            
+            # Log test
+            IntegrationLog.objects.create(
+                integration=integration,
+                action='config_update',
+                status='success' if success else 'error',
+                message=f'Connection test: {message}',
+                details=test_result
+            )
+            
+            return Response(test_result)
+            
+        except Exception as e:
+            error_result = {
+                'success': False,
+                'message': f'Connection test failed: {str(e)}',
+                'details': {
+                    'integration_type': integration.integration_type,
+                    'error': str(e),
+                }
+            }
+            
+            # Log error
+            IntegrationLog.objects.create(
+                integration=integration,
+                action='error',
+                status='error',
+                message=f'Connection test failed: {str(e)}',
+                details=error_result
+            )
+            
+            return Response(error_result, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=True, methods=['get'])
     def logs(self, request, tenant_slug=None, pk=None):
