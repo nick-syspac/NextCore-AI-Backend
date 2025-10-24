@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "pd_tracker",
     "trainer_diary",
     "industry_currency",
+    "competency_gap",
 ]
 
 MIDDLEWARE = [
