@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "adaptive_pathway",
     "engagement_heatmap",
     "study_coach",
+    "intervention_tracker",
 ]
 
 MIDDLEWARE = [
