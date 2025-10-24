@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "rubric_generator",
     "auto_marker",
     "feedback_assistant",
+    "moderation_tool",
 ]
 
 MIDDLEWARE = [
