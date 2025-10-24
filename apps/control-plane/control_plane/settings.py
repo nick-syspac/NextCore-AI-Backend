@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "study_coach",
     "intervention_tracker",
     "pd_tracker",
+    "trainer_diary",
 ]
 
 MIDDLEWARE = [
