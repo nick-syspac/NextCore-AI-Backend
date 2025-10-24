@@ -25,4 +25,5 @@ urlpatterns = [
     path("tenants/<str:tenant_slug>/moderation-tool/", include("moderation_tool.urls")),
     path("tenants/<str:tenant_slug>/evidence-mapper/", include("evidence_mapper.urls")),
     path("tenants/<str:tenant_slug>/authenticity-check/", include("authenticity_check.urls")),
+    path("tenants/<str:tenant_slug>/risk-engine/", include("risk_engine.urls")),
 ]

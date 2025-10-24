@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "moderation_tool",
     "evidence_mapper",
     "authenticity_check",
+    "risk_engine",
 ]
 
 MIDDLEWARE = [
