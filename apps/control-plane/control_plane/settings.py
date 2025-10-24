@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "continuous_improvement",
     "funding_eligibility",
     "assessment_builder",
+    "rubric_generator",
 ]
 
 MIDDLEWARE = [
