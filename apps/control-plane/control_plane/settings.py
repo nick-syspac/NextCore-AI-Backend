@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "assessment_builder",
     "rubric_generator",
     "auto_marker",
+    "feedback_assistant",
 ]
 
 MIDDLEWARE = [
