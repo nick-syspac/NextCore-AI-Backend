@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "feedback_assistant",
     "moderation_tool",
     "evidence_mapper",
+    "authenticity_check",
 ]
 
 MIDDLEWARE = [
