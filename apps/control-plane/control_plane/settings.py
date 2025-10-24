@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "integrations",
     "tas",
     "policy_comparator",
+    "audit_assistant",
 ]
 
 MIDDLEWARE = [
