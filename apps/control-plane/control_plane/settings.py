@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "funding_eligibility",
     "assessment_builder",
     "rubric_generator",
+    "auto_marker",
 ]
 
 MIDDLEWARE = [

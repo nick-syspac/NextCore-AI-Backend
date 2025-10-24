@@ -20,4 +20,5 @@ urlpatterns = [
     path("tenants/<str:tenant_slug>/funding-eligibility/", include("funding_eligibility.urls")),
     path("tenants/<str:tenant_slug>/assessment-builder/", include("assessment_builder.urls")),
     path("tenants/<str:tenant_slug>/rubric-generator/", include("rubric_generator.urls")),
+    path("tenants/<str:tenant_slug>/auto-marker/", include("auto_marker.urls")),
 ]
