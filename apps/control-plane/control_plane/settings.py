@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "users",
     "integrations",
     "tas",
+    "policy_comparator",
 ]
 
 MIDDLEWARE = [
