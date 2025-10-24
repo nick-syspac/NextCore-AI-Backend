@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "auto_marker",
     "feedback_assistant",
     "moderation_tool",
+    "evidence_mapper",
 ]
 
 MIDDLEWARE = [

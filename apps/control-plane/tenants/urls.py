@@ -23,4 +23,5 @@ urlpatterns = [
     path("tenants/<str:tenant_slug>/auto-marker/", include("auto_marker.urls")),
     path("tenants/<str:tenant_slug>/feedback-assistant/", include("feedback_assistant.urls")),
     path("tenants/<str:tenant_slug>/moderation-tool/", include("moderation_tool.urls")),
+    path("tenants/<str:tenant_slug>/evidence-mapper/", include("evidence_mapper.urls")),
 ]
