@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "engagement_heatmap",
     "study_coach",
     "intervention_tracker",
+    "pd_tracker",
 ]
 
 MIDDLEWARE = [

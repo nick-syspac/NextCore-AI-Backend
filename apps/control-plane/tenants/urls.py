@@ -30,4 +30,5 @@ urlpatterns = [
     path("tenants/<str:tenant_slug>/engagement-heatmap/", include("engagement_heatmap.urls")),
     path("tenants/<str:tenant_slug>/study-coach/", include("study_coach.urls")),
     path("tenants/<str:tenant_slug>/intervention-tracker/", include("intervention_tracker.urls")),
+    path("tenants/<str:tenant_slug>/pd-tracker/", include("pd_tracker.urls")),
 ]
