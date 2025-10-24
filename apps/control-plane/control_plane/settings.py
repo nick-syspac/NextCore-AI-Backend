@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "evidence_mapper",
     "authenticity_check",
     "risk_engine",
+    "adaptive_pathway",
 ]
 
 MIDDLEWARE = [
