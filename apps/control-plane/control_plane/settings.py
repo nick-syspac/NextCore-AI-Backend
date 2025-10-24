@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "trainer_diary",
     "industry_currency",
     "competency_gap",
+    "email_assistant",
 ]
 
 MIDDLEWARE = [

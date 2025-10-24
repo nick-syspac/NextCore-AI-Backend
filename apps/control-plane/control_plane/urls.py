@@ -56,4 +56,5 @@ urlpatterns = [
     path("api/trainer-diary/", include("trainer_diary.urls")),
     path("api/industry-currency/", include("industry_currency.urls")),
     path("api/competency-gap/", include("competency_gap.urls")),
+    path("api/email-assistant/", include("email_assistant.urls")),
 ]
