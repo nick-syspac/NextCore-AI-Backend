@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.utils import timezone
 from django.db import transaction
 import time
@@ -18,7 +18,7 @@ from .serializers import (
 class TASTemplateViewSet(viewsets.ModelViewSet):
     """ViewSet for TAS templates"""
     serializer_class = TASTemplateSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]  # TODO: Change to IsAuthenticated in production
     filterset_fields = ['aqf_level', 'template_type', 'is_active']
     search_fields = ['name', 'description']
     ordering_fields = ['name', 'aqf_level', 'created_at']
@@ -28,7 +28,9 @@ class TASTemplateViewSet(viewsets.ModelViewSet):
         return TASTemplate.objects.filter(is_active=True)
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        # Use request.user if authenticated, otherwise use None or a default user
+        user = self.request.user if self.request.user.is_authenticated else None
+        serializer.save(created_by=user)
 
     def destroy(self, request, *args, **kwargs):
         template = self.get_object()

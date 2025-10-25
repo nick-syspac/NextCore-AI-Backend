@@ -156,7 +156,7 @@ CSRF_COOKIE_SAMESITE = "Lax"
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = os.getenv(
     "CORS_ALLOWED_ORIGINS", 
-    "http://localhost:3000,http://localhost:8000"
+    "http://localhost:3000,http://localhost:3001,http://localhost:8000"
 ).split(",")
 CORS_ALLOW_CREDENTIALS = True
 
