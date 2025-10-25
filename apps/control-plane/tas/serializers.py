@@ -127,6 +127,12 @@ class TASGenerateRequestSerializer(serializers.Serializer):
         help_text="Specific sections to generate, or all if empty"
     )
     use_gpt4 = serializers.BooleanField(default=True)
+    ai_model = serializers.CharField(
+        max_length=50,
+        required=False,
+        default='gpt-4o',
+        help_text="AI model to use for generation (e.g., gpt-4o, gpt-4-turbo, gpt-3.5-turbo)"
+    )
 
 
 class TASVersionCreateSerializer(serializers.Serializer):
@@ -139,3 +145,37 @@ class TASVersionCreateSerializer(serializers.Serializer):
         default=list,
         help_text="Sections to regenerate with GPT-4"
     )
+
+
+class TASUpdateSerializer(serializers.Serializer):
+    """Serializer for updating TAS document content"""
+    title = serializers.CharField(max_length=300, required=False)
+    description = serializers.CharField(required=False, allow_blank=True)
+    qualification_name = serializers.CharField(max_length=300, required=False)
+    training_package = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    sections = serializers.ListField(required=False)
+    content = serializers.JSONField(required=False)
+    metadata = serializers.JSONField(required=False)
+    status = serializers.ChoiceField(
+        choices=['draft', 'in_review', 'approved', 'published', 'archived'],
+        required=False
+    )
+    
+    # Version control
+    create_version = serializers.BooleanField(
+        default=False,
+        help_text="Create a new version instead of updating current one"
+    )
+    change_summary = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="Summary of changes (required if create_version is True)"
+    )
+    
+    def validate(self, data):
+        """Validate that change_summary is provided if create_version is True"""
+        if data.get('create_version') and not data.get('change_summary'):
+            raise serializers.ValidationError({
+                'change_summary': 'Change summary is required when creating a new version'
+            })
+        return data
