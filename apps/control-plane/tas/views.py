@@ -13,6 +13,7 @@ from .serializers import (
     TASGenerationLogSerializer, TASGenerateRequestSerializer,
     TASVersionCreateSerializer
 )
+from .ai_services import AIServiceFactory
 import logging
 
 logger = logging.getLogger(__name__)
@@ -1297,3 +1298,607 @@ class TASViewSet(viewsets.ModelViewSet):
         }
         
         return qualifications_units.get(qual_code)
+    
+    # ==================== AI-POWERED ENDPOINTS ====================
+    
+    @action(detail=True, methods=['post'], url_path='ai/enrich-tga')
+    def ai_enrich_tga(self, request, tenant_slug=None, pk=None):
+        """
+        Enrich TGA unit data with learning outcomes and assessment hints
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/enrich-tga/
+        Body: {
+            "unit_code": "BSBWHS411",
+            "tga_data": {...}
+        }
+        """
+        try:
+            unit_code = request.data.get('unit_code')
+            tga_data = request.data.get('tga_data', {})
+            
+            if not unit_code:
+                return Response(
+                    {'error': 'unit_code is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            service = AIServiceFactory.get_service('intake_prefill')
+            result = service.enrich_tga_snapshot(unit_code, tga_data)
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"TGA enrichment error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/suggest-cohort')
+    def ai_suggest_cohort(self, request, tenant_slug=None, pk=None):
+        """
+        Suggest cohort archetype and support requirements
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/suggest-cohort/
+        Body: {
+            "cohort_history": [...],
+            "demographics": {...}
+        }
+        """
+        try:
+            cohort_history = request.data.get('cohort_history', [])
+            demographics = request.data.get('demographics', {})
+            
+            service = AIServiceFactory.get_service('intake_prefill')
+            result = service.suggest_cohort_archetype(cohort_history, demographics)
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Cohort suggestion error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/recommend-electives')
+    def ai_recommend_electives(self, request, tenant_slug=None, pk=None):
+        """
+        Recommend elective units based on job outcomes
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/recommend-electives/
+        Body: {
+            "qualification_code": "BSB50120",
+            "job_outcomes": ["Business Manager", "Operations Coordinator"],
+            "available_electives": [...],
+            "packaging_rules": "..."
+        }
+        """
+        try:
+            qual_code = request.data.get('qualification_code')
+            job_outcomes = request.data.get('job_outcomes', [])
+            available_electives = request.data.get('available_electives', [])
+            packaging_rules = request.data.get('packaging_rules', '')
+            
+            if not qual_code or not job_outcomes:
+                return Response(
+                    {'error': 'qualification_code and job_outcomes are required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            service = AIServiceFactory.get_service('packaging_clustering')
+            result = service.recommend_electives(
+                qual_code, job_outcomes, available_electives, packaging_rules
+            )
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Elective recommendation error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/cluster-units')
+    def ai_cluster_units(self, request, tenant_slug=None, pk=None):
+        """
+        Suggest unit clusters based on semantic similarity
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/cluster-units/
+        Body: {
+            "units": [...],
+            "max_cluster_size": 4
+        }
+        """
+        try:
+            units = request.data.get('units', [])
+            max_cluster_size = request.data.get('max_cluster_size', 4)
+            
+            if not units:
+                return Response(
+                    {'error': 'units array is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            service = AIServiceFactory.get_service('packaging_clustering')
+            result = service.suggest_unit_clusters(units, max_cluster_size)
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Unit clustering error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/optimize-timetable')
+    def ai_optimize_timetable(self, request, tenant_slug=None, pk=None):
+        """
+        Optimize timetable allocation
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/optimize-timetable/
+        Body: {
+            "clusters": [...],
+            "total_weeks": 52,
+            "resources": {...},
+            "constraints": {...}
+        }
+        """
+        try:
+            clusters = request.data.get('clusters', [])
+            total_weeks = request.data.get('total_weeks', 52)
+            resources = request.data.get('resources', {})
+            constraints = request.data.get('constraints', {})
+            
+            service = AIServiceFactory.get_service('packaging_clustering')
+            result = service.optimize_timetable(
+                clusters, total_weeks, resources, constraints
+            )
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Timetable optimization error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/draft-section')
+    def ai_draft_section(self, request, tenant_slug=None, pk=None):
+        """
+        Draft TAS content section (cohort needs, delivery model, etc.)
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/draft-section/
+        Body: {
+            "section_type": "cohort_needs",
+            "cohort_data": {...},
+            "qualification": "...",
+            "delivery_context": "..."
+        }
+        """
+        try:
+            section_type = request.data.get('section_type')
+            
+            if section_type == 'cohort_needs':
+                cohort_data = request.data.get('cohort_data', {})
+                qualification = request.data.get('qualification', '')
+                delivery_context = request.data.get('delivery_context', '')
+                
+                service = AIServiceFactory.get_service('content_drafter')
+                result = service.draft_cohort_needs_section(
+                    cohort_data, qualification, delivery_context
+                )
+            else:
+                return Response(
+                    {'error': f'Unsupported section_type: {section_type}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Content drafting error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/assessment-blueprint')
+    def ai_assessment_blueprint(self, request, tenant_slug=None, pk=None):
+        """
+        Generate assessment blueprint for a unit
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/assessment-blueprint/
+        Body: {
+            "unit_code": "BSBWHS411",
+            "elements": [...],
+            "delivery_mode": "classroom",
+            "industry_context": "office administration"
+        }
+        """
+        try:
+            unit_code = request.data.get('unit_code')
+            elements = request.data.get('elements', [])
+            delivery_mode = request.data.get('delivery_mode', 'classroom')
+            industry_context = request.data.get('industry_context', '')
+            
+            if not unit_code or not elements:
+                return Response(
+                    {'error': 'unit_code and elements are required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            service = AIServiceFactory.get_service('content_drafter')
+            result = service.generate_assessment_blueprint(
+                unit_code, elements, delivery_mode, industry_context
+            )
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Assessment blueprint error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/map-resources')
+    def ai_map_resources(self, request, tenant_slug=None, pk=None):
+        """
+        Map unit resource requirements to inventory
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/map-resources/
+        Body: {
+            "unit_requirements": {...},
+            "available_inventory": [...],
+            "budget_constraints": {...}
+        }
+        """
+        try:
+            unit_requirements = request.data.get('unit_requirements', {})
+            available_inventory = request.data.get('available_inventory', [])
+            budget_constraints = request.data.get('budget_constraints', {})
+            
+            service = AIServiceFactory.get_service('content_drafter')
+            result = service.map_resources(
+                unit_requirements, available_inventory, budget_constraints
+            )
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Resource mapping error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/check-compliance')
+    def ai_check_compliance(self, request, tenant_slug=None, pk=None):
+        """
+        Check ASQA clause coverage
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/check-compliance/
+        Body: {
+            "tas_content": {...},
+            "target_clauses": ["1.1", "1.2", "1.3"]
+        }
+        """
+        try:
+            tas_content = request.data.get('tas_content', {})
+            target_clauses = request.data.get('target_clauses')
+            
+            service = AIServiceFactory.get_service('compliance_rag')
+            result = service.evaluate_clause_coverage(tas_content, target_clauses)
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Compliance check error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/score-trainer')
+    def ai_score_trainer(self, request, tenant_slug=None, pk=None):
+        """
+        Score trainer suitability for a unit
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/score-trainer/
+        Body: {
+            "trainer_profile": {...},
+            "unit_requirements": {...}
+        }
+        """
+        try:
+            trainer_profile = request.data.get('trainer_profile', {})
+            unit_requirements = request.data.get('unit_requirements', {})
+            
+            service = AIServiceFactory.get_service('compliance_rag')
+            result = service.score_trainer_suitability(
+                trainer_profile, unit_requirements
+            )
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Trainer scoring error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/assess-facility')
+    def ai_assess_facility(self, request, tenant_slug=None, pk=None):
+        """
+        Assess facility adequacy
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/assess-facility/
+        Body: {
+            "facility_inventory": [...],
+            "unit_requirements": {...}
+        }
+        """
+        try:
+            facility_inventory = request.data.get('facility_inventory', [])
+            unit_requirements = request.data.get('unit_requirements', {})
+            
+            service = AIServiceFactory.get_service('compliance_rag')
+            result = service.assess_facility_adequacy(
+                facility_inventory, unit_requirements
+            )
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Facility assessment error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/detect-policy-drift')
+    def ai_detect_policy_drift(self, request, tenant_slug=None, pk=None):
+        """
+        Detect policy changes since TAS approval
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/detect-policy-drift/
+        Body: {
+            "tas_policy_references": [...],
+            "current_policies": [...]
+        }
+        """
+        try:
+            tas_policy_refs = request.data.get('tas_policy_references', [])
+            current_policies = request.data.get('current_policies', [])
+            
+            service = AIServiceFactory.get_service('compliance_rag')
+            result = service.detect_policy_drift(
+                tas_policy_refs, current_policies
+            )
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Policy drift detection error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/summarize-minutes')
+    def ai_summarize_minutes(self, request, tenant_slug=None, pk=None):
+        """
+        Summarize industry engagement minutes
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/summarize-minutes/
+        Body: {
+            "minutes_text": "...",
+            "meeting_date": "2024-01-15",
+            "attendees": [...]
+        }
+        """
+        try:
+            minutes_text = request.data.get('minutes_text', '')
+            meeting_date = request.data.get('meeting_date', '')
+            attendees = request.data.get('attendees', [])
+            
+            if not minutes_text:
+                return Response(
+                    {'error': 'minutes_text is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            service = AIServiceFactory.get_service('evidence')
+            result = service.summarize_industry_minutes(
+                minutes_text, meeting_date, attendees
+            )
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Minutes summarization error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/validation-plan')
+    def ai_validation_plan(self, request, tenant_slug=None, pk=None):
+        """
+        Generate validation/moderation plan
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/validation-plan/
+        Body: {
+            "assessment_tasks": [...],
+            "cohort_size": 25,
+            "last_validation_date": "2024-01-01"
+        }
+        """
+        try:
+            assessment_tasks = request.data.get('assessment_tasks', [])
+            cohort_size = request.data.get('cohort_size', 0)
+            last_validation_date = request.data.get('last_validation_date')
+            
+            service = AIServiceFactory.get_service('evidence')
+            result = service.generate_validation_plan(
+                assessment_tasks, cohort_size, last_validation_date
+            )
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Validation planning error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/explain-changes')
+    def ai_explain_changes(self, request, tenant_slug=None, pk=None):
+        """
+        Explain differences between TAS versions
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/explain-changes/
+        Body: {
+            "old_version": {...},
+            "new_version": {...}
+        }
+        """
+        try:
+            old_version = request.data.get('old_version', {})
+            new_version = request.data.get('new_version', {})
+            
+            service = AIServiceFactory.get_service('evidence')
+            result = service.explain_version_differences(old_version, new_version)
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Version explanation error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/predict-lln-risk')
+    def ai_predict_lln_risk(self, request, tenant_slug=None, pk=None):
+        """
+        Predict LLN support requirements
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/predict-lln-risk/
+        Body: {
+            "cohort_data": {...},
+            "historical_cohorts": [...]
+        }
+        """
+        try:
+            cohort_data = request.data.get('cohort_data', {})
+            historical_cohorts = request.data.get('historical_cohorts', [])
+            
+            service = AIServiceFactory.get_service('quality_analytics')
+            result = service.predict_lln_risk(cohort_data, historical_cohorts)
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"LLN risk prediction error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/completion-risk')
+    def ai_completion_risk(self, request, tenant_slug=None, pk=None):
+        """
+        Analyze completion/withdrawal risk
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/completion-risk/
+        Body: {
+            "clusters": [...],
+            "delivery_schedule": {...}
+        }
+        """
+        try:
+            clusters = request.data.get('clusters', [])
+            delivery_schedule = request.data.get('delivery_schedule', {})
+            
+            service = AIServiceFactory.get_service('quality_analytics')
+            result = service.analyze_completion_risk(clusters, delivery_schedule)
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Completion risk analysis error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/check-consistency')
+    def ai_check_consistency(self, request, tenant_slug=None, pk=None):
+        """
+        Check consistency across TAS, LMS, assessment tools
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/check-consistency/
+        Body: {
+            "tas_data": {...},
+            "lms_data": {...},
+            "assessment_tools": [...]
+        }
+        """
+        try:
+            tas_data = request.data.get('tas_data', {})
+            lms_data = request.data.get('lms_data', {})
+            assessment_tools = request.data.get('assessment_tools', [])
+            
+            service = AIServiceFactory.get_service('quality_analytics')
+            result = service.check_system_consistency(
+                tas_data, lms_data, assessment_tools
+            )
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Consistency check error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], url_path='ai/ask')
+    def ai_ask(self, request, tenant_slug=None, pk=None):
+        """
+        Conversational AI co-pilot - answer inline questions
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/ai/ask/
+        Body: {
+            "question": "Why is this cluster non-compliant?",
+            "context": {...}
+        }
+        """
+        try:
+            question = request.data.get('question', '')
+            context = request.data.get('context', {})
+            
+            if not question:
+                return Response(
+                    {'error': 'question is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            service = AIServiceFactory.get_service('copilot')
+            result = service.answer_inline_question(question, context)
+            
+            return Response(result, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"AI copilot error: {e}")
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

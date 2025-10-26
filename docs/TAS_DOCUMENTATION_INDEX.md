@@ -1,6 +1,6 @@
 # TAS Module - Documentation Index
 
-Complete documentation for the Training and Assessment Strategy (TAS) module's dynamic qualification management system.
+Complete documentation for the Training and Assessment Strategy (TAS) module's dynamic qualification management system and AI integration.
 
 ## 📚 Documentation Structure
 
@@ -24,6 +24,17 @@ Comprehensive documentation for the qualification cache system.
 - Best for: Detailed implementation and maintenance
 - Audience: Developers, database administrators
 
+**[TAS AI Integration Guide](TAS_AI_INTEGRATION.md)** ⭐ NEW  
+Complete AI capabilities documentation across 9 feature areas.
+- AI service architecture
+- 20+ AI-powered API endpoints
+- Feature area guides (Intake, Packaging, Drafting, Compliance, Evidence, Analytics, Co-pilot)
+- Implementation notes and best practices
+- Quick wins to implement first
+- Cost estimates and optimization
+- Best for: Understanding and implementing AI features
+- Audience: Developers, AI engineers, RTO managers
+
 ### 3. Quick Reference
 
 **[TAS Quick Reference](TAS_QUICK_REFERENCE.md)**  
@@ -35,6 +46,17 @@ Fast lookup guide with common commands and code snippets.
 - Currently loaded qualifications table
 - Best for: Daily operations and quick lookups
 - Audience: All technical staff
+
+**[TAS AI Quick Reference](TAS_AI_QUICK_REFERENCE.md)** ⭐ NEW  
+Fast lookup for AI features and API calls.
+- Available AI services table
+- Common API curl commands
+- Python usage examples
+- Common workflows
+- Cost estimates
+- Quick troubleshooting
+- Best for: Using AI features in daily work
+- Audience: All technical staff, RTO content developers
 
 ### 4. Management Commands
 
@@ -53,6 +75,19 @@ Detailed documentation for Django management commands.
 
 #### **Understand the system**
 → Start with [TAS Module README](../apps/control-plane/tas/README.md)
+
+#### **Learn about AI features**
+→ See [TAS AI Integration Guide](TAS_AI_INTEGRATION.md)  
+→ Or [TAS AI Quick Reference](TAS_AI_QUICK_REFERENCE.md) for quick examples
+
+#### **Use AI to check ASQA compliance**
+→ See [AI Quick Reference - Check Compliance](TAS_AI_QUICK_REFERENCE.md#1-check-asqa-compliance-quick-win-1)
+
+#### **Generate assessment blueprints with AI**
+→ See [AI Integration - Assessment Blueprinting](TAS_AI_INTEGRATION.md#generate-assessment-blueprint)
+
+#### **Get AI help with TAS drafting**
+→ See [AI Integration - Content Drafting](TAS_AI_INTEGRATION.md#3-drafting-tas-content)
 
 #### **Add a new qualification**
 → Go to [Quick Reference - Quick Add Qualification](TAS_QUICK_REFERENCE.md#quick-add-qualification)
@@ -99,6 +134,44 @@ Detailed documentation for Django management commands.
   - Management command detailed usage
   - Three methods for adding qualifications
   - Python/SQL query examples
+
+### TAS AI Integration Guide ⭐ NEW
+- **Location:** `docs/TAS_AI_INTEGRATION.md`
+- **Length:** ~2,500 lines
+- **Topics:**
+  - AI service architecture and design
+  - 7 AI service classes with detailed specs
+  - 20+ API endpoints with request/response examples
+  - 9 feature areas:
+    * Intake & Prefill (entity extraction, TGA enrichment, cohort suggestions)
+    * Packaging & Clustering (elective recommendations, unit clustering, timetabling)
+    * Content Drafting (TAS sections, assessment blueprints, resource mapping)
+    * Compliance Guardrails (ASQA checks, trainer scoring, facility assessment, policy drift)
+    * Evidence Pack (minutes summarization, validation planning, version diffs)
+    * Quality & Risk Analytics (LLN prediction, completion risk, consistency checking)
+    * Conversational Co-pilot (inline Q&A, guided prompts)
+  - Implementation notes (model selection, embeddings, vector search)
+  - Safety rails and privacy considerations
+  - 5 quick wins to implement first
+  - Cost estimates and optimization strategies
+  - Testing and performance guidance
+  - Roadmap (4 phases)
+
+### TAS AI Quick Reference ⭐ NEW
+- **Location:** `docs/TAS_AI_QUICK_REFERENCE.md`
+- **Length:** ~500 lines
+- **Topics:**
+  - Quick start code examples
+  - Available services table
+  - 20+ common API curl commands
+  - Python usage examples for all services
+  - 3 complete workflows:
+    * Complete TAS generation with AI
+    * Compliance audit with AI
+    * Evidence pack assembly
+  - Troubleshooting common issues
+  - Cost estimates by feature
+  - Next steps checklist
   - Frontend integration code
   - Maintenance procedures
   - Future enhancements (4 planned features)
