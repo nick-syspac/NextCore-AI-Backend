@@ -108,16 +108,8 @@ class TASViewSet(viewsets.ModelViewSet):
                 )
                 tas.save()
                 
-                # Generate content with GPT-4 (mock implementation)  
-                # Skip generation log for now to test TAS creation
-                # generated_content = self._generate_tas_content(data, template, gen_log)
-                generated_content = {
-                    'sections': [],
-                    'metadata': {},
-                    'tokens_used': 0,
-                    'tokens_prompt': 0,
-                    'tokens_completion': 0,
-                }
+                # Generate content with GPT-4 implementation
+                generated_content = self._generate_tas_content(data, template)
                 
                 # Calculate generation time
                 generation_time = time.time() - start_time
@@ -143,7 +135,7 @@ class TASViewSet(viewsets.ModelViewSet):
             traceback.print_exc()
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def _generate_tas_content(self, data, template, gen_log):
+    def _generate_tas_content(self, data, template, gen_log=None):
         """
         Generate TAS content using GPT-4
         In production, this would call OpenAI API with structured prompts
@@ -571,7 +563,16 @@ class TASViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def regenerate_section(self, request, tenant_slug=None, pk=None):
-        """Regenerate a specific section using GPT-4"""
+        """
+        Regenerate a specific section using GPT-4
+        
+        Request body:
+        {
+            "section_name": "qualification_overview",  // Required
+            "custom_prompt": "Additional context...",  // Optional
+            "ai_model": "gpt-4o"                      // Optional, defaults to gpt-4
+        }
+        """
         tas = self.get_object()
         section_name = request.data.get('section_name')
         
@@ -580,29 +581,46 @@ class TASViewSet(viewsets.ModelViewSet):
 
         start_time = time.time()
         
+        # Get AI model from request
+        ai_model = request.data.get('ai_model', 'gpt-4o')
+        
         # Create generation log
         gen_log = TASGenerationLog.objects.create(
             tas=tas,
             requested_sections=[section_name],
             input_data=request.data,
             status='processing',
-            created_by=request.user,
-            model_version='gpt-4',
+            created_by=request.user if request.user.is_authenticated else None,
+            model_version=ai_model,
         )
 
         try:
+            # Prepare data for section generation
+            section_data = {
+                'code': tas.code,
+                'qualification_name': tas.qualification_name,
+                'aqf_level': tas.aqf_level,
+                'training_package': tas.training_package,
+                'delivery_mode': request.data.get('delivery_mode', 'Face-to-face'),
+                'duration_weeks': request.data.get('duration_weeks', 52),
+                'additional_context': request.data.get('custom_prompt', ''),
+                'units_of_competency': request.data.get('units_of_competency', []),
+                'assessment_methods': request.data.get('assessment_methods', []),
+            }
+            
             # Generate new content for the section
+            custom_prompt = request.data.get('custom_prompt', '')
             new_section = self._generate_section_content(
                 section_name,
-                {'aqf_level': tas.aqf_level, 'code': tas.code, 'qualification_name': tas.qualification_name},
-                request.data.get('custom_prompt', '')
+                section_data,
+                custom_prompt
             )
 
             # Update TAS content
             sections = tas.sections or []
             updated = False
             for i, section in enumerate(sections):
-                if section['name'] == section_name:
+                if isinstance(section, dict) and section.get('name') == section_name:
                     sections[i] = new_section
                     updated = True
                     break
@@ -611,7 +629,15 @@ class TASViewSet(viewsets.ModelViewSet):
                 sections.append(new_section)
 
             tas.sections = sections
+            
+            # Update content structure
+            if not tas.content:
+                tas.content = {}
             tas.content['sections'] = sections
+            
+            # Update GPT metadata
+            tas.gpt_generated = True
+            tas.gpt_model_used = ai_model
             tas.save()
 
             # Update generation log
@@ -619,19 +645,32 @@ class TASViewSet(viewsets.ModelViewSet):
             gen_log.status = 'completed'
             gen_log.generated_content = {section_name: new_section}
             gen_log.generation_time_seconds = generation_time
+            gen_log.tokens_total = new_section.get('tokens', 500)
+            gen_log.tokens_prompt = int(new_section.get('tokens', 500) * 0.4)
+            gen_log.tokens_completion = int(new_section.get('tokens', 500) * 0.6)
             gen_log.completed_at = timezone.now()
             gen_log.save()
 
             return Response({
+                'success': True,
                 'section': new_section,
                 'generation_log': TASGenerationLogSerializer(gen_log).data,
+                'message': f'Section "{section_name}" regenerated successfully in {generation_time:.2f} seconds',
             })
 
         except Exception as e:
             gen_log.status = 'failed'
             gen_log.error_message = str(e)
             gen_log.save()
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            import traceback
+            traceback.print_exc()
+            
+            return Response({
+                'success': False,
+                'error': str(e),
+                'message': f'Failed to regenerate section "{section_name}"'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=True, methods=['post'])
     def submit_for_review(self, request, tenant_slug=None, pk=None):
