@@ -770,3 +770,57 @@ class EvidencePack(models.Model):
 
     def __str__(self):
         return f"Evidence Pack - {self.course_tas.qualification_code}"
+
+
+class QualificationCache(models.Model):
+    """
+    Cached qualification and units data from training.gov.au
+    Populated via management command and refreshed periodically
+    """
+    qualification_code = models.CharField(max_length=20, unique=True, db_index=True)
+    qualification_title = models.CharField(max_length=500)
+    training_package = models.CharField(max_length=20, blank=True)
+    aqf_level = models.CharField(max_length=50, blank=True)
+    
+    # Packaging rules and structure
+    packaging_rules = models.TextField(blank=True)
+    has_groupings = models.BooleanField(default=False)
+    
+    # Units data (stored as JSON)
+    groupings = models.JSONField(
+        default=list,
+        help_text="List of groupings with units: [{name, type, required, units: [{code, title, type}]}]"
+    )
+    
+    # Metadata
+    source = models.CharField(
+        max_length=50, 
+        default='training.gov.au',
+        help_text="Data source (training.gov.au, manual, etc.)"
+    )
+    last_updated = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    release_date = models.DateField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'tas_qualification_cache'
+        ordering = ['qualification_code']
+        verbose_name = 'Qualification Cache'
+        verbose_name_plural = 'Qualification Cache'
+        indexes = [
+            models.Index(fields=['qualification_code', 'is_active']),
+            models.Index(fields=['training_package']),
+        ]
+    
+    def __str__(self):
+        return f"{self.qualification_code} - {self.qualification_title}"
+    
+    def get_units_data(self):
+        """Return the units data structure for API responses"""
+        return {
+            'qualification_code': self.qualification_code,
+            'qualification_title': self.qualification_title,
+            'packaging_rules': self.packaging_rules,
+            'has_groupings': self.has_groupings,
+            'groupings': self.groupings
+        }

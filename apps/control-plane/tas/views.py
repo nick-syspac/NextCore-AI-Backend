@@ -7,7 +7,7 @@ from django.db import transaction
 import time
 import json
 
-from .models import TAS, TASTemplate, TASVersion, TASGenerationLog
+from .models import TAS, TASTemplate, TASVersion, TASGenerationLog, QualificationCache
 from .serializers import (
     TASSerializer, TASTemplateSerializer, TASVersionSerializer,
     TASGenerationLogSerializer, TASGenerateRequestSerializer,
@@ -883,9 +883,25 @@ class TASViewSet(viewsets.ModelViewSet):
     def _get_units_for_qualification(self, qual_code):
         """
         Get units of competency for a qualification
-        Currently uses curated data. In production, this would be cached data
-        from training.gov.au with periodic updates via management command.
+        First tries database cache, then falls back to mock data
         """
+        try:
+            # Try to get from database cache
+            cached_qual = QualificationCache.objects.filter(
+                qualification_code=qual_code,
+                is_active=True
+            ).first()
+            
+            if cached_qual:
+                logger.info(f"✅ Found cached units for {qual_code}")
+                return cached_qual.get_units_data()
+            
+            logger.warning(f"⚠️ No cached data for {qual_code}, using fallback data")
+            
+        except Exception as e:
+            logger.error(f"❌ Error fetching from cache: {str(e)}")
+        
+        # Fallback to mock data for known qualifications
         return self._get_mock_units_data(qual_code)
     
     def _get_mock_units_data(self, qual_code):
