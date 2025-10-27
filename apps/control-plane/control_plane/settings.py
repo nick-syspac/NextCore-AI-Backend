@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "industry_currency",
     "competency_gap",
     "email_assistant",
+    "micro_credential",
 ]
 
 MIDDLEWARE = [

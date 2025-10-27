@@ -57,4 +57,5 @@ urlpatterns = [
     path("api/industry-currency/", include("industry_currency.urls")),
     path("api/competency-gap/", include("competency_gap.urls")),
     path("api/email-assistant/", include("email_assistant.urls")),
+    path("api/tenants/<slug:tenant_slug>/micro-credentials/", include("micro_credential.urls")),
 ]
