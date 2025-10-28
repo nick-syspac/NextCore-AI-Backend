@@ -2,6 +2,133 @@ from django.db import models
 from django.contrib.auth.models import User
 from tenants.models import Tenant
 from django.core.validators import MinValueValidator, MaxValueValidator
+from pgvector.django import VectorField
+import hashlib
+
+
+class Document(models.Model):
+    """
+    Uploaded policy documents with versioning support
+    """
+    SOURCE_TYPES = [
+        ('pdf', 'PDF'),
+        ('docx', 'Word Document'),
+        ('html', 'HTML'),
+        ('txt', 'Plain Text'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending Upload'),
+        ('uploading', 'Uploading'),
+        ('processing', 'Processing'),
+        ('ready', 'Ready'),
+        ('failed', 'Failed'),
+        ('archived', 'Archived'),
+    ]
+
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name='policy_documents')
+    
+    title = models.CharField(max_length=500)
+    source_type = models.CharField(max_length=20, choices=SOURCE_TYPES)
+    s3_uri = models.CharField(max_length=1000, help_text="S3 path to original file")
+    sha256 = models.CharField(max_length=64, db_index=True, help_text="File hash for deduplication")
+    
+    language = models.CharField(max_length=10, default='en')
+    pages = models.IntegerField(null=True, blank=True)
+    word_count = models.IntegerField(null=True, blank=True)
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    error_message = models.TextField(blank=True)
+    
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='uploaded_documents')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'policy_documents'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['tenant', 'status']),
+            models.Index(fields=['sha256']),
+        ]
+
+    def __str__(self):
+        return f"{self.title} ({self.source_type})"
+
+
+class DocumentVersion(models.Model):
+    """
+    Version history for documents
+    """
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='versions')
+    version_no = models.IntegerField()
+    s3_uri = models.CharField(max_length=1000)
+    sha256 = models.CharField(max_length=64, db_index=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'document_versions'
+        ordering = ['-version_no']
+        unique_together = [['document', 'version_no']]
+
+    def __str__(self):
+        return f"{self.document.title} v{self.version_no}"
+
+
+class DocumentChunk(models.Model):
+    """
+    Text chunks from documents for embedding and comparison
+    """
+    document_version = models.ForeignKey(DocumentVersion, on_delete=models.CASCADE, related_name='chunks')
+    chunk_idx = models.IntegerField(help_text="Sequential index of chunk")
+    
+    text = models.TextField()
+    tokens = models.IntegerField(help_text="Token count for this chunk")
+    section_path = models.CharField(max_length=500, blank=True, help_text="Heading path, e.g., '1. Introduction > 1.1 Purpose'")
+    
+    page_from = models.IntegerField(null=True, blank=True)
+    page_to = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'document_chunks'
+        ordering = ['document_version', 'chunk_idx']
+        indexes = [
+            models.Index(fields=['document_version', 'chunk_idx']),
+        ]
+
+    def __str__(self):
+        return f"{self.document_version} chunk {self.chunk_idx}"
+
+
+class AsqaClausePack(models.Model):
+    """
+    Versioned packs of ASQA clauses (global or tenant-specific)
+    """
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),
+        ('review', 'Under Review'),
+        ('published', 'Published'),
+        ('archived', 'Archived'),
+    ]
+
+    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, null=True, blank=True, 
+                               help_text="Null for global ASQA packs")
+    name = models.CharField(max_length=200)
+    version = models.CharField(max_length=50)
+    description = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    
+    published_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'asqa_clause_packs'
+        ordering = ['-published_at']
+        unique_together = [['tenant', 'name', 'version']]
+
+    def __str__(self):
+        return f"{self.name} v{self.version}"
 
 
 class ASQAStandard(models.Model):
