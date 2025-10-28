@@ -1,12 +1,13 @@
+from typing import Optional
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db.models import Count, Q, Prefetch
-import re
-from datetime import datetime
 
 from .models import Evidence, ClauseEvidence, AuditReport, AuditReportClause
 from .serializers import (
@@ -15,105 +16,125 @@ from .serializers import (
     EvidenceUploadSerializer, ClauseEvidenceGapSerializer
 )
 from policy_comparator.models import ASQAClause, ASQAStandard
+from tenants.models import Tenant
+
+from .services import auto_tag_clauses, detect_ner_entities, extract_text_from_file
+from .tasks import process_evidence_document
 
 
-class EvidenceViewSet(viewsets.ModelViewSet):
+class TenantScopedViewSetMixin:
+    """Common helpers for retrieving the tenant from request context."""
+
+    _tenant: Optional[Tenant] = None
+
+    def get_tenant(self) -> Tenant:
+        if self._tenant:
+            return self._tenant
+
+        tenant_slug = self.kwargs.get("tenant_slug")
+        tenant_id = self.kwargs.get("tenant_id") or getattr(self.request, "tenant_id", None)
+
+        if tenant_slug:
+            tenant = get_object_or_404(Tenant, slug=tenant_slug)
+        elif tenant_id:
+            tenant = get_object_or_404(Tenant, id=tenant_id)
+        else:
+            raise NotFound("Tenant context is required for this endpoint.")
+
+        self._tenant = tenant
+        return tenant
+
+
+class EvidenceViewSet(TenantScopedViewSetMixin, viewsets.ModelViewSet):
     """
     ViewSet for evidence document management with NER auto-tagging
     """
     serializer_class = EvidenceSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
+    filterset_fields = ["status", "evidence_type"]
+    search_fields = ["evidence_number", "title", "description"]
+    ordering_fields = ["uploaded_at", "evidence_date", "file_size"]
+    ordering = ["-uploaded_at"]
     
     def get_queryset(self):
-        tenant_id = self.kwargs.get('tenant_id')
-        return Evidence.objects.filter(tenant_id=tenant_id).select_related(
+        tenant = self.get_tenant()
+        return Evidence.objects.filter(tenant=tenant).select_related(
             'uploaded_by', 'reviewed_by'
         ).prefetch_related('auto_tagged_clauses')
     
     @action(detail=False, methods=['post'], parser_classes=[MultiPartParser, FormParser])
-    def upload(self, request, tenant_id=None):
-        """
-        Upload evidence file and process with NER for auto-tagging
-        """
+    def upload(self, request, _tenant_id=None):
+        """Upload evidence file and queue background processing."""
+        tenant = self.get_tenant()
         serializer = EvidenceUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
-        # Create evidence record
+
+        auto_tag = serializer.validated_data.get('auto_tag', True)
+        uploaded_file = serializer.validated_data['file']
+        file_size = getattr(uploaded_file, 'size', None)
+
         evidence = Evidence.objects.create(
-            tenant_id=tenant_id,
+            tenant=tenant,
             evidence_number=serializer.validated_data['evidence_number'],
             title=serializer.validated_data['title'],
             description=serializer.validated_data.get('description', ''),
             evidence_type=serializer.validated_data['evidence_type'],
-            file=serializer.validated_data['file'],
+            file=uploaded_file,
+            file_size=file_size,
             evidence_date=serializer.validated_data['evidence_date'],
             tags=serializer.validated_data.get('tags', []),
             uploaded_by=request.user,
-            status='uploaded'
+            status='processing' if auto_tag else 'uploaded'
         )
-        
-        # Extract text from file
-        extracted_text = self._extract_text_from_file(evidence.file)
-        evidence.extracted_text = extracted_text
-        evidence.save()
-        
-        # Process NER if auto-tag is enabled
-        if serializer.validated_data.get('auto_tag', True) and extracted_text:
-            evidence.status = 'processing'
-            evidence.save()
-            
-            # Run NER processing
-            ner_entities = self._process_ner(extracted_text)
-            evidence.ner_entities = ner_entities
-            evidence.ner_processed_at = timezone.now()
-            
-            # Auto-tag clauses based on NER + rules
-            auto_tagged_count = self._auto_tag_clauses(evidence, extracted_text, ner_entities)
-            
-            evidence.status = 'tagged' if auto_tagged_count > 0 else 'uploaded'
-            evidence.save()
-        
-        return Response(
-            EvidenceSerializer(evidence, context={'request': request}).data,
-            status=status.HTTP_201_CREATED
-        )
+
+        # Kick off asynchronous processing (runs synchronously in eager mode during tests)
+        process_evidence_document.delay(evidence.id, auto_tag=auto_tag)
+
+        serializer_context = {'request': request}
+        response_payload = EvidenceSerializer(evidence, context=serializer_context).data
+        response_payload['processing'] = auto_tag
+
+        return Response(response_payload, status=status.HTTP_201_CREATED)
     
     @action(detail=True, methods=['post'])
-    def process_ner(self, request, tenant_id=None, pk=None):
-        """
-        Manually trigger NER processing and auto-tagging for an evidence document
-        """
+    def process_ner(self, request, _tenant_id=None, pk=None):
+        """Manually trigger NER processing and auto-tagging for an evidence document."""
         evidence = self.get_object()
-        
-        if not evidence.extracted_text:
+
+        extracted_text = evidence.extracted_text or extract_text_from_file(evidence)
+        if not extracted_text:
             return Response(
-                {'error': 'No text extracted from file. Cannot process NER.'},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "No text available for NER processing."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
-        evidence.status = 'processing'
-        evidence.save()
-        
-        # Run NER
-        ner_entities = self._process_ner(evidence.extracted_text)
+
+        evidence.extracted_text = extracted_text
+        evidence.status = "processing"
+        evidence.save(update_fields=["extracted_text", "status"])
+
+        ner_entities = detect_ner_entities(extracted_text)
         evidence.ner_entities = ner_entities
         evidence.ner_processed_at = timezone.now()
-        
-        # Auto-tag clauses
-        auto_tagged_count = self._auto_tag_clauses(evidence, evidence.extracted_text, ner_entities)
-        
-        evidence.status = 'tagged' if auto_tagged_count > 0 else 'uploaded'
-        evidence.save()
-        
+
+        auto_tagged_count = auto_tag_clauses(evidence, extracted_text, ner_entities)
+
+        evidence.status = "tagged" if auto_tagged_count > 0 else "uploaded"
+        evidence.save(update_fields=["ner_entities", "ner_processed_at", "status"])
+
+        payload = EvidenceSerializer(evidence, context={'request': request}).data
+
         return Response({
-            'message': f'NER processing complete. {len(ner_entities)} entities found. {auto_tagged_count} clauses auto-tagged.',
-            'ner_entities': ner_entities,
-            'auto_tagged_count': auto_tagged_count,
-            'evidence': EvidenceSerializer(evidence, context={'request': request}).data
+            "message": (
+                f"NER processing complete. {len(ner_entities)} entities found. "
+                f"{auto_tagged_count} clauses auto-tagged."
+            ),
+            "ner_entities": ner_entities,
+            "auto_tagged_count": auto_tagged_count,
+            "evidence": payload,
         })
     
     @action(detail=True, methods=['get'])
-    def tagged_clauses(self, request, tenant_id=None, pk=None):
+    def tagged_clauses(self, request, _tenant_id=None, pk=None):
         """
         Get all clauses tagged to this evidence with mapping details
         """
@@ -126,7 +147,7 @@ class EvidenceViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     @action(detail=True, methods=['post'])
-    def verify_tagging(self, request, tenant_id=None, pk=None):
+    def verify_tagging(self, request, _tenant_id=None, pk=None):
         """
         Verify/approve auto-tagged clauses for evidence
         """
@@ -153,237 +174,28 @@ class EvidenceViewSet(viewsets.ModelViewSet):
             'evidence': EvidenceSerializer(evidence, context={'request': request}).data
         })
     
-    def _extract_text_from_file(self, file):
-        """
-        Extract text from uploaded file (PDF, DOCX, TXT, etc.)
-        TODO: Implement actual text extraction using libraries like PyPDF2, python-docx
-        """
-        # Placeholder - in production, use libraries for extraction
-        file_ext = file.name.split('.')[-1].lower()
-        
-        if file_ext == 'txt':
-            try:
-                return file.read().decode('utf-8')
-            except:
-                return ""
-        
-        # For other formats, return placeholder
-        # In production, implement:
-        # - PDF: PyPDF2, pdfplumber
-        # - DOCX: python-docx
-        # - Images: pytesseract (OCR)
-        return f"[Text extraction placeholder for {file_ext} file: {file.name}]"
-    
-    def _process_ner(self, text):
-        """
-        Process Named Entity Recognition on text.
-        Uses simple regex patterns for now - in production, use spaCy or similar.
-        
-        Entity types:
-        - PERSON: Names of people
-        - ORG: Organizations, RTOs
-        - DATE: Dates
-        - QUALIFICATION: Qualifications, certificates
-        - STANDARD: ASQA standard references
-        - CLAUSE: Clause references
-        - POLICY: Policy references
-        """
-        entities = []
-        
-        # STANDARD references (e.g., "Standard 1", "SNR 2.1")
-        standard_pattern = r'\b(?:Standard|SNR|Std\.?)\s+(\d+(?:\.\d+)?)\b'
-        for match in re.finditer(standard_pattern, text, re.IGNORECASE):
-            entities.append({
-                'entity': match.group(0),
-                'type': 'STANDARD',
-                'start': match.start(),
-                'end': match.end(),
-                'value': match.group(1)
-            })
-        
-        # CLAUSE references (e.g., "Clause 1.1", "1.5.2")
-        clause_pattern = r'\b(?:Clause\s+)?(\d+\.\d+(?:\.\d+)?)\b'
-        for match in re.finditer(clause_pattern, text):
-            entities.append({
-                'entity': match.group(0),
-                'type': 'CLAUSE',
-                'start': match.start(),
-                'end': match.end(),
-                'value': match.group(1)
-            })
-        
-        # DATE patterns (e.g., "01/01/2024", "January 2024")
-        date_patterns = [
-            r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b',
-            r'\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}\b'
-        ]
-        for pattern in date_patterns:
-            for match in re.finditer(pattern, text, re.IGNORECASE):
-                entities.append({
-                    'entity': match.group(0),
-                    'type': 'DATE',
-                    'start': match.start(),
-                    'end': match.end()
-                })
-        
-        # QUALIFICATION codes (e.g., "TAE40116", "BSB50420")
-        qual_pattern = r'\b[A-Z]{3}\d{5}\b'
-        for match in re.finditer(qual_pattern, text):
-            entities.append({
-                'entity': match.group(0),
-                'type': 'QUALIFICATION',
-                'start': match.start(),
-                'end': match.end()
-            })
-        
-        # ORG - Common RTO-related organizations
-        org_keywords = ['ASQA', 'RTO', 'Training Organisation', 'VET', 'AQF', 'TGA']
-        for keyword in org_keywords:
-            for match in re.finditer(r'\b' + re.escape(keyword) + r'\b', text, re.IGNORECASE):
-                entities.append({
-                    'entity': match.group(0),
-                    'type': 'ORG',
-                    'start': match.start(),
-                    'end': match.end()
-                })
-        
-        # POLICY references
-        policy_pattern = r'\b(?:Policy|Procedure)\s+([A-Z0-9-]+)\b'
-        for match in re.finditer(policy_pattern, text, re.IGNORECASE):
-            entities.append({
-                'entity': match.group(0),
-                'type': 'POLICY',
-                'start': match.start(),
-                'end': match.end(),
-                'value': match.group(1)
-            })
-        
-        # Remove duplicates (keep first occurrence)
-        seen = set()
-        unique_entities = []
-        for entity in entities:
-            key = (entity['entity'], entity['type'], entity['start'])
-            if key not in seen:
-                seen.add(key)
-                unique_entities.append(entity)
-        
-        return unique_entities
-    
-    def _auto_tag_clauses(self, evidence, text, ner_entities):
-        """
-        Auto-tag ASQA clauses based on NER entities and rule-based matching
-        """
-        text_lower = text.lower()
-        auto_tagged_count = 0
-        
-        # Extract entity values for matching
-        standard_refs = [e['value'] for e in ner_entities if e['type'] == 'STANDARD' and 'value' in e]
-        clause_refs = [e['value'] for e in ner_entities if e['type'] == 'CLAUSE' and 'value' in e]
-        
-        # Get all ASQA clauses
-        all_clauses = ASQAClause.objects.select_related('standard').all()
-        
-        for clause in all_clauses:
-            mapping_type = None
-            confidence_score = 0.0
-            matched_entities = []
-            matched_keywords = []
-            rule_name = None
-            
-            # Rule 1: Direct clause number reference
-            clause_num = clause.clause_number
-            if clause_num in clause_refs or f"clause {clause_num}" in text_lower:
-                mapping_type = 'auto_rule'
-                confidence_score = 0.95
-                rule_name = 'direct_clause_reference'
-                matched_entities = [e for e in ner_entities if e.get('value') == clause_num]
-            
-            # Rule 2: Standard reference + keyword matching
-            elif not mapping_type:
-                standard_num = clause.standard.standard_number
-                if standard_num in standard_refs or f"standard {standard_num}" in text_lower:
-                    # Check keyword overlap
-                    clause_keywords = clause.keywords or []
-                    keywords_found = [kw for kw in clause_keywords if kw.lower() in text_lower]
-                    
-                    if len(keywords_found) >= 2:  # At least 2 keywords match
-                        mapping_type = 'auto_ner'
-                        confidence_score = min(0.7 + (len(keywords_found) * 0.05), 0.9)
-                        rule_name = 'standard_reference_with_keywords'
-                        matched_keywords = keywords_found
-                        matched_entities = [e for e in ner_entities if e.get('value') == standard_num]
-            
-            # Rule 3: High keyword density (without standard reference)
-            if not mapping_type:
-                clause_keywords = clause.keywords or []
-                if clause_keywords:
-                    keywords_found = [kw for kw in clause_keywords if kw.lower() in text_lower]
-                    keyword_ratio = len(keywords_found) / len(clause_keywords)
-                    
-                    if keyword_ratio >= 0.6:  # 60% of keywords present
-                        mapping_type = 'auto_rule'
-                        confidence_score = min(0.5 + (keyword_ratio * 0.3), 0.8)
-                        rule_name = 'high_keyword_density'
-                        matched_keywords = keywords_found
-            
-            # Rule 4: Title/topic similarity
-            if not mapping_type and clause.title:
-                title_words = set(clause.title.lower().split())
-                title_words = {w for w in title_words if len(w) > 3}  # Filter short words
-                
-                if title_words:
-                    title_matches = [w for w in title_words if w in text_lower]
-                    title_ratio = len(title_matches) / len(title_words)
-                    
-                    if title_ratio >= 0.5:  # 50% of title words present
-                        mapping_type = 'suggested'
-                        confidence_score = min(0.4 + (title_ratio * 0.2), 0.6)
-                        rule_name = 'title_similarity'
-                        matched_keywords = title_matches
-            
-            # Create mapping if any rule matched
-            if mapping_type and confidence_score >= 0.4:  # Minimum confidence threshold
-                ClauseEvidence.objects.get_or_create(
-                    asqa_clause=clause,
-                    evidence=evidence,
-                    defaults={
-                        'mapping_type': mapping_type,
-                        'confidence_score': confidence_score,
-                        'matched_entities': matched_entities,
-                        'matched_keywords': matched_keywords,
-                        'rule_name': rule_name,
-                        'rule_metadata': {
-                            'processed_at': timezone.now().isoformat(),
-                            'text_length': len(text),
-                            'entity_count': len(ner_entities)
-                        }
-                    }
-                )
-                auto_tagged_count += 1
-        
-        return auto_tagged_count
 
-
-class ClauseEvidenceViewSet(viewsets.ModelViewSet):
+class ClauseEvidenceViewSet(TenantScopedViewSetMixin, viewsets.ModelViewSet):
     """
     ViewSet for managing clause-evidence mappings
     """
     serializer_class = ClauseEvidenceSerializer
     
     def get_queryset(self):
-        tenant_id = self.kwargs.get('tenant_id')
+        tenant = self.get_tenant()
         return ClauseEvidence.objects.filter(
-            evidence__tenant_id=tenant_id
+            evidence__tenant=tenant
         ).select_related(
             'asqa_clause', 'asqa_clause__standard',
             'evidence', 'verified_by'
         )
     
     @action(detail=False, methods=['get'])
-    def gaps(self, request, tenant_id=None):
+    def gaps(self, request, _tenant_id=None):
         """
         Identify clauses with insufficient evidence (gap analysis)
         """
+        tenant = self.get_tenant()
         standard_ids = request.query_params.getlist('standard_ids')
         
         # Get clauses for specified standards
@@ -396,13 +208,13 @@ class ClauseEvidenceViewSet(viewsets.ModelViewSet):
             # Count evidence for this clause
             evidence_count = ClauseEvidence.objects.filter(
                 asqa_clause=clause,
-                evidence__tenant_id=tenant_id,
+                evidence__tenant=tenant,
                 evidence__status__in=['tagged', 'reviewed', 'approved']
             ).count()
             
             verified_count = ClauseEvidence.objects.filter(
                 asqa_clause=clause,
-                evidence__tenant_id=tenant_id,
+                evidence__tenant=tenant,
                 evidence__status__in=['tagged', 'reviewed', 'approved'],
                 is_verified=True
             ).count()
@@ -450,7 +262,7 @@ class ClauseEvidenceViewSet(viewsets.ModelViewSet):
         })
 
 
-class AuditReportViewSet(viewsets.ModelViewSet):
+class AuditReportViewSet(TenantScopedViewSetMixin, viewsets.ModelViewSet):
     """
     ViewSet for audit report management
     """
@@ -461,16 +273,15 @@ class AuditReportViewSet(viewsets.ModelViewSet):
         return AuditReportSerializer
     
     def get_queryset(self):
-        tenant_id = self.kwargs.get('tenant_id')
-        return AuditReport.objects.filter(tenant_id=tenant_id).prefetch_related(
+        tenant = self.get_tenant()
+        return AuditReport.objects.filter(tenant=tenant).prefetch_related(
             'asqa_standards',
             Prefetch('clause_entries', queryset=AuditReportClause.objects.select_related('asqa_clause'))
         )
     
     def perform_create(self, serializer):
-        tenant_id = self.kwargs.get('tenant_id')
         audit_report = serializer.save(
-            tenant_id=tenant_id,
+            tenant=self.get_tenant(),
             created_by=self.request.user
         )
         
@@ -481,7 +292,7 @@ class AuditReportViewSet(viewsets.ModelViewSet):
         audit_report.calculate_metrics()
     
     @action(detail=True, methods=['post'])
-    def generate_report(self, request, tenant_id=None, pk=None):
+    def generate_report(self, request, _tenant_id=None, pk=None):
         """
         Generate clause-by-clause audit report with evidence mapping
         """
@@ -499,7 +310,7 @@ class AuditReportViewSet(viewsets.ModelViewSet):
         )
     
     @action(detail=True, methods=['post'])
-    def submit(self, request, tenant_id=None, pk=None):
+    def submit(self, request, _tenant_id=None, pk=None):
         """
         Submit audit report (mark as submitted to ASQA)
         """
