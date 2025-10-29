@@ -5,6 +5,37 @@ from datetime import timedelta
 
 User = get_user_model()
 
+# Import extended CIR models
+from .models_cir import (
+    ActionStep,
+    Comment,
+    Attachment,
+    Verification,
+    ClauseLink,
+    SLAPolicy,
+    KPISnapshot,
+    TaxonomyLabel,
+    AIRun,
+    Embedding,
+)
+
+__all__ = [
+    'ImprovementCategory',
+    'ImprovementAction',
+    'ActionTracking',
+    'ImprovementReview',
+    'ActionStep',
+    'Comment',
+    'Attachment',
+    'Verification',
+    'ClauseLink',
+    'SLAPolicy',
+    'KPISnapshot',
+    'TaxonomyLabel',
+    'AIRun',
+    'Embedding',
+]
+
 
 class ImprovementCategory(models.Model):
     """
