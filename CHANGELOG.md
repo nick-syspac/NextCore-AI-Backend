@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.1...v1.0.2) (2025-11-01)
+
+
+### Bug Fixes
+
+* update Django version and improve pip installation in Dockerfiles ([8db4de3](https://github.com/nick-syspac/NextCore-AI-Backend/commit/8db4de3bb484480db2a96da7acaed782768e7ee0))
+
 ## [1.0.1](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.0...v1.0.1) (2025-11-01)
 
 
