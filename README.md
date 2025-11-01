@@ -1,86 +1,108 @@
-# NextCore AI Cloud - RTO SaaS Platform
+# NextCore AI Backend
 
-[![CI Status](https://github.com/nick-syspac/NextCore-AI-Cloud/workflows/CI%20(Python)/badge.svg)](https://github.com/nick-syspac/NextCore-AI-Cloud/actions)
+Production-ready backend services for the NextCore AI RTO SaaS platform.
+
+[![CI Status](https://github.com/nick-syspac/NextCore-AI-Backend/workflows/CI%20(Python)/badge.svg)](https://github.com/nick-syspac/NextCore-AI-Backend/actions)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-This is a production-ready **monorepo** for an RTO-focused SaaS platform. It's designed for:
+## 🏗️ Architecture
 
-- 🏢 **Django/DRF Control Plane** - Tenant provisioning, lifecycle, RBAC, billing, audit logging
-- 🤖 **FastAPI AI Gateway** - Model routing, usage metering, rate limiting, multi-provider support
-- 🌐 **Next.js Web Portal** - Modern tenant web interface (coming soon)
-- ⚙️ **Celery Workers** - Background jobs, emails, ETL, scheduled tasks
-- 🏗️ **Infrastructure as Code** - Terraform-managed AWS infra with GitHub OIDC
-- ☸️ **Kubernetes Ready** - Helm charts for containerized deployments
-- 📋 **Compliance Built-in** - Audit hooks for ASQA/RTO Standards
+This repository contains three main services:
+
+- 🏢 **Control Plane** (Django/DRF) - Multi-tenant API, RBAC, audit logging, 20+ feature modules
+- 🤖 **AI Gateway** (FastAPI) - AI model routing, usage metering, rate limiting
+- ⚙️ **Worker** (Celery) - Background jobs, emails, ETL, scheduled tasks
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - Docker & Docker Compose
-- Python 3.11+ (for local development)
-- Make (optional but recommended)
+- Python 3.11+
+- PostgreSQL 16 with pgvector extension
+- Redis 7
 
 ### Setup
 
-1. **Clone and configure:**
-
 ```bash
-git clone https://github.com/nick-syspac/NextCore-AI-Cloud.git
-cd NextCore-AI-Cloud
+# Clone repository
+git clone https://github.com/nick-syspac/NextCore-AI-Backend.git
+cd NextCore-AI-Backend
+
+# Configure environment
 cp .env.example .env
 # Edit .env with your configuration
-```
 
-2. **Start services:**
-
-```bash
+# Start all services
 make up
-```
 
-3. **Run migrations:**
-
-```bash
+# Run migrations
 make migrate
-```
 
-4. **Create superuser:**
-
-```bash
+# Create superuser
 make createsuperuser
 ```
 
-5. **Access services:**
+### Access Services
 
-- Control Plane: http://localhost:8000
-- Control Plane Admin: http://localhost:8000/admin
-- AI Gateway: http://localhost:8080
-- MinIO Console: http://localhost:9001
+- **Control Plane API**: http://localhost:8000
+- **Control Plane Admin**: http://localhost:8000/admin
+- **AI Gateway**: http://localhost:8080
+- **API Documentation**: http://localhost:8000/api/schema/swagger-ui/
 
 ## 📁 Project Structure
 
 ```
-NextCore-AI-Cloud/
+NextCore-AI-Backend/
 ├── apps/
-│   ├── control-plane/      # Django REST API for tenant & user management
-│   ├── ai-gateway/          # FastAPI gateway for AI model routing
-│   ├── worker/              # Celery background workers
-│   └── web-portal/          # Next.js frontend (planned)
+│   ├── control-plane/          # Django REST API
+│   │   ├── adaptive_pathway/   # Adaptive learning pathways
+│   │   ├── assessment_builder/ # Assessment creation tools
+│   │   ├── audit/              # Audit logging with blockchain
+│   │   ├── audit_assistant/    # AI-powered audit assistance
+│   │   ├── authenticity_check/ # Student work verification
+│   │   ├── auto_marker/        # Automated marking
+│   │   ├── competency_gap/     # Gap analysis
+│   │   ├── continuous_improvement/ # CIR system
+│   │   ├── email_assistant/    # Email automation
+│   │   ├── engagement_heatmap/ # Student engagement tracking
+│   │   ├── evidence_mapper/    # Evidence mapping
+│   │   ├── feedback_assistant/ # Feedback generation
+│   │   ├── funding_eligibility/# Eligibility checking with rules engine
+│   │   ├── industry_currency/  # Industry currency tracking
+│   │   ├── integrations/       # External system integrations
+│   │   ├── intervention_tracker/ # Student interventions
+│   │   ├── message_assistant/  # Messaging automation
+│   │   ├── moderation_tool/    # Content moderation
+│   │   ├── pd_tracker/         # Professional development
+│   │   ├── policy_comparator/  # Policy comparison with vector search
+│   │   ├── risk_engine/        # Risk assessment
+│   │   ├── rubric_generator/   # Rubric creation
+│   │   ├── study_coach/        # Student coaching
+│   │   ├── tas/                # Training & Assessment System
+│   │   ├── tenants/            # Multi-tenancy
+│   │   ├── trainer_diary/      # Trainer activity logs
+│   │   └── users/              # User management
+│   ├── ai-gateway/             # FastAPI AI routing
+│   └── worker/                 # Celery workers
 ├── libs/
-│   ├── common-py/           # Shared Python utilities
-│   └── observability/       # Logging, metrics, tracing
+│   ├── common-py/              # Shared Python utilities
+│   └── observability/          # Logging, metrics, tracing
 ├── infra/
-│   └── terraform/           # Infrastructure as Code
+│   └── terraform/              # Infrastructure as Code
 ├── kubernetes/
-│   ├── base/                # Base Kubernetes configs
-│   └── charts/              # Helm charts
+│   ├── base/                   # Base Kubernetes configs
+│   └── charts/                 # Helm charts
 ├── docs/
-│   ├── architecture/        # Architecture Decision Records
-│   ├── compliance/          # Compliance documentation
-│   └── runbooks/            # Operational runbooks
-└── db/
-    ├── migrations/          # Database migration scripts
-    └── seeds/               # Seed data
+│   ├── architecture/           # Architecture Decision Records
+│   ├── compliance/             # Compliance documentation
+│   └── runbooks/               # Operational runbooks
+├── db/
+│   ├── migrations/             # Database migrations
+│   └── seeds/                  # Seed data
+├── docker-compose.yml
+├── Makefile
+└── pytest.ini
 ```
 
 ## 🛠️ Development
@@ -107,84 +129,62 @@ make clean             # Clean temporary files
 # Run all tests with coverage
 make test
 
-# Run fast tests (no coverage)
-make test-fast
-
-# Run specific test file
+# Run specific app tests
 cd apps/control-plane
-pytest audit/tests.py -v
+pytest funding_eligibility/tests.py -v
+
+# Run with coverage report
+pytest --cov=. --cov-report=html
 ```
 
 ### Code Quality
 
 ```bash
-# Format code
-make format
-
-# Run linters
-make lint
-
-# Fix linting issues
-make lint-fix
-
-# Type checking
-make typecheck
-
-# Security checks
-make security
+make format      # Format with black
+make lint        # Run flake8 and mypy
+make typecheck   # Type checking only
+make security    # Security checks with bandit
 ```
 
-## 🏗️ Architecture
+## 🎯 Key Features
 
 ### Control Plane (Django)
 
-**Key Features:**
-- Multi-tenant architecture with tenant isolation
-- Role-based access control (RBAC)
-- Audit logging with blockchain-inspired chain verification
-- RESTful API with token authentication
-- PostgreSQL database with connection pooling
-- Redis caching and session management
+- ✅ Multi-tenant architecture with tenant isolation
+- ✅ 20+ feature modules for RTO compliance
+- ✅ Funding eligibility with JSONLogic rules engine
+- ✅ Audit logging with blockchain-inspired chain verification
+- ✅ Training & Assessment System (TAS)
+- ✅ AI-powered assistants (email, feedback, messages)
+- ✅ Assessment builder and auto-marker
+- ✅ Policy comparison with pgvector semantic search
+- ✅ RESTful API with token authentication
+- ✅ PostgreSQL with pgvector extension
+- ✅ Redis caching and session management
 
-**API Endpoints:**
-- `/api/auth/token/` - Get authentication token
-- `/api/tenants/` - Tenant management
-- `/api/tenant-users/` - User-tenant relationships
-- `/api/api-keys/` - API key management
-- `/api/audit/events/` - Audit log access
-- `/api/audit/verify/` - Audit chain verification
+**API Endpoints**: `/api/schema/swagger-ui/` for full documentation
 
 ### AI Gateway (FastAPI)
 
-**Key Features:**
-- Multi-provider AI model routing (OpenAI, Anthropic)
-- Real-time usage metering and token counting
-- Rate limiting per tenant
-- Request/response logging
-- Async/await for high performance
-- Redis-based caching and metrics
-
-**API Endpoints:**
-- `/v1/chat/completions` - Chat completion proxy
-- `/metrics/{tenant_id}` - Usage metrics
-- `/health` - Health check
+- ✅ Multi-provider AI model routing (OpenAI, Anthropic)
+- ✅ Real-time usage metering and token counting
+- ✅ Per-tenant rate limiting
+- ✅ Request/response logging
+- ✅ Async/await for high performance
+- ✅ Redis-based caching
 
 ### Worker (Celery)
 
-**Background Tasks:**
-- Audit event processing (outbox pattern)
-- Email notifications
-- Data exports
-- Monthly quota resets
-- Scheduled cleanups
+- ✅ Audit event processing (outbox pattern)
+- ✅ Email notifications
+- ✅ Data exports
+- ✅ Monthly quota resets
+- ✅ Scheduled cleanups
 
 ## 🔒 Security
 
-### Implemented Features
-
 - ✅ Environment-based configuration (no hardcoded secrets)
 - ✅ Strong password validation
-- ✅ HTTPS/TLS in production (via settings)
 - ✅ Security headers (XSS, CSRF, Clickjacking protection)
 - ✅ Token-based authentication
 - ✅ Rate limiting
@@ -192,34 +192,7 @@ make security
 - ✅ Input validation with Pydantic
 - ✅ Non-root Docker containers
 - ✅ Multi-stage Docker builds
-
-### Best Practices
-
-1. **Never commit secrets** - Use environment variables
-2. **Rotate credentials regularly** - Especially API keys
-3. **Enable 2FA** - For admin accounts
-4. **Monitor audit logs** - Regular chain verification
-5. **Keep dependencies updated** - Use Dependabot
-6. **Run security scans** - `make security`
-
-## 📊 Monitoring & Observability
-
-### Logging
-
-- Structured JSON logging in production
-- Contextual logging with tenant IDs
-- Log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
-
-### Metrics (Planned)
-
-- Prometheus for metrics collection
-- Grafana for visualization
-- Custom metrics for business KPIs
-
-### Tracing (Planned)
-
-- Distributed tracing with OpenTelemetry
-- Jaeger for trace visualization
+- ✅ pgvector for secure vector storage
 
 ## 🚢 Deployment
 
@@ -247,26 +220,26 @@ terraform plan
 terraform apply
 ```
 
-## 🧪 Testing
+## 📊 Monitoring
 
-### Test Coverage
+- Structured JSON logging in production
+- Contextual logging with tenant IDs
+- Audit chain verification
+- Health check endpoints
+- (Planned) Prometheus metrics
+- (Planned) OpenTelemetry tracing
 
-Current coverage: Run `make test` to see latest
+## 🔗 Related Repositories
 
-### Test Structure
-
-```
-apps/control-plane/
-├── audit/tests.py           # Audit functionality tests
-├── tenants/tests.py         # Tenant management tests
-└── conftest.py              # Pytest fixtures
-```
+- **Frontend**: [NextCore-AI-Portal](https://github.com/nick-syspac/NextCore-AI-Portal) - Next.js web portal
 
 ## 📚 Documentation
 
+- [API Documentation](docs/API_DOCUMENTATION.md)
 - [Architecture Decisions](docs/architecture/)
 - [Compliance Controls](docs/compliance/controls-map.md)
 - [Operational Runbooks](docs/runbooks/)
+- [Getting Started Guide](GETTING-STARTED.md)
 - [Contributing Guidelines](CONTRIBUTING.md)
 - [Security Policy](SECURITY.md)
 
@@ -274,7 +247,13 @@ apps/control-plane/
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
+3. Follow conventional commits:
+   - `feat:` for new features
+   - `fix:` for bug fixes
+   - `docs:` for documentation
+   - `refactor:` for refactoring
+   - `test:` for tests
+   - `chore:` for maintenance
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
@@ -282,51 +261,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
 - 📧 Email: support@nextcollege.edu.au
 - 🔒 Security: security@nextcollege.edu.au
-- 📖 Docs: [Coming soon]
-
-## 🗺️ Roadmap
-
-### Phase 1 (Current)
-- [x] Django control plane setup
-- [x] AI Gateway implementation
-- [x] Tenant management
-- [x] Audit logging with chain verification
-- [x] Docker containerization
-- [x] CI/CD pipeline
-
-### Phase 2 (Q1 2026)
-- [ ] Next.js web portal
-- [ ] Stripe billing integration
-- [ ] Advanced RBAC with permissions
-- [ ] Email notification system
-- [ ] Data export functionality
-- [ ] Comprehensive Helm charts
-
-### Phase 3 (Q2 2026)
-- [ ] Terraform AWS deployment
-- [ ] Production Kubernetes setup
-- [ ] Monitoring & alerting
-- [ ] Advanced AI features
-- [ ] Multi-region support
-- [ ] Compliance certifications
 
 ---
 
-**Built with ❤️ for RTO organizations**onorepo (Starter)
-
-This is a production-ready **monorepo skeleton** for an RTO-focused SaaS platform. It’s designed for:
-- Django/DRF control plane (tenant provisioning, lifecycle, RBAC, billing)
-- FastAPI AI Gateway (model routing, usage metering)
-- Next.js tenant web portal
-- Worker processes (emails, ETL, background jobs)
-- Terraform-managed AWS infra with GitHub OIDC
-- Kubernetes manifests/Helm charts
-- Compliance & audit hooks for ASQA/RTO Standards
-
-> You can clone this repo and incrementally fill in the services. CI/CD and guardrails are pre-wired.
+**Built with ❤️ for RTO organizations**
