@@ -7,9 +7,13 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
+      - name: Lowercase repository name
+        id: repo
+        run: echo "repo_lower=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+      
       - uses: aquasecurity/trivy-action@0.24.0
         with:
-          image-ref: ghcr.io/${{ github.repository }}/control-plane:${{ github.sha }}
+          image-ref: ghcr.io/${{ steps.repo.outputs.repo_lower }}/control-plane:${{ github.sha }}
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
