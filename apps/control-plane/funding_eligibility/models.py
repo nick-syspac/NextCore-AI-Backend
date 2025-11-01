@@ -6,6 +6,11 @@ from datetime import date
 import json
 
 
+def get_current_date():
+    """Return current date in Django's configured timezone."""
+    return timezone.now().date()
+
+
 class JurisdictionRequirement(models.Model):
     """
     Defines funding eligibility requirements by Australian jurisdiction (State/Territory).
@@ -125,7 +130,7 @@ class JurisdictionRequirement(models.Model):
 
     # Status
     is_active = models.BooleanField(default=True)
-    effective_from = models.DateField(default=date.today)
+    effective_from = models.DateField(default=get_current_date)
     effective_to = models.DateField(null=True, blank=True)
 
     # Audit
@@ -149,9 +154,7 @@ class JurisdictionRequirement(models.Model):
 
     def is_currently_effective(self):
         """Check if requirement is currently in effect"""
-        from datetime import date
-
-        today = date.today()
+        today = get_current_date()
         if not self.is_active:
             return False
         if self.effective_from > today:
