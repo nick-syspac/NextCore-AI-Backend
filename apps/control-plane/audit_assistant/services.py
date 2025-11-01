@@ -1,4 +1,5 @@
 """Service helpers for processing audit evidence and auto-tagging."""
+
 from __future__ import annotations
 
 import logging
@@ -109,7 +110,9 @@ def detect_ner_entities(text: str) -> List[dict]:
     # Common ORG keywords
     org_keywords = ["ASQA", "RTO", "Training Organisation", "VET", "AQF", "TGA"]
     for keyword in org_keywords:
-        for match in re.finditer(r"\b" + re.escape(keyword) + r"\b", text, re.IGNORECASE):
+        for match in re.finditer(
+            r"\b" + re.escape(keyword) + r"\b", text, re.IGNORECASE
+        ):
             entities.append(
                 {
                     "entity": match.group(0),
@@ -153,7 +156,9 @@ def _cleanup_previous_mappings(evidence: Evidence) -> None:
     ).delete()
 
 
-def auto_tag_clauses(evidence: Evidence, text: str, ner_entities: Iterable[dict]) -> int:
+def auto_tag_clauses(
+    evidence: Evidence, text: str, ner_entities: Iterable[dict]
+) -> int:
     """Create clause evidence relationships using lightweight heuristics."""
     if not text:
         return 0
@@ -161,7 +166,9 @@ def auto_tag_clauses(evidence: Evidence, text: str, ner_entities: Iterable[dict]
     entities_list = list(ner_entities)
     entities_count = len(entities_list)
     text_lower = text.lower()
-    standard_refs = [e.get("value") for e in entities_list if e.get("type") == "STANDARD"]
+    standard_refs = [
+        e.get("value") for e in entities_list if e.get("type") == "STANDARD"
+    ]
     clause_refs = [e.get("value") for e in entities_list if e.get("type") == "CLAUSE"]
 
     _cleanup_previous_mappings(evidence)
@@ -183,15 +190,20 @@ def auto_tag_clauses(evidence: Evidence, text: str, ner_entities: Iterable[dict]
             mapping_type = "auto_rule"
             confidence_score = 0.95
             rule_name = "direct_clause_reference"
-            matched_entities = [e for e in entities_list if e.get("value") == clause_num]
+            matched_entities = [
+                e for e in entities_list if e.get("value") == clause_num
+            ]
 
         if not mapping_type:
             standard_num = clause.standard.standard_number if clause.standard else None
             if standard_num and (
-                standard_num in standard_refs or f"standard {standard_num}" in text_lower
+                standard_num in standard_refs
+                or f"standard {standard_num}" in text_lower
             ):
                 clause_keywords = clause.keywords or []
-                keywords_found = [kw for kw in clause_keywords if kw.lower() in text_lower]
+                keywords_found = [
+                    kw for kw in clause_keywords if kw.lower() in text_lower
+                ]
                 if len(keywords_found) >= 2:
                     mapping_type = "auto_ner"
                     confidence_score = min(0.7 + (len(keywords_found) * 0.05), 0.9)
@@ -204,7 +216,9 @@ def auto_tag_clauses(evidence: Evidence, text: str, ner_entities: Iterable[dict]
         if not mapping_type:
             clause_keywords = clause.keywords or []
             if clause_keywords:
-                keywords_found = [kw for kw in clause_keywords if kw.lower() in text_lower]
+                keywords_found = [
+                    kw for kw in clause_keywords if kw.lower() in text_lower
+                ]
                 keyword_ratio = len(keywords_found) / len(clause_keywords)
                 if keyword_ratio >= 0.6:
                     mapping_type = "auto_rule"

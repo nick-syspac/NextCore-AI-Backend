@@ -1,6 +1,7 @@
 """
 Custom exception handlers for the application.
 """
+
 import logging
 from typing import Any
 
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class TenantRequiredError(exceptions.APIException):
     """Raised when a tenant context is required but not provided."""
+
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Tenant context is required for this operation."
     default_code = "tenant_required"
@@ -22,6 +24,7 @@ class TenantRequiredError(exceptions.APIException):
 
 class TenantNotFoundError(exceptions.APIException):
     """Raised when a tenant is not found."""
+
     status_code = status.HTTP_404_NOT_FOUND
     default_detail = "Tenant not found."
     default_code = "tenant_not_found"
@@ -29,6 +32,7 @@ class TenantNotFoundError(exceptions.APIException):
 
 class TenantSuspendedError(exceptions.APIException):
     """Raised when attempting to access a suspended tenant."""
+
     status_code = status.HTTP_403_FORBIDDEN
     default_detail = "Tenant is suspended."
     default_code = "tenant_suspended"
@@ -36,19 +40,22 @@ class TenantSuspendedError(exceptions.APIException):
 
 class QuotaExceededError(exceptions.APIException):
     """Raised when a tenant exceeds their quota."""
+
     status_code = status.HTTP_429_TOO_MANY_REQUESTS
     default_detail = "Quota exceeded."
     default_code = "quota_exceeded"
 
 
-def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Response | None:
+def custom_exception_handler(
+    exc: Exception, context: dict[str, Any]
+) -> Response | None:
     """
     Custom exception handler that provides consistent error responses.
-    
+
     Args:
         exc: The exception that was raised
         context: Context information about the request
-        
+
     Returns:
         Response object with error details
     """
@@ -61,11 +68,15 @@ def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Respons
             "error": {
                 "code": getattr(exc, "default_code", "error"),
                 "message": str(exc),
-                "details": response.data if isinstance(response.data, dict) else {"detail": response.data},
+                "details": (
+                    response.data
+                    if isinstance(response.data, dict)
+                    else {"detail": response.data}
+                ),
             }
         }
         response.data = error_data
-        
+
         # Log the error
         logger.error(
             f"API Exception: {exc.__class__.__name__}",
@@ -76,7 +87,7 @@ def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Respons
             },
             exc_info=True,
         )
-        
+
         return response
 
     # Handle Django exceptions
@@ -106,9 +117,9 @@ def custom_exception_handler(exc: Exception, context: dict[str, Any]) -> Respons
         extra={
             "exception": str(exc),
             "path": context.get("request").path if context.get("request") else None,
-        }
+        },
     )
-    
+
     error_data = {
         "error": {
             "code": "internal_error",

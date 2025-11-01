@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class FeedbackAssistantConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'feedback_assistant'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "feedback_assistant"

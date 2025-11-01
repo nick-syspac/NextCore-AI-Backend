@@ -1,6 +1,7 @@
 """
 Apps configuration for tenants.
 """
+
 from django.apps import AppConfig
 
 

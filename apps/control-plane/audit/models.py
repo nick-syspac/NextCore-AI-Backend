@@ -3,28 +3,33 @@ import json
 from django.db import models
 from django.utils import timezone
 
-def chain_hash(prev_hash: bytes|None, record: dict) -> bytes:
+
+def chain_hash(prev_hash: bytes | None, record: dict) -> bytes:
     m = hashlib.sha256()
-    if prev_hash: m.update(prev_hash)
+    if prev_hash:
+        m.update(prev_hash)
     m.update(json.dumps(record, sort_keys=True).encode())
     return m.digest()
+
 
 class Audit(models.Model):
     tenant_id = models.CharField(max_length=255)
     event_type = models.CharField(max_length=255)
     payload = models.JSONField()
-    timestamp = models.DateTimeField()  # Removed auto_now_add to control timestamp in save()
+    timestamp = (
+        models.DateTimeField()
+    )  # Removed auto_now_add to control timestamp in save()
     prev_hash = models.BinaryField(null=True, blank=True)
     hash = models.BinaryField()
 
     class Meta:
-        ordering = ['timestamp']
+        ordering = ["timestamp"]
 
     def save(self, *args, **kwargs):
         # Always set timestamp before computing hash (removed auto_now_add to ensure consistency)
         if not self.timestamp:
             self.timestamp = timezone.now()
-            
+
         # Don't compute hash if this is an update (already has a PK)
         if not self.pk:
             last_event = Audit.objects.filter(tenant_id=self.tenant_id).last()
@@ -39,10 +44,11 @@ class Audit(models.Model):
             self.hash = chain_hash(prev_hash, record)
         super().save(*args, **kwargs)
 
+
 class Outbox(models.Model):
     audit_event = models.ForeignKey(Audit, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     processed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['created_at']
+        ordering = ["created_at"]

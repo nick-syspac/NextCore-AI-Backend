@@ -1,1 +1,1 @@
-default_app_config = 'competency_gap.apps.CompetencyGapConfig'
+default_app_config = "competency_gap.apps.CompetencyGapConfig"

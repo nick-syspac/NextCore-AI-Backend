@@ -6,23 +6,23 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tas', '0001_initial'),
+        ("tas", "0001_initial"),
     ]
 
     operations = [
         migrations.RenameIndex(
-            model_name='tas',
-            new_name='tas_documen_tenant__80c323_idx',
-            old_name='tas_documen_tenant__4ac7ea_idx',
+            model_name="tas",
+            new_name="tas_documen_tenant__80c323_idx",
+            old_name="tas_documen_tenant__4ac7ea_idx",
         ),
         migrations.RenameIndex(
-            model_name='tas',
-            new_name='tas_documen_tenant__dc3a91_idx',
-            old_name='tas_documen_tenant__b9e5c8_idx',
+            model_name="tas",
+            new_name="tas_documen_tenant__dc3a91_idx",
+            old_name="tas_documen_tenant__b9e5c8_idx",
         ),
         migrations.RenameIndex(
-            model_name='tas',
-            new_name='tas_documen_created_5e226c_idx',
-            old_name='tas_documen_created_5f8b91_idx',
+            model_name="tas",
+            new_name="tas_documen_created_5e226c_idx",
+            old_name="tas_documen_created_5f8b91_idx",
         ),
     ]

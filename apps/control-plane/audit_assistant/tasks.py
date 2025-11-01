@@ -1,4 +1,5 @@
 """Celery tasks for the Audit Assistant evidence pipeline."""
+
 from __future__ import annotations
 
 import logging
@@ -23,8 +24,16 @@ class EvidenceProcessingResult(TypedDict):
     message: str
 
 
-@shared_task(bind=True, autoretry_for=(Exception,), retry_backoff=True, retry_jitter=True, max_retries=3)
-def process_evidence_document(self, evidence_id: int, auto_tag: bool = True) -> EvidenceProcessingResult:
+@shared_task(
+    bind=True,
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_jitter=True,
+    max_retries=3,
+)
+def process_evidence_document(
+    self, evidence_id: int, auto_tag: bool = True
+) -> EvidenceProcessingResult:
     """Extract text, run NER, and optionally auto-tag clauses for an evidence document."""
     try:
         evidence = Evidence.objects.select_related("tenant").get(pk=evidence_id)
@@ -41,7 +50,11 @@ def process_evidence_document(self, evidence_id: int, auto_tag: bool = True) -> 
 
     logger.info(
         "Starting evidence processing",
-        extra={"evidence_id": evidence_id, "auto_tag": auto_tag, "tenant_id": evidence.tenant_id},
+        extra={
+            "evidence_id": evidence_id,
+            "auto_tag": auto_tag,
+            "tenant_id": evidence.tenant_id,
+        },
     )
 
     with transaction.atomic():
@@ -52,8 +65,12 @@ def process_evidence_document(self, evidence_id: int, auto_tag: bool = True) -> 
             try:
                 evidence.file_size = evidence.file.size
                 update_fields.append("file_size")
-            except Exception:  # pragma: no cover - storage backends may raise custom errors
-                logger.debug("Unable to determine file size for evidence %s", evidence_id)
+            except (
+                Exception
+            ):  # pragma: no cover - storage backends may raise custom errors
+                logger.debug(
+                    "Unable to determine file size for evidence %s", evidence_id
+                )
 
         evidence.save(update_fields=update_fields)
 
@@ -65,7 +82,14 @@ def process_evidence_document(self, evidence_id: int, auto_tag: bool = True) -> 
         evidence.ner_entities = []
         evidence.ner_processed_at = None
         evidence.status = "uploaded"
-        evidence.save(update_fields=["extracted_text", "ner_entities", "ner_processed_at", "status"])
+        evidence.save(
+            update_fields=[
+                "extracted_text",
+                "ner_entities",
+                "ner_processed_at",
+                "status",
+            ]
+        )
         return EvidenceProcessingResult(
             evidence_id=evidence.id,
             status=evidence.status,
@@ -76,7 +100,9 @@ def process_evidence_document(self, evidence_id: int, auto_tag: bool = True) -> 
         )
 
     ner_entities = detect_ner_entities(extracted_text)
-    auto_tagged_count = auto_tag_clauses(evidence, extracted_text, ner_entities) if auto_tag else 0
+    auto_tagged_count = (
+        auto_tag_clauses(evidence, extracted_text, ner_entities) if auto_tag else 0
+    )
 
     with transaction.atomic():
         evidence.refresh_from_db()

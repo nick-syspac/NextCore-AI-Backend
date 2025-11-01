@@ -5,16 +5,16 @@ from .views import (
     TrainerProfileViewSet,
     PDSuggestionViewSet,
     ComplianceRuleViewSet,
-    ComplianceCheckViewSet
+    ComplianceCheckViewSet,
 )
 
 router = DefaultRouter()
-router.register(r'activities', PDActivityViewSet, basename='pd_activity')
-router.register(r'profiles', TrainerProfileViewSet, basename='trainer_profile')
-router.register(r'suggestions', PDSuggestionViewSet, basename='pd_suggestion')
-router.register(r'rules', ComplianceRuleViewSet, basename='compliance_rule')
-router.register(r'checks', ComplianceCheckViewSet, basename='compliance_check')
+router.register(r"activities", PDActivityViewSet, basename="pd_activity")
+router.register(r"profiles", TrainerProfileViewSet, basename="trainer_profile")
+router.register(r"suggestions", PDSuggestionViewSet, basename="pd_suggestion")
+router.register(r"rules", ComplianceRuleViewSet, basename="compliance_rule")
+router.register(r"checks", ComplianceCheckViewSet, basename="compliance_check")
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

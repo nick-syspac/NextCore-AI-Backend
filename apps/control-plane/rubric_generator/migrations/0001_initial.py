@@ -10,137 +10,434 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('assessment_builder', '0001_initial'),
-        ('tenants', '0003_tenantapikey_description'),
+        ("assessment_builder", "0001_initial"),
+        ("tenants", "0003_tenantapikey_description"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Rubric',
+            name="Rubric",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('rubric_number', models.CharField(editable=False, max_length=50, unique=True)),
-                ('title', models.CharField(max_length=500)),
-                ('description', models.TextField(blank=True)),
-                ('rubric_type', models.CharField(choices=[('analytic', 'Analytic'), ('holistic', 'Holistic'), ('checklist', 'Checklist'), ('single_point', 'Single Point')], default='analytic', max_length=20)),
-                ('status', models.CharField(choices=[('draft', 'Draft'), ('generating', 'Generating'), ('review', 'In Review'), ('approved', 'Approved'), ('published', 'Published'), ('archived', 'Archived')], default='draft', max_length=20)),
-                ('total_points', models.IntegerField(default=100, help_text='Maximum points achievable')),
-                ('passing_score', models.IntegerField(default=50, help_text='Minimum points to pass')),
-                ('ai_generated', models.BooleanField(default=False)),
-                ('ai_model', models.CharField(blank=True, max_length=100)),
-                ('ai_prompt', models.TextField(blank=True)),
-                ('ai_generation_time', models.FloatField(blank=True, help_text='Generation time in seconds', null=True)),
-                ('ai_generated_at', models.DateTimeField(blank=True, null=True)),
-                ('nlp_summary', models.TextField(blank=True, help_text='NLP-generated summary of rubric purpose')),
-                ('nlp_key_points', models.JSONField(blank=True, default=list, help_text='Extracted key assessment points')),
-                ('taxonomy_tags', models.JSONField(blank=True, default=list, help_text="Educational taxonomy tags (Bloom's, SOLO, etc.)")),
-                ('blooms_levels', models.JSONField(blank=True, default=dict, help_text="Distribution of Bloom's levels in criteria")),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('reviewed_at', models.DateTimeField(blank=True, null=True)),
-                ('approved_at', models.DateTimeField(blank=True, null=True)),
-                ('approved_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='approved_rubrics', to=settings.AUTH_USER_MODEL)),
-                ('assessment', models.ForeignKey(blank=True, help_text='Assessment this rubric is for', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='rubrics', to='assessment_builder.assessment')),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_rubrics', to=settings.AUTH_USER_MODEL)),
-                ('reviewed_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='reviewed_rubrics', to=settings.AUTH_USER_MODEL)),
-                ('task', models.ForeignKey(blank=True, help_text='Specific task this rubric is for (optional)', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='rubrics', to='assessment_builder.assessmenttask')),
-                ('tenant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='rubrics', to='tenants.tenant')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "rubric_number",
+                    models.CharField(editable=False, max_length=50, unique=True),
+                ),
+                ("title", models.CharField(max_length=500)),
+                ("description", models.TextField(blank=True)),
+                (
+                    "rubric_type",
+                    models.CharField(
+                        choices=[
+                            ("analytic", "Analytic"),
+                            ("holistic", "Holistic"),
+                            ("checklist", "Checklist"),
+                            ("single_point", "Single Point"),
+                        ],
+                        default="analytic",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("draft", "Draft"),
+                            ("generating", "Generating"),
+                            ("review", "In Review"),
+                            ("approved", "Approved"),
+                            ("published", "Published"),
+                            ("archived", "Archived"),
+                        ],
+                        default="draft",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "total_points",
+                    models.IntegerField(
+                        default=100, help_text="Maximum points achievable"
+                    ),
+                ),
+                (
+                    "passing_score",
+                    models.IntegerField(default=50, help_text="Minimum points to pass"),
+                ),
+                ("ai_generated", models.BooleanField(default=False)),
+                ("ai_model", models.CharField(blank=True, max_length=100)),
+                ("ai_prompt", models.TextField(blank=True)),
+                (
+                    "ai_generation_time",
+                    models.FloatField(
+                        blank=True, help_text="Generation time in seconds", null=True
+                    ),
+                ),
+                ("ai_generated_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "nlp_summary",
+                    models.TextField(
+                        blank=True, help_text="NLP-generated summary of rubric purpose"
+                    ),
+                ),
+                (
+                    "nlp_key_points",
+                    models.JSONField(
+                        blank=True,
+                        default=list,
+                        help_text="Extracted key assessment points",
+                    ),
+                ),
+                (
+                    "taxonomy_tags",
+                    models.JSONField(
+                        blank=True,
+                        default=list,
+                        help_text="Educational taxonomy tags (Bloom's, SOLO, etc.)",
+                    ),
+                ),
+                (
+                    "blooms_levels",
+                    models.JSONField(
+                        blank=True,
+                        default=dict,
+                        help_text="Distribution of Bloom's levels in criteria",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("reviewed_at", models.DateTimeField(blank=True, null=True)),
+                ("approved_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "approved_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="approved_rubrics",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "assessment",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Assessment this rubric is for",
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="rubrics",
+                        to="assessment_builder.assessment",
+                    ),
+                ),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_rubrics",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "reviewed_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="reviewed_rubrics",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "task",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Specific task this rubric is for (optional)",
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="rubrics",
+                        to="assessment_builder.assessmenttask",
+                    ),
+                ),
+                (
+                    "tenant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="rubrics",
+                        to="tenants.tenant",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='RubricCriterion',
+            name="RubricCriterion",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('criterion_number', models.CharField(help_text='e.g., 1, 1.1, A', max_length=20)),
-                ('title', models.CharField(max_length=500)),
-                ('description', models.TextField(blank=True)),
-                ('weight', models.IntegerField(default=1, help_text='Weight of this criterion')),
-                ('max_points', models.IntegerField(default=10, help_text='Maximum points for this criterion')),
-                ('maps_to_elements', models.JSONField(blank=True, default=list)),
-                ('maps_to_performance_criteria', models.JSONField(blank=True, default=list)),
-                ('maps_to_knowledge_evidence', models.JSONField(blank=True, default=list)),
-                ('taxonomy_tags', models.JSONField(blank=True, default=list, help_text='Tags like "Bloom\'s: Apply", "SOLO: Relational"')),
-                ('blooms_level', models.CharField(blank=True, help_text="Primary Bloom's level for this criterion", max_length=20)),
-                ('ai_generated', models.BooleanField(default=False)),
-                ('ai_rationale', models.TextField(blank=True, help_text='Why this criterion was generated')),
-                ('nlp_keywords', models.JSONField(blank=True, default=list, help_text='NLP-extracted keywords')),
-                ('display_order', models.IntegerField(default=0)),
-                ('rubric', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='criteria', to='rubric_generator.rubric')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "criterion_number",
+                    models.CharField(help_text="e.g., 1, 1.1, A", max_length=20),
+                ),
+                ("title", models.CharField(max_length=500)),
+                ("description", models.TextField(blank=True)),
+                (
+                    "weight",
+                    models.IntegerField(
+                        default=1, help_text="Weight of this criterion"
+                    ),
+                ),
+                (
+                    "max_points",
+                    models.IntegerField(
+                        default=10, help_text="Maximum points for this criterion"
+                    ),
+                ),
+                ("maps_to_elements", models.JSONField(blank=True, default=list)),
+                (
+                    "maps_to_performance_criteria",
+                    models.JSONField(blank=True, default=list),
+                ),
+                (
+                    "maps_to_knowledge_evidence",
+                    models.JSONField(blank=True, default=list),
+                ),
+                (
+                    "taxonomy_tags",
+                    models.JSONField(
+                        blank=True,
+                        default=list,
+                        help_text='Tags like "Bloom\'s: Apply", "SOLO: Relational"',
+                    ),
+                ),
+                (
+                    "blooms_level",
+                    models.CharField(
+                        blank=True,
+                        help_text="Primary Bloom's level for this criterion",
+                        max_length=20,
+                    ),
+                ),
+                ("ai_generated", models.BooleanField(default=False)),
+                (
+                    "ai_rationale",
+                    models.TextField(
+                        blank=True, help_text="Why this criterion was generated"
+                    ),
+                ),
+                (
+                    "nlp_keywords",
+                    models.JSONField(
+                        blank=True, default=list, help_text="NLP-extracted keywords"
+                    ),
+                ),
+                ("display_order", models.IntegerField(default=0)),
+                (
+                    "rubric",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="criteria",
+                        to="rubric_generator.rubric",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['rubric', 'display_order'],
+                "ordering": ["rubric", "display_order"],
             },
         ),
         migrations.CreateModel(
-            name='RubricGenerationLog',
+            name="RubricGenerationLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(choices=[('generate_full', 'Generate Full Rubric'), ('generate_criterion', 'Generate Single Criterion'), ('generate_levels', 'Generate Performance Levels'), ('nlp_summarize', 'NLP Summarization'), ('tag_taxonomy', 'Taxonomy Tagging'), ('regenerate', 'Regenerate')], max_length=30)),
-                ('ai_model', models.CharField(blank=True, max_length=100)),
-                ('nlp_model', models.CharField(blank=True, max_length=100)),
-                ('prompt_used', models.TextField(blank=True)),
-                ('response_text', models.TextField(blank=True)),
-                ('tokens_used', models.IntegerField(default=0)),
-                ('generation_time', models.FloatField(help_text='Time in seconds')),
-                ('success', models.BooleanField(default=True)),
-                ('error_message', models.TextField(blank=True)),
-                ('performed_at', models.DateTimeField(auto_now_add=True)),
-                ('performed_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('rubric', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='generation_logs', to='rubric_generator.rubric')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[
+                            ("generate_full", "Generate Full Rubric"),
+                            ("generate_criterion", "Generate Single Criterion"),
+                            ("generate_levels", "Generate Performance Levels"),
+                            ("nlp_summarize", "NLP Summarization"),
+                            ("tag_taxonomy", "Taxonomy Tagging"),
+                            ("regenerate", "Regenerate"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("ai_model", models.CharField(blank=True, max_length=100)),
+                ("nlp_model", models.CharField(blank=True, max_length=100)),
+                ("prompt_used", models.TextField(blank=True)),
+                ("response_text", models.TextField(blank=True)),
+                ("tokens_used", models.IntegerField(default=0)),
+                ("generation_time", models.FloatField(help_text="Time in seconds")),
+                ("success", models.BooleanField(default=True)),
+                ("error_message", models.TextField(blank=True)),
+                ("performed_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "performed_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "rubric",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="generation_logs",
+                        to="rubric_generator.rubric",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-performed_at'],
+                "ordering": ["-performed_at"],
             },
         ),
         migrations.CreateModel(
-            name='RubricLevel',
+            name="RubricLevel",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('level_name', models.CharField(help_text='e.g., Excellent, Good, Satisfactory', max_length=50)),
-                ('level_type', models.CharField(blank=True, choices=[('exemplary', 'Exemplary'), ('proficient', 'Proficient'), ('competent', 'Competent'), ('developing', 'Developing'), ('unsatisfactory', 'Unsatisfactory'), ('not_demonstrated', 'Not Demonstrated')], max_length=30)),
-                ('points', models.IntegerField(help_text='Points awarded for this level')),
-                ('description', models.TextField(help_text='What performance looks like at this level')),
-                ('indicators', models.JSONField(blank=True, default=list, help_text='Specific indicators of this performance level')),
-                ('examples', models.TextField(blank=True, help_text='Example responses or work at this level')),
-                ('ai_generated', models.BooleanField(default=False)),
-                ('nlp_summary', models.TextField(blank=True, help_text='NLP summary of level description')),
-                ('display_order', models.IntegerField(default=0)),
-                ('criterion', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='levels', to='rubric_generator.rubriccriterion')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "level_name",
+                    models.CharField(
+                        help_text="e.g., Excellent, Good, Satisfactory", max_length=50
+                    ),
+                ),
+                (
+                    "level_type",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("exemplary", "Exemplary"),
+                            ("proficient", "Proficient"),
+                            ("competent", "Competent"),
+                            ("developing", "Developing"),
+                            ("unsatisfactory", "Unsatisfactory"),
+                            ("not_demonstrated", "Not Demonstrated"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                (
+                    "points",
+                    models.IntegerField(help_text="Points awarded for this level"),
+                ),
+                (
+                    "description",
+                    models.TextField(
+                        help_text="What performance looks like at this level"
+                    ),
+                ),
+                (
+                    "indicators",
+                    models.JSONField(
+                        blank=True,
+                        default=list,
+                        help_text="Specific indicators of this performance level",
+                    ),
+                ),
+                (
+                    "examples",
+                    models.TextField(
+                        blank=True, help_text="Example responses or work at this level"
+                    ),
+                ),
+                ("ai_generated", models.BooleanField(default=False)),
+                (
+                    "nlp_summary",
+                    models.TextField(
+                        blank=True, help_text="NLP summary of level description"
+                    ),
+                ),
+                ("display_order", models.IntegerField(default=0)),
+                (
+                    "criterion",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="levels",
+                        to="rubric_generator.rubriccriterion",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['criterion', '-points'],
+                "ordering": ["criterion", "-points"],
             },
         ),
         migrations.AddIndex(
-            model_name='rubric',
-            index=models.Index(fields=['tenant', 'status'], name='rubric_gene_tenant__b4d718_idx'),
+            model_name="rubric",
+            index=models.Index(
+                fields=["tenant", "status"], name="rubric_gene_tenant__b4d718_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='rubric',
-            index=models.Index(fields=['rubric_type'], name='rubric_gene_rubric__8ce800_idx'),
+            model_name="rubric",
+            index=models.Index(
+                fields=["rubric_type"], name="rubric_gene_rubric__8ce800_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='rubric',
-            index=models.Index(fields=['assessment'], name='rubric_gene_assessm_e6f0dd_idx'),
+            model_name="rubric",
+            index=models.Index(
+                fields=["assessment"], name="rubric_gene_assessm_e6f0dd_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='rubric',
-            index=models.Index(fields=['created_at'], name='rubric_gene_created_8727c1_idx'),
+            model_name="rubric",
+            index=models.Index(
+                fields=["created_at"], name="rubric_gene_created_8727c1_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='rubriccriterion',
-            index=models.Index(fields=['rubric', 'display_order'], name='rubric_gene_rubric__ee2f31_idx'),
+            model_name="rubriccriterion",
+            index=models.Index(
+                fields=["rubric", "display_order"],
+                name="rubric_gene_rubric__ee2f31_idx",
+            ),
         ),
         migrations.AddIndex(
-            model_name='rubricgenerationlog',
-            index=models.Index(fields=['rubric', 'performed_at'], name='rubric_gene_rubric__1c3f70_idx'),
+            model_name="rubricgenerationlog",
+            index=models.Index(
+                fields=["rubric", "performed_at"], name="rubric_gene_rubric__1c3f70_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='rubriclevel',
-            index=models.Index(fields=['criterion', 'display_order'], name='rubric_gene_criteri_da8a0c_idx'),
+            model_name="rubriclevel",
+            index=models.Index(
+                fields=["criterion", "display_order"],
+                name="rubric_gene_criteri_da8a0c_idx",
+            ),
         ),
     ]

@@ -8,35 +8,55 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Audit',
+            name="Audit",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('tenant_id', models.CharField(max_length=255)),
-                ('event_type', models.CharField(max_length=255)),
-                ('payload', models.JSONField()),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
-                ('prev_hash', models.BinaryField(blank=True, null=True)),
-                ('hash', models.BinaryField()),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("tenant_id", models.CharField(max_length=255)),
+                ("event_type", models.CharField(max_length=255)),
+                ("payload", models.JSONField()),
+                ("timestamp", models.DateTimeField(auto_now_add=True)),
+                ("prev_hash", models.BinaryField(blank=True, null=True)),
+                ("hash", models.BinaryField()),
             ],
             options={
-                'ordering': ['timestamp'],
+                "ordering": ["timestamp"],
             },
         ),
         migrations.CreateModel(
-            name='Outbox',
+            name="Outbox",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('processed_at', models.DateTimeField(blank=True, null=True)),
-                ('audit_event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='audit.audit')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("processed_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "audit_event",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="audit.audit"
+                    ),
+                ),
             ],
             options={
-                'ordering': ['created_at'],
+                "ordering": ["created_at"],
             },
         ),
     ]

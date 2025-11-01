@@ -12,193 +12,637 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('tenants', '0003_tenantapikey_description'),
+        ("tenants", "0003_tenantapikey_description"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='JurisdictionRequirement',
+            name="JurisdictionRequirement",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('jurisdiction', models.CharField(choices=[('nsw', 'New South Wales'), ('vic', 'Victoria'), ('qld', 'Queensland'), ('wa', 'Western Australia'), ('sa', 'South Australia'), ('tas', 'Tasmania'), ('act', 'Australian Capital Territory'), ('nt', 'Northern Territory'), ('federal', 'Federal (Commonwealth)')], max_length=20)),
-                ('name', models.CharField(help_text="Name of funding program (e.g., 'Smart and Skilled NSW')", max_length=200)),
-                ('code', models.CharField(help_text="Program code (e.g., 'SS-NSW', 'STS-VIC')", max_length=50)),
-                ('requires_australian_citizen', models.BooleanField(default=False)),
-                ('requires_permanent_resident', models.BooleanField(default=False)),
-                ('requires_jurisdiction_resident', models.BooleanField(default=True)),
-                ('min_jurisdiction_residency_months', models.IntegerField(default=6, help_text='Minimum months of residency required', validators=[django.core.validators.MinValueValidator(0)])),
-                ('min_age', models.IntegerField(blank=True, null=True, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(120)])),
-                ('max_age', models.IntegerField(blank=True, null=True, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(120)])),
-                ('requires_year_12', models.BooleanField(default=False)),
-                ('allows_year_10_completion', models.BooleanField(default=True)),
-                ('requires_unemployed', models.BooleanField(default=False)),
-                ('allows_employed', models.BooleanField(default=True)),
-                ('requires_apprentice_trainee', models.BooleanField(default=False)),
-                ('restricts_higher_qualifications', models.BooleanField(default=False, help_text="Student cannot have a higher qualification than what they're enrolling in")),
-                ('max_aqf_level', models.IntegerField(blank=True, help_text='Maximum AQF level student can already have', null=True, validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(10)])),
-                ('has_income_threshold', models.BooleanField(default=False)),
-                ('max_annual_income', models.DecimalField(blank=True, decimal_places=2, help_text='Maximum annual income in AUD', max_digits=10, null=True)),
-                ('allows_concession_card', models.BooleanField(default=True)),
-                ('allows_disability', models.BooleanField(default=True)),
-                ('allows_indigenous', models.BooleanField(default=True)),
-                ('priority_indigenous', models.BooleanField(default=False)),
-                ('funding_percentage', models.DecimalField(decimal_places=2, default=100.0, help_text='Percentage of course fees covered', max_digits=5, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)])),
-                ('student_contribution', models.DecimalField(decimal_places=2, default=0.0, help_text='Student contribution/co-payment amount in AUD', max_digits=10)),
-                ('api_endpoint', models.URLField(blank=True, help_text='External API endpoint for eligibility verification', null=True)),
-                ('api_key_required', models.BooleanField(default=False)),
-                ('additional_rules', models.JSONField(blank=True, default=dict, help_text='Additional eligibility rules in JSON format')),
-                ('is_active', models.BooleanField(default=True)),
-                ('effective_from', models.DateField(default=django.utils.timezone.now)),
-                ('effective_to', models.DateField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_requirements', to=settings.AUTH_USER_MODEL)),
-                ('tenant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='jurisdiction_requirements', to='tenants.tenant')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "jurisdiction",
+                    models.CharField(
+                        choices=[
+                            ("nsw", "New South Wales"),
+                            ("vic", "Victoria"),
+                            ("qld", "Queensland"),
+                            ("wa", "Western Australia"),
+                            ("sa", "South Australia"),
+                            ("tas", "Tasmania"),
+                            ("act", "Australian Capital Territory"),
+                            ("nt", "Northern Territory"),
+                            ("federal", "Federal (Commonwealth)"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Name of funding program (e.g., 'Smart and Skilled NSW')",
+                        max_length=200,
+                    ),
+                ),
+                (
+                    "code",
+                    models.CharField(
+                        help_text="Program code (e.g., 'SS-NSW', 'STS-VIC')",
+                        max_length=50,
+                    ),
+                ),
+                ("requires_australian_citizen", models.BooleanField(default=False)),
+                ("requires_permanent_resident", models.BooleanField(default=False)),
+                ("requires_jurisdiction_resident", models.BooleanField(default=True)),
+                (
+                    "min_jurisdiction_residency_months",
+                    models.IntegerField(
+                        default=6,
+                        help_text="Minimum months of residency required",
+                        validators=[django.core.validators.MinValueValidator(0)],
+                    ),
+                ),
+                (
+                    "min_age",
+                    models.IntegerField(
+                        blank=True,
+                        null=True,
+                        validators=[
+                            django.core.validators.MinValueValidator(0),
+                            django.core.validators.MaxValueValidator(120),
+                        ],
+                    ),
+                ),
+                (
+                    "max_age",
+                    models.IntegerField(
+                        blank=True,
+                        null=True,
+                        validators=[
+                            django.core.validators.MinValueValidator(0),
+                            django.core.validators.MaxValueValidator(120),
+                        ],
+                    ),
+                ),
+                ("requires_year_12", models.BooleanField(default=False)),
+                ("allows_year_10_completion", models.BooleanField(default=True)),
+                ("requires_unemployed", models.BooleanField(default=False)),
+                ("allows_employed", models.BooleanField(default=True)),
+                ("requires_apprentice_trainee", models.BooleanField(default=False)),
+                (
+                    "restricts_higher_qualifications",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Student cannot have a higher qualification than what they're enrolling in",
+                    ),
+                ),
+                (
+                    "max_aqf_level",
+                    models.IntegerField(
+                        blank=True,
+                        help_text="Maximum AQF level student can already have",
+                        null=True,
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(10),
+                        ],
+                    ),
+                ),
+                ("has_income_threshold", models.BooleanField(default=False)),
+                (
+                    "max_annual_income",
+                    models.DecimalField(
+                        blank=True,
+                        decimal_places=2,
+                        help_text="Maximum annual income in AUD",
+                        max_digits=10,
+                        null=True,
+                    ),
+                ),
+                ("allows_concession_card", models.BooleanField(default=True)),
+                ("allows_disability", models.BooleanField(default=True)),
+                ("allows_indigenous", models.BooleanField(default=True)),
+                ("priority_indigenous", models.BooleanField(default=False)),
+                (
+                    "funding_percentage",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=100.0,
+                        help_text="Percentage of course fees covered",
+                        max_digits=5,
+                        validators=[
+                            django.core.validators.MinValueValidator(0),
+                            django.core.validators.MaxValueValidator(100),
+                        ],
+                    ),
+                ),
+                (
+                    "student_contribution",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=0.0,
+                        help_text="Student contribution/co-payment amount in AUD",
+                        max_digits=10,
+                    ),
+                ),
+                (
+                    "api_endpoint",
+                    models.URLField(
+                        blank=True,
+                        help_text="External API endpoint for eligibility verification",
+                        null=True,
+                    ),
+                ),
+                ("api_key_required", models.BooleanField(default=False)),
+                (
+                    "additional_rules",
+                    models.JSONField(
+                        blank=True,
+                        default=dict,
+                        help_text="Additional eligibility rules in JSON format",
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("effective_from", models.DateField(default=django.utils.timezone.now)),
+                ("effective_to", models.DateField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_requirements",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "tenant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="jurisdiction_requirements",
+                        to="tenants.tenant",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['jurisdiction', 'name'],
+                "ordering": ["jurisdiction", "name"],
             },
         ),
         migrations.CreateModel(
-            name='EligibilityRule',
+            name="EligibilityRule",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('rule_type', models.CharField(choices=[('age', 'Age Requirement'), ('residency', 'Residency Requirement'), ('citizenship', 'Citizenship Requirement'), ('education', 'Education Requirement'), ('employment', 'Employment Status'), ('income', 'Income Threshold'), ('disability', 'Disability Status'), ('concession', 'Concession Card Holder'), ('indigenous', 'Indigenous Status'), ('language', 'Language Proficiency'), ('visa', 'Visa Type'), ('qualification', 'Prior Qualification'), ('custom', 'Custom Rule')], max_length=20)),
-                ('name', models.CharField(max_length=200)),
-                ('description', models.TextField()),
-                ('field_name', models.CharField(help_text="Field to evaluate (e.g., 'age', 'citizenship_status', 'income')", max_length=100)),
-                ('operator', models.CharField(choices=[('equals', 'Equals'), ('not_equals', 'Not Equals'), ('greater_than', 'Greater Than'), ('less_than', 'Less Than'), ('greater_equal', 'Greater Than or Equal'), ('less_equal', 'Less Than or Equal'), ('contains', 'Contains'), ('not_contains', 'Does Not Contain'), ('in_list', 'In List'), ('not_in_list', 'Not In List'), ('between', 'Between'), ('regex', 'Matches Pattern')], max_length=20)),
-                ('expected_value', models.CharField(help_text='Expected value or comma-separated list for comparison', max_length=500)),
-                ('is_mandatory', models.BooleanField(default=True, help_text='Must pass for eligibility (vs. optional/bonus points)')),
-                ('priority', models.IntegerField(default=10, help_text='Evaluation priority (1=highest)', validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(100)])),
-                ('error_message', models.TextField(help_text='Message shown when rule fails')),
-                ('override_allowed', models.BooleanField(default=False, help_text='Can be manually overridden by authorized staff')),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_rules', to=settings.AUTH_USER_MODEL)),
-                ('tenant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='eligibility_rules', to='tenants.tenant')),
-                ('jurisdiction_requirement', models.ForeignKey(blank=True, help_text='Link to specific jurisdiction requirement (optional)', null=True, on_delete=django.db.models.deletion.CASCADE, related_name='custom_rules', to='funding_eligibility.jurisdictionrequirement')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "rule_type",
+                    models.CharField(
+                        choices=[
+                            ("age", "Age Requirement"),
+                            ("residency", "Residency Requirement"),
+                            ("citizenship", "Citizenship Requirement"),
+                            ("education", "Education Requirement"),
+                            ("employment", "Employment Status"),
+                            ("income", "Income Threshold"),
+                            ("disability", "Disability Status"),
+                            ("concession", "Concession Card Holder"),
+                            ("indigenous", "Indigenous Status"),
+                            ("language", "Language Proficiency"),
+                            ("visa", "Visa Type"),
+                            ("qualification", "Prior Qualification"),
+                            ("custom", "Custom Rule"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("name", models.CharField(max_length=200)),
+                ("description", models.TextField()),
+                (
+                    "field_name",
+                    models.CharField(
+                        help_text="Field to evaluate (e.g., 'age', 'citizenship_status', 'income')",
+                        max_length=100,
+                    ),
+                ),
+                (
+                    "operator",
+                    models.CharField(
+                        choices=[
+                            ("equals", "Equals"),
+                            ("not_equals", "Not Equals"),
+                            ("greater_than", "Greater Than"),
+                            ("less_than", "Less Than"),
+                            ("greater_equal", "Greater Than or Equal"),
+                            ("less_equal", "Less Than or Equal"),
+                            ("contains", "Contains"),
+                            ("not_contains", "Does Not Contain"),
+                            ("in_list", "In List"),
+                            ("not_in_list", "Not In List"),
+                            ("between", "Between"),
+                            ("regex", "Matches Pattern"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "expected_value",
+                    models.CharField(
+                        help_text="Expected value or comma-separated list for comparison",
+                        max_length=500,
+                    ),
+                ),
+                (
+                    "is_mandatory",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Must pass for eligibility (vs. optional/bonus points)",
+                    ),
+                ),
+                (
+                    "priority",
+                    models.IntegerField(
+                        default=10,
+                        help_text="Evaluation priority (1=highest)",
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(100),
+                        ],
+                    ),
+                ),
+                (
+                    "error_message",
+                    models.TextField(help_text="Message shown when rule fails"),
+                ),
+                (
+                    "override_allowed",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Can be manually overridden by authorized staff",
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_rules",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "tenant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="eligibility_rules",
+                        to="tenants.tenant",
+                    ),
+                ),
+                (
+                    "jurisdiction_requirement",
+                    models.ForeignKey(
+                        blank=True,
+                        help_text="Link to specific jurisdiction requirement (optional)",
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="custom_rules",
+                        to="funding_eligibility.jurisdictionrequirement",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['priority', 'rule_type', 'name'],
+                "ordering": ["priority", "rule_type", "name"],
             },
         ),
         migrations.CreateModel(
-            name='EligibilityCheck',
+            name="EligibilityCheck",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('check_number', models.CharField(editable=False, max_length=50, unique=True)),
-                ('student_first_name', models.CharField(max_length=100)),
-                ('student_last_name', models.CharField(max_length=100)),
-                ('student_dob', models.DateField(help_text='Date of birth')),
-                ('student_email', models.EmailField(max_length=254)),
-                ('student_phone', models.CharField(blank=True, max_length=20)),
-                ('course_code', models.CharField(max_length=50)),
-                ('course_name', models.CharField(max_length=200)),
-                ('aqf_level', models.IntegerField(help_text='AQF level of course (1-10)', validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(10)])),
-                ('intended_start_date', models.DateField()),
-                ('jurisdiction', models.CharField(choices=[('nsw', 'New South Wales'), ('vic', 'Victoria'), ('qld', 'Queensland'), ('wa', 'Western Australia'), ('sa', 'South Australia'), ('tas', 'Tasmania'), ('act', 'Australian Capital Territory'), ('nt', 'Northern Territory'), ('federal', 'Federal (Commonwealth)')], max_length=20)),
-                ('funding_program_code', models.CharField(blank=True, max_length=50)),
-                ('student_data', models.JSONField(default=dict, help_text='Student eligibility information including citizenship, residency, employment, etc.')),
-                ('status', models.CharField(choices=[('pending', 'Pending Verification'), ('eligible', 'Eligible'), ('ineligible', 'Not Eligible'), ('conditional', 'Conditionally Eligible'), ('override', 'Override Approved'), ('expired', 'Eligibility Expired')], default='pending', max_length=20)),
-                ('is_eligible', models.BooleanField(default=False)),
-                ('eligibility_percentage', models.DecimalField(decimal_places=2, default=0.0, help_text='Percentage of rules passed', max_digits=5)),
-                ('rules_checked', models.IntegerField(default=0)),
-                ('rules_passed', models.IntegerField(default=0)),
-                ('rules_failed', models.IntegerField(default=0)),
-                ('check_results', models.JSONField(default=dict, help_text='Detailed results of each rule evaluation')),
-                ('failed_rules', models.JSONField(default=list, help_text='List of failed rule details')),
-                ('warnings', models.JSONField(default=list, help_text='Non-critical warnings')),
-                ('api_verified', models.BooleanField(default=False)),
-                ('api_response', models.JSONField(blank=True, default=dict, help_text='Response from external API verification')),
-                ('api_verified_at', models.DateTimeField(blank=True, null=True)),
-                ('override_required', models.BooleanField(default=False)),
-                ('override_approved', models.BooleanField(default=False)),
-                ('override_reason', models.TextField(blank=True)),
-                ('override_approved_at', models.DateTimeField(blank=True, null=True)),
-                ('prevents_enrollment', models.BooleanField(default=True, help_text='If ineligible, prevent enrollment')),
-                ('compliance_notes', models.TextField(blank=True)),
-                ('valid_from', models.DateField(auto_now_add=True)),
-                ('valid_until', models.DateField(blank=True, help_text='Eligibility expiry date', null=True)),
-                ('checked_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('checked_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='eligibility_checks_performed', to=settings.AUTH_USER_MODEL)),
-                ('override_approved_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='eligibility_overrides', to=settings.AUTH_USER_MODEL)),
-                ('tenant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='eligibility_checks', to='tenants.tenant')),
-                ('jurisdiction_requirement', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='checks', to='funding_eligibility.jurisdictionrequirement')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "check_number",
+                    models.CharField(editable=False, max_length=50, unique=True),
+                ),
+                ("student_first_name", models.CharField(max_length=100)),
+                ("student_last_name", models.CharField(max_length=100)),
+                ("student_dob", models.DateField(help_text="Date of birth")),
+                ("student_email", models.EmailField(max_length=254)),
+                ("student_phone", models.CharField(blank=True, max_length=20)),
+                ("course_code", models.CharField(max_length=50)),
+                ("course_name", models.CharField(max_length=200)),
+                (
+                    "aqf_level",
+                    models.IntegerField(
+                        help_text="AQF level of course (1-10)",
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(10),
+                        ],
+                    ),
+                ),
+                ("intended_start_date", models.DateField()),
+                (
+                    "jurisdiction",
+                    models.CharField(
+                        choices=[
+                            ("nsw", "New South Wales"),
+                            ("vic", "Victoria"),
+                            ("qld", "Queensland"),
+                            ("wa", "Western Australia"),
+                            ("sa", "South Australia"),
+                            ("tas", "Tasmania"),
+                            ("act", "Australian Capital Territory"),
+                            ("nt", "Northern Territory"),
+                            ("federal", "Federal (Commonwealth)"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("funding_program_code", models.CharField(blank=True, max_length=50)),
+                (
+                    "student_data",
+                    models.JSONField(
+                        default=dict,
+                        help_text="Student eligibility information including citizenship, residency, employment, etc.",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending Verification"),
+                            ("eligible", "Eligible"),
+                            ("ineligible", "Not Eligible"),
+                            ("conditional", "Conditionally Eligible"),
+                            ("override", "Override Approved"),
+                            ("expired", "Eligibility Expired"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                ("is_eligible", models.BooleanField(default=False)),
+                (
+                    "eligibility_percentage",
+                    models.DecimalField(
+                        decimal_places=2,
+                        default=0.0,
+                        help_text="Percentage of rules passed",
+                        max_digits=5,
+                    ),
+                ),
+                ("rules_checked", models.IntegerField(default=0)),
+                ("rules_passed", models.IntegerField(default=0)),
+                ("rules_failed", models.IntegerField(default=0)),
+                (
+                    "check_results",
+                    models.JSONField(
+                        default=dict,
+                        help_text="Detailed results of each rule evaluation",
+                    ),
+                ),
+                (
+                    "failed_rules",
+                    models.JSONField(
+                        default=list, help_text="List of failed rule details"
+                    ),
+                ),
+                (
+                    "warnings",
+                    models.JSONField(default=list, help_text="Non-critical warnings"),
+                ),
+                ("api_verified", models.BooleanField(default=False)),
+                (
+                    "api_response",
+                    models.JSONField(
+                        blank=True,
+                        default=dict,
+                        help_text="Response from external API verification",
+                    ),
+                ),
+                ("api_verified_at", models.DateTimeField(blank=True, null=True)),
+                ("override_required", models.BooleanField(default=False)),
+                ("override_approved", models.BooleanField(default=False)),
+                ("override_reason", models.TextField(blank=True)),
+                ("override_approved_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "prevents_enrollment",
+                    models.BooleanField(
+                        default=True, help_text="If ineligible, prevent enrollment"
+                    ),
+                ),
+                ("compliance_notes", models.TextField(blank=True)),
+                ("valid_from", models.DateField(auto_now_add=True)),
+                (
+                    "valid_until",
+                    models.DateField(
+                        blank=True, help_text="Eligibility expiry date", null=True
+                    ),
+                ),
+                ("checked_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "checked_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="eligibility_checks_performed",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "override_approved_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="eligibility_overrides",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "tenant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="eligibility_checks",
+                        to="tenants.tenant",
+                    ),
+                ),
+                (
+                    "jurisdiction_requirement",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="checks",
+                        to="funding_eligibility.jurisdictionrequirement",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-checked_at'],
+                "ordering": ["-checked_at"],
             },
         ),
         migrations.CreateModel(
-            name='EligibilityCheckLog',
+            name="EligibilityCheckLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(choices=[('check_created', 'Check Created'), ('rule_evaluated', 'Rule Evaluated'), ('api_called', 'API Called'), ('status_changed', 'Status Changed'), ('override_requested', 'Override Requested'), ('override_approved', 'Override Approved'), ('override_rejected', 'Override Rejected'), ('check_expired', 'Check Expired')], max_length=30)),
-                ('details', models.JSONField(default=dict)),
-                ('notes', models.TextField(blank=True)),
-                ('performed_at', models.DateTimeField(auto_now_add=True)),
-                ('eligibility_check', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='logs', to='funding_eligibility.eligibilitycheck')),
-                ('performed_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[
+                            ("check_created", "Check Created"),
+                            ("rule_evaluated", "Rule Evaluated"),
+                            ("api_called", "API Called"),
+                            ("status_changed", "Status Changed"),
+                            ("override_requested", "Override Requested"),
+                            ("override_approved", "Override Approved"),
+                            ("override_rejected", "Override Rejected"),
+                            ("check_expired", "Check Expired"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("details", models.JSONField(default=dict)),
+                ("notes", models.TextField(blank=True)),
+                ("performed_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "eligibility_check",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="logs",
+                        to="funding_eligibility.eligibilitycheck",
+                    ),
+                ),
+                (
+                    "performed_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-performed_at'],
-                'indexes': [models.Index(fields=['eligibility_check', 'performed_at'], name='funding_eli_eligibi_ed3587_idx'), models.Index(fields=['action'], name='funding_eli_action_0f8dc1_idx')],
+                "ordering": ["-performed_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["eligibility_check", "performed_at"],
+                        name="funding_eli_eligibi_ed3587_idx",
+                    ),
+                    models.Index(
+                        fields=["action"], name="funding_eli_action_0f8dc1_idx"
+                    ),
+                ],
             },
         ),
         migrations.AddIndex(
-            model_name='jurisdictionrequirement',
-            index=models.Index(fields=['tenant', 'is_active'], name='funding_eli_tenant__a9fe9f_idx'),
+            model_name="jurisdictionrequirement",
+            index=models.Index(
+                fields=["tenant", "is_active"], name="funding_eli_tenant__a9fe9f_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='jurisdictionrequirement',
-            index=models.Index(fields=['jurisdiction'], name='funding_eli_jurisdi_113e91_idx'),
+            model_name="jurisdictionrequirement",
+            index=models.Index(
+                fields=["jurisdiction"], name="funding_eli_jurisdi_113e91_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='jurisdictionrequirement',
-            index=models.Index(fields=['effective_from', 'effective_to'], name='funding_eli_effecti_2a9747_idx'),
+            model_name="jurisdictionrequirement",
+            index=models.Index(
+                fields=["effective_from", "effective_to"],
+                name="funding_eli_effecti_2a9747_idx",
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='jurisdictionrequirement',
-            unique_together={('tenant', 'jurisdiction', 'code')},
+            name="jurisdictionrequirement",
+            unique_together={("tenant", "jurisdiction", "code")},
         ),
         migrations.AddIndex(
-            model_name='eligibilityrule',
-            index=models.Index(fields=['tenant', 'is_active'], name='funding_eli_tenant__da99ad_idx'),
+            model_name="eligibilityrule",
+            index=models.Index(
+                fields=["tenant", "is_active"], name="funding_eli_tenant__da99ad_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='eligibilityrule',
-            index=models.Index(fields=['rule_type'], name='funding_eli_rule_ty_144ed0_idx'),
+            model_name="eligibilityrule",
+            index=models.Index(
+                fields=["rule_type"], name="funding_eli_rule_ty_144ed0_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='eligibilityrule',
-            index=models.Index(fields=['priority'], name='funding_eli_priorit_9aa724_idx'),
+            model_name="eligibilityrule",
+            index=models.Index(
+                fields=["priority"], name="funding_eli_priorit_9aa724_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='eligibilitycheck',
-            index=models.Index(fields=['tenant', 'status'], name='funding_eli_tenant__8192eb_idx'),
+            model_name="eligibilitycheck",
+            index=models.Index(
+                fields=["tenant", "status"], name="funding_eli_tenant__8192eb_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='eligibilitycheck',
-            index=models.Index(fields=['check_number'], name='funding_eli_check_n_2b765a_idx'),
+            model_name="eligibilitycheck",
+            index=models.Index(
+                fields=["check_number"], name="funding_eli_check_n_2b765a_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='eligibilitycheck',
-            index=models.Index(fields=['jurisdiction'], name='funding_eli_jurisdi_7a514e_idx'),
+            model_name="eligibilitycheck",
+            index=models.Index(
+                fields=["jurisdiction"], name="funding_eli_jurisdi_7a514e_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='eligibilitycheck',
-            index=models.Index(fields=['student_email'], name='funding_eli_student_7a9504_idx'),
+            model_name="eligibilitycheck",
+            index=models.Index(
+                fields=["student_email"], name="funding_eli_student_7a9504_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='eligibilitycheck',
-            index=models.Index(fields=['intended_start_date'], name='funding_eli_intende_f21a08_idx'),
+            model_name="eligibilitycheck",
+            index=models.Index(
+                fields=["intended_start_date"], name="funding_eli_intende_f21a08_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='eligibilitycheck',
-            index=models.Index(fields=['is_eligible'], name='funding_eli_is_elig_dae8ab_idx'),
+            model_name="eligibilitycheck",
+            index=models.Index(
+                fields=["is_eligible"], name="funding_eli_is_elig_dae8ab_idx"
+            ),
         ),
     ]

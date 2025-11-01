@@ -5,16 +5,20 @@ from .views import (
     AudioRecordingViewSet,
     DailySummaryViewSet,
     EvidenceDocumentViewSet,
-    TranscriptionJobViewSet
+    TranscriptionJobViewSet,
 )
 
 router = DefaultRouter()
-router.register(r'diary-entries', DiaryEntryViewSet, basename='diary-entry')
-router.register(r'audio-recordings', AudioRecordingViewSet, basename='audio-recording')
-router.register(r'daily-summaries', DailySummaryViewSet, basename='daily-summary')
-router.register(r'evidence-documents', EvidenceDocumentViewSet, basename='evidence-document')
-router.register(r'transcription-jobs', TranscriptionJobViewSet, basename='transcription-job')
+router.register(r"diary-entries", DiaryEntryViewSet, basename="diary-entry")
+router.register(r"audio-recordings", AudioRecordingViewSet, basename="audio-recording")
+router.register(r"daily-summaries", DailySummaryViewSet, basename="daily-summary")
+router.register(
+    r"evidence-documents", EvidenceDocumentViewSet, basename="evidence-document"
+)
+router.register(
+    r"transcription-jobs", TranscriptionJobViewSet, basename="transcription-job"
+)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

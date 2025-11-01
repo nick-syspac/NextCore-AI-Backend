@@ -1,1 +1,1 @@
-default_app_config = 'trainer_diary.apps.TrainerDiaryConfig'
+default_app_config = "trainer_diary.apps.TrainerDiaryConfig"

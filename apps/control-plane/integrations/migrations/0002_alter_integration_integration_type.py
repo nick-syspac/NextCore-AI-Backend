@@ -6,13 +6,31 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('integrations', '0001_initial'),
+        ("integrations", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='integration',
-            name='integration_type',
-            field=models.CharField(choices=[('axcelerate', 'Axcelerate'), ('canvas', 'Canvas LMS'), ('xero', 'Xero'), ('myob', 'MYOB'), ('readytech_jr', 'ReadyTech JR Plus / Ready Student'), ('vettrak', 'VETtrak (ReadyTech)'), ('eskilled', 'eSkilled SMS+LMS'), ('cloudassess', 'CloudAssess'), ('coursebox', 'Coursebox AI-LMS'), ('moodle', 'Moodle'), ('d2l_brightspace', 'D2L Brightspace'), ('quickbooks', 'QuickBooks Online'), ('sage_intacct', 'Sage Intacct'), ('stripe', 'Stripe (AU)')], max_length=50),
+            model_name="integration",
+            name="integration_type",
+            field=models.CharField(
+                choices=[
+                    ("axcelerate", "Axcelerate"),
+                    ("canvas", "Canvas LMS"),
+                    ("xero", "Xero"),
+                    ("myob", "MYOB"),
+                    ("readytech_jr", "ReadyTech JR Plus / Ready Student"),
+                    ("vettrak", "VETtrak (ReadyTech)"),
+                    ("eskilled", "eSkilled SMS+LMS"),
+                    ("cloudassess", "CloudAssess"),
+                    ("coursebox", "Coursebox AI-LMS"),
+                    ("moodle", "Moodle"),
+                    ("d2l_brightspace", "D2L Brightspace"),
+                    ("quickbooks", "QuickBooks Online"),
+                    ("sage_intacct", "Sage Intacct"),
+                    ("stripe", "Stripe (AU)"),
+                ],
+                max_length=50,
+            ),
         ),
     ]

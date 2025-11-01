@@ -7,6 +7,7 @@ This worker processes:
 - Data exports
 - Scheduled cleanups
 """
+
 import os
 import sys
 
@@ -26,6 +27,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "control_plane.settings")
 
 # Import Django to configure it
 import django
+
 django.setup()
 
 # Create Celery app

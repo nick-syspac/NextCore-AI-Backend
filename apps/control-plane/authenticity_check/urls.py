@@ -5,16 +5,24 @@ from .views import (
     SubmissionAnalysisViewSet,
     PlagiarismMatchViewSet,
     MetadataVerificationViewSet,
-    AnomalyDetectionViewSet
+    AnomalyDetectionViewSet,
 )
 
 router = DefaultRouter()
-router.register(r'checks', AuthenticityCheckViewSet, basename='authenticity-check')
-router.register(r'analyses', SubmissionAnalysisViewSet, basename='submission-analysis')
-router.register(r'plagiarism-matches', PlagiarismMatchViewSet, basename='plagiarism-match')
-router.register(r'metadata-verifications', MetadataVerificationViewSet, basename='metadata-verification')
-router.register(r'anomaly-detections', AnomalyDetectionViewSet, basename='anomaly-detection')
+router.register(r"checks", AuthenticityCheckViewSet, basename="authenticity-check")
+router.register(r"analyses", SubmissionAnalysisViewSet, basename="submission-analysis")
+router.register(
+    r"plagiarism-matches", PlagiarismMatchViewSet, basename="plagiarism-match"
+)
+router.register(
+    r"metadata-verifications",
+    MetadataVerificationViewSet,
+    basename="metadata-verification",
+)
+router.register(
+    r"anomaly-detections", AnomalyDetectionViewSet, basename="anomaly-detection"
+)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

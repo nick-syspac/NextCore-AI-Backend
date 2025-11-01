@@ -11,171 +11,472 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('tenants', '0003_tenantapikey_description'),
+        ("tenants", "0003_tenantapikey_description"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ASQAStandard',
+            name="ASQAStandard",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('standard_number', models.CharField(help_text='e.g., Standard 1.1', max_length=20, unique=True)),
-                ('title', models.CharField(max_length=300)),
-                ('description', models.TextField()),
-                ('standard_type', models.CharField(choices=[('training_assessment', 'Training and Assessment'), ('trainer_assessor', 'Trainer and Assessor'), ('educational_support', 'Educational and Support Services'), ('certification', 'Certification'), ('engagement_employer', 'Engagement with Employers'), ('complaints_appeals', 'Complaints and Appeals'), ('governance', 'Governance and Administration'), ('financial', 'Financial Management')], max_length=50)),
-                ('full_text', models.TextField(help_text='Complete text of the ASQA standard')),
-                ('requirements', models.JSONField(default=list, help_text='List of specific requirements')),
-                ('is_active', models.BooleanField(default=True)),
-                ('effective_date', models.DateField(blank=True, null=True)),
-                ('version', models.CharField(default='2015', max_length=20)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "standard_number",
+                    models.CharField(
+                        help_text="e.g., Standard 1.1", max_length=20, unique=True
+                    ),
+                ),
+                ("title", models.CharField(max_length=300)),
+                ("description", models.TextField()),
+                (
+                    "standard_type",
+                    models.CharField(
+                        choices=[
+                            ("training_assessment", "Training and Assessment"),
+                            ("trainer_assessor", "Trainer and Assessor"),
+                            ("educational_support", "Educational and Support Services"),
+                            ("certification", "Certification"),
+                            ("engagement_employer", "Engagement with Employers"),
+                            ("complaints_appeals", "Complaints and Appeals"),
+                            ("governance", "Governance and Administration"),
+                            ("financial", "Financial Management"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "full_text",
+                    models.TextField(help_text="Complete text of the ASQA standard"),
+                ),
+                (
+                    "requirements",
+                    models.JSONField(
+                        default=list, help_text="List of specific requirements"
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("effective_date", models.DateField(blank=True, null=True)),
+                ("version", models.CharField(default="2015", max_length=20)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'verbose_name': 'ASQA Standard',
-                'verbose_name_plural': 'ASQA Standards',
-                'db_table': 'asqa_standards',
-                'ordering': ['standard_number'],
+                "verbose_name": "ASQA Standard",
+                "verbose_name_plural": "ASQA Standards",
+                "db_table": "asqa_standards",
+                "ordering": ["standard_number"],
             },
         ),
         migrations.CreateModel(
-            name='ASQAClause',
+            name="ASQAClause",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('clause_number', models.CharField(help_text='e.g., 1.1, 1.2, 1.3', max_length=20)),
-                ('title', models.CharField(max_length=300)),
-                ('clause_text', models.TextField(help_text='Full text of the clause')),
-                ('evidence_required', models.JSONField(default=list, help_text='Types of evidence needed')),
-                ('keywords', models.JSONField(default=list, help_text='Key terms for text similarity')),
-                ('compliance_level', models.CharField(choices=[('critical', 'Critical - Must comply'), ('essential', 'Essential - Required'), ('recommended', 'Recommended - Best practice')], default='essential', max_length=20)),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('standard', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='clauses', to='policy_comparator.asqastandard')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "clause_number",
+                    models.CharField(help_text="e.g., 1.1, 1.2, 1.3", max_length=20),
+                ),
+                ("title", models.CharField(max_length=300)),
+                ("clause_text", models.TextField(help_text="Full text of the clause")),
+                (
+                    "evidence_required",
+                    models.JSONField(
+                        default=list, help_text="Types of evidence needed"
+                    ),
+                ),
+                (
+                    "keywords",
+                    models.JSONField(
+                        default=list, help_text="Key terms for text similarity"
+                    ),
+                ),
+                (
+                    "compliance_level",
+                    models.CharField(
+                        choices=[
+                            ("critical", "Critical - Must comply"),
+                            ("essential", "Essential - Required"),
+                            ("recommended", "Recommended - Best practice"),
+                        ],
+                        default="essential",
+                        max_length=20,
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "standard",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="clauses",
+                        to="policy_comparator.asqastandard",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'ASQA Clause',
-                'verbose_name_plural': 'ASQA Clauses',
-                'db_table': 'asqa_clauses',
-                'ordering': ['standard', 'clause_number'],
-                'unique_together': {('standard', 'clause_number')},
+                "verbose_name": "ASQA Clause",
+                "verbose_name_plural": "ASQA Clauses",
+                "db_table": "asqa_clauses",
+                "ordering": ["standard", "clause_number"],
+                "unique_together": {("standard", "clause_number")},
             },
         ),
         migrations.CreateModel(
-            name='Policy',
+            name="Policy",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('policy_number', models.CharField(max_length=50)),
-                ('title', models.CharField(max_length=300)),
-                ('description', models.TextField(blank=True)),
-                ('policy_type', models.CharField(choices=[('training_delivery', 'Training and Delivery'), ('assessment', 'Assessment'), ('student_support', 'Student Support'), ('complaints_appeals', 'Complaints and Appeals'), ('financial', 'Financial'), ('governance', 'Governance'), ('quality_assurance', 'Quality Assurance'), ('workplace_health_safety', 'Workplace Health and Safety'), ('staff_management', 'Staff Management'), ('facilities_resources', 'Facilities and Resources')], max_length=50)),
-                ('content', models.TextField(help_text='Full policy content')),
-                ('version', models.CharField(default='1.0', max_length=20)),
-                ('status', models.CharField(choices=[('draft', 'Draft'), ('under_review', 'Under Review'), ('approved', 'Approved'), ('archived', 'Archived')], default='draft', max_length=20)),
-                ('effective_date', models.DateField(blank=True, null=True)),
-                ('review_date', models.DateField(blank=True, null=True)),
-                ('last_compared_at', models.DateTimeField(blank=True, null=True)),
-                ('compliance_score', models.FloatField(blank=True, help_text='Overall compliance score (0-100)', null=True, validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(100.0)])),
-                ('file_path', models.CharField(blank=True, help_text='Path to uploaded policy document', max_length=500)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='policies_created', to=settings.AUTH_USER_MODEL)),
-                ('tenant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='policies', to='tenants.tenant')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("policy_number", models.CharField(max_length=50)),
+                ("title", models.CharField(max_length=300)),
+                ("description", models.TextField(blank=True)),
+                (
+                    "policy_type",
+                    models.CharField(
+                        choices=[
+                            ("training_delivery", "Training and Delivery"),
+                            ("assessment", "Assessment"),
+                            ("student_support", "Student Support"),
+                            ("complaints_appeals", "Complaints and Appeals"),
+                            ("financial", "Financial"),
+                            ("governance", "Governance"),
+                            ("quality_assurance", "Quality Assurance"),
+                            ("workplace_health_safety", "Workplace Health and Safety"),
+                            ("staff_management", "Staff Management"),
+                            ("facilities_resources", "Facilities and Resources"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                ("content", models.TextField(help_text="Full policy content")),
+                ("version", models.CharField(default="1.0", max_length=20)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("draft", "Draft"),
+                            ("under_review", "Under Review"),
+                            ("approved", "Approved"),
+                            ("archived", "Archived"),
+                        ],
+                        default="draft",
+                        max_length=20,
+                    ),
+                ),
+                ("effective_date", models.DateField(blank=True, null=True)),
+                ("review_date", models.DateField(blank=True, null=True)),
+                ("last_compared_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "compliance_score",
+                    models.FloatField(
+                        blank=True,
+                        help_text="Overall compliance score (0-100)",
+                        null=True,
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(100.0),
+                        ],
+                    ),
+                ),
+                (
+                    "file_path",
+                    models.CharField(
+                        blank=True,
+                        help_text="Path to uploaded policy document",
+                        max_length=500,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="policies_created",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "tenant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="policies",
+                        to="tenants.tenant",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Policy',
-                'verbose_name_plural': 'Policies',
-                'db_table': 'policies',
-                'ordering': ['-created_at'],
+                "verbose_name": "Policy",
+                "verbose_name_plural": "Policies",
+                "db_table": "policies",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='ComparisonSession',
+            name="ComparisonSession",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('session_name', models.CharField(max_length=200)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('processing', 'Processing'), ('completed', 'Completed'), ('failed', 'Failed')], default='pending', max_length=20)),
-                ('standards_compared', models.JSONField(default=list, help_text='List of ASQA standard IDs compared')),
-                ('total_clauses_checked', models.IntegerField(default=0)),
-                ('compliant_count', models.IntegerField(default=0)),
-                ('partial_match_count', models.IntegerField(default=0)),
-                ('gap_count', models.IntegerField(default=0)),
-                ('overall_compliance_score', models.FloatField(blank=True, null=True, validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(100.0)])),
-                ('processing_time_seconds', models.FloatField(default=0.0)),
-                ('error_message', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('completed_at', models.DateTimeField(blank=True, null=True)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('tenant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comparison_sessions', to='tenants.tenant')),
-                ('policy', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comparison_sessions', to='policy_comparator.policy')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("session_name", models.CharField(max_length=200)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("processing", "Processing"),
+                            ("completed", "Completed"),
+                            ("failed", "Failed"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "standards_compared",
+                    models.JSONField(
+                        default=list, help_text="List of ASQA standard IDs compared"
+                    ),
+                ),
+                ("total_clauses_checked", models.IntegerField(default=0)),
+                ("compliant_count", models.IntegerField(default=0)),
+                ("partial_match_count", models.IntegerField(default=0)),
+                ("gap_count", models.IntegerField(default=0)),
+                (
+                    "overall_compliance_score",
+                    models.FloatField(
+                        blank=True,
+                        null=True,
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(100.0),
+                        ],
+                    ),
+                ),
+                ("processing_time_seconds", models.FloatField(default=0.0)),
+                ("error_message", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("completed_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "tenant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="comparison_sessions",
+                        to="tenants.tenant",
+                    ),
+                ),
+                (
+                    "policy",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="comparison_sessions",
+                        to="policy_comparator.policy",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Comparison Session',
-                'verbose_name_plural': 'Comparison Sessions',
-                'db_table': 'comparison_sessions',
-                'ordering': ['-created_at'],
+                "verbose_name": "Comparison Session",
+                "verbose_name_plural": "Comparison Sessions",
+                "db_table": "comparison_sessions",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='ComparisonResult',
+            name="ComparisonResult",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('similarity_score', models.FloatField(help_text='Text similarity score (0.0 - 1.0)', validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(1.0)])),
-                ('match_type', models.CharField(choices=[('full', 'Full Match'), ('partial', 'Partial Match'), ('weak', 'Weak Match'), ('no_match', 'No Match')], max_length=20)),
-                ('matched_text', models.TextField(blank=True, help_text='Relevant text from policy')),
-                ('gap_description', models.TextField(blank=True, help_text='Description of compliance gap')),
-                ('recommendations', models.JSONField(default=list, help_text='Suggestions to improve compliance')),
-                ('nlp_metadata', models.JSONField(default=dict, help_text='NLP processing metadata')),
-                ('keywords_matched', models.JSONField(default=list, help_text='Keywords found in policy')),
-                ('keywords_missing', models.JSONField(default=list, help_text='Keywords missing from policy')),
-                ('has_sufficient_evidence', models.BooleanField(default=False)),
-                ('evidence_notes', models.TextField(blank=True)),
-                ('is_compliant', models.BooleanField(default=False, help_text='Meets ASQA requirements')),
-                ('requires_action', models.BooleanField(default=False, help_text='Action needed to achieve compliance')),
-                ('comparison_date', models.DateTimeField(auto_now_add=True)),
-                ('reviewed_at', models.DateTimeField(blank=True, null=True)),
-                ('asqa_clause', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comparison_results', to='policy_comparator.asqaclause')),
-                ('reviewed_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='reviewed_comparisons', to=settings.AUTH_USER_MODEL)),
-                ('policy', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='comparison_results', to='policy_comparator.policy')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "similarity_score",
+                    models.FloatField(
+                        help_text="Text similarity score (0.0 - 1.0)",
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(1.0),
+                        ],
+                    ),
+                ),
+                (
+                    "match_type",
+                    models.CharField(
+                        choices=[
+                            ("full", "Full Match"),
+                            ("partial", "Partial Match"),
+                            ("weak", "Weak Match"),
+                            ("no_match", "No Match"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "matched_text",
+                    models.TextField(blank=True, help_text="Relevant text from policy"),
+                ),
+                (
+                    "gap_description",
+                    models.TextField(
+                        blank=True, help_text="Description of compliance gap"
+                    ),
+                ),
+                (
+                    "recommendations",
+                    models.JSONField(
+                        default=list, help_text="Suggestions to improve compliance"
+                    ),
+                ),
+                (
+                    "nlp_metadata",
+                    models.JSONField(default=dict, help_text="NLP processing metadata"),
+                ),
+                (
+                    "keywords_matched",
+                    models.JSONField(
+                        default=list, help_text="Keywords found in policy"
+                    ),
+                ),
+                (
+                    "keywords_missing",
+                    models.JSONField(
+                        default=list, help_text="Keywords missing from policy"
+                    ),
+                ),
+                ("has_sufficient_evidence", models.BooleanField(default=False)),
+                ("evidence_notes", models.TextField(blank=True)),
+                (
+                    "is_compliant",
+                    models.BooleanField(
+                        default=False, help_text="Meets ASQA requirements"
+                    ),
+                ),
+                (
+                    "requires_action",
+                    models.BooleanField(
+                        default=False, help_text="Action needed to achieve compliance"
+                    ),
+                ),
+                ("comparison_date", models.DateTimeField(auto_now_add=True)),
+                ("reviewed_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "asqa_clause",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="comparison_results",
+                        to="policy_comparator.asqaclause",
+                    ),
+                ),
+                (
+                    "reviewed_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="reviewed_comparisons",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "policy",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="comparison_results",
+                        to="policy_comparator.policy",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Comparison Result',
-                'verbose_name_plural': 'Comparison Results',
-                'db_table': 'comparison_results',
-                'ordering': ['-similarity_score'],
+                "verbose_name": "Comparison Result",
+                "verbose_name_plural": "Comparison Results",
+                "db_table": "comparison_results",
+                "ordering": ["-similarity_score"],
             },
         ),
         migrations.AddIndex(
-            model_name='policy',
-            index=models.Index(fields=['tenant', 'status'], name='policies_tenant__40f254_idx'),
+            model_name="policy",
+            index=models.Index(
+                fields=["tenant", "status"], name="policies_tenant__40f254_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='policy',
-            index=models.Index(fields=['policy_type'], name='policies_policy__66f050_idx'),
+            model_name="policy",
+            index=models.Index(
+                fields=["policy_type"], name="policies_policy__66f050_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='policy',
-            index=models.Index(fields=['compliance_score'], name='policies_complia_275ca3_idx'),
+            model_name="policy",
+            index=models.Index(
+                fields=["compliance_score"], name="policies_complia_275ca3_idx"
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='policy',
-            unique_together={('tenant', 'policy_number')},
+            name="policy",
+            unique_together={("tenant", "policy_number")},
         ),
         migrations.AddIndex(
-            model_name='comparisonresult',
-            index=models.Index(fields=['policy', 'similarity_score'], name='comparison__policy__e7fbbd_idx'),
+            model_name="comparisonresult",
+            index=models.Index(
+                fields=["policy", "similarity_score"],
+                name="comparison__policy__e7fbbd_idx",
+            ),
         ),
         migrations.AddIndex(
-            model_name='comparisonresult',
-            index=models.Index(fields=['is_compliant'], name='comparison__is_comp_420787_idx'),
+            model_name="comparisonresult",
+            index=models.Index(
+                fields=["is_compliant"], name="comparison__is_comp_420787_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='comparisonresult',
-            index=models.Index(fields=['requires_action'], name='comparison__require_3316d2_idx'),
+            model_name="comparisonresult",
+            index=models.Index(
+                fields=["requires_action"], name="comparison__require_3316d2_idx"
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='comparisonresult',
-            unique_together={('policy', 'asqa_clause')},
+            name="comparisonresult",
+            unique_together={("policy", "asqa_clause")},
         ),
     ]

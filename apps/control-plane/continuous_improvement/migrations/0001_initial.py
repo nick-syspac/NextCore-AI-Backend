@@ -11,194 +11,602 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('tenants', '0003_tenantapikey_description'),
+        ("tenants", "0003_tenantapikey_description"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ImprovementCategory',
+            name="ImprovementCategory",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200)),
-                ('category_type', models.CharField(choices=[('training_assessment', 'Training & Assessment'), ('trainer_qualifications', 'Trainer & Assessor Qualifications'), ('student_support', 'Student Support Services'), ('facilities_equipment', 'Facilities & Equipment'), ('admin_records', 'Administration & Records'), ('compliance_governance', 'Compliance & Governance'), ('marketing_recruitment', 'Marketing & Recruitment'), ('financial_management', 'Financial Management'), ('quality_assurance', 'Quality Assurance'), ('stakeholder_engagement', 'Stakeholder Engagement'), ('continuous_improvement', 'Continuous Improvement'), ('other', 'Other')], max_length=50)),
-                ('description', models.TextField(blank=True)),
-                ('color_code', models.CharField(default='#3B82F6', help_text='Hex color code for UI display', max_length=7)),
-                ('related_standards', models.JSONField(default=list, help_text='List of ASQA standard numbers this category relates to')),
-                ('is_active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_categories', to=settings.AUTH_USER_MODEL)),
-                ('tenant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='improvement_categories', to='tenants.tenant')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=200)),
+                (
+                    "category_type",
+                    models.CharField(
+                        choices=[
+                            ("training_assessment", "Training & Assessment"),
+                            (
+                                "trainer_qualifications",
+                                "Trainer & Assessor Qualifications",
+                            ),
+                            ("student_support", "Student Support Services"),
+                            ("facilities_equipment", "Facilities & Equipment"),
+                            ("admin_records", "Administration & Records"),
+                            ("compliance_governance", "Compliance & Governance"),
+                            ("marketing_recruitment", "Marketing & Recruitment"),
+                            ("financial_management", "Financial Management"),
+                            ("quality_assurance", "Quality Assurance"),
+                            ("stakeholder_engagement", "Stakeholder Engagement"),
+                            ("continuous_improvement", "Continuous Improvement"),
+                            ("other", "Other"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                ("description", models.TextField(blank=True)),
+                (
+                    "color_code",
+                    models.CharField(
+                        default="#3B82F6",
+                        help_text="Hex color code for UI display",
+                        max_length=7,
+                    ),
+                ),
+                (
+                    "related_standards",
+                    models.JSONField(
+                        default=list,
+                        help_text="List of ASQA standard numbers this category relates to",
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_categories",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "tenant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="improvement_categories",
+                        to="tenants.tenant",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Improvement Category',
-                'verbose_name_plural': 'Improvement Categories',
-                'db_table': 'improvement_categories',
-                'ordering': ['name'],
+                "verbose_name": "Improvement Category",
+                "verbose_name_plural": "Improvement Categories",
+                "db_table": "improvement_categories",
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='ImprovementAction',
+            name="ImprovementAction",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action_number', models.CharField(max_length=50)),
-                ('title', models.CharField(max_length=255)),
-                ('description', models.TextField(help_text='Detailed description of the improvement action')),
-                ('priority', models.CharField(choices=[('critical', 'Critical'), ('high', 'High'), ('medium', 'Medium'), ('low', 'Low')], default='medium', max_length=20)),
-                ('source', models.CharField(choices=[('audit', 'Audit Finding'), ('complaint', 'Complaint'), ('feedback', 'Stakeholder Feedback'), ('self_assessment', 'Self Assessment'), ('staff_suggestion', 'Staff Suggestion'), ('student_feedback', 'Student Feedback'), ('industry_feedback', 'Industry Feedback'), ('regulator_feedback', 'Regulator Feedback'), ('data_analysis', 'Data Analysis'), ('benchmarking', 'Benchmarking'), ('other', 'Other')], max_length=50)),
-                ('ai_classified_category', models.CharField(blank=True, help_text='AI-suggested category based on content analysis', max_length=50)),
-                ('ai_classification_confidence', models.FloatField(default=0.0, help_text='Confidence score (0.0-1.0) for AI classification')),
-                ('ai_summary', models.TextField(blank=True, help_text='AI-generated summary of the action')),
-                ('ai_keywords', models.JSONField(default=list, help_text='AI-extracted keywords from description')),
-                ('ai_related_standards', models.JSONField(default=list, help_text='AI-identified ASQA standards related to this action')),
-                ('ai_processed_at', models.DateTimeField(blank=True, null=True)),
-                ('status', models.CharField(choices=[('identified', 'Identified'), ('planned', 'Planned'), ('in_progress', 'In Progress'), ('on_hold', 'On Hold'), ('completed', 'Completed'), ('cancelled', 'Cancelled')], default='identified', max_length=20)),
-                ('identified_date', models.DateField(default=django.utils.timezone.now)),
-                ('planned_start_date', models.DateField(blank=True, null=True)),
-                ('target_completion_date', models.DateField(blank=True, null=True)),
-                ('actual_completion_date', models.DateField(blank=True, null=True)),
-                ('root_cause', models.TextField(blank=True, help_text='Root cause analysis')),
-                ('proposed_solution', models.TextField(blank=True)),
-                ('resources_required', models.TextField(blank=True)),
-                ('estimated_cost', models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True)),
-                ('actual_cost', models.DecimalField(blank=True, decimal_places=2, max_digits=10, null=True)),
-                ('success_criteria', models.TextField(blank=True, help_text='How to measure success')),
-                ('expected_impact', models.TextField(blank=True)),
-                ('actual_impact', models.TextField(blank=True, help_text='Post-implementation impact')),
-                ('effectiveness_rating', models.IntegerField(blank=True, help_text='Rating 1-5 after completion', null=True)),
-                ('compliance_status', models.CharField(choices=[('compliant', 'Compliant'), ('at_risk', 'At Risk'), ('overdue', 'Overdue'), ('completed', 'Completed')], default='compliant', max_length=20)),
-                ('is_critical_compliance', models.BooleanField(default=False, help_text='Critical for maintaining RTO registration')),
-                ('requires_approval', models.BooleanField(default=False)),
-                ('approved_at', models.DateTimeField(blank=True, null=True)),
-                ('tags', models.JSONField(default=list, help_text='Custom tags for filtering')),
-                ('attachments', models.JSONField(default=list, help_text='List of attachment URLs/metadata')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('approved_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='approved_improvement_actions', to=settings.AUTH_USER_MODEL)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_improvement_actions', to=settings.AUTH_USER_MODEL)),
-                ('responsible_person', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='responsible_improvement_actions', to=settings.AUTH_USER_MODEL)),
-                ('supporting_staff', models.ManyToManyField(blank=True, help_text='Additional staff supporting this action', related_name='supporting_improvement_actions', to=settings.AUTH_USER_MODEL)),
-                ('tenant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='improvement_actions', to='tenants.tenant')),
-                ('category', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='actions', to='continuous_improvement.improvementcategory')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("action_number", models.CharField(max_length=50)),
+                ("title", models.CharField(max_length=255)),
+                (
+                    "description",
+                    models.TextField(
+                        help_text="Detailed description of the improvement action"
+                    ),
+                ),
+                (
+                    "priority",
+                    models.CharField(
+                        choices=[
+                            ("critical", "Critical"),
+                            ("high", "High"),
+                            ("medium", "Medium"),
+                            ("low", "Low"),
+                        ],
+                        default="medium",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "source",
+                    models.CharField(
+                        choices=[
+                            ("audit", "Audit Finding"),
+                            ("complaint", "Complaint"),
+                            ("feedback", "Stakeholder Feedback"),
+                            ("self_assessment", "Self Assessment"),
+                            ("staff_suggestion", "Staff Suggestion"),
+                            ("student_feedback", "Student Feedback"),
+                            ("industry_feedback", "Industry Feedback"),
+                            ("regulator_feedback", "Regulator Feedback"),
+                            ("data_analysis", "Data Analysis"),
+                            ("benchmarking", "Benchmarking"),
+                            ("other", "Other"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "ai_classified_category",
+                    models.CharField(
+                        blank=True,
+                        help_text="AI-suggested category based on content analysis",
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "ai_classification_confidence",
+                    models.FloatField(
+                        default=0.0,
+                        help_text="Confidence score (0.0-1.0) for AI classification",
+                    ),
+                ),
+                (
+                    "ai_summary",
+                    models.TextField(
+                        blank=True, help_text="AI-generated summary of the action"
+                    ),
+                ),
+                (
+                    "ai_keywords",
+                    models.JSONField(
+                        default=list, help_text="AI-extracted keywords from description"
+                    ),
+                ),
+                (
+                    "ai_related_standards",
+                    models.JSONField(
+                        default=list,
+                        help_text="AI-identified ASQA standards related to this action",
+                    ),
+                ),
+                ("ai_processed_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("identified", "Identified"),
+                            ("planned", "Planned"),
+                            ("in_progress", "In Progress"),
+                            ("on_hold", "On Hold"),
+                            ("completed", "Completed"),
+                            ("cancelled", "Cancelled"),
+                        ],
+                        default="identified",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "identified_date",
+                    models.DateField(default=django.utils.timezone.now),
+                ),
+                ("planned_start_date", models.DateField(blank=True, null=True)),
+                ("target_completion_date", models.DateField(blank=True, null=True)),
+                ("actual_completion_date", models.DateField(blank=True, null=True)),
+                (
+                    "root_cause",
+                    models.TextField(blank=True, help_text="Root cause analysis"),
+                ),
+                ("proposed_solution", models.TextField(blank=True)),
+                ("resources_required", models.TextField(blank=True)),
+                (
+                    "estimated_cost",
+                    models.DecimalField(
+                        blank=True, decimal_places=2, max_digits=10, null=True
+                    ),
+                ),
+                (
+                    "actual_cost",
+                    models.DecimalField(
+                        blank=True, decimal_places=2, max_digits=10, null=True
+                    ),
+                ),
+                (
+                    "success_criteria",
+                    models.TextField(blank=True, help_text="How to measure success"),
+                ),
+                ("expected_impact", models.TextField(blank=True)),
+                (
+                    "actual_impact",
+                    models.TextField(
+                        blank=True, help_text="Post-implementation impact"
+                    ),
+                ),
+                (
+                    "effectiveness_rating",
+                    models.IntegerField(
+                        blank=True, help_text="Rating 1-5 after completion", null=True
+                    ),
+                ),
+                (
+                    "compliance_status",
+                    models.CharField(
+                        choices=[
+                            ("compliant", "Compliant"),
+                            ("at_risk", "At Risk"),
+                            ("overdue", "Overdue"),
+                            ("completed", "Completed"),
+                        ],
+                        default="compliant",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "is_critical_compliance",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Critical for maintaining RTO registration",
+                    ),
+                ),
+                ("requires_approval", models.BooleanField(default=False)),
+                ("approved_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "tags",
+                    models.JSONField(
+                        default=list, help_text="Custom tags for filtering"
+                    ),
+                ),
+                (
+                    "attachments",
+                    models.JSONField(
+                        default=list, help_text="List of attachment URLs/metadata"
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "approved_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="approved_improvement_actions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_improvement_actions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "responsible_person",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="responsible_improvement_actions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "supporting_staff",
+                    models.ManyToManyField(
+                        blank=True,
+                        help_text="Additional staff supporting this action",
+                        related_name="supporting_improvement_actions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "tenant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="improvement_actions",
+                        to="tenants.tenant",
+                    ),
+                ),
+                (
+                    "category",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="actions",
+                        to="continuous_improvement.improvementcategory",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Improvement Action',
-                'verbose_name_plural': 'Improvement Actions',
-                'db_table': 'improvement_actions',
-                'ordering': ['-created_at'],
+                "verbose_name": "Improvement Action",
+                "verbose_name_plural": "Improvement Actions",
+                "db_table": "improvement_actions",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='ImprovementReview',
+            name="ImprovementReview",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('review_number', models.CharField(max_length=50)),
-                ('title', models.CharField(max_length=255)),
-                ('review_type', models.CharField(choices=[('monthly', 'Monthly Review'), ('quarterly', 'Quarterly Review'), ('annual', 'Annual Review'), ('ad_hoc', 'Ad-hoc Review')], max_length=20)),
-                ('review_date', models.DateField()),
-                ('review_period_start', models.DateField()),
-                ('review_period_end', models.DateField()),
-                ('total_actions_reviewed', models.IntegerField(default=0)),
-                ('actions_completed', models.IntegerField(default=0)),
-                ('actions_on_track', models.IntegerField(default=0)),
-                ('actions_at_risk', models.IntegerField(default=0)),
-                ('actions_overdue', models.IntegerField(default=0)),
-                ('ai_summary', models.TextField(blank=True, help_text='AI-generated summary of review findings')),
-                ('ai_trends', models.JSONField(default=list, help_text='AI-identified trends and patterns')),
-                ('ai_recommendations', models.JSONField(default=list, help_text='AI-generated recommendations')),
-                ('key_findings', models.TextField(blank=True)),
-                ('areas_of_concern', models.TextField(blank=True)),
-                ('recommendations', models.TextField(blank=True)),
-                ('action_items', models.JSONField(default=list, help_text='New actions arising from review')),
-                ('approved_at', models.DateTimeField(blank=True, null=True)),
-                ('notes', models.TextField(blank=True)),
-                ('attachments', models.JSONField(default=list)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('actions_reviewed', models.ManyToManyField(blank=True, related_name='reviews', to='continuous_improvement.improvementaction')),
-                ('approved_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='approved_reviews', to=settings.AUTH_USER_MODEL)),
-                ('attendees', models.ManyToManyField(blank=True, related_name='attended_reviews', to=settings.AUTH_USER_MODEL)),
-                ('reviewed_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='conducted_reviews', to=settings.AUTH_USER_MODEL)),
-                ('tenant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='improvement_reviews', to='tenants.tenant')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("review_number", models.CharField(max_length=50)),
+                ("title", models.CharField(max_length=255)),
+                (
+                    "review_type",
+                    models.CharField(
+                        choices=[
+                            ("monthly", "Monthly Review"),
+                            ("quarterly", "Quarterly Review"),
+                            ("annual", "Annual Review"),
+                            ("ad_hoc", "Ad-hoc Review"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("review_date", models.DateField()),
+                ("review_period_start", models.DateField()),
+                ("review_period_end", models.DateField()),
+                ("total_actions_reviewed", models.IntegerField(default=0)),
+                ("actions_completed", models.IntegerField(default=0)),
+                ("actions_on_track", models.IntegerField(default=0)),
+                ("actions_at_risk", models.IntegerField(default=0)),
+                ("actions_overdue", models.IntegerField(default=0)),
+                (
+                    "ai_summary",
+                    models.TextField(
+                        blank=True, help_text="AI-generated summary of review findings"
+                    ),
+                ),
+                (
+                    "ai_trends",
+                    models.JSONField(
+                        default=list, help_text="AI-identified trends and patterns"
+                    ),
+                ),
+                (
+                    "ai_recommendations",
+                    models.JSONField(
+                        default=list, help_text="AI-generated recommendations"
+                    ),
+                ),
+                ("key_findings", models.TextField(blank=True)),
+                ("areas_of_concern", models.TextField(blank=True)),
+                ("recommendations", models.TextField(blank=True)),
+                (
+                    "action_items",
+                    models.JSONField(
+                        default=list, help_text="New actions arising from review"
+                    ),
+                ),
+                ("approved_at", models.DateTimeField(blank=True, null=True)),
+                ("notes", models.TextField(blank=True)),
+                ("attachments", models.JSONField(default=list)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "actions_reviewed",
+                    models.ManyToManyField(
+                        blank=True,
+                        related_name="reviews",
+                        to="continuous_improvement.improvementaction",
+                    ),
+                ),
+                (
+                    "approved_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="approved_reviews",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "attendees",
+                    models.ManyToManyField(
+                        blank=True,
+                        related_name="attended_reviews",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "reviewed_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="conducted_reviews",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "tenant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="improvement_reviews",
+                        to="tenants.tenant",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Improvement Review',
-                'verbose_name_plural': 'Improvement Reviews',
-                'db_table': 'improvement_reviews',
-                'ordering': ['-review_date'],
+                "verbose_name": "Improvement Review",
+                "verbose_name_plural": "Improvement Reviews",
+                "db_table": "improvement_reviews",
+                "ordering": ["-review_date"],
             },
         ),
         migrations.CreateModel(
-            name='ActionTracking',
+            name="ActionTracking",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('update_type', models.CharField(choices=[('progress', 'Progress Update'), ('milestone', 'Milestone Achieved'), ('issue', 'Issue/Blocker'), ('resource_change', 'Resource Change'), ('timeline_change', 'Timeline Change'), ('status_change', 'Status Change'), ('completion', 'Completion'), ('review', 'Review')], max_length=30)),
-                ('update_text', models.TextField(help_text='Description of the update')),
-                ('progress_percentage', models.IntegerField(blank=True, help_text='Overall progress (0-100)', null=True)),
-                ('old_status', models.CharField(blank=True, max_length=20)),
-                ('new_status', models.CharField(blank=True, max_length=20)),
-                ('is_blocker', models.BooleanField(default=False)),
-                ('blocker_resolved', models.BooleanField(default=False)),
-                ('blocker_resolution', models.TextField(blank=True)),
-                ('evidence_provided', models.JSONField(default=list, help_text='Evidence of progress (file URLs, references)')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('improvement_action', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='tracking_updates', to='continuous_improvement.improvementaction')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "update_type",
+                    models.CharField(
+                        choices=[
+                            ("progress", "Progress Update"),
+                            ("milestone", "Milestone Achieved"),
+                            ("issue", "Issue/Blocker"),
+                            ("resource_change", "Resource Change"),
+                            ("timeline_change", "Timeline Change"),
+                            ("status_change", "Status Change"),
+                            ("completion", "Completion"),
+                            ("review", "Review"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                (
+                    "update_text",
+                    models.TextField(help_text="Description of the update"),
+                ),
+                (
+                    "progress_percentage",
+                    models.IntegerField(
+                        blank=True, help_text="Overall progress (0-100)", null=True
+                    ),
+                ),
+                ("old_status", models.CharField(blank=True, max_length=20)),
+                ("new_status", models.CharField(blank=True, max_length=20)),
+                ("is_blocker", models.BooleanField(default=False)),
+                ("blocker_resolved", models.BooleanField(default=False)),
+                ("blocker_resolution", models.TextField(blank=True)),
+                (
+                    "evidence_provided",
+                    models.JSONField(
+                        default=list,
+                        help_text="Evidence of progress (file URLs, references)",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "improvement_action",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="tracking_updates",
+                        to="continuous_improvement.improvementaction",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Action Tracking Update',
-                'verbose_name_plural': 'Action Tracking Updates',
-                'db_table': 'action_tracking',
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['improvement_action', 'created_at'], name='action_trac_improve_d2a32d_idx'), models.Index(fields=['update_type'], name='action_trac_update__96af04_idx'), models.Index(fields=['is_blocker'], name='action_trac_is_bloc_24e621_idx')],
+                "verbose_name": "Action Tracking Update",
+                "verbose_name_plural": "Action Tracking Updates",
+                "db_table": "action_tracking",
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["improvement_action", "created_at"],
+                        name="action_trac_improve_d2a32d_idx",
+                    ),
+                    models.Index(
+                        fields=["update_type"], name="action_trac_update__96af04_idx"
+                    ),
+                    models.Index(
+                        fields=["is_blocker"], name="action_trac_is_bloc_24e621_idx"
+                    ),
+                ],
             },
         ),
         migrations.AddIndex(
-            model_name='improvementcategory',
-            index=models.Index(fields=['tenant', 'is_active'], name='improvement_tenant__d41a50_idx'),
+            model_name="improvementcategory",
+            index=models.Index(
+                fields=["tenant", "is_active"], name="improvement_tenant__d41a50_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='improvementcategory',
-            index=models.Index(fields=['category_type'], name='improvement_categor_404528_idx'),
+            model_name="improvementcategory",
+            index=models.Index(
+                fields=["category_type"], name="improvement_categor_404528_idx"
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='improvementcategory',
-            unique_together={('tenant', 'name')},
+            name="improvementcategory",
+            unique_together={("tenant", "name")},
         ),
         migrations.AddIndex(
-            model_name='improvementaction',
-            index=models.Index(fields=['tenant', 'status'], name='improvement_tenant__c5a6b5_idx'),
+            model_name="improvementaction",
+            index=models.Index(
+                fields=["tenant", "status"], name="improvement_tenant__c5a6b5_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='improvementaction',
-            index=models.Index(fields=['priority'], name='improvement_priorit_bffb82_idx'),
+            model_name="improvementaction",
+            index=models.Index(
+                fields=["priority"], name="improvement_priorit_bffb82_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='improvementaction',
-            index=models.Index(fields=['compliance_status'], name='improvement_complia_00fd6c_idx'),
+            model_name="improvementaction",
+            index=models.Index(
+                fields=["compliance_status"], name="improvement_complia_00fd6c_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='improvementaction',
-            index=models.Index(fields=['target_completion_date'], name='improvement_target__4cea34_idx'),
+            model_name="improvementaction",
+            index=models.Index(
+                fields=["target_completion_date"], name="improvement_target__4cea34_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='improvementaction',
-            index=models.Index(fields=['responsible_person'], name='improvement_respons_c02693_idx'),
+            model_name="improvementaction",
+            index=models.Index(
+                fields=["responsible_person"], name="improvement_respons_c02693_idx"
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='improvementaction',
-            unique_together={('tenant', 'action_number')},
+            name="improvementaction",
+            unique_together={("tenant", "action_number")},
         ),
         migrations.AddIndex(
-            model_name='improvementreview',
-            index=models.Index(fields=['tenant', 'review_date'], name='improvement_tenant__de8bdb_idx'),
+            model_name="improvementreview",
+            index=models.Index(
+                fields=["tenant", "review_date"], name="improvement_tenant__de8bdb_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='improvementreview',
-            index=models.Index(fields=['review_type'], name='improvement_review__1b3e4f_idx'),
+            model_name="improvementreview",
+            index=models.Index(
+                fields=["review_type"], name="improvement_review__1b3e4f_idx"
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='improvementreview',
-            unique_together={('tenant', 'review_number')},
+            name="improvementreview",
+            unique_together={("tenant", "review_number")},
         ),
     ]

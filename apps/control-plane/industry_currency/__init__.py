@@ -1,1 +1,1 @@
-default_app_config = 'industry_currency.apps.IndustryCurrencyConfig'
+default_app_config = "industry_currency.apps.IndustryCurrencyConfig"

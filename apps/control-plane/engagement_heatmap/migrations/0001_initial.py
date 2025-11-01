@@ -10,160 +10,603 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='EngagementHeatmap',
+            name="EngagementHeatmap",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('heatmap_number', models.CharField(editable=False, max_length=50, unique=True)),
-                ('tenant', models.CharField(db_index=True, max_length=100)),
-                ('student_id', models.CharField(db_index=True, max_length=100)),
-                ('student_name', models.CharField(max_length=200)),
-                ('time_period', models.CharField(choices=[('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly'), ('semester', 'Semester')], default='weekly', max_length=20)),
-                ('start_date', models.DateField()),
-                ('end_date', models.DateField()),
-                ('overall_engagement_score', models.DecimalField(decimal_places=2, help_text='Weighted composite: 40% attendance + 35% LMS + 25% sentiment', max_digits=5, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)])),
-                ('attendance_score', models.DecimalField(decimal_places=2, max_digits=5, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)])),
-                ('lms_activity_score', models.DecimalField(decimal_places=2, max_digits=5, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)])),
-                ('sentiment_score', models.DecimalField(decimal_places=2, help_text='Normalized sentiment (0=very negative, 100=very positive)', max_digits=5, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)])),
-                ('risk_level', models.CharField(choices=[('critical', 'Critical - Immediate Action Required'), ('high', 'High Risk'), ('medium', 'Medium Risk'), ('low', 'Low Risk'), ('engaged', 'Fully Engaged')], max_length=20)),
-                ('risk_flags', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=100), blank=True, default=list, help_text='Specific risk indicators: low_attendance, inactive_lms, negative_sentiment, etc.', size=None)),
-                ('heatmap_data', models.JSONField(default=dict, help_text='Daily engagement data: {date: {attendance: bool, lms_minutes: int, sentiment: float}}')),
-                ('engagement_trend', models.CharField(choices=[('improving', 'Improving'), ('stable', 'Stable'), ('declining', 'Declining'), ('critical_decline', 'Critical Decline')], default='stable', max_length=20)),
-                ('change_percentage', models.DecimalField(decimal_places=2, help_text='Percentage change from previous period', max_digits=6)),
-                ('alerts_triggered', models.PositiveIntegerField(default=0)),
-                ('interventions_applied', models.PositiveIntegerField(default=0)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "heatmap_number",
+                    models.CharField(editable=False, max_length=50, unique=True),
+                ),
+                ("tenant", models.CharField(db_index=True, max_length=100)),
+                ("student_id", models.CharField(db_index=True, max_length=100)),
+                ("student_name", models.CharField(max_length=200)),
+                (
+                    "time_period",
+                    models.CharField(
+                        choices=[
+                            ("daily", "Daily"),
+                            ("weekly", "Weekly"),
+                            ("monthly", "Monthly"),
+                            ("semester", "Semester"),
+                        ],
+                        default="weekly",
+                        max_length=20,
+                    ),
+                ),
+                ("start_date", models.DateField()),
+                ("end_date", models.DateField()),
+                (
+                    "overall_engagement_score",
+                    models.DecimalField(
+                        decimal_places=2,
+                        help_text="Weighted composite: 40% attendance + 35% LMS + 25% sentiment",
+                        max_digits=5,
+                        validators=[
+                            django.core.validators.MinValueValidator(0),
+                            django.core.validators.MaxValueValidator(100),
+                        ],
+                    ),
+                ),
+                (
+                    "attendance_score",
+                    models.DecimalField(
+                        decimal_places=2,
+                        max_digits=5,
+                        validators=[
+                            django.core.validators.MinValueValidator(0),
+                            django.core.validators.MaxValueValidator(100),
+                        ],
+                    ),
+                ),
+                (
+                    "lms_activity_score",
+                    models.DecimalField(
+                        decimal_places=2,
+                        max_digits=5,
+                        validators=[
+                            django.core.validators.MinValueValidator(0),
+                            django.core.validators.MaxValueValidator(100),
+                        ],
+                    ),
+                ),
+                (
+                    "sentiment_score",
+                    models.DecimalField(
+                        decimal_places=2,
+                        help_text="Normalized sentiment (0=very negative, 100=very positive)",
+                        max_digits=5,
+                        validators=[
+                            django.core.validators.MinValueValidator(0),
+                            django.core.validators.MaxValueValidator(100),
+                        ],
+                    ),
+                ),
+                (
+                    "risk_level",
+                    models.CharField(
+                        choices=[
+                            ("critical", "Critical - Immediate Action Required"),
+                            ("high", "High Risk"),
+                            ("medium", "Medium Risk"),
+                            ("low", "Low Risk"),
+                            ("engaged", "Fully Engaged"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "risk_flags",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.CharField(max_length=100),
+                        blank=True,
+                        default=list,
+                        help_text="Specific risk indicators: low_attendance, inactive_lms, negative_sentiment, etc.",
+                        size=None,
+                    ),
+                ),
+                (
+                    "heatmap_data",
+                    models.JSONField(
+                        default=dict,
+                        help_text="Daily engagement data: {date: {attendance: bool, lms_minutes: int, sentiment: float}}",
+                    ),
+                ),
+                (
+                    "engagement_trend",
+                    models.CharField(
+                        choices=[
+                            ("improving", "Improving"),
+                            ("stable", "Stable"),
+                            ("declining", "Declining"),
+                            ("critical_decline", "Critical Decline"),
+                        ],
+                        default="stable",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "change_percentage",
+                    models.DecimalField(
+                        decimal_places=2,
+                        help_text="Percentage change from previous period",
+                        max_digits=6,
+                    ),
+                ),
+                ("alerts_triggered", models.PositiveIntegerField(default=0)),
+                ("interventions_applied", models.PositiveIntegerField(default=0)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'verbose_name': 'Engagement Heatmap',
-                'verbose_name_plural': 'Engagement Heatmaps',
-                'ordering': ['-start_date', '-created_at'],
-                'indexes': [models.Index(fields=['student_id', '-start_date'], name='engagement__student_c0b28c_idx'), models.Index(fields=['risk_level', 'tenant'], name='engagement__risk_le_42941e_idx'), models.Index(fields=['engagement_trend'], name='engagement__engagem_43a289_idx')],
-                'unique_together': {('student_id', 'start_date', 'end_date', 'time_period')},
+                "verbose_name": "Engagement Heatmap",
+                "verbose_name_plural": "Engagement Heatmaps",
+                "ordering": ["-start_date", "-created_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["student_id", "-start_date"],
+                        name="engagement__student_c0b28c_idx",
+                    ),
+                    models.Index(
+                        fields=["risk_level", "tenant"],
+                        name="engagement__risk_le_42941e_idx",
+                    ),
+                    models.Index(
+                        fields=["engagement_trend"],
+                        name="engagement__engagem_43a289_idx",
+                    ),
+                ],
+                "unique_together": {
+                    ("student_id", "start_date", "end_date", "time_period")
+                },
             },
         ),
         migrations.CreateModel(
-            name='EngagementAlert',
+            name="EngagementAlert",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('alert_number', models.CharField(editable=False, max_length=50, unique=True)),
-                ('tenant', models.CharField(db_index=True, max_length=100)),
-                ('student_id', models.CharField(db_index=True, max_length=100)),
-                ('student_name', models.CharField(max_length=200)),
-                ('alert_type', models.CharField(choices=[('attendance', 'Attendance Warning'), ('lms_inactivity', 'LMS Inactivity'), ('negative_sentiment', 'Negative Sentiment Detected'), ('participation_drop', 'Participation Drop'), ('overall_engagement', 'Overall Engagement Risk'), ('discussion_silence', 'Discussion Silence'), ('deadline_approaching', 'Deadline Approaching')], max_length=30)),
-                ('severity', models.CharField(choices=[('critical', 'Critical'), ('high', 'High'), ('medium', 'Medium'), ('low', 'Low')], max_length=20)),
-                ('title', models.CharField(max_length=300)),
-                ('description', models.TextField()),
-                ('trigger_metrics', models.JSONField(default=dict, help_text='Metrics that triggered this alert: {attendance_score: 45, days_absent: 5}')),
-                ('recommended_actions', django.contrib.postgres.fields.ArrayField(base_field=models.TextField(), blank=True, default=list, help_text='Suggested interventions', size=None)),
-                ('status', models.CharField(choices=[('active', 'Active'), ('acknowledged', 'Acknowledged'), ('resolved', 'Resolved'), ('dismissed', 'Dismissed')], default='active', max_length=20)),
-                ('acknowledged_by', models.CharField(blank=True, max_length=200)),
-                ('acknowledged_at', models.DateTimeField(blank=True, null=True)),
-                ('resolved_at', models.DateTimeField(blank=True, null=True)),
-                ('resolution_notes', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('heatmap', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='engagement_alerts', to='engagement_heatmap.engagementheatmap')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "alert_number",
+                    models.CharField(editable=False, max_length=50, unique=True),
+                ),
+                ("tenant", models.CharField(db_index=True, max_length=100)),
+                ("student_id", models.CharField(db_index=True, max_length=100)),
+                ("student_name", models.CharField(max_length=200)),
+                (
+                    "alert_type",
+                    models.CharField(
+                        choices=[
+                            ("attendance", "Attendance Warning"),
+                            ("lms_inactivity", "LMS Inactivity"),
+                            ("negative_sentiment", "Negative Sentiment Detected"),
+                            ("participation_drop", "Participation Drop"),
+                            ("overall_engagement", "Overall Engagement Risk"),
+                            ("discussion_silence", "Discussion Silence"),
+                            ("deadline_approaching", "Deadline Approaching"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                (
+                    "severity",
+                    models.CharField(
+                        choices=[
+                            ("critical", "Critical"),
+                            ("high", "High"),
+                            ("medium", "Medium"),
+                            ("low", "Low"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("title", models.CharField(max_length=300)),
+                ("description", models.TextField()),
+                (
+                    "trigger_metrics",
+                    models.JSONField(
+                        default=dict,
+                        help_text="Metrics that triggered this alert: {attendance_score: 45, days_absent: 5}",
+                    ),
+                ),
+                (
+                    "recommended_actions",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.TextField(),
+                        blank=True,
+                        default=list,
+                        help_text="Suggested interventions",
+                        size=None,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("active", "Active"),
+                            ("acknowledged", "Acknowledged"),
+                            ("resolved", "Resolved"),
+                            ("dismissed", "Dismissed"),
+                        ],
+                        default="active",
+                        max_length=20,
+                    ),
+                ),
+                ("acknowledged_by", models.CharField(blank=True, max_length=200)),
+                ("acknowledged_at", models.DateTimeField(blank=True, null=True)),
+                ("resolved_at", models.DateTimeField(blank=True, null=True)),
+                ("resolution_notes", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "heatmap",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="engagement_alerts",
+                        to="engagement_heatmap.engagementheatmap",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Engagement Alert',
-                'verbose_name_plural': 'Engagement Alerts',
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['student_id', '-created_at'], name='engagement__student_d00001_idx'), models.Index(fields=['status', 'severity'], name='engagement__status_0b7f91_idx'), models.Index(fields=['alert_type', 'tenant'], name='engagement__alert_t_f7df62_idx')],
+                "verbose_name": "Engagement Alert",
+                "verbose_name_plural": "Engagement Alerts",
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["student_id", "-created_at"],
+                        name="engagement__student_d00001_idx",
+                    ),
+                    models.Index(
+                        fields=["status", "severity"],
+                        name="engagement__status_0b7f91_idx",
+                    ),
+                    models.Index(
+                        fields=["alert_type", "tenant"],
+                        name="engagement__alert_t_f7df62_idx",
+                    ),
+                ],
             },
         ),
         migrations.CreateModel(
-            name='DiscussionSentiment',
+            name="DiscussionSentiment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('sentiment_number', models.CharField(editable=False, max_length=50, unique=True)),
-                ('tenant', models.CharField(db_index=True, max_length=100)),
-                ('student_id', models.CharField(db_index=True, max_length=100)),
-                ('date', models.DateField(db_index=True)),
-                ('timestamp', models.DateTimeField()),
-                ('message_type', models.CharField(choices=[('forum_post', 'Forum Post'), ('forum_reply', 'Forum Reply'), ('chat_message', 'Chat Message'), ('email', 'Email'), ('feedback', 'Feedback')], max_length=30)),
-                ('message_content', models.TextField()),
-                ('sentiment_score', models.DecimalField(decimal_places=4, help_text='Sentiment polarity: -1 (very negative) to +1 (very positive)', max_digits=5, validators=[django.core.validators.MinValueValidator(-1), django.core.validators.MaxValueValidator(1)])),
-                ('sentiment_label', models.CharField(choices=[('very_positive', 'Very Positive'), ('positive', 'Positive'), ('neutral', 'Neutral'), ('negative', 'Negative'), ('very_negative', 'Very Negative')], max_length=20)),
-                ('confidence', models.DecimalField(decimal_places=4, help_text='Confidence in sentiment classification (0-1)', max_digits=5, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(1)])),
-                ('primary_emotion', models.CharField(blank=True, choices=[('joy', 'Joy'), ('interest', 'Interest'), ('confusion', 'Confusion'), ('frustration', 'Frustration'), ('anxiety', 'Anxiety'), ('anger', 'Anger'), ('sadness', 'Sadness')], max_length=20, null=True)),
-                ('emotion_scores', models.JSONField(default=dict, help_text='Emotion probabilities: {joy: 0.2, frustration: 0.6, ...}')),
-                ('word_count', models.PositiveIntegerField(default=0)),
-                ('question_count', models.PositiveIntegerField(default=0)),
-                ('exclamation_count', models.PositiveIntegerField(default=0)),
-                ('negative_keywords', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=50), blank=True, default=list, help_text='Detected negative or concerning keywords', size=None)),
-                ('help_seeking_keywords', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=50), blank=True, default=list, help_text='Keywords indicating student needs help', size=None)),
-                ('discussion_topic', models.CharField(blank=True, max_length=300)),
-                ('reply_count', models.PositiveIntegerField(default=0)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('heatmap', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='discussion_sentiments', to='engagement_heatmap.engagementheatmap')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "sentiment_number",
+                    models.CharField(editable=False, max_length=50, unique=True),
+                ),
+                ("tenant", models.CharField(db_index=True, max_length=100)),
+                ("student_id", models.CharField(db_index=True, max_length=100)),
+                ("date", models.DateField(db_index=True)),
+                ("timestamp", models.DateTimeField()),
+                (
+                    "message_type",
+                    models.CharField(
+                        choices=[
+                            ("forum_post", "Forum Post"),
+                            ("forum_reply", "Forum Reply"),
+                            ("chat_message", "Chat Message"),
+                            ("email", "Email"),
+                            ("feedback", "Feedback"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("message_content", models.TextField()),
+                (
+                    "sentiment_score",
+                    models.DecimalField(
+                        decimal_places=4,
+                        help_text="Sentiment polarity: -1 (very negative) to +1 (very positive)",
+                        max_digits=5,
+                        validators=[
+                            django.core.validators.MinValueValidator(-1),
+                            django.core.validators.MaxValueValidator(1),
+                        ],
+                    ),
+                ),
+                (
+                    "sentiment_label",
+                    models.CharField(
+                        choices=[
+                            ("very_positive", "Very Positive"),
+                            ("positive", "Positive"),
+                            ("neutral", "Neutral"),
+                            ("negative", "Negative"),
+                            ("very_negative", "Very Negative"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "confidence",
+                    models.DecimalField(
+                        decimal_places=4,
+                        help_text="Confidence in sentiment classification (0-1)",
+                        max_digits=5,
+                        validators=[
+                            django.core.validators.MinValueValidator(0),
+                            django.core.validators.MaxValueValidator(1),
+                        ],
+                    ),
+                ),
+                (
+                    "primary_emotion",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("joy", "Joy"),
+                            ("interest", "Interest"),
+                            ("confusion", "Confusion"),
+                            ("frustration", "Frustration"),
+                            ("anxiety", "Anxiety"),
+                            ("anger", "Anger"),
+                            ("sadness", "Sadness"),
+                        ],
+                        max_length=20,
+                        null=True,
+                    ),
+                ),
+                (
+                    "emotion_scores",
+                    models.JSONField(
+                        default=dict,
+                        help_text="Emotion probabilities: {joy: 0.2, frustration: 0.6, ...}",
+                    ),
+                ),
+                ("word_count", models.PositiveIntegerField(default=0)),
+                ("question_count", models.PositiveIntegerField(default=0)),
+                ("exclamation_count", models.PositiveIntegerField(default=0)),
+                (
+                    "negative_keywords",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.CharField(max_length=50),
+                        blank=True,
+                        default=list,
+                        help_text="Detected negative or concerning keywords",
+                        size=None,
+                    ),
+                ),
+                (
+                    "help_seeking_keywords",
+                    django.contrib.postgres.fields.ArrayField(
+                        base_field=models.CharField(max_length=50),
+                        blank=True,
+                        default=list,
+                        help_text="Keywords indicating student needs help",
+                        size=None,
+                    ),
+                ),
+                ("discussion_topic", models.CharField(blank=True, max_length=300)),
+                ("reply_count", models.PositiveIntegerField(default=0)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "heatmap",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="discussion_sentiments",
+                        to="engagement_heatmap.engagementheatmap",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Discussion Sentiment',
-                'verbose_name_plural': 'Discussion Sentiments',
-                'ordering': ['-timestamp'],
-                'indexes': [models.Index(fields=['student_id', '-date'], name='engagement__student_ff6523_idx'), models.Index(fields=['sentiment_label', 'date'], name='engagement__sentime_437dad_idx')],
+                "verbose_name": "Discussion Sentiment",
+                "verbose_name_plural": "Discussion Sentiments",
+                "ordering": ["-timestamp"],
+                "indexes": [
+                    models.Index(
+                        fields=["student_id", "-date"],
+                        name="engagement__student_ff6523_idx",
+                    ),
+                    models.Index(
+                        fields=["sentiment_label", "date"],
+                        name="engagement__sentime_437dad_idx",
+                    ),
+                ],
             },
         ),
         migrations.CreateModel(
-            name='AttendanceRecord',
+            name="AttendanceRecord",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('record_number', models.CharField(editable=False, max_length=50, unique=True)),
-                ('tenant', models.CharField(db_index=True, max_length=100)),
-                ('student_id', models.CharField(db_index=True, max_length=100)),
-                ('date', models.DateField(db_index=True)),
-                ('status', models.CharField(choices=[('present', 'Present'), ('absent', 'Absent'), ('late', 'Late'), ('excused', 'Excused')], max_length=20)),
-                ('session_name', models.CharField(max_length=200)),
-                ('scheduled_start', models.TimeField()),
-                ('scheduled_end', models.TimeField()),
-                ('actual_arrival', models.TimeField(blank=True, null=True)),
-                ('actual_departure', models.TimeField(blank=True, null=True)),
-                ('minutes_late', models.PositiveIntegerField(default=0)),
-                ('minutes_attended', models.PositiveIntegerField(default=0)),
-                ('participation_level', models.CharField(choices=[('high', 'High Participation'), ('medium', 'Medium Participation'), ('low', 'Low Participation'), ('none', 'No Participation')], default='medium', max_length=20)),
-                ('notes', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('heatmap', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attendance_records', to='engagement_heatmap.engagementheatmap')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "record_number",
+                    models.CharField(editable=False, max_length=50, unique=True),
+                ),
+                ("tenant", models.CharField(db_index=True, max_length=100)),
+                ("student_id", models.CharField(db_index=True, max_length=100)),
+                ("date", models.DateField(db_index=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("present", "Present"),
+                            ("absent", "Absent"),
+                            ("late", "Late"),
+                            ("excused", "Excused"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("session_name", models.CharField(max_length=200)),
+                ("scheduled_start", models.TimeField()),
+                ("scheduled_end", models.TimeField()),
+                ("actual_arrival", models.TimeField(blank=True, null=True)),
+                ("actual_departure", models.TimeField(blank=True, null=True)),
+                ("minutes_late", models.PositiveIntegerField(default=0)),
+                ("minutes_attended", models.PositiveIntegerField(default=0)),
+                (
+                    "participation_level",
+                    models.CharField(
+                        choices=[
+                            ("high", "High Participation"),
+                            ("medium", "Medium Participation"),
+                            ("low", "Low Participation"),
+                            ("none", "No Participation"),
+                        ],
+                        default="medium",
+                        max_length=20,
+                    ),
+                ),
+                ("notes", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "heatmap",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="attendance_records",
+                        to="engagement_heatmap.engagementheatmap",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Attendance Record',
-                'verbose_name_plural': 'Attendance Records',
-                'ordering': ['-date'],
-                'indexes': [models.Index(fields=['student_id', '-date'], name='engagement__student_38f7a2_idx'), models.Index(fields=['status', 'date'], name='engagement__status_b7ef1a_idx')],
-                'unique_together': {('student_id', 'date', 'session_name')},
+                "verbose_name": "Attendance Record",
+                "verbose_name_plural": "Attendance Records",
+                "ordering": ["-date"],
+                "indexes": [
+                    models.Index(
+                        fields=["student_id", "-date"],
+                        name="engagement__student_38f7a2_idx",
+                    ),
+                    models.Index(
+                        fields=["status", "date"], name="engagement__status_b7ef1a_idx"
+                    ),
+                ],
+                "unique_together": {("student_id", "date", "session_name")},
             },
         ),
         migrations.CreateModel(
-            name='LMSActivity',
+            name="LMSActivity",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('activity_number', models.CharField(editable=False, max_length=50, unique=True)),
-                ('tenant', models.CharField(db_index=True, max_length=100)),
-                ('student_id', models.CharField(db_index=True, max_length=100)),
-                ('date', models.DateField(db_index=True)),
-                ('activity_type', models.CharField(choices=[('login', 'Login'), ('content_view', 'Content View'), ('assignment_submit', 'Assignment Submission'), ('quiz_attempt', 'Quiz Attempt'), ('forum_post', 'Forum Post'), ('forum_reply', 'Forum Reply'), ('resource_download', 'Resource Download'), ('video_watch', 'Video Watch'), ('chat_message', 'Chat Message')], max_length=30)),
-                ('activity_name', models.CharField(max_length=300)),
-                ('timestamp', models.DateTimeField()),
-                ('duration_minutes', models.PositiveIntegerField(default=0)),
-                ('completion_status', models.CharField(choices=[('completed', 'Completed'), ('in_progress', 'In Progress'), ('started', 'Started'), ('abandoned', 'Abandoned')], default='completed', max_length=20)),
-                ('interaction_count', models.PositiveIntegerField(default=1, help_text='Number of clicks, views, or interactions')),
-                ('course_name', models.CharField(blank=True, max_length=200)),
-                ('module_name', models.CharField(blank=True, max_length=200)),
-                ('quality_score', models.DecimalField(blank=True, decimal_places=2, help_text='Score for submissions, quiz results, etc.', max_digits=5, null=True, validators=[django.core.validators.MinValueValidator(0), django.core.validators.MaxValueValidator(100)])),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('heatmap', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='lms_activities', to='engagement_heatmap.engagementheatmap')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "activity_number",
+                    models.CharField(editable=False, max_length=50, unique=True),
+                ),
+                ("tenant", models.CharField(db_index=True, max_length=100)),
+                ("student_id", models.CharField(db_index=True, max_length=100)),
+                ("date", models.DateField(db_index=True)),
+                (
+                    "activity_type",
+                    models.CharField(
+                        choices=[
+                            ("login", "Login"),
+                            ("content_view", "Content View"),
+                            ("assignment_submit", "Assignment Submission"),
+                            ("quiz_attempt", "Quiz Attempt"),
+                            ("forum_post", "Forum Post"),
+                            ("forum_reply", "Forum Reply"),
+                            ("resource_download", "Resource Download"),
+                            ("video_watch", "Video Watch"),
+                            ("chat_message", "Chat Message"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("activity_name", models.CharField(max_length=300)),
+                ("timestamp", models.DateTimeField()),
+                ("duration_minutes", models.PositiveIntegerField(default=0)),
+                (
+                    "completion_status",
+                    models.CharField(
+                        choices=[
+                            ("completed", "Completed"),
+                            ("in_progress", "In Progress"),
+                            ("started", "Started"),
+                            ("abandoned", "Abandoned"),
+                        ],
+                        default="completed",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "interaction_count",
+                    models.PositiveIntegerField(
+                        default=1, help_text="Number of clicks, views, or interactions"
+                    ),
+                ),
+                ("course_name", models.CharField(blank=True, max_length=200)),
+                ("module_name", models.CharField(blank=True, max_length=200)),
+                (
+                    "quality_score",
+                    models.DecimalField(
+                        blank=True,
+                        decimal_places=2,
+                        help_text="Score for submissions, quiz results, etc.",
+                        max_digits=5,
+                        null=True,
+                        validators=[
+                            django.core.validators.MinValueValidator(0),
+                            django.core.validators.MaxValueValidator(100),
+                        ],
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "heatmap",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="lms_activities",
+                        to="engagement_heatmap.engagementheatmap",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'LMS Activity',
-                'verbose_name_plural': 'LMS Activities',
-                'ordering': ['-timestamp'],
-                'indexes': [models.Index(fields=['student_id', '-date'], name='engagement__student_eab885_idx'), models.Index(fields=['activity_type', 'date'], name='engagement__activit_a3802d_idx')],
+                "verbose_name": "LMS Activity",
+                "verbose_name_plural": "LMS Activities",
+                "ordering": ["-timestamp"],
+                "indexes": [
+                    models.Index(
+                        fields=["student_id", "-date"],
+                        name="engagement__student_eab885_idx",
+                    ),
+                    models.Index(
+                        fields=["activity_type", "date"],
+                        name="engagement__activit_a3802d_idx",
+                    ),
+                ],
             },
         ),
     ]

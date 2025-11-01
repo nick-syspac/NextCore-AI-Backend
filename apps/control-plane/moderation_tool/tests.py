@@ -1,7 +1,13 @@
 from django.test import TestCase
 from django.utils import timezone
 from datetime import datetime
-from .models import ModerationSession, AssessorDecision, OutlierDetection, BiasScore, ModerationLog
+from .models import (
+    ModerationSession,
+    AssessorDecision,
+    OutlierDetection,
+    BiasScore,
+    ModerationLog,
+)
 
 
 class ModerationSessionModelTests(TestCase):
@@ -13,15 +19,15 @@ class ModerationSessionModelTests(TestCase):
             assessment_type="exam",
             assessment_title="Final Exam 2025",
             total_submissions=50,
-            assessors_count=3
+            assessors_count=3,
         )
-        
+
         self.assertIsNotNone(session.session_number)
-        self.assertTrue(session.session_number.startswith('MOD-'))
+        self.assertTrue(session.session_number.startswith("MOD-"))
         self.assertEqual(session.outlier_threshold, 2.0)
         self.assertEqual(session.bias_sensitivity, 5)
-        self.assertEqual(session.status, 'active')
-    
+        self.assertEqual(session.status, "active")
+
     def test_fairness_score_calculation(self):
         """Test fairness score calculation"""
         session = ModerationSession.objects.create(
@@ -30,9 +36,9 @@ class ModerationSessionModelTests(TestCase):
             decisions_compared=100,
             outliers_detected=5,
             bias_flags_raised=3,
-            average_agreement_rate=0.85
+            average_agreement_rate=0.85,
         )
-        
+
         fairness_score = session.get_fairness_score()
         self.assertGreater(fairness_score, 0)
         self.assertLessEqual(fairness_score, 100)
@@ -41,10 +47,9 @@ class ModerationSessionModelTests(TestCase):
 class AssessorDecisionModelTests(TestCase):
     def setUp(self):
         self.session = ModerationSession.objects.create(
-            name="Test Session",
-            assessment_title="Test Assessment"
+            name="Test Session", assessment_title="Test Assessment"
         )
-    
+
     def test_decision_creation(self):
         """Test that AssessorDecision is created correctly"""
         decision = AssessorDecision.objects.create(
@@ -57,14 +62,14 @@ class AssessorDecisionModelTests(TestCase):
             score=85,
             max_score=100,
             grade="D",
-            marked_at=timezone.now()
+            marked_at=timezone.now(),
         )
-        
+
         self.assertIsNotNone(decision.decision_number)
-        self.assertTrue(decision.decision_number.startswith('DEC-'))
+        self.assertTrue(decision.decision_number.startswith("DEC-"))
         self.assertFalse(decision.is_outlier)
         self.assertFalse(decision.has_bias_flag)
-    
+
     def test_percentage_score_calculation(self):
         """Test percentage score calculation"""
         decision = AssessorDecision.objects.create(
@@ -75,17 +80,16 @@ class AssessorDecisionModelTests(TestCase):
             score=75,
             max_score=100,
             grade="C",
-            marked_at=timezone.now()
+            marked_at=timezone.now(),
         )
-        
+
         self.assertEqual(decision.get_percentage_score(), 75.0)
 
 
 class OutlierDetectionTests(TestCase):
     def setUp(self):
         self.session = ModerationSession.objects.create(
-            name="Test Session",
-            assessment_title="Test"
+            name="Test Session", assessment_title="Test"
         )
         self.decision = AssessorDecision.objects.create(
             session=self.session,
@@ -95,9 +99,9 @@ class OutlierDetectionTests(TestCase):
             score=95,
             max_score=100,
             grade="HD",
-            marked_at=timezone.now()
+            marked_at=timezone.now(),
         )
-    
+
     def test_outlier_creation(self):
         """Test that OutlierDetection is created correctly"""
         outlier = OutlierDetection.objects.create(
@@ -113,22 +117,21 @@ class OutlierDetectionTests(TestCase):
             cohort_std_dev=10.0,
             assessor_mean=88.0,
             explanation="Significantly higher than expected",
-            confidence_score=0.85
+            confidence_score=0.85,
         )
-        
+
         self.assertIsNotNone(outlier.outlier_number)
-        self.assertTrue(outlier.outlier_number.startswith('OUT-'))
+        self.assertTrue(outlier.outlier_number.startswith("OUT-"))
         self.assertFalse(outlier.is_resolved)
-        self.assertEqual(outlier.severity, 'high')
+        self.assertEqual(outlier.severity, "high")
 
 
 class BiasScoreTests(TestCase):
     def setUp(self):
         self.session = ModerationSession.objects.create(
-            name="Test Session",
-            assessment_title="Test"
+            name="Test Session", assessment_title="Test"
         )
-    
+
     def test_bias_creation(self):
         """Test that BiasScore is created correctly"""
         bias = BiasScore.objects.create(
@@ -143,14 +146,14 @@ class BiasScoreTests(TestCase):
             evidence={"pattern": "Consistently high scores"},
             affected_students=["S001", "S002", "S003"],
             recommendation="Review marking criteria",
-            severity_level=7
+            severity_level=7,
         )
-        
+
         self.assertIsNotNone(bias.bias_number)
-        self.assertTrue(bias.bias_number.startswith('BIAS-'))
+        self.assertTrue(bias.bias_number.startswith("BIAS-"))
         self.assertFalse(bias.is_validated)
         self.assertEqual(bias.get_severity_label(), "Significant")
-    
+
     def test_severity_labels(self):
         """Test severity label generation"""
         # Test minor
@@ -164,10 +167,10 @@ class BiasScoreTests(TestCase):
             mean_difference=2.0,
             std_dev_ratio=1.0,
             recommendation="Monitor",
-            severity_level=2
+            severity_level=2,
         )
         self.assertEqual(bias1.get_severity_label(), "Minor")
-        
+
         # Test critical
         bias2 = BiasScore.objects.create(
             session=self.session,
@@ -179,7 +182,7 @@ class BiasScoreTests(TestCase):
             mean_difference=-15.0,
             std_dev_ratio=0.5,
             recommendation="Immediate review",
-            severity_level=10
+            severity_level=10,
         )
         self.assertEqual(bias2.get_severity_label(), "Critical")
 
@@ -187,10 +190,9 @@ class BiasScoreTests(TestCase):
 class ModerationLogTests(TestCase):
     def setUp(self):
         self.session = ModerationSession.objects.create(
-            name="Test Session",
-            assessment_title="Test"
+            name="Test Session", assessment_title="Test"
         )
-    
+
     def test_log_creation(self):
         """Test that ModerationLog is created correctly"""
         log = ModerationLog.objects.create(
@@ -201,9 +203,9 @@ class ModerationLogTests(TestCase):
             outliers_found=1,
             bias_flags=0,
             processing_time_ms=150,
-            performed_by="admin"
+            performed_by="admin",
         )
-        
+
         self.assertEqual(log.action, "comparison_run")
         self.assertEqual(log.decisions_processed, 5)
         self.assertIsNotNone(log.timestamp)

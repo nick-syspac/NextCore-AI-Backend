@@ -1,1 +1,1 @@
-default_app_config = 'intervention_tracker.apps.InterventionTrackerConfig'
+default_app_config = "intervention_tracker.apps.InterventionTrackerConfig"

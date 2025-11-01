@@ -1,6 +1,7 @@
 """
 Tenant models for multi-tenancy support.
 """
+
 import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
@@ -12,6 +13,7 @@ User = get_user_model()
 
 class TenantStatus(models.TextChoices):
     """Status choices for tenants."""
+
     ACTIVE = "active", "Active"
     SUSPENDED = "suspended", "Suspended"
     PENDING = "pending", "Pending"
@@ -20,6 +22,7 @@ class TenantStatus(models.TextChoices):
 
 class SubscriptionTier(models.TextChoices):
     """Subscription tier choices."""
+
     FREE = "free", "Free"
     BASIC = "basic", "Basic"
     PROFESSIONAL = "professional", "Professional"
@@ -29,45 +32,50 @@ class SubscriptionTier(models.TextChoices):
 class Tenant(models.Model):
     """
     Represents a tenant in the multi-tenant system.
-    
+
     Each tenant represents a separate organization/customer with isolated data.
     """
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255, help_text="Organization name")
-    slug = models.SlugField(max_length=255, unique=True, help_text="URL-safe identifier")
-    domain = models.CharField(max_length=255, blank=True, help_text="Custom domain (optional)")
-    
+    slug = models.SlugField(
+        max_length=255, unique=True, help_text="URL-safe identifier"
+    )
+    domain = models.CharField(
+        max_length=255, blank=True, help_text="Custom domain (optional)"
+    )
+
     status = models.CharField(
         max_length=20,
         choices=TenantStatus.choices,
         default=TenantStatus.PENDING,
     )
-    
+
     subscription_tier = models.CharField(
         max_length=20,
         choices=SubscriptionTier.choices,
         default=SubscriptionTier.FREE,
     )
-    
+
     # Contact Information
     contact_email = models.EmailField(validators=[EmailValidator()])
     contact_name = models.CharField(max_length=255)
     contact_phone = models.CharField(max_length=50, blank=True)
-    
+
     # Billing
     billing_email = models.EmailField(blank=True)
     stripe_customer_id = models.CharField(max_length=255, blank=True)
-    
+
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     activated_at = models.DateTimeField(null=True, blank=True)
     suspended_at = models.DateTimeField(null=True, blank=True)
     suspension_reason = models.TextField(blank=True)
-    
+
     # Settings
     settings = models.JSONField(default=dict, blank=True)
-    
+
     class Meta:
         ordering = ["-created_at"]
         indexes = [
@@ -103,9 +111,10 @@ class Tenant(models.Model):
 class TenantUser(models.Model):
     """
     Maps users to tenants with role-based access.
-    
+
     A user can belong to multiple tenants with different roles.
     """
+
     class Role(models.TextChoices):
         OWNER = "owner", "Owner"
         ADMIN = "admin", "Admin"
@@ -114,12 +123,14 @@ class TenantUser(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="users")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tenant_memberships")
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="tenant_memberships"
+    )
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.MEMBER)
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         unique_together = [["tenant", "user"]]
         ordering = ["tenant", "role"]
@@ -132,30 +143,37 @@ class TenantQuota(models.Model):
     """
     Tracks usage quotas and limits for tenants.
     """
-    tenant = models.OneToOneField(Tenant, on_delete=models.CASCADE, related_name="quota")
-    
+
+    tenant = models.OneToOneField(
+        Tenant, on_delete=models.CASCADE, related_name="quota"
+    )
+
     # API Quotas
-    api_calls_limit = models.IntegerField(default=10000, help_text="API calls per month")
+    api_calls_limit = models.IntegerField(
+        default=10000, help_text="API calls per month"
+    )
     api_calls_used = models.IntegerField(default=0)
-    
+
     # AI Gateway Quotas
-    ai_tokens_limit = models.IntegerField(default=100000, help_text="AI tokens per month")
+    ai_tokens_limit = models.IntegerField(
+        default=100000, help_text="AI tokens per month"
+    )
     ai_tokens_used = models.IntegerField(default=0)
-    
+
     # Storage Quotas
     storage_limit_gb = models.FloatField(default=10.0, help_text="Storage limit in GB")
     storage_used_gb = models.FloatField(default=0.0)
-    
+
     # User Quotas
     max_users = models.IntegerField(default=5, help_text="Maximum number of users")
     current_users = models.IntegerField(default=0)
-    
+
     # Reset tracking
     quota_reset_at = models.DateTimeField(default=timezone.now)
     last_reset_at = models.DateTimeField(null=True, blank=True)
-    
+
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         verbose_name_plural = "Tenant quotas"
 
@@ -193,22 +211,27 @@ class TenantAPIKey(models.Model):
     """
     API keys for tenant authentication.
     """
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="api_keys")
+    tenant = models.ForeignKey(
+        Tenant, on_delete=models.CASCADE, related_name="api_keys"
+    )
     name = models.CharField(max_length=255, help_text="Key description")
-    description = models.TextField(blank=True, help_text="Optional description of key usage")
+    description = models.TextField(
+        blank=True, help_text="Optional description of key usage"
+    )
     key_prefix = models.CharField(max_length=16, editable=False)
     key_hash = models.CharField(max_length=128, editable=False)
-    
+
     is_active = models.BooleanField(default=True)
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
     last_used_at = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True)
-    
+
     # Permissions
     scopes = models.JSONField(default=list, help_text="List of allowed scopes")
-    
+
     class Meta:
         ordering = ["-created_at"]
 
@@ -224,17 +247,19 @@ class TenantAPIKey(models.Model):
     def is_valid(self) -> bool:
         """Check if the API key is valid for use."""
         return self.is_active and not self.is_expired()
-    
+
     @staticmethod
     def generate_key():
         """Generate a new API key."""
         import secrets
+
         return f"nc_{secrets.token_urlsafe(32)}"
-    
+
     @staticmethod
     def hash_key(key: str) -> str:
         """Hash an API key for storage."""
         import hashlib
+
         return hashlib.sha256(key.encode()).hexdigest()
 
     def save(self, *args, **kwargs):

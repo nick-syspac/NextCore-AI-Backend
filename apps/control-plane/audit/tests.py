@@ -1,6 +1,7 @@
 """
 Tests for audit functionality.
 """
+
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APITestCase
@@ -22,7 +23,7 @@ class AuditModelTestCase(TestCase):
             event_type="user.created",
             payload={"user_id": "123", "email": "test@example.com"},
         )
-        
+
         self.assertIsNotNone(audit.hash)
         self.assertIsNone(audit.prev_hash)
         self.assertEqual(audit.tenant_id, "test-tenant")
@@ -35,14 +36,14 @@ class AuditModelTestCase(TestCase):
             event_type="user.created",
             payload={"user_id": "123"},
         )
-        
+
         # Create second event
         audit2 = Audit.objects.create(
             tenant_id="test-tenant",
             event_type="user.updated",
             payload={"user_id": "123", "name": "John"},
         )
-        
+
         # Verify chain
         self.assertEqual(audit2.prev_hash, audit1.hash)
         self.assertIsNone(audit1.prev_hash)
@@ -56,13 +57,13 @@ class AuditModelTestCase(TestCase):
             "payload": {"key": "value"},
             "timestamp": "2024-01-01T00:00:00",
         }
-        
+
         hash1 = chain_hash(prev_hash, record)
         hash2 = chain_hash(prev_hash, record)
-        
+
         # Same input should produce same hash
         self.assertEqual(hash1, hash2)
-        
+
         # Different input should produce different hash
         record["payload"]["key"] = "different"
         hash3 = chain_hash(prev_hash, record)
@@ -93,12 +94,16 @@ class AuditAPITestCase(APITestCase):
             event_type="user.updated",
             payload={"user_id": "123"},
         )
-        
+
         response = self.client.get("/api/audit/events/")
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Handle both paginated and non-paginated responses
-        data = response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
+        data = (
+            response.data.get("results", response.data)
+            if isinstance(response.data, dict)
+            else response.data
+        )
         self.assertGreaterEqual(len(data), 2)  # At least 2 events
 
     def test_filter_by_tenant(self):
@@ -113,12 +118,16 @@ class AuditAPITestCase(APITestCase):
             event_type="user.created",
             payload={"user_id": "456"},
         )
-        
+
         response = self.client.get("/api/audit/events/?tenant_id=tenant1")
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Handle both paginated and non-paginated responses
-        data = response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
+        data = (
+            response.data.get("results", response.data)
+            if isinstance(response.data, dict)
+            else response.data
+        )
         self.assertGreaterEqual(len(data), 1)  # At least 1 event for tenant1
         # Verify all returned events are for tenant1
         for event in data:
@@ -137,9 +146,9 @@ class AuditAPITestCase(APITestCase):
             event_type="user.updated",
             payload={"user_id": "123"},
         )
-        
+
         response = self.client.get("/api/audit/verify/")
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data["chain_valid"])
         self.assertEqual(response.data["verified_count"], 2)
@@ -155,9 +164,9 @@ class OutboxTestCase(TestCase):
             event_type="user.created",
             payload={"user_id": "123"},
         )
-        
+
         outbox = Outbox.objects.create(audit_event=audit)
-        
+
         self.assertIsNone(outbox.processed_at)
         self.assertEqual(outbox.audit_event, audit)
 
@@ -168,10 +177,9 @@ class OutboxTestCase(TestCase):
             event_type="user.created",
             payload={"user_id": "123"},
         )
-        
+
         outbox = Outbox.objects.create(audit_event=audit)
         outbox.processed_at = timezone.now()
         outbox.save()
-        
-        self.assertIsNotNone(outbox.processed_at)
 
+        self.assertIsNotNone(outbox.processed_at)

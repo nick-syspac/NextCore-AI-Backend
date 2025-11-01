@@ -9,296 +9,724 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('funding_eligibility', '0001_initial'),
-        ('tenants', '0003_tenantapikey_description'),
+        ("funding_eligibility", "0001_initial"),
+        ("tenants", "0003_tenantapikey_description"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EligibilityRequest',
+            name="EligibilityRequest",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('person_id', models.CharField(help_text='Person identifier in SMS/LMS', max_length=100)),
-                ('course_id', models.CharField(help_text='Course identifier', max_length=100)),
-                ('jurisdiction_code', models.CharField(max_length=10)),
-                ('input', models.JSONField(help_text='Complete input data for evaluation')),
-                ('evidence_refs', models.JSONField(default=list, help_text='References to attached evidence documents')),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('evaluating', 'Evaluating'), ('evaluated', 'Evaluated'), ('error', 'Error')], default='pending', max_length=20)),
-                ('requested_at', models.DateTimeField(auto_now_add=True)),
-                ('evaluated_at', models.DateTimeField(blank=True, null=True)),
-                ('metadata', models.JSONField(default=dict, help_text='Additional metadata')),
-                ('requested_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='eligibility_requests', to=settings.AUTH_USER_MODEL)),
-                ('tenant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='eligibility_requests', to='tenants.tenant')),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                (
+                    "person_id",
+                    models.CharField(
+                        help_text="Person identifier in SMS/LMS", max_length=100
+                    ),
+                ),
+                (
+                    "course_id",
+                    models.CharField(help_text="Course identifier", max_length=100),
+                ),
+                ("jurisdiction_code", models.CharField(max_length=10)),
+                (
+                    "input",
+                    models.JSONField(help_text="Complete input data for evaluation"),
+                ),
+                (
+                    "evidence_refs",
+                    models.JSONField(
+                        default=list,
+                        help_text="References to attached evidence documents",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("evaluating", "Evaluating"),
+                            ("evaluated", "Evaluated"),
+                            ("error", "Error"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                ("requested_at", models.DateTimeField(auto_now_add=True)),
+                ("evaluated_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "metadata",
+                    models.JSONField(default=dict, help_text="Additional metadata"),
+                ),
+                (
+                    "requested_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="eligibility_requests",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "tenant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="eligibility_requests",
+                        to="tenants.tenant",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'funding_eligibility_requests',
-                'ordering': ['-requested_at'],
+                "db_table": "funding_eligibility_requests",
+                "ordering": ["-requested_at"],
             },
         ),
         migrations.CreateModel(
-            name='EvidenceAttachment',
+            name="EvidenceAttachment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('file_uri', models.CharField(help_text='S3/storage URI', max_length=500)),
-                ('filename', models.CharField(max_length=255)),
-                ('file_size', models.BigIntegerField(help_text='Size in bytes')),
-                ('mime_type', models.CharField(max_length=100)),
-                ('type', models.CharField(choices=[('id', 'ID Document'), ('concession', 'Concession Card'), ('residency', 'Proof of Residency'), ('visa', 'Visa Document'), ('qualification', 'Prior Qualification'), ('employment', 'Employment Proof'), ('income', 'Income Statement'), ('other', 'Other')], max_length=20)),
-                ('verified', models.BooleanField(default=False)),
-                ('verified_at', models.DateTimeField(blank=True, null=True)),
-                ('verification_notes', models.TextField(blank=True)),
-                ('uploaded_at', models.DateTimeField(auto_now_add=True)),
-                ('request', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attachments', to='funding_eligibility.eligibilityrequest')),
-                ('uploaded_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='funding_uploaded_evidence', to=settings.AUTH_USER_MODEL)),
-                ('verifier', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='funding_verified_evidence', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "file_uri",
+                    models.CharField(help_text="S3/storage URI", max_length=500),
+                ),
+                ("filename", models.CharField(max_length=255)),
+                ("file_size", models.BigIntegerField(help_text="Size in bytes")),
+                ("mime_type", models.CharField(max_length=100)),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("id", "ID Document"),
+                            ("concession", "Concession Card"),
+                            ("residency", "Proof of Residency"),
+                            ("visa", "Visa Document"),
+                            ("qualification", "Prior Qualification"),
+                            ("employment", "Employment Proof"),
+                            ("income", "Income Statement"),
+                            ("other", "Other"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("verified", models.BooleanField(default=False)),
+                ("verified_at", models.DateTimeField(blank=True, null=True)),
+                ("verification_notes", models.TextField(blank=True)),
+                ("uploaded_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "request",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="attachments",
+                        to="funding_eligibility.eligibilityrequest",
+                    ),
+                ),
+                (
+                    "uploaded_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="funding_uploaded_evidence",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "verifier",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="funding_verified_evidence",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'funding_evidence_attachments',
-                'ordering': ['-uploaded_at'],
+                "db_table": "funding_evidence_attachments",
+                "ordering": ["-uploaded_at"],
             },
         ),
         migrations.CreateModel(
-            name='ExternalLookup',
+            name="ExternalLookup",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('provider', models.CharField(help_text='API provider (USI, visa, etc.)', max_length=100)),
-                ('request_data', models.JSONField()),
-                ('response_data', models.JSONField(blank=True, null=True)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('success', 'Success'), ('error', 'Error'), ('timeout', 'Timeout')], default='pending', max_length=20)),
-                ('error_message', models.TextField(blank=True)),
-                ('latency_ms', models.IntegerField(blank=True, null=True)),
-                ('cached_until', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('request', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='external_lookups', to='funding_eligibility.eligibilityrequest')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "provider",
+                    models.CharField(
+                        help_text="API provider (USI, visa, etc.)", max_length=100
+                    ),
+                ),
+                ("request_data", models.JSONField()),
+                ("response_data", models.JSONField(blank=True, null=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("success", "Success"),
+                            ("error", "Error"),
+                            ("timeout", "Timeout"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                ("error_message", models.TextField(blank=True)),
+                ("latency_ms", models.IntegerField(blank=True, null=True)),
+                ("cached_until", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "request",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="external_lookups",
+                        to="funding_eligibility.eligibilityrequest",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'funding_external_lookups',
-                'ordering': ['-created_at'],
+                "db_table": "funding_external_lookups",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='ReferenceTable',
+            name="ReferenceTable",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('namespace', models.CharField(help_text="Data namespace (e.g., 'vic.concessions')", max_length=100)),
-                ('version', models.CharField(max_length=20)),
-                ('data', models.JSONField(help_text='Reference data as JSON')),
-                ('source', models.CharField(help_text='Data source URL or description', max_length=200)),
-                ('checksum', models.CharField(help_text='SHA256 of data', max_length=64)),
-                ('valid_from', models.DateField(default=django.utils.timezone.now)),
-                ('valid_until', models.DateField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "namespace",
+                    models.CharField(
+                        help_text="Data namespace (e.g., 'vic.concessions')",
+                        max_length=100,
+                    ),
+                ),
+                ("version", models.CharField(max_length=20)),
+                ("data", models.JSONField(help_text="Reference data as JSON")),
+                (
+                    "source",
+                    models.CharField(
+                        help_text="Data source URL or description", max_length=200
+                    ),
+                ),
+                (
+                    "checksum",
+                    models.CharField(help_text="SHA256 of data", max_length=64),
+                ),
+                ("valid_from", models.DateField(default=django.utils.timezone.now)),
+                ("valid_until", models.DateField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'funding_reference_tables',
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['namespace', 'valid_from', 'valid_until'], name='funding_ref_namespa_3fc1ca_idx')],
-                'unique_together': {('namespace', 'version')},
+                "db_table": "funding_reference_tables",
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["namespace", "valid_from", "valid_until"],
+                        name="funding_ref_namespa_3fc1ca_idx",
+                    )
+                ],
+                "unique_together": {("namespace", "version")},
             },
         ),
         migrations.CreateModel(
-            name='Ruleset',
+            name="Ruleset",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('version', models.CharField(help_text='Semantic version (e.g., 1.7.2)', max_length=20)),
-                ('jurisdiction_code', models.CharField(max_length=10)),
-                ('status', models.CharField(choices=[('draft', 'Draft'), ('active', 'Active'), ('retired', 'Retired')], default='draft', max_length=10)),
-                ('checksum', models.CharField(editable=False, help_text='SHA256 of rule content', max_length=64)),
-                ('description', models.TextField(blank=True)),
-                ('changelog', models.TextField(blank=True, help_text='Changes from previous version')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('activated_at', models.DateTimeField(blank=True, null=True)),
-                ('retired_at', models.DateTimeField(blank=True, null=True)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_rulesets', to=settings.AUTH_USER_MODEL)),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                (
+                    "version",
+                    models.CharField(
+                        help_text="Semantic version (e.g., 1.7.2)", max_length=20
+                    ),
+                ),
+                ("jurisdiction_code", models.CharField(max_length=10)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("draft", "Draft"),
+                            ("active", "Active"),
+                            ("retired", "Retired"),
+                        ],
+                        default="draft",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "checksum",
+                    models.CharField(
+                        editable=False,
+                        help_text="SHA256 of rule content",
+                        max_length=64,
+                    ),
+                ),
+                ("description", models.TextField(blank=True)),
+                (
+                    "changelog",
+                    models.TextField(
+                        blank=True, help_text="Changes from previous version"
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("activated_at", models.DateTimeField(blank=True, null=True)),
+                ("retired_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_rulesets",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'funding_rulesets',
-                'ordering': ['-created_at'],
+                "db_table": "funding_rulesets",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='Jurisdiction',
+            name="Jurisdiction",
             fields=[
-                ('code', models.CharField(max_length=10, primary_key=True, serialize=False, unique=True)),
-                ('name', models.CharField(max_length=100)),
-                ('active', models.BooleanField(default=True)),
-                ('config', models.JSONField(default=dict, help_text='Jurisdiction-specific configuration')),
-                ('default_ruleset', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to='funding_eligibility.ruleset')),
+                (
+                    "code",
+                    models.CharField(
+                        max_length=10, primary_key=True, serialize=False, unique=True
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("active", models.BooleanField(default=True)),
+                (
+                    "config",
+                    models.JSONField(
+                        default=dict, help_text="Jurisdiction-specific configuration"
+                    ),
+                ),
+                (
+                    "default_ruleset",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="+",
+                        to="funding_eligibility.ruleset",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Jurisdiction',
-                'verbose_name_plural': 'Jurisdictions',
-                'db_table': 'funding_jurisdictions',
+                "verbose_name": "Jurisdiction",
+                "verbose_name_plural": "Jurisdictions",
+                "db_table": "funding_jurisdictions",
             },
         ),
         migrations.CreateModel(
-            name='EligibilityDecision',
+            name="EligibilityDecision",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False)),
-                ('outcome', models.CharField(choices=[('eligible', 'Eligible'), ('ineligible', 'Ineligible'), ('review', 'Manual Review Required')], max_length=20)),
-                ('reasons', models.JSONField(default=list, help_text='Reason codes for the decision')),
-                ('clause_refs', models.JSONField(default=list, help_text='Relevant clause/policy references')),
-                ('decision_data', models.JSONField(help_text='Complete decision output from rules engine')),
-                ('explanation', models.TextField(blank=True)),
-                ('decided_by', models.CharField(choices=[('system', 'System'), ('user', 'User')], default='system', max_length=20)),
-                ('decided_at', models.DateTimeField(auto_now_add=True)),
-                ('decided_by_user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='eligibility_decisions', to=settings.AUTH_USER_MODEL)),
-                ('request', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='decision', to='funding_eligibility.eligibilityrequest')),
-                ('ruleset', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='decisions', to='funding_eligibility.ruleset')),
+                ("id", models.AutoField(primary_key=True, serialize=False)),
+                (
+                    "outcome",
+                    models.CharField(
+                        choices=[
+                            ("eligible", "Eligible"),
+                            ("ineligible", "Ineligible"),
+                            ("review", "Manual Review Required"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "reasons",
+                    models.JSONField(
+                        default=list, help_text="Reason codes for the decision"
+                    ),
+                ),
+                (
+                    "clause_refs",
+                    models.JSONField(
+                        default=list, help_text="Relevant clause/policy references"
+                    ),
+                ),
+                (
+                    "decision_data",
+                    models.JSONField(
+                        help_text="Complete decision output from rules engine"
+                    ),
+                ),
+                ("explanation", models.TextField(blank=True)),
+                (
+                    "decided_by",
+                    models.CharField(
+                        choices=[("system", "System"), ("user", "User")],
+                        default="system",
+                        max_length=20,
+                    ),
+                ),
+                ("decided_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "decided_by_user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="eligibility_decisions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "request",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="decision",
+                        to="funding_eligibility.eligibilityrequest",
+                    ),
+                ),
+                (
+                    "ruleset",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="decisions",
+                        to="funding_eligibility.ruleset",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'funding_eligibility_decisions',
-                'ordering': ['-decided_at'],
+                "db_table": "funding_eligibility_decisions",
+                "ordering": ["-decided_at"],
             },
         ),
         migrations.CreateModel(
-            name='RulesetArtifact',
+            name="RulesetArtifact",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.CharField(choices=[('jsonlogic', 'JSONLogic'), ('rego', 'Open Policy Agent (Rego)'), ('python', 'Python Expression')], max_length=20)),
-                ('name', models.CharField(help_text='Artifact name/identifier', max_length=100)),
-                ('blob', models.TextField(help_text='Rule content')),
-                ('description', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('ruleset', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='artifacts', to='funding_eligibility.ruleset')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("jsonlogic", "JSONLogic"),
+                            ("rego", "Open Policy Agent (Rego)"),
+                            ("python", "Python Expression"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="Artifact name/identifier", max_length=100
+                    ),
+                ),
+                ("blob", models.TextField(help_text="Rule content")),
+                ("description", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "ruleset",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="artifacts",
+                        to="funding_eligibility.ruleset",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'funding_ruleset_artifacts',
+                "db_table": "funding_ruleset_artifacts",
             },
         ),
         migrations.CreateModel(
-            name='WebhookEndpoint',
+            name="WebhookEndpoint",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200)),
-                ('target', models.CharField(choices=[('sms', 'Student Management System'), ('lms', 'Learning Management System'), ('other', 'Other System')], max_length=20)),
-                ('url', models.URLField()),
-                ('secret', models.CharField(help_text='HMAC secret for signing', max_length=255)),
-                ('events', models.JSONField(default=list, help_text="Event types to send (e.g., ['decision.finalized', 'override.approved'])")),
-                ('active', models.BooleanField(default=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('tenant', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='webhook_endpoints', to='tenants.tenant')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=200)),
+                (
+                    "target",
+                    models.CharField(
+                        choices=[
+                            ("sms", "Student Management System"),
+                            ("lms", "Learning Management System"),
+                            ("other", "Other System"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("url", models.URLField()),
+                (
+                    "secret",
+                    models.CharField(
+                        help_text="HMAC secret for signing", max_length=255
+                    ),
+                ),
+                (
+                    "events",
+                    models.JSONField(
+                        default=list,
+                        help_text="Event types to send (e.g., ['decision.finalized', 'override.approved'])",
+                    ),
+                ),
+                ("active", models.BooleanField(default=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "tenant",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="webhook_endpoints",
+                        to="tenants.tenant",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'funding_webhook_endpoints',
+                "db_table": "funding_webhook_endpoints",
             },
         ),
         migrations.CreateModel(
-            name='WebhookDelivery',
+            name="WebhookDelivery",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('event_type', models.CharField(max_length=50)),
-                ('payload', models.JSONField()),
-                ('status_code', models.IntegerField(blank=True, null=True)),
-                ('response_body', models.TextField(blank=True)),
-                ('error_message', models.TextField(blank=True)),
-                ('attempt_count', models.IntegerField(default=1)),
-                ('last_attempt_at', models.DateTimeField(auto_now=True)),
-                ('delivered_at', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('endpoint', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='deliveries', to='funding_eligibility.webhookendpoint')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("event_type", models.CharField(max_length=50)),
+                ("payload", models.JSONField()),
+                ("status_code", models.IntegerField(blank=True, null=True)),
+                ("response_body", models.TextField(blank=True)),
+                ("error_message", models.TextField(blank=True)),
+                ("attempt_count", models.IntegerField(default=1)),
+                ("last_attempt_at", models.DateTimeField(auto_now=True)),
+                ("delivered_at", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "endpoint",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="deliveries",
+                        to="funding_eligibility.webhookendpoint",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'funding_webhook_deliveries',
-                'ordering': ['-created_at'],
+                "db_table": "funding_webhook_deliveries",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='DecisionOverride',
+            name="DecisionOverride",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('reason_code', models.CharField(max_length=50)),
-                ('justification', models.TextField(help_text='Detailed justification for override')),
-                ('final_outcome', models.CharField(choices=[('eligible', 'Eligible'), ('ineligible', 'Ineligible'), ('review', 'Manual Review Required')], max_length=20)),
-                ('approved_at', models.DateTimeField(auto_now_add=True)),
-                ('policy_version', models.CharField(help_text='Override policy version applied', max_length=20)),
-                ('evidence_refs', models.JSONField(default=list)),
-                ('approver', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='funding_decision_overrides', to=settings.AUTH_USER_MODEL)),
-                ('decision', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='overrides', to='funding_eligibility.eligibilitydecision')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("reason_code", models.CharField(max_length=50)),
+                (
+                    "justification",
+                    models.TextField(help_text="Detailed justification for override"),
+                ),
+                (
+                    "final_outcome",
+                    models.CharField(
+                        choices=[
+                            ("eligible", "Eligible"),
+                            ("ineligible", "Ineligible"),
+                            ("review", "Manual Review Required"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("approved_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "policy_version",
+                    models.CharField(
+                        help_text="Override policy version applied", max_length=20
+                    ),
+                ),
+                ("evidence_refs", models.JSONField(default=list)),
+                (
+                    "approver",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="funding_decision_overrides",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "decision",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="overrides",
+                        to="funding_eligibility.eligibilitydecision",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'funding_decision_overrides',
-                'ordering': ['-approved_at'],
-                'indexes': [models.Index(fields=['decision'], name='funding_dec_decisio_f8b73a_idx'), models.Index(fields=['approver'], name='funding_dec_approve_241dee_idx')],
+                "db_table": "funding_decision_overrides",
+                "ordering": ["-approved_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["decision"], name="funding_dec_decisio_f8b73a_idx"
+                    ),
+                    models.Index(
+                        fields=["approver"], name="funding_dec_approve_241dee_idx"
+                    ),
+                ],
             },
         ),
         migrations.AddIndex(
-            model_name='eligibilityrequest',
-            index=models.Index(fields=['tenant', 'status'], name='funding_eli_tenant__1b87e8_idx'),
+            model_name="eligibilityrequest",
+            index=models.Index(
+                fields=["tenant", "status"], name="funding_eli_tenant__1b87e8_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='eligibilityrequest',
-            index=models.Index(fields=['person_id'], name='funding_eli_person__183452_idx'),
+            model_name="eligibilityrequest",
+            index=models.Index(
+                fields=["person_id"], name="funding_eli_person__183452_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='eligibilityrequest',
-            index=models.Index(fields=['jurisdiction_code'], name='funding_eli_jurisdi_1f2cae_idx'),
+            model_name="eligibilityrequest",
+            index=models.Index(
+                fields=["jurisdiction_code"], name="funding_eli_jurisdi_1f2cae_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='eligibilityrequest',
-            index=models.Index(fields=['requested_at'], name='funding_eli_request_44e606_idx'),
+            model_name="eligibilityrequest",
+            index=models.Index(
+                fields=["requested_at"], name="funding_eli_request_44e606_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='evidenceattachment',
-            index=models.Index(fields=['request', 'type'], name='funding_evi_request_c1ff4c_idx'),
+            model_name="evidenceattachment",
+            index=models.Index(
+                fields=["request", "type"], name="funding_evi_request_c1ff4c_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='evidenceattachment',
-            index=models.Index(fields=['verified'], name='funding_evi_verifie_103675_idx'),
+            model_name="evidenceattachment",
+            index=models.Index(
+                fields=["verified"], name="funding_evi_verifie_103675_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='externallookup',
-            index=models.Index(fields=['request', 'provider'], name='funding_ext_request_eb3e31_idx'),
+            model_name="externallookup",
+            index=models.Index(
+                fields=["request", "provider"], name="funding_ext_request_eb3e31_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='externallookup',
-            index=models.Index(fields=['provider', 'status'], name='funding_ext_provide_2ec049_idx'),
+            model_name="externallookup",
+            index=models.Index(
+                fields=["provider", "status"], name="funding_ext_provide_2ec049_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='externallookup',
-            index=models.Index(fields=['cached_until'], name='funding_ext_cached__c66e53_idx'),
+            model_name="externallookup",
+            index=models.Index(
+                fields=["cached_until"], name="funding_ext_cached__c66e53_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='ruleset',
-            index=models.Index(fields=['jurisdiction_code', 'status'], name='funding_rul_jurisdi_ea3e5e_idx'),
+            model_name="ruleset",
+            index=models.Index(
+                fields=["jurisdiction_code", "status"],
+                name="funding_rul_jurisdi_ea3e5e_idx",
+            ),
         ),
         migrations.AddIndex(
-            model_name='ruleset',
-            index=models.Index(fields=['status'], name='funding_rul_status_012891_idx'),
+            model_name="ruleset",
+            index=models.Index(fields=["status"], name="funding_rul_status_012891_idx"),
         ),
         migrations.AlterUniqueTogether(
-            name='ruleset',
-            unique_together={('jurisdiction_code', 'version')},
+            name="ruleset",
+            unique_together={("jurisdiction_code", "version")},
         ),
         migrations.AddIndex(
-            model_name='eligibilitydecision',
-            index=models.Index(fields=['request'], name='funding_eli_request_e44dfb_idx'),
+            model_name="eligibilitydecision",
+            index=models.Index(
+                fields=["request"], name="funding_eli_request_e44dfb_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='eligibilitydecision',
-            index=models.Index(fields=['outcome'], name='funding_eli_outcome_ab9974_idx'),
+            model_name="eligibilitydecision",
+            index=models.Index(
+                fields=["outcome"], name="funding_eli_outcome_ab9974_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='eligibilitydecision',
-            index=models.Index(fields=['ruleset'], name='funding_eli_ruleset_596d71_idx'),
+            model_name="eligibilitydecision",
+            index=models.Index(
+                fields=["ruleset"], name="funding_eli_ruleset_596d71_idx"
+            ),
         ),
         migrations.AlterUniqueTogether(
-            name='rulesetartifact',
-            unique_together={('ruleset', 'name')},
+            name="rulesetartifact",
+            unique_together={("ruleset", "name")},
         ),
         migrations.AddIndex(
-            model_name='webhookendpoint',
-            index=models.Index(fields=['tenant', 'active'], name='funding_web_tenant__7144db_idx'),
+            model_name="webhookendpoint",
+            index=models.Index(
+                fields=["tenant", "active"], name="funding_web_tenant__7144db_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='webhookdelivery',
-            index=models.Index(fields=['endpoint', 'event_type'], name='funding_web_endpoin_ad0674_idx'),
+            model_name="webhookdelivery",
+            index=models.Index(
+                fields=["endpoint", "event_type"], name="funding_web_endpoin_ad0674_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='webhookdelivery',
-            index=models.Index(fields=['created_at'], name='funding_web_created_c92737_idx'),
+            model_name="webhookdelivery",
+            index=models.Index(
+                fields=["created_at"], name="funding_web_created_c92737_idx"
+            ),
         ),
     ]

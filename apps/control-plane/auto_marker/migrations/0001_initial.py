@@ -16,165 +16,510 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='AutoMarker',
+            name="AutoMarker",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('marker_number', models.CharField(editable=False, max_length=50, unique=True)),
-                ('title', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True)),
-                ('tenant', models.CharField(db_index=True, max_length=100)),
-                ('answer_type', models.CharField(choices=[('short_answer', 'Short Answer'), ('essay', 'Essay'), ('paragraph', 'Paragraph'), ('definition', 'Definition'), ('explanation', 'Explanation')], default='short_answer', max_length=50)),
-                ('question_text', models.TextField(help_text='The question being asked')),
-                ('model_answer', models.TextField(help_text='The ideal/model answer for comparison')),
-                ('max_marks', models.IntegerField(default=10, validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(100)])),
-                ('similarity_model', models.CharField(choices=[('sentence_transformers', 'Sentence Transformers'), ('word2vec', 'Word2Vec'), ('bert', 'BERT'), ('openai_embeddings', 'OpenAI Embeddings')], default='sentence_transformers', max_length=50)),
-                ('similarity_threshold', models.FloatField(default=0.7, help_text='Minimum similarity score for full marks (0.0-1.0)', validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(1.0)])),
-                ('partial_credit_enabled', models.BooleanField(default=True)),
-                ('min_similarity_for_credit', models.FloatField(default=0.4, help_text='Minimum similarity for partial credit', validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(1.0)])),
-                ('use_keywords', models.BooleanField(default=True, help_text='Enable keyword matching')),
-                ('keywords', models.JSONField(blank=True, default=list, help_text='Required keywords for full marks')),
-                ('keyword_weight', models.FloatField(default=0.2, help_text='Weight of keyword matching in final score', validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(1.0)])),
-                ('total_responses_marked', models.IntegerField(default=0)),
-                ('average_similarity_score', models.FloatField(default=0.0)),
-                ('average_marking_time', models.FloatField(default=0.0, help_text='Average time in seconds')),
-                ('status', models.CharField(choices=[('draft', 'Draft'), ('active', 'Active'), ('paused', 'Paused'), ('completed', 'Completed'), ('archived', 'Archived')], db_index=True, default='draft', max_length=20)),
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('created_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_markers', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "marker_number",
+                    models.CharField(editable=False, max_length=50, unique=True),
+                ),
+                ("title", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True)),
+                ("tenant", models.CharField(db_index=True, max_length=100)),
+                (
+                    "answer_type",
+                    models.CharField(
+                        choices=[
+                            ("short_answer", "Short Answer"),
+                            ("essay", "Essay"),
+                            ("paragraph", "Paragraph"),
+                            ("definition", "Definition"),
+                            ("explanation", "Explanation"),
+                        ],
+                        default="short_answer",
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "question_text",
+                    models.TextField(help_text="The question being asked"),
+                ),
+                (
+                    "model_answer",
+                    models.TextField(help_text="The ideal/model answer for comparison"),
+                ),
+                (
+                    "max_marks",
+                    models.IntegerField(
+                        default=10,
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(100),
+                        ],
+                    ),
+                ),
+                (
+                    "similarity_model",
+                    models.CharField(
+                        choices=[
+                            ("sentence_transformers", "Sentence Transformers"),
+                            ("word2vec", "Word2Vec"),
+                            ("bert", "BERT"),
+                            ("openai_embeddings", "OpenAI Embeddings"),
+                        ],
+                        default="sentence_transformers",
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "similarity_threshold",
+                    models.FloatField(
+                        default=0.7,
+                        help_text="Minimum similarity score for full marks (0.0-1.0)",
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(1.0),
+                        ],
+                    ),
+                ),
+                ("partial_credit_enabled", models.BooleanField(default=True)),
+                (
+                    "min_similarity_for_credit",
+                    models.FloatField(
+                        default=0.4,
+                        help_text="Minimum similarity for partial credit",
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(1.0),
+                        ],
+                    ),
+                ),
+                (
+                    "use_keywords",
+                    models.BooleanField(
+                        default=True, help_text="Enable keyword matching"
+                    ),
+                ),
+                (
+                    "keywords",
+                    models.JSONField(
+                        blank=True,
+                        default=list,
+                        help_text="Required keywords for full marks",
+                    ),
+                ),
+                (
+                    "keyword_weight",
+                    models.FloatField(
+                        default=0.2,
+                        help_text="Weight of keyword matching in final score",
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(1.0),
+                        ],
+                    ),
+                ),
+                ("total_responses_marked", models.IntegerField(default=0)),
+                ("average_similarity_score", models.FloatField(default=0.0)),
+                (
+                    "average_marking_time",
+                    models.FloatField(default=0.0, help_text="Average time in seconds"),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("draft", "Draft"),
+                            ("active", "Active"),
+                            ("paused", "Paused"),
+                            ("completed", "Completed"),
+                            ("archived", "Archived"),
+                        ],
+                        db_index=True,
+                        default="draft",
+                        max_length=20,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "created_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="created_markers",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='MarkedResponse',
+            name="MarkedResponse",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('response_number', models.CharField(editable=False, max_length=50, unique=True)),
-                ('student_id', models.CharField(db_index=True, max_length=100)),
-                ('student_name', models.CharField(max_length=255)),
-                ('response_text', models.TextField()),
-                ('word_count', models.IntegerField(default=0)),
-                ('similarity_score', models.FloatField(default=0.0, help_text='Semantic similarity to model answer (0.0-1.0)', validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(1.0)])),
-                ('keyword_match_score', models.FloatField(default=0.0, help_text='Keyword matching score (0.0-1.0)', validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(1.0)])),
-                ('combined_score', models.FloatField(default=0.0, help_text='Weighted combination of similarity and keyword scores', validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(1.0)])),
-                ('marks_awarded', models.FloatField(default=0.0)),
-                ('confidence_score', models.FloatField(default=0.0, help_text='Confidence in the automated marking', validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(1.0)])),
-                ('matched_keywords', models.JSONField(blank=True, default=list)),
-                ('missing_keywords', models.JSONField(blank=True, default=list)),
-                ('key_phrases_detected', models.JSONField(blank=True, default=list)),
-                ('similarity_breakdown', models.JSONField(blank=True, default=dict, help_text='Detailed similarity analysis')),
-                ('requires_review', models.BooleanField(db_index=True, default=False)),
-                ('review_reason', models.CharField(blank=True, max_length=255)),
-                ('automated_feedback', models.TextField(blank=True)),
-                ('reviewer_notes', models.TextField(blank=True)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('marking', 'Marking'), ('marked', 'Marked'), ('reviewed', 'Reviewed'), ('disputed', 'Disputed')], db_index=True, default='pending', max_length=20)),
-                ('marking_time', models.FloatField(default=0.0, help_text='Time taken to mark in seconds')),
-                ('marked_at', models.DateTimeField(blank=True, null=True)),
-                ('reviewed_at', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('auto_marker', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='responses', to='auto_marker.automarker')),
-                ('reviewed_by', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='reviewed_responses', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "response_number",
+                    models.CharField(editable=False, max_length=50, unique=True),
+                ),
+                ("student_id", models.CharField(db_index=True, max_length=100)),
+                ("student_name", models.CharField(max_length=255)),
+                ("response_text", models.TextField()),
+                ("word_count", models.IntegerField(default=0)),
+                (
+                    "similarity_score",
+                    models.FloatField(
+                        default=0.0,
+                        help_text="Semantic similarity to model answer (0.0-1.0)",
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(1.0),
+                        ],
+                    ),
+                ),
+                (
+                    "keyword_match_score",
+                    models.FloatField(
+                        default=0.0,
+                        help_text="Keyword matching score (0.0-1.0)",
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(1.0),
+                        ],
+                    ),
+                ),
+                (
+                    "combined_score",
+                    models.FloatField(
+                        default=0.0,
+                        help_text="Weighted combination of similarity and keyword scores",
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(1.0),
+                        ],
+                    ),
+                ),
+                ("marks_awarded", models.FloatField(default=0.0)),
+                (
+                    "confidence_score",
+                    models.FloatField(
+                        default=0.0,
+                        help_text="Confidence in the automated marking",
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(1.0),
+                        ],
+                    ),
+                ),
+                ("matched_keywords", models.JSONField(blank=True, default=list)),
+                ("missing_keywords", models.JSONField(blank=True, default=list)),
+                ("key_phrases_detected", models.JSONField(blank=True, default=list)),
+                (
+                    "similarity_breakdown",
+                    models.JSONField(
+                        blank=True,
+                        default=dict,
+                        help_text="Detailed similarity analysis",
+                    ),
+                ),
+                ("requires_review", models.BooleanField(db_index=True, default=False)),
+                ("review_reason", models.CharField(blank=True, max_length=255)),
+                ("automated_feedback", models.TextField(blank=True)),
+                ("reviewer_notes", models.TextField(blank=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("marking", "Marking"),
+                            ("marked", "Marked"),
+                            ("reviewed", "Reviewed"),
+                            ("disputed", "Disputed"),
+                        ],
+                        db_index=True,
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "marking_time",
+                    models.FloatField(
+                        default=0.0, help_text="Time taken to mark in seconds"
+                    ),
+                ),
+                ("marked_at", models.DateTimeField(blank=True, null=True)),
+                ("reviewed_at", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "auto_marker",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="responses",
+                        to="auto_marker.automarker",
+                    ),
+                ),
+                (
+                    "reviewed_by",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="reviewed_responses",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='MarkingCriterion',
+            name="MarkingCriterion",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('criterion_name', models.CharField(max_length=255)),
-                ('description', models.TextField()),
-                ('expected_content', models.TextField(help_text='Expected content for this criterion')),
-                ('weight', models.FloatField(default=1.0, help_text='Weight of this criterion (0.0-1.0)', validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(1.0)])),
-                ('max_points', models.IntegerField(validators=[django.core.validators.MinValueValidator(1)])),
-                ('criterion_keywords', models.JSONField(blank=True, default=list)),
-                ('required', models.BooleanField(default=False, help_text='Is this criterion required?')),
-                ('display_order', models.IntegerField(default=0)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('auto_marker', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='criteria', to='auto_marker.automarker')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("criterion_name", models.CharField(max_length=255)),
+                ("description", models.TextField()),
+                (
+                    "expected_content",
+                    models.TextField(help_text="Expected content for this criterion"),
+                ),
+                (
+                    "weight",
+                    models.FloatField(
+                        default=1.0,
+                        help_text="Weight of this criterion (0.0-1.0)",
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(1.0),
+                        ],
+                    ),
+                ),
+                (
+                    "max_points",
+                    models.IntegerField(
+                        validators=[django.core.validators.MinValueValidator(1)]
+                    ),
+                ),
+                ("criterion_keywords", models.JSONField(blank=True, default=list)),
+                (
+                    "required",
+                    models.BooleanField(
+                        default=False, help_text="Is this criterion required?"
+                    ),
+                ),
+                ("display_order", models.IntegerField(default=0)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "auto_marker",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="criteria",
+                        to="auto_marker.automarker",
+                    ),
+                ),
             ],
             options={
-                'verbose_name_plural': 'Marking Criteria',
-                'ordering': ['display_order', 'created_at'],
+                "verbose_name_plural": "Marking Criteria",
+                "ordering": ["display_order", "created_at"],
             },
         ),
         migrations.CreateModel(
-            name='CriterionScore',
+            name="CriterionScore",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('similarity_score', models.FloatField(default=0.0, validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(1.0)])),
-                ('points_awarded', models.FloatField(default=0.0)),
-                ('matched_content', models.TextField(blank=True)),
-                ('missing_elements', models.JSONField(blank=True, default=list)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('response', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='criterion_scores', to='auto_marker.markedresponse')),
-                ('criterion', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='auto_marker.markingcriterion')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "similarity_score",
+                    models.FloatField(
+                        default=0.0,
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(1.0),
+                        ],
+                    ),
+                ),
+                ("points_awarded", models.FloatField(default=0.0)),
+                ("matched_content", models.TextField(blank=True)),
+                ("missing_elements", models.JSONField(blank=True, default=list)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "response",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="criterion_scores",
+                        to="auto_marker.markedresponse",
+                    ),
+                ),
+                (
+                    "criterion",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="auto_marker.markingcriterion",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['criterion__display_order'],
+                "ordering": ["criterion__display_order"],
             },
         ),
         migrations.CreateModel(
-            name='MarkingLog',
+            name="MarkingLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(choices=[('mark_single', 'Mark Single Response'), ('mark_batch', 'Mark Batch'), ('review_mark', 'Review Mark'), ('adjust_score', 'Adjust Score'), ('recalculate', 'Recalculate Scores'), ('model_update', 'Update Model Answer')], db_index=True, max_length=50)),
-                ('similarity_model', models.CharField(max_length=100)),
-                ('model_version', models.CharField(blank=True, max_length=50)),
-                ('responses_processed', models.IntegerField(default=1)),
-                ('total_time', models.FloatField(help_text='Total processing time in seconds')),
-                ('average_time_per_response', models.FloatField(default=0.0)),
-                ('original_score', models.FloatField(blank=True, null=True)),
-                ('new_score', models.FloatField(blank=True, null=True)),
-                ('adjustment_reason', models.TextField(blank=True)),
-                ('details', models.JSONField(blank=True, default=dict)),
-                ('timestamp', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('auto_marker', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='logs', to='auto_marker.automarker')),
-                ('performed_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('response', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='logs', to='auto_marker.markedresponse')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[
+                            ("mark_single", "Mark Single Response"),
+                            ("mark_batch", "Mark Batch"),
+                            ("review_mark", "Review Mark"),
+                            ("adjust_score", "Adjust Score"),
+                            ("recalculate", "Recalculate Scores"),
+                            ("model_update", "Update Model Answer"),
+                        ],
+                        db_index=True,
+                        max_length=50,
+                    ),
+                ),
+                ("similarity_model", models.CharField(max_length=100)),
+                ("model_version", models.CharField(blank=True, max_length=50)),
+                ("responses_processed", models.IntegerField(default=1)),
+                (
+                    "total_time",
+                    models.FloatField(help_text="Total processing time in seconds"),
+                ),
+                ("average_time_per_response", models.FloatField(default=0.0)),
+                ("original_score", models.FloatField(blank=True, null=True)),
+                ("new_score", models.FloatField(blank=True, null=True)),
+                ("adjustment_reason", models.TextField(blank=True)),
+                ("details", models.JSONField(blank=True, default=dict)),
+                ("timestamp", models.DateTimeField(auto_now_add=True, db_index=True)),
+                (
+                    "auto_marker",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="logs",
+                        to="auto_marker.automarker",
+                    ),
+                ),
+                (
+                    "performed_by",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "response",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="logs",
+                        to="auto_marker.markedresponse",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-timestamp'],
+                "ordering": ["-timestamp"],
             },
         ),
         migrations.AddIndex(
-            model_name='automarker',
-            index=models.Index(fields=['tenant', 'status'], name='auto_marker_tenant_e44700_idx'),
+            model_name="automarker",
+            index=models.Index(
+                fields=["tenant", "status"], name="auto_marker_tenant_e44700_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='automarker',
-            index=models.Index(fields=['answer_type'], name='auto_marker_answer__89ecc8_idx'),
+            model_name="automarker",
+            index=models.Index(
+                fields=["answer_type"], name="auto_marker_answer__89ecc8_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='automarker',
-            index=models.Index(fields=['created_at'], name='auto_marker_created_ee36c7_idx'),
+            model_name="automarker",
+            index=models.Index(
+                fields=["created_at"], name="auto_marker_created_ee36c7_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='markedresponse',
-            index=models.Index(fields=['auto_marker', 'status'], name='auto_marker_auto_ma_505ee8_idx'),
+            model_name="markedresponse",
+            index=models.Index(
+                fields=["auto_marker", "status"], name="auto_marker_auto_ma_505ee8_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='markedresponse',
-            index=models.Index(fields=['student_id'], name='auto_marker_student_718664_idx'),
+            model_name="markedresponse",
+            index=models.Index(
+                fields=["student_id"], name="auto_marker_student_718664_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='markedresponse',
-            index=models.Index(fields=['requires_review'], name='auto_marker_require_ae791c_idx'),
+            model_name="markedresponse",
+            index=models.Index(
+                fields=["requires_review"], name="auto_marker_require_ae791c_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='markedresponse',
-            index=models.Index(fields=['marked_at'], name='auto_marker_marked__7fd6e9_idx'),
+            model_name="markedresponse",
+            index=models.Index(
+                fields=["marked_at"], name="auto_marker_marked__7fd6e9_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='markinglog',
-            index=models.Index(fields=['auto_marker', 'action'], name='auto_marker_auto_ma_c97e4e_idx'),
+            model_name="markinglog",
+            index=models.Index(
+                fields=["auto_marker", "action"], name="auto_marker_auto_ma_c97e4e_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='markinglog',
-            index=models.Index(fields=['timestamp'], name='auto_marker_timesta_74f76a_idx'),
+            model_name="markinglog",
+            index=models.Index(
+                fields=["timestamp"], name="auto_marker_timesta_74f76a_idx"
+            ),
         ),
     ]

@@ -1,6 +1,7 @@
 """
 Custom middleware for tenant context and request processing.
 """
+
 import logging
 import threading
 from typing import Callable
@@ -27,14 +28,14 @@ def set_current_tenant_id(tenant_id: str | None) -> None:
 class TenantContextMiddleware(MiddlewareMixin):
     """
     Middleware to extract and set tenant context from request headers.
-    
+
     Expects X-Tenant-ID header in requests.
     """
 
     def process_request(self, request: HttpRequest) -> None:
         """Extract tenant ID from request header and set in thread-local storage."""
         tenant_id = request.headers.get("X-Tenant-ID")
-        
+
         if tenant_id:
             set_current_tenant_id(tenant_id)
             request.tenant_id = tenant_id
@@ -44,7 +45,9 @@ class TenantContextMiddleware(MiddlewareMixin):
             request.tenant_id = None
             logger.debug("No tenant context in request")
 
-    def process_response(self, request: HttpRequest, response: HttpResponse) -> HttpResponse:
+    def process_response(
+        self, request: HttpRequest, response: HttpResponse
+    ) -> HttpResponse:
         """Clear tenant context after request is processed."""
         set_current_tenant_id(None)
         return response
@@ -64,10 +67,12 @@ class RequestLoggingMiddleware(MiddlewareMixin):
                 "path": request.path,
                 "user": str(request.user) if hasattr(request, "user") else "anonymous",
                 "tenant_id": getattr(request, "tenant_id", None),
-            }
+            },
         )
 
-    def process_response(self, request: HttpRequest, response: HttpResponse) -> HttpResponse:
+    def process_response(
+        self, request: HttpRequest, response: HttpResponse
+    ) -> HttpResponse:
         """Log response status."""
         logger.info(
             f"Response: {response.status_code} for {request.method} {request.path}",
@@ -75,6 +80,6 @@ class RequestLoggingMiddleware(MiddlewareMixin):
                 "status_code": response.status_code,
                 "method": request.method,
                 "path": request.path,
-            }
+            },
         )
         return response

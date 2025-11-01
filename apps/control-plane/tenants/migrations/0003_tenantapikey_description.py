@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tenants', '0002_rename_tenants_ten_slug_idx_tenants_ten_slug_63daca_idx_and_more'),
+        (
+            "tenants",
+            "0002_rename_tenants_ten_slug_idx_tenants_ten_slug_63daca_idx_and_more",
+        ),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='tenantapikey',
-            name='description',
-            field=models.TextField(blank=True, help_text='Optional description of key usage'),
+            model_name="tenantapikey",
+            name="description",
+            field=models.TextField(
+                blank=True, help_text="Optional description of key usage"
+            ),
         ),
     ]

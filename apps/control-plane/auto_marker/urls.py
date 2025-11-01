@@ -4,15 +4,15 @@ from .views import (
     AutoMarkerViewSet,
     MarkedResponseViewSet,
     MarkingCriterionViewSet,
-    MarkingLogViewSet
+    MarkingLogViewSet,
 )
 
 router = DefaultRouter()
-router.register('markers', AutoMarkerViewSet, basename='auto-marker')
-router.register('responses', MarkedResponseViewSet, basename='marked-response')
-router.register('criteria', MarkingCriterionViewSet, basename='marking-criterion')
-router.register('logs', MarkingLogViewSet, basename='marking-log')
+router.register("markers", AutoMarkerViewSet, basename="auto-marker")
+router.register("responses", MarkedResponseViewSet, basename="marked-response")
+router.register("criteria", MarkingCriterionViewSet, basename="marking-criterion")
+router.register("logs", MarkingLogViewSet, basename="marking-log")
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]

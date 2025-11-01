@@ -9,165 +9,498 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='ModerationSession',
+            name="ModerationSession",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('session_number', models.CharField(blank=True, editable=False, max_length=50, unique=True)),
-                ('name', models.CharField(max_length=200)),
-                ('description', models.TextField(blank=True)),
-                ('assessment_type', models.CharField(choices=[('exam', 'Exam'), ('assignment', 'Assignment'), ('project', 'Project'), ('practical', 'Practical'), ('portfolio', 'Portfolio')], default='exam', max_length=50)),
-                ('assessment_title', models.CharField(max_length=200)),
-                ('total_submissions', models.IntegerField(default=0)),
-                ('assessors_count', models.IntegerField(default=0)),
-                ('outlier_threshold', models.FloatField(default=2.0, help_text='Standard deviations for outlier detection', validators=[django.core.validators.MinValueValidator(0.5), django.core.validators.MaxValueValidator(5.0)])),
-                ('bias_sensitivity', models.IntegerField(default=5, help_text='Sensitivity level for bias detection (1=low, 10=high)', validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(10)])),
-                ('status', models.CharField(choices=[('active', 'Active'), ('completed', 'Completed'), ('archived', 'Archived')], default='active', max_length=20)),
-                ('outliers_detected', models.IntegerField(default=0)),
-                ('bias_flags_raised', models.IntegerField(default=0)),
-                ('decisions_compared', models.IntegerField(default=0)),
-                ('average_agreement_rate', models.FloatField(default=0.0, validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(1.0)])),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('created_by', models.CharField(blank=True, max_length=100)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "session_number",
+                    models.CharField(
+                        blank=True, editable=False, max_length=50, unique=True
+                    ),
+                ),
+                ("name", models.CharField(max_length=200)),
+                ("description", models.TextField(blank=True)),
+                (
+                    "assessment_type",
+                    models.CharField(
+                        choices=[
+                            ("exam", "Exam"),
+                            ("assignment", "Assignment"),
+                            ("project", "Project"),
+                            ("practical", "Practical"),
+                            ("portfolio", "Portfolio"),
+                        ],
+                        default="exam",
+                        max_length=50,
+                    ),
+                ),
+                ("assessment_title", models.CharField(max_length=200)),
+                ("total_submissions", models.IntegerField(default=0)),
+                ("assessors_count", models.IntegerField(default=0)),
+                (
+                    "outlier_threshold",
+                    models.FloatField(
+                        default=2.0,
+                        help_text="Standard deviations for outlier detection",
+                        validators=[
+                            django.core.validators.MinValueValidator(0.5),
+                            django.core.validators.MaxValueValidator(5.0),
+                        ],
+                    ),
+                ),
+                (
+                    "bias_sensitivity",
+                    models.IntegerField(
+                        default=5,
+                        help_text="Sensitivity level for bias detection (1=low, 10=high)",
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(10),
+                        ],
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("active", "Active"),
+                            ("completed", "Completed"),
+                            ("archived", "Archived"),
+                        ],
+                        default="active",
+                        max_length=20,
+                    ),
+                ),
+                ("outliers_detected", models.IntegerField(default=0)),
+                ("bias_flags_raised", models.IntegerField(default=0)),
+                ("decisions_compared", models.IntegerField(default=0)),
+                (
+                    "average_agreement_rate",
+                    models.FloatField(
+                        default=0.0,
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(1.0),
+                        ],
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("created_by", models.CharField(blank=True, max_length=100)),
             ],
             options={
-                'ordering': ['-created_at'],
-                'indexes': [models.Index(fields=['status', 'created_at'], name='moderation__status_a7f36f_idx'), models.Index(fields=['assessment_type'], name='moderation__assessm_55733c_idx')],
+                "ordering": ["-created_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["status", "created_at"],
+                        name="moderation__status_a7f36f_idx",
+                    ),
+                    models.Index(
+                        fields=["assessment_type"],
+                        name="moderation__assessm_55733c_idx",
+                    ),
+                ],
             },
         ),
         migrations.CreateModel(
-            name='AssessorDecision',
+            name="AssessorDecision",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('decision_number', models.CharField(blank=True, editable=False, max_length=50, unique=True)),
-                ('student_id', models.CharField(max_length=100)),
-                ('student_name', models.CharField(blank=True, max_length=200)),
-                ('submission_id', models.CharField(max_length=100)),
-                ('assessor_id', models.CharField(max_length=100)),
-                ('assessor_name', models.CharField(max_length=200)),
-                ('score', models.FloatField(validators=[django.core.validators.MinValueValidator(0)])),
-                ('max_score', models.FloatField(validators=[django.core.validators.MinValueValidator(0)])),
-                ('grade', models.CharField(choices=[('HD', 'High Distinction'), ('D', 'Distinction'), ('C', 'Credit'), ('P', 'Pass'), ('F', 'Fail'), ('NYC', 'Not Yet Competent'), ('C', 'Competent')], max_length=10)),
-                ('criterion_scores', models.JSONField(default=dict, help_text='Dictionary of criterion_id -> score')),
-                ('is_outlier', models.BooleanField(default=False)),
-                ('has_bias_flag', models.BooleanField(default=False)),
-                ('requires_review', models.BooleanField(default=False)),
-                ('comments', models.TextField(blank=True)),
-                ('marking_time_minutes', models.IntegerField(blank=True, null=True)),
-                ('marked_at', models.DateTimeField()),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='decisions', to='moderation_tool.moderationsession')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "decision_number",
+                    models.CharField(
+                        blank=True, editable=False, max_length=50, unique=True
+                    ),
+                ),
+                ("student_id", models.CharField(max_length=100)),
+                ("student_name", models.CharField(blank=True, max_length=200)),
+                ("submission_id", models.CharField(max_length=100)),
+                ("assessor_id", models.CharField(max_length=100)),
+                ("assessor_name", models.CharField(max_length=200)),
+                (
+                    "score",
+                    models.FloatField(
+                        validators=[django.core.validators.MinValueValidator(0)]
+                    ),
+                ),
+                (
+                    "max_score",
+                    models.FloatField(
+                        validators=[django.core.validators.MinValueValidator(0)]
+                    ),
+                ),
+                (
+                    "grade",
+                    models.CharField(
+                        choices=[
+                            ("HD", "High Distinction"),
+                            ("D", "Distinction"),
+                            ("C", "Credit"),
+                            ("P", "Pass"),
+                            ("F", "Fail"),
+                            ("NYC", "Not Yet Competent"),
+                            ("C", "Competent"),
+                        ],
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "criterion_scores",
+                    models.JSONField(
+                        default=dict, help_text="Dictionary of criterion_id -> score"
+                    ),
+                ),
+                ("is_outlier", models.BooleanField(default=False)),
+                ("has_bias_flag", models.BooleanField(default=False)),
+                ("requires_review", models.BooleanField(default=False)),
+                ("comments", models.TextField(blank=True)),
+                ("marking_time_minutes", models.IntegerField(blank=True, null=True)),
+                ("marked_at", models.DateTimeField()),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "session",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="decisions",
+                        to="moderation_tool.moderationsession",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-marked_at'],
+                "ordering": ["-marked_at"],
             },
         ),
         migrations.CreateModel(
-            name='OutlierDetection',
+            name="OutlierDetection",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('outlier_number', models.CharField(blank=True, editable=False, max_length=50, unique=True)),
-                ('outlier_type', models.CharField(choices=[('high_scorer', 'High Scorer'), ('low_scorer', 'Low Scorer'), ('inconsistent', 'Inconsistent'), ('statistical', 'Statistical Anomaly')], max_length=50)),
-                ('severity', models.CharField(choices=[('low', 'Low'), ('medium', 'Medium'), ('high', 'High'), ('critical', 'Critical')], max_length=20)),
-                ('z_score', models.FloatField(help_text='Standard deviations from mean')),
-                ('deviation_percentage', models.FloatField(help_text='Percentage deviation from average')),
-                ('expected_score', models.FloatField()),
-                ('actual_score', models.FloatField()),
-                ('cohort_mean', models.FloatField()),
-                ('cohort_std_dev', models.FloatField()),
-                ('assessor_mean', models.FloatField(help_text="Assessor's average score across all submissions")),
-                ('explanation', models.TextField()),
-                ('confidence_score', models.FloatField(help_text='Confidence in outlier detection (0-1)', validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(1.0)])),
-                ('is_resolved', models.BooleanField(default=False)),
-                ('resolution_notes', models.TextField(blank=True)),
-                ('resolved_by', models.CharField(blank=True, max_length=100)),
-                ('resolved_at', models.DateTimeField(blank=True, null=True)),
-                ('detected_at', models.DateTimeField(auto_now_add=True)),
-                ('decision', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='outlier_flags', to='moderation_tool.assessordecision')),
-                ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='outliers', to='moderation_tool.moderationsession')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "outlier_number",
+                    models.CharField(
+                        blank=True, editable=False, max_length=50, unique=True
+                    ),
+                ),
+                (
+                    "outlier_type",
+                    models.CharField(
+                        choices=[
+                            ("high_scorer", "High Scorer"),
+                            ("low_scorer", "Low Scorer"),
+                            ("inconsistent", "Inconsistent"),
+                            ("statistical", "Statistical Anomaly"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "severity",
+                    models.CharField(
+                        choices=[
+                            ("low", "Low"),
+                            ("medium", "Medium"),
+                            ("high", "High"),
+                            ("critical", "Critical"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "z_score",
+                    models.FloatField(help_text="Standard deviations from mean"),
+                ),
+                (
+                    "deviation_percentage",
+                    models.FloatField(help_text="Percentage deviation from average"),
+                ),
+                ("expected_score", models.FloatField()),
+                ("actual_score", models.FloatField()),
+                ("cohort_mean", models.FloatField()),
+                ("cohort_std_dev", models.FloatField()),
+                (
+                    "assessor_mean",
+                    models.FloatField(
+                        help_text="Assessor's average score across all submissions"
+                    ),
+                ),
+                ("explanation", models.TextField()),
+                (
+                    "confidence_score",
+                    models.FloatField(
+                        help_text="Confidence in outlier detection (0-1)",
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(1.0),
+                        ],
+                    ),
+                ),
+                ("is_resolved", models.BooleanField(default=False)),
+                ("resolution_notes", models.TextField(blank=True)),
+                ("resolved_by", models.CharField(blank=True, max_length=100)),
+                ("resolved_at", models.DateTimeField(blank=True, null=True)),
+                ("detected_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "decision",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="outlier_flags",
+                        to="moderation_tool.assessordecision",
+                    ),
+                ),
+                (
+                    "session",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="outliers",
+                        to="moderation_tool.moderationsession",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-severity', '-detected_at'],
+                "ordering": ["-severity", "-detected_at"],
             },
         ),
         migrations.CreateModel(
-            name='ModerationLog',
+            name="ModerationLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(choices=[('session_created', 'Session Created'), ('decision_added', 'Decision Added'), ('outlier_detected', 'Outlier Detected'), ('bias_calculated', 'Bias Calculated'), ('comparison_run', 'Comparison Run'), ('validation_completed', 'Validation Completed'), ('session_completed', 'Session Completed')], max_length=50)),
-                ('description', models.TextField()),
-                ('decisions_processed', models.IntegerField(default=0)),
-                ('outliers_found', models.IntegerField(default=0)),
-                ('bias_flags', models.IntegerField(default=0)),
-                ('processing_time_ms', models.IntegerField(blank=True, null=True)),
-                ('performed_by', models.CharField(blank=True, max_length=100)),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
-                ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='logs', to='moderation_tool.moderationsession')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[
+                            ("session_created", "Session Created"),
+                            ("decision_added", "Decision Added"),
+                            ("outlier_detected", "Outlier Detected"),
+                            ("bias_calculated", "Bias Calculated"),
+                            ("comparison_run", "Comparison Run"),
+                            ("validation_completed", "Validation Completed"),
+                            ("session_completed", "Session Completed"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                ("description", models.TextField()),
+                ("decisions_processed", models.IntegerField(default=0)),
+                ("outliers_found", models.IntegerField(default=0)),
+                ("bias_flags", models.IntegerField(default=0)),
+                ("processing_time_ms", models.IntegerField(blank=True, null=True)),
+                ("performed_by", models.CharField(blank=True, max_length=100)),
+                ("timestamp", models.DateTimeField(auto_now_add=True)),
+                (
+                    "session",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="logs",
+                        to="moderation_tool.moderationsession",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-timestamp'],
-                'indexes': [models.Index(fields=['session', 'action'], name='moderation__session_57f654_idx'), models.Index(fields=['timestamp'], name='moderation__timesta_1a3587_idx')],
+                "ordering": ["-timestamp"],
+                "indexes": [
+                    models.Index(
+                        fields=["session", "action"],
+                        name="moderation__session_57f654_idx",
+                    ),
+                    models.Index(
+                        fields=["timestamp"], name="moderation__timesta_1a3587_idx"
+                    ),
+                ],
             },
         ),
         migrations.CreateModel(
-            name='BiasScore',
+            name="BiasScore",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('bias_number', models.CharField(blank=True, editable=False, max_length=50, unique=True)),
-                ('assessor_id', models.CharField(max_length=100)),
-                ('assessor_name', models.CharField(max_length=200)),
-                ('bias_type', models.CharField(choices=[('leniency', 'Leniency Bias'), ('severity', 'Severity Bias'), ('central_tendency', 'Central Tendency Bias'), ('halo_effect', 'Halo Effect'), ('recency', 'Recency Bias'), ('demographic', 'Demographic Bias'), ('timing', 'Timing Bias')], max_length=50)),
-                ('bias_score', models.FloatField(help_text='Bias score (0=no bias, 1=severe bias)', validators=[django.core.validators.MinValueValidator(0.0), django.core.validators.MaxValueValidator(1.0)])),
-                ('sample_size', models.IntegerField(help_text='Number of decisions analyzed')),
-                ('mean_difference', models.FloatField(help_text='Difference from cohort mean')),
-                ('std_dev_ratio', models.FloatField(help_text='Ratio to cohort standard deviation')),
-                ('evidence', models.JSONField(default=dict, help_text='Statistical evidence and patterns detected')),
-                ('affected_students', models.JSONField(default=list, help_text='List of student IDs affected by bias')),
-                ('is_validated', models.BooleanField(default=False)),
-                ('validation_notes', models.TextField(blank=True)),
-                ('validated_by', models.CharField(blank=True, max_length=100)),
-                ('validated_at', models.DateTimeField(blank=True, null=True)),
-                ('recommendation', models.TextField(help_text='Action recommended to address bias')),
-                ('severity_level', models.IntegerField(default=5, help_text='Severity level (1=minor, 10=critical)', validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(10)])),
-                ('calculated_at', models.DateTimeField(auto_now_add=True)),
-                ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='bias_scores', to='moderation_tool.moderationsession')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "bias_number",
+                    models.CharField(
+                        blank=True, editable=False, max_length=50, unique=True
+                    ),
+                ),
+                ("assessor_id", models.CharField(max_length=100)),
+                ("assessor_name", models.CharField(max_length=200)),
+                (
+                    "bias_type",
+                    models.CharField(
+                        choices=[
+                            ("leniency", "Leniency Bias"),
+                            ("severity", "Severity Bias"),
+                            ("central_tendency", "Central Tendency Bias"),
+                            ("halo_effect", "Halo Effect"),
+                            ("recency", "Recency Bias"),
+                            ("demographic", "Demographic Bias"),
+                            ("timing", "Timing Bias"),
+                        ],
+                        max_length=50,
+                    ),
+                ),
+                (
+                    "bias_score",
+                    models.FloatField(
+                        help_text="Bias score (0=no bias, 1=severe bias)",
+                        validators=[
+                            django.core.validators.MinValueValidator(0.0),
+                            django.core.validators.MaxValueValidator(1.0),
+                        ],
+                    ),
+                ),
+                (
+                    "sample_size",
+                    models.IntegerField(help_text="Number of decisions analyzed"),
+                ),
+                (
+                    "mean_difference",
+                    models.FloatField(help_text="Difference from cohort mean"),
+                ),
+                (
+                    "std_dev_ratio",
+                    models.FloatField(help_text="Ratio to cohort standard deviation"),
+                ),
+                (
+                    "evidence",
+                    models.JSONField(
+                        default=dict,
+                        help_text="Statistical evidence and patterns detected",
+                    ),
+                ),
+                (
+                    "affected_students",
+                    models.JSONField(
+                        default=list, help_text="List of student IDs affected by bias"
+                    ),
+                ),
+                ("is_validated", models.BooleanField(default=False)),
+                ("validation_notes", models.TextField(blank=True)),
+                ("validated_by", models.CharField(blank=True, max_length=100)),
+                ("validated_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "recommendation",
+                    models.TextField(help_text="Action recommended to address bias"),
+                ),
+                (
+                    "severity_level",
+                    models.IntegerField(
+                        default=5,
+                        help_text="Severity level (1=minor, 10=critical)",
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(10),
+                        ],
+                    ),
+                ),
+                ("calculated_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "session",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="bias_scores",
+                        to="moderation_tool.moderationsession",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-bias_score', '-calculated_at'],
-                'indexes': [models.Index(fields=['session', 'assessor_id'], name='moderation__session_48f386_idx'), models.Index(fields=['bias_type'], name='moderation__bias_ty_adc118_idx'), models.Index(fields=['is_validated'], name='moderation__is_vali_9afaa8_idx'), models.Index(fields=['calculated_at'], name='moderation__calcula_968437_idx')],
+                "ordering": ["-bias_score", "-calculated_at"],
+                "indexes": [
+                    models.Index(
+                        fields=["session", "assessor_id"],
+                        name="moderation__session_48f386_idx",
+                    ),
+                    models.Index(
+                        fields=["bias_type"], name="moderation__bias_ty_adc118_idx"
+                    ),
+                    models.Index(
+                        fields=["is_validated"], name="moderation__is_vali_9afaa8_idx"
+                    ),
+                    models.Index(
+                        fields=["calculated_at"], name="moderation__calcula_968437_idx"
+                    ),
+                ],
             },
         ),
         migrations.AddIndex(
-            model_name='assessordecision',
-            index=models.Index(fields=['session', 'student_id'], name='moderation__session_821df2_idx'),
+            model_name="assessordecision",
+            index=models.Index(
+                fields=["session", "student_id"], name="moderation__session_821df2_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='assessordecision',
-            index=models.Index(fields=['assessor_id'], name='moderation__assesso_4195df_idx'),
+            model_name="assessordecision",
+            index=models.Index(
+                fields=["assessor_id"], name="moderation__assesso_4195df_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='assessordecision',
-            index=models.Index(fields=['is_outlier'], name='moderation__is_outl_8ab5d4_idx'),
+            model_name="assessordecision",
+            index=models.Index(
+                fields=["is_outlier"], name="moderation__is_outl_8ab5d4_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='assessordecision',
-            index=models.Index(fields=['has_bias_flag'], name='moderation__has_bia_cee63b_idx'),
+            model_name="assessordecision",
+            index=models.Index(
+                fields=["has_bias_flag"], name="moderation__has_bia_cee63b_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='outlierdetection',
-            index=models.Index(fields=['session', 'severity'], name='moderation__session_ffebc1_idx'),
+            model_name="outlierdetection",
+            index=models.Index(
+                fields=["session", "severity"], name="moderation__session_ffebc1_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='outlierdetection',
-            index=models.Index(fields=['is_resolved'], name='moderation__is_reso_3067fc_idx'),
+            model_name="outlierdetection",
+            index=models.Index(
+                fields=["is_resolved"], name="moderation__is_reso_3067fc_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='outlierdetection',
-            index=models.Index(fields=['detected_at'], name='moderation__detecte_45c26a_idx'),
+            model_name="outlierdetection",
+            index=models.Index(
+                fields=["detected_at"], name="moderation__detecte_45c26a_idx"
+            ),
         ),
     ]
