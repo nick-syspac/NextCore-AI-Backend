@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.0...v1.0.1) (2025-11-01)
+
+
+### Bug Fixes
+
+* update image reference in Trivy scan workflow to use lowercase repository name ([5d55fb7](https://github.com/nick-syspac/NextCore-AI-Backend/commit/5d55fb779b06f209ad10101620efca3ba3ab32e2))
+
 # 1.0.0 (2025-11-01)
 
 
