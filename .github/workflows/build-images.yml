@@ -29,7 +29,12 @@ jobs:
       - name: Build & push
         run: |
           SERVICES="control-plane ai-gateway worker"
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           for S in $SERVICES; do
-            docker buildx build               --platform linux/amd64               -t ghcr.io/${{ github.repository }}/$S:${{ github.sha }}               -f apps/$S/Dockerfile               --push apps/$S
+            docker buildx build \
+              --platform linux/amd64 \
+              -t ghcr.io/$REPO_LOWER/$S:${{ github.sha }} \
+              -f apps/$S/Dockerfile \
+              --push apps/$S
           done
 
