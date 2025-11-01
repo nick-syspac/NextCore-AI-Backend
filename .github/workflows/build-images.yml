@@ -37,4 +37,3 @@ jobs:
               -f apps/$S/Dockerfile \
               --push apps/$S
           done
-
