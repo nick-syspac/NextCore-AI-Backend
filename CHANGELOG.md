@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.3...v1.0.4) (2025-11-01)
+
+
+### Bug Fixes
+
+* downgrade Django version to 5.1.13 in requirements files ([a5d7d0f](https://github.com/nick-syspac/NextCore-AI-Backend/commit/a5d7d0fad36806aa3ab9cd5bcb60629d33c2e6e8))
+
 ## [1.0.3](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.2...v1.0.3) (2025-11-01)
 
 
