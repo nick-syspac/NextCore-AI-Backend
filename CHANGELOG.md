@@ -1,3 +1,10 @@
+## [1.0.9](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.8...v1.0.9) (2025-11-01)
+
+
+### Bug Fixes
+
+* resolve timezone inconsistency in funding_eligibility tests ([a161fb4](https://github.com/nick-syspac/NextCore-AI-Backend/commit/a161fb44e28d2a4326c137bc69b91054212f52cb))
+
 ## [1.0.8](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.7...v1.0.8) (2025-11-01)
 
 
