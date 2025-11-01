@@ -11,7 +11,8 @@ WORKDIR /app
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip==25.3 && \
+    pip install --user --no-cache-dir -r requirements.txt
 
 # Final stage
 FROM python:3.12-slim
