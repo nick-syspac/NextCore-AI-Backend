@@ -1,3 +1,10 @@
+## [1.0.10](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.9...v1.0.10) (2025-11-01)
+
+
+### Bug Fixes
+
+* replace all date.today() with timezone.now().date() in funding_eligibility tests ([2248974](https://github.com/nick-syspac/NextCore-AI-Backend/commit/224897400024d1aedfd927161fc92605c1de3fd4))
+
 ## [1.0.9](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.8...v1.0.9) (2025-11-01)
 
 
