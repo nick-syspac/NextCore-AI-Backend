@@ -16,7 +16,9 @@ class IntegrationModelTest(TestCase):
         self.tenant = Tenant.objects.create(
             name='Test Org',
             slug='test-org',
-            tier='professional'
+            subscription_tier='professional',
+            contact_email='test@example.com',
+            contact_name='Test Contact'
         )
     
     def test_create_integration(self):

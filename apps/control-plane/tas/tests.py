@@ -27,7 +27,9 @@ class TASModelTest(TestCase):
         self.tenant = Tenant.objects.create(
             name='Test College',
             slug='test-college',
-            subdomain='test',
+            domain='test.example.com',
+            contact_email='test@example.com',
+            contact_name='Test Contact'
         )
         self.tas = TAS.objects.create(
             tenant=self.tenant,
@@ -92,7 +94,9 @@ class TASVersionModelTest(TestCase):
         self.tenant = Tenant.objects.create(
             name='Test College',
             slug='test-college',
-            subdomain='test',
+            domain='test.example.com',
+            contact_email='test@example.com',
+            contact_name='Test Contact'
         )
         self.tas = TAS.objects.create(
             tenant=self.tenant,
@@ -119,7 +123,9 @@ class TASGenerationLogModelTest(TestCase):
         self.tenant = Tenant.objects.create(
             name='Test College',
             slug='test-college',
-            subdomain='test',
+            domain='test.example.com',
+            contact_email='test@example.com',
+            contact_name='Test Contact'
         )
         self.tas = TAS.objects.create(
             tenant=self.tenant,

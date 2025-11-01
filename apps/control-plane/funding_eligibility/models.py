@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from datetime import date
 import json
 
 
@@ -118,7 +119,7 @@ class JurisdictionRequirement(models.Model):
     
     # Status
     is_active = models.BooleanField(default=True)
-    effective_from = models.DateField(default=timezone.now)
+    effective_from = models.DateField(default=date.today)
     effective_to = models.DateField(null=True, blank=True)
     
     # Audit

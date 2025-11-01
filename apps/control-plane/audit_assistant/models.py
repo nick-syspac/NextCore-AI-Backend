@@ -264,8 +264,8 @@ class AuditReport(models.Model):
         
         # Count clauses with evidence
         clauses_with_evidence = all_clauses.filter(
-            evidence_documents__evidence__tenant=self.tenant,
-            evidence_documents__evidence__status__in=['tagged', 'reviewed', 'approved']
+            clauseevidence__evidence__tenant=self.tenant,
+            clauseevidence__evidence__status__in=['tagged', 'reviewed', 'approved']
         ).distinct().count()
         
         self.clauses_with_evidence = clauses_with_evidence
@@ -282,8 +282,8 @@ class AuditReport(models.Model):
         self.critical_clauses_count = critical_clauses.count()
         
         critical_with_evidence = critical_clauses.filter(
-            evidence_documents__evidence__tenant=self.tenant,
-            evidence_documents__evidence__status__in=['tagged', 'reviewed', 'approved']
+            clauseevidence__evidence__tenant=self.tenant,
+            clauseevidence__evidence__status__in=['tagged', 'reviewed', 'approved']
         ).distinct().count()
         
         self.critical_clauses_covered = critical_with_evidence

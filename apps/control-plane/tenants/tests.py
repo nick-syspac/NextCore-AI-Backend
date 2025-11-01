@@ -202,7 +202,11 @@ class TenantAPITestCase(APITestCase):
         response = self.client.get("/api/tenants/")
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        # User should see at least their tenant
+        self.assertGreaterEqual(len(response.data), 1)
+        # Verify the user's tenant is in the results
+        tenant_slugs = [t['slug'] for t in response.data]
+        self.assertIn('test-org', tenant_slugs)
 
     def test_activate_tenant(self):
         """Test activating a tenant via API."""

@@ -10,7 +10,12 @@ User = get_user_model()
 
 class EvidenceModelTest(TestCase):
     def setUp(self):
-        self.tenant = Tenant.objects.create(name="Test RTO", slug="test-rto")
+        self.tenant = Tenant.objects.create(
+            name="Test RTO",
+            slug="test-rto",
+            contact_email="test@rto.com",
+            contact_name="Test Contact"
+        )
         self.user = User.objects.create_user(username="testuser", password="testpass")
     
     def test_evidence_creation(self):
@@ -44,7 +49,12 @@ class EvidenceModelTest(TestCase):
 
 class ClauseEvidenceModelTest(TestCase):
     def setUp(self):
-        self.tenant = Tenant.objects.create(name="Test RTO", slug="test-rto")
+        self.tenant = Tenant.objects.create(
+            name="Test RTO",
+            slug="test-rto",
+            contact_email="test@rto.com",
+            contact_name="Test Contact"
+        )
         self.user = User.objects.create_user(username="testuser", password="testpass")
         
         self.standard = ASQAStandard.objects.create(
@@ -99,7 +109,12 @@ class ClauseEvidenceModelTest(TestCase):
 
 class AuditReportModelTest(TestCase):
     def setUp(self):
-        self.tenant = Tenant.objects.create(name="Test RTO", slug="test-rto")
+        self.tenant = Tenant.objects.create(
+            name="Test RTO",
+            slug="test-rto",
+            contact_email="test@rto.com",
+            contact_name="Test Contact"
+        )
         self.user = User.objects.create_user(username="testuser", password="testpass")
         
         self.standard = ASQAStandard.objects.create(
@@ -158,7 +173,12 @@ class AuditReportModelTest(TestCase):
 
 class AuditReportClauseModelTest(TestCase):
     def setUp(self):
-        self.tenant = Tenant.objects.create(name="Test RTO", slug="test-rto")
+        self.tenant = Tenant.objects.create(
+            name="Test RTO",
+            slug="test-rto",
+            contact_email="test@rto.com",
+            contact_name="Test Contact"
+        )
         self.user = User.objects.create_user(username="testuser", password="testpass")
         
         self.standard = ASQAStandard.objects.create(

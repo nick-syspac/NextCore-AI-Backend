@@ -9,7 +9,12 @@ from .models import JurisdictionRequirement, EligibilityRule, EligibilityCheck
 class JurisdictionRequirementTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('testuser', 'test@example.com', 'password')
-        self.tenant = Tenant.objects.create(name='Test Tenant', slug='test-tenant')
+        self.tenant = Tenant.objects.create(
+            name='Test Tenant',
+            slug='test-tenant',
+            contact_email='test@example.com',
+            contact_name='Test Contact'
+        )
         
         self.requirement = JurisdictionRequirement.objects.create(
             tenant=self.tenant,
@@ -40,7 +45,12 @@ class JurisdictionRequirementTests(TestCase):
 class EligibilityRuleTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('testuser', 'test@example.com', 'password')
-        self.tenant = Tenant.objects.create(name='Test Tenant', slug='test-tenant')
+        self.tenant = Tenant.objects.create(
+            name='Test Tenant',
+            slug='test-tenant',
+            contact_email='test@example.com',
+            contact_name='Test Contact'
+        )
         
         self.rule = EligibilityRule.objects.create(
             tenant=self.tenant,
@@ -76,7 +86,12 @@ class EligibilityRuleTests(TestCase):
 class EligibilityCheckTests(TestCase):
     def setUp(self):
         self.user = User.objects.create_user('testuser', 'test@example.com', 'password')
-        self.tenant = Tenant.objects.create(name='Test Tenant', slug='test-tenant')
+        self.tenant = Tenant.objects.create(
+            name='Test Tenant',
+            slug='test-tenant',
+            contact_email='test@example.com',
+            contact_name='Test Contact'
+        )
         
         self.check = EligibilityCheck.objects.create(
             tenant=self.tenant,

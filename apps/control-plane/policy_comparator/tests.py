@@ -48,7 +48,9 @@ class PolicyModelTest(TestCase):
         self.tenant = Tenant.objects.create(
             name='Test College',
             slug='test-college',
-            subdomain='test',
+            domain='test.example.com',
+            contact_email='test@example.com',
+            contact_name='Test Contact'
         )
         self.policy = Policy.objects.create(
             tenant=self.tenant,
@@ -71,7 +73,9 @@ class ComparisonResultModelTest(TestCase):
         self.tenant = Tenant.objects.create(
             name='Test College',
             slug='test-college',
-            subdomain='test',
+            domain='test.example.com',
+            contact_email='test@example.com',
+            contact_name='Test Contact'
         )
         self.standard = ASQAStandard.objects.create(
             standard_number='1.1',
@@ -128,7 +132,9 @@ class ComparisonSessionModelTest(TestCase):
         self.tenant = Tenant.objects.create(
             name='Test College',
             slug='test-college',
-            subdomain='test',
+            domain='test.example.com',
+            contact_email='test@example.com',
+            contact_name='Test Contact'
         )
         self.policy = Policy.objects.create(
             tenant=self.tenant,
