@@ -1,3 +1,10 @@
+## [1.0.6](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.5...v1.0.6) (2025-11-01)
+
+
+### Bug Fixes
+
+* add effective_from date to JurisdictionRequirement creation in tests ([e88018a](https://github.com/nick-syspac/NextCore-AI-Backend/commit/e88018a96e8037c1fcbc09f73096335808460307))
+
 ## [1.0.5](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.4...v1.0.5) (2025-11-01)
 
 
