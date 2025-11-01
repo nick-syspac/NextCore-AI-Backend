@@ -29,6 +29,7 @@ class JurisdictionRequirementTests(TestCase):
             funding_percentage=90.00,
             student_contribution=500.00,
             is_active=True,
+            effective_from=date.today(),
             created_by=self.user
         )
     
