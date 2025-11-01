@@ -3,17 +3,24 @@ on:
   workflow_run:
     workflows: ["Build Images"]
     types: [completed]
+    branches: [main]
 jobs:
   scan:
     runs-on: ubuntu-latest
+    # Only run if the build workflow succeeded
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Lowercase repository name
         id: repo
         run: echo "repo_lower=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
       
+      - name: Get build commit SHA
+        id: build_sha
+        run: echo "sha=${{ github.event.workflow_run.head_sha }}" >> $GITHUB_OUTPUT
+      
       - uses: aquasecurity/trivy-action@0.24.0
         with:
-          image-ref: ghcr.io/${{ steps.repo.outputs.repo_lower }}/control-plane:${{ github.sha }}
+          image-ref: ghcr.io/${{ steps.repo.outputs.repo_lower }}/control-plane:${{ steps.build_sha.outputs.sha }}
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
