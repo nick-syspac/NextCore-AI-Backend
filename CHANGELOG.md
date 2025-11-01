@@ -1,3 +1,10 @@
+## [1.0.5](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.4...v1.0.5) (2025-11-01)
+
+
+### Bug Fixes
+
+* upgrade pip in Dockerfiles for AI Gateway, Control Plane, and Worker ([a4c98b3](https://github.com/nick-syspac/NextCore-AI-Backend/commit/a4c98b383ca78d35813189a2df93205b81797421))
+
 ## [1.0.4](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.3...v1.0.4) (2025-11-01)
 
 
