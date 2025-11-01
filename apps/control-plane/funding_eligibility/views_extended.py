@@ -5,7 +5,7 @@ Implements hard-block enforcement for non-compliant enrolments.
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db import transaction
@@ -61,11 +61,11 @@ class TenantScopedMixin:
 
 class JurisdictionViewSet(viewsets.ReadOnlyModelViewSet):
     """
-    Jurisdiction viewset - read-only for RTO users.
+    Jurisdiction viewset - read-only, public access for browsing available jurisdictions.
     """
     queryset = Jurisdiction.objects.filter(active=True)
     serializer_class = JurisdictionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]  # Public read-only access
 
 
 class RulesetViewSet(viewsets.ModelViewSet):

@@ -5,8 +5,14 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write       # Required to push tags and update releases
+      issues: write         # Required to comment on issues
+      pull-requests: write  # Required to comment on PRs
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0    # Fetch all history for semantic-release to analyze commits
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v4
         env:
