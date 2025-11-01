@@ -1,3 +1,10 @@
+## [1.0.7](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.6...v1.0.7) (2025-11-01)
+
+
+### Bug Fixes
+
+* set default value for effective_from in JurisdictionRequirement migration ([29a6c5d](https://github.com/nick-syspac/NextCore-AI-Backend/commit/29a6c5d21cca3460d450064c0953f0a0184863f9))
+
 ## [1.0.6](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.5...v1.0.6) (2025-11-01)
 
 
