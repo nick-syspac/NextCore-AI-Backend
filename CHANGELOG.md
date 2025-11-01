@@ -1,3 +1,10 @@
+## [1.0.8](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.7...v1.0.8) (2025-11-01)
+
+
+### Bug Fixes
+
+* update date handling in is_currently_effective method and enhance tests for requirement creation ([0712778](https://github.com/nick-syspac/NextCore-AI-Backend/commit/07127789d4e20ec9bed923b39420dd601f37fffb))
+
 ## [1.0.7](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.6...v1.0.7) (2025-11-01)
 
 
