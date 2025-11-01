@@ -38,16 +38,15 @@ class JurisdictionRequirementTests(TestCase):
             str(self.requirement), "New South Wales - Smart and Skilled NSW"
         )
         # Check the requirement is currently effective
-        # Debug: print values to understand what's happening
         today = timezone.now().date()
-        self.assertEqual(self.requirement.effective_from, date.today())
+        self.assertEqual(self.requirement.effective_from, today)
         self.assertTrue(self.requirement.is_active)
         self.assertIsNone(self.requirement.effective_to)
         self.assertLessEqual(self.requirement.effective_from, today)
         self.assertTrue(self.requirement.is_currently_effective())
 
     def test_requirement_expiry(self):
-        self.requirement.effective_to = date.today() - timedelta(days=1)
+        self.requirement.effective_to = timezone.now().date() - timedelta(days=1)
         self.requirement.save()
         self.assertFalse(self.requirement.is_currently_effective())
 
@@ -112,7 +111,7 @@ class EligibilityCheckTests(TestCase):
             course_code="ICT50120",
             course_name="Diploma of Information Technology",
             aqf_level=5,
-            intended_start_date=date.today() + timedelta(days=30),
+            intended_start_date=timezone.now().date() + timedelta(days=30),
             jurisdiction="nsw",
             student_data={"citizenship_status": "citizen"},
             checked_by=self.user,
@@ -123,7 +122,7 @@ class EligibilityCheckTests(TestCase):
 
     def test_age_calculation(self):
         age = self.check.calculate_age()
-        expected_age = date.today().year - 2000
+        expected_age = timezone.now().date().year - 2000
         self.assertEqual(age, expected_age)
 
     def test_eligibility_summary(self):
