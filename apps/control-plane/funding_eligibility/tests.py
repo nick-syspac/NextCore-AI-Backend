@@ -35,6 +35,13 @@ class JurisdictionRequirementTests(TestCase):
     
     def test_requirement_creation(self):
         self.assertEqual(str(self.requirement), 'New South Wales - Smart and Skilled NSW')
+        # Check the requirement is currently effective
+        # Debug: print values to understand what's happening
+        today = timezone.now().date()
+        self.assertEqual(self.requirement.effective_from, date.today())
+        self.assertTrue(self.requirement.is_active)
+        self.assertIsNone(self.requirement.effective_to)
+        self.assertLessEqual(self.requirement.effective_from, today)
         self.assertTrue(self.requirement.is_currently_effective())
     
     def test_requirement_expiry(self):

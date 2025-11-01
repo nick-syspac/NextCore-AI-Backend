@@ -141,7 +141,8 @@ class JurisdictionRequirement(models.Model):
     
     def is_currently_effective(self):
         """Check if requirement is currently in effect"""
-        today = timezone.now().date()
+        from datetime import date
+        today = date.today()
         if not self.is_active:
             return False
         if self.effective_from > today:
