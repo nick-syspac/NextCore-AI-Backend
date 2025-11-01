@@ -61,17 +61,19 @@ class TASModelTest(TestCase):
         self.assertEqual(tas2.version, 2)
 
     def test_unique_constraint(self):
-        # Try to create TAS with same tenant, code, and version
-        with self.assertRaises(IntegrityError):
-            TAS.objects.create(
-                tenant=self.tenant,
-                title='BSB50120 - Diploma of Business',
-                code='BSB50120',
-                qualification_name='Diploma of Business',
-                aqf_level='diploma',
-                version=1,  # Duplicate version
-                created_by=self.user,
-            )
+        # The save() method auto-increments version to prevent duplicates
+        # Test that this works correctly
+        tas2 = TAS.objects.create(
+            tenant=self.tenant,
+            title='BSB50120 - Diploma of Business Updated',
+            code='BSB50120',
+            qualification_name='Diploma of Business',
+            aqf_level='diploma',
+            version=1,  # Try to use same version
+            created_by=self.user,
+        )
+        # Version should have been auto-incremented to 2
+        self.assertEqual(tas2.version, 2)
 
     def test_time_saved_calculation(self):
         time_saved = self.tas.get_time_saved()
