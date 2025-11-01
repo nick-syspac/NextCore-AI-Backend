@@ -202,10 +202,12 @@ class TenantAPITestCase(APITestCase):
         response = self.client.get("/api/tenants/")
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Handle both paginated and non-paginated responses
+        data = response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
         # User should see at least their tenant
-        self.assertGreaterEqual(len(response.data), 1)
+        self.assertGreaterEqual(len(data), 1)
         # Verify the user's tenant is in the results
-        tenant_slugs = [t['slug'] for t in response.data]
+        tenant_slugs = [t['slug'] for t in data]
         self.assertIn('test-org', tenant_slugs)
 
     def test_activate_tenant(self):

@@ -97,7 +97,9 @@ class AuditAPITestCase(APITestCase):
         response = self.client.get("/api/audit/events/")
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(len(response.data), 2)  # At least 2 events
+        # Handle both paginated and non-paginated responses
+        data = response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
+        self.assertGreaterEqual(len(data), 2)  # At least 2 events
 
     def test_filter_by_tenant(self):
         """Test filtering audit events by tenant."""
@@ -115,9 +117,11 @@ class AuditAPITestCase(APITestCase):
         response = self.client.get("/api/audit/events/?tenant_id=tenant1")
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(len(response.data), 1)  # At least 1 event for tenant1
+        # Handle both paginated and non-paginated responses
+        data = response.data.get('results', response.data) if isinstance(response.data, dict) else response.data
+        self.assertGreaterEqual(len(data), 1)  # At least 1 event for tenant1
         # Verify all returned events are for tenant1
-        for event in response.data:
+        for event in data:
             self.assertEqual(event["tenant_id"], "tenant1")
 
     def test_verify_chain(self):

@@ -1,5 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
+from django.db import IntegrityError
 from tenants.models import Tenant
 from .models import TAS, TASTemplate, TASVersion, TASGenerationLog
 
@@ -61,7 +62,7 @@ class TASModelTest(TestCase):
 
     def test_unique_constraint(self):
         # Try to create TAS with same tenant, code, and version
-        with self.assertRaises(Exception):
+        with self.assertRaises(IntegrityError):
             TAS.objects.create(
                 tenant=self.tenant,
                 title='BSB50120 - Diploma of Business',
