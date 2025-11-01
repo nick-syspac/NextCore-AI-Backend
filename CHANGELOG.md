@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.2...v1.0.3) (2025-11-01)
+
+
+### Bug Fixes
+
+* update trivy-scan workflow to correctly retrieve build commit SHA ([4d9f123](https://github.com/nick-syspac/NextCore-AI-Backend/commit/4d9f123eaa35ef77c8b3d0b93cab42f5090200f5))
+
 ## [1.0.2](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.1...v1.0.2) (2025-11-01)
 
 
