@@ -54,6 +54,9 @@ class TASTemplate(models.Model):
     gpt_prompts = models.JSONField(
         default=dict, help_text="GPT-4 prompts for each section"
     )
+    
+    # Many-to-many relationship with sections (defined below)
+    # Access via: template.section_assignments.all()
 
     # Metadata
     is_active = models.BooleanField(default=True)
@@ -78,7 +81,8 @@ class TASTemplate(models.Model):
 
 class TASTemplateSection(models.Model):
     """
-    Individual sections within a TAS template with editable configuration
+    Reusable sections that can be assigned to any TAS template
+    Sections are independent and can be used across multiple templates
     """
 
     CONTENT_TYPES = [
@@ -88,12 +92,6 @@ class TASTemplateSection(models.Model):
         ("list", "Bulleted/Numbered List"),
         ("json", "JSON Data"),
     ]
-
-    template = models.ForeignKey(
-        TASTemplate,
-        on_delete=models.CASCADE,
-        related_name="sections"
-    )
     
     # Section identification
     section_name = models.CharField(
@@ -102,6 +100,7 @@ class TASTemplateSection(models.Model):
     )
     section_code = models.CharField(
         max_length=50,
+        unique=True,
         help_text="Unique code for the section (e.g., 'cohort_profile')"
     )
     
@@ -125,19 +124,11 @@ class TASTemplateSection(models.Model):
         default=True,
         help_text="Whether users can edit this section"
     )
-    is_required = models.BooleanField(
-        default=True,
-        help_text="Whether this section is required in the TAS document"
-    )
     
-    # Ordering and organization
-    section_order = models.IntegerField(
-        default=0,
-        help_text="Display order within the template"
-    )
+    # Organization
     parent_section = models.ForeignKey(
         "self",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="subsections",
@@ -151,22 +142,88 @@ class TASTemplateSection(models.Model):
     )
     
     # Metadata
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether this section is available for use"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "tas_template_sections"
-        ordering = ["template", "section_order", "section_name"]
-        unique_together = [["template", "section_code"]]
+        ordering = ["section_name"]
         verbose_name = "TAS Template Section"
         verbose_name_plural = "TAS Template Sections"
         indexes = [
-            models.Index(fields=["template", "section_order"]),
             models.Index(fields=["section_code"]),
+            models.Index(fields=["is_active"]),
         ]
 
     def __str__(self):
-        return f"{self.template.name} - {self.section_name}"
+        return f"{self.section_name} ({self.section_code})"
+
+
+class TASTemplateSectionAssignment(models.Model):
+    """
+    Junction table for assigning sections to templates with ordering
+    """
+    
+    template = models.ForeignKey(
+        TASTemplate,
+        on_delete=models.CASCADE,
+        related_name="section_assignments"
+    )
+    section = models.ForeignKey(
+        TASTemplateSection,
+        on_delete=models.CASCADE,
+        related_name="template_assignments"
+    )
+    
+    # Configuration for this section in this template
+    section_order = models.IntegerField(
+        default=0,
+        help_text="Display order within this template"
+    )
+    is_required = models.BooleanField(
+        default=True,
+        help_text="Whether this section is required in this template"
+    )
+    custom_label = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text="Override section name for this template (optional)"
+    )
+    custom_description = models.TextField(
+        blank=True,
+        help_text="Override description for this template (optional)"
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "tas_template_section_assignments"
+        ordering = ["template", "section_order"]
+        unique_together = [["template", "section"]]
+        verbose_name = "Template Section Assignment"
+        verbose_name_plural = "Template Section Assignments"
+        indexes = [
+            models.Index(fields=["template", "section_order"]),
+        ]
+
+    def __str__(self):
+        return f"{self.template.name} - {self.section.section_name} (order: {self.section_order})"
+    
+    @property
+    def effective_label(self):
+        """Return custom label if set, otherwise section name"""
+        return self.custom_label or self.section.section_name
+    
+    @property
+    def effective_description(self):
+        """Return custom description if set, otherwise section description"""
+        return self.custom_description or self.section.description
 
 
 class TAS(models.Model):

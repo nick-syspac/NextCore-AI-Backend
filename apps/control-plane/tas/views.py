@@ -7,11 +7,20 @@ from django.db import transaction
 import time
 import json
 
-from .models import TAS, TASTemplate, TASTemplateSection, TASVersion, TASGenerationLog, QualificationCache
+from .models import (
+    TAS, 
+    TASTemplate, 
+    TASTemplateSection, 
+    TASTemplateSectionAssignment,
+    TASVersion, 
+    TASGenerationLog, 
+    QualificationCache
+)
 from .serializers import (
     TASSerializer,
     TASTemplateSerializer,
     TASTemplateSectionSerializer,
+    TASTemplateSectionAssignmentSerializer,
     TASVersionSerializer,
     TASGenerationLogSerializer,
     TASGenerateRequestSerializer,
@@ -52,21 +61,16 @@ class TASTemplateViewSet(viewsets.ModelViewSet):
 
 
 class TASTemplateSectionViewSet(viewsets.ModelViewSet):
-    """ViewSet for managing TAS template sections"""
+    """ViewSet for managing reusable TAS template sections"""
 
     serializer_class = TASTemplateSectionSerializer
     permission_classes = [AllowAny]  # TODO: Change to IsAuthenticated in production
-    filterset_fields = ["template", "content_type", "is_editable", "is_required", "parent_section"]
+    filterset_fields = ["content_type", "is_editable", "is_active", "parent_section"]
     search_fields = ["section_name", "section_code", "description"]
-    ordering_fields = ["section_order", "section_name", "created_at"]
+    ordering_fields = ["section_name", "section_code", "created_at"]
 
     def get_queryset(self):
-        queryset = TASTemplateSection.objects.all()
-        
-        # Filter by template if provided
-        template_id = self.request.query_params.get("template_id")
-        if template_id:
-            queryset = queryset.filter(template_id=template_id)
+        queryset = TASTemplateSection.objects.filter(is_active=True)
         
         # Filter for top-level sections only
         top_level_only = self.request.query_params.get("top_level_only")
@@ -75,9 +79,55 @@ class TASTemplateSectionViewSet(viewsets.ModelViewSet):
         
         return queryset
 
+    @action(detail=True, methods=["post"])
+    def duplicate(self, request, pk=None):
+        """Duplicate a section"""
+        section = self.get_object()
+        
+        try:
+            # Create duplicate
+            new_section = TASTemplateSection.objects.create(
+                section_name=f"{section.section_name} (Copy)",
+                section_code=f"{section.section_code}_copy_{timezone.now().timestamp()}",
+                description=section.description,
+                content_type=section.content_type,
+                default_content=section.default_content,
+                is_editable=section.is_editable,
+                gpt_prompt=section.gpt_prompt,
+            )
+
+            return Response(
+                TASTemplateSectionSerializer(new_section).data,
+                status=status.HTTP_201_CREATED,
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+
+class TASTemplateSectionAssignmentViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing section assignments to templates"""
+
+    serializer_class = TASTemplateSectionAssignmentSerializer
+    permission_classes = [AllowAny]  # TODO: Change to IsAuthenticated in production
+    filterset_fields = ["template", "section", "is_required"]
+    ordering_fields = ["section_order", "created_at"]
+
+    def get_queryset(self):
+        queryset = TASTemplateSectionAssignment.objects.all()
+        
+        # Filter by template if provided
+        template_id = self.request.query_params.get("template_id")
+        if template_id:
+            queryset = queryset.filter(template_id=template_id)
+        
+        return queryset.select_related("template", "section")
+
     @action(detail=False, methods=["get"])
     def by_template(self, request):
-        """Get all sections for a specific template, organized hierarchically"""
+        """Get all section assignments for a specific template, organized hierarchically"""
         template_id = request.query_params.get("template_id")
         if not template_id:
             return Response(
@@ -93,93 +143,112 @@ class TASTemplateSectionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # Get top-level sections
-        top_level_sections = TASTemplateSection.objects.filter(
-            template=template,
-            parent_section__isnull=True
-        ).order_by("section_order")
+        # Get all assignments for this template
+        assignments = TASTemplateSectionAssignment.objects.filter(
+            template=template
+        ).select_related("section").order_by("section_order")
 
-        sections_data = []
-        for section in top_level_sections:
-            section_dict = TASTemplateSectionSerializer(section).data
+        assignments_data = []
+        for assignment in assignments:
+            assignment_dict = TASTemplateSectionAssignmentSerializer(assignment).data
             
-            # Get subsections
-            subsections = TASTemplateSection.objects.filter(
-                parent_section=section
-            ).order_by("section_order")
-            section_dict["subsections"] = TASTemplateSectionSerializer(subsections, many=True).data
+            # Get subsections if any
+            if assignment.section.subsections.exists():
+                subsections = assignment.section.subsections.all()
+                assignment_dict["subsections"] = TASTemplateSectionSerializer(subsections, many=True).data
             
-            sections_data.append(section_dict)
+            assignments_data.append(assignment_dict)
 
         return Response({
             "template": TASTemplateSerializer(template).data,
-            "sections": sections_data,
+            "assignments": assignments_data,
         })
 
     @action(detail=False, methods=["post"])
     def reorder(self, request):
-        """Reorder sections within a template"""
-        section_orders = request.data.get("section_orders", [])
+        """Reorder section assignments within a template"""
+        assignment_orders = request.data.get("assignment_orders", [])
         
-        if not section_orders:
+        if not assignment_orders:
             return Response(
-                {"error": "section_orders array is required"},
+                {"error": "assignment_orders array is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
             with transaction.atomic():
-                for item in section_orders:
-                    section_id = item.get("id")
+                for item in assignment_orders:
+                    assignment_id = item.get("id")
                     new_order = item.get("section_order")
                     
-                    if section_id is None or new_order is None:
+                    if assignment_id is None or new_order is None:
                         continue
                     
-                    TASTemplateSection.objects.filter(id=section_id).update(
+                    TASTemplateSectionAssignment.objects.filter(id=assignment_id).update(
                         section_order=new_order
                     )
             
-            return Response({"message": "Sections reordered successfully"})
+            return Response({"message": "Section assignments reordered successfully"})
         except Exception as e:
             return Response(
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    @action(detail=True, methods=["post"])
-    def duplicate(self, request, pk=None):
-        """Duplicate a section (optionally to another template)"""
-        section = self.get_object()
-        target_template_id = request.data.get("target_template_id")
+    @action(detail=False, methods=["post"])
+    def bulk_assign(self, request):
+        """Assign multiple sections to a template at once"""
+        template_id = request.data.get("template_id")
+        sections = request.data.get("sections", [])
         
-        try:
-            if target_template_id:
-                target_template = TASTemplate.objects.get(id=target_template_id)
-            else:
-                target_template = section.template
-
-            # Create duplicate
-            new_section = TASTemplateSection.objects.create(
-                template=target_template,
-                section_name=f"{section.section_name} (Copy)",
-                section_code=f"{section.section_code}_copy",
-                description=section.description,
-                content_type=section.content_type,
-                default_content=section.default_content,
-                is_editable=section.is_editable,
-                is_required=section.is_required,
-                section_order=section.section_order,
-                gpt_prompt=section.gpt_prompt,
-            )
-
+        if not template_id:
             return Response(
-                TASTemplateSectionSerializer(new_section).data,
-                status=status.HTTP_201_CREATED,
+                {"error": "template_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
+        
+        if not sections:
+            return Response(
+                {"error": "sections array is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            template = TASTemplate.objects.get(id=template_id)
+            
+            created_assignments = []
+            with transaction.atomic():
+                for section_data in sections:
+                    section_id = section_data.get("section_id")
+                    section_order = section_data.get("section_order", 0)
+                    is_required = section_data.get("is_required", True)
+                    
+                    section = TASTemplateSection.objects.get(id=section_id)
+                    
+                    # Create or update assignment
+                    assignment, created = TASTemplateSectionAssignment.objects.update_or_create(
+                        template=template,
+                        section=section,
+                        defaults={
+                            "section_order": section_order,
+                            "is_required": is_required,
+                        }
+                    )
+                    created_assignments.append(assignment)
+            
+            return Response({
+                "message": f"{len(created_assignments)} sections assigned successfully",
+                "assignments": TASTemplateSectionAssignmentSerializer(created_assignments, many=True).data
+            }, status=status.HTTP_201_CREATED)
+            
         except TASTemplate.DoesNotExist:
             return Response(
-                {"error": "Target template not found"},
+                {"error": "Template not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except TASTemplateSection.DoesNotExist:
+            return Response(
+                {"error": "Section not found"},
                 status=status.HTTP_404_NOT_FOUND,
             )
         except Exception as e:

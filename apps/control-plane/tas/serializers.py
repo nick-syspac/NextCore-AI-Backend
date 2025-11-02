@@ -1,5 +1,12 @@
 from rest_framework import serializers
-from .models import TAS, TASTemplate, TASTemplateSection, TASVersion, TASGenerationLog
+from .models import (
+    TAS, 
+    TASTemplate, 
+    TASTemplateSection, 
+    TASTemplateSectionAssignment,
+    TASVersion, 
+    TASGenerationLog
+)
 from django.contrib.auth.models import User
 
 
@@ -14,12 +21,12 @@ class TASTemplateSectionSerializer(serializers.ModelSerializer):
         source="get_content_type_display", read_only=True
     )
     has_subsections = serializers.SerializerMethodField()
+    template_count = serializers.SerializerMethodField()
 
     class Meta:
         model = TASTemplateSection
         fields = [
             "id",
-            "template",
             "section_name",
             "section_code",
             "description",
@@ -27,11 +34,11 @@ class TASTemplateSectionSerializer(serializers.ModelSerializer):
             "content_type_display",
             "default_content",
             "is_editable",
-            "is_required",
-            "section_order",
             "parent_section",
             "gpt_prompt",
+            "is_active",
             "has_subsections",
+            "template_count",
             "created_at",
             "updated_at",
         ]
@@ -39,6 +46,34 @@ class TASTemplateSectionSerializer(serializers.ModelSerializer):
 
     def get_has_subsections(self, obj):
         return obj.subsections.exists()
+    
+    def get_template_count(self, obj):
+        """Count how many templates use this section"""
+        return obj.template_assignments.count()
+
+
+class TASTemplateSectionAssignmentSerializer(serializers.ModelSerializer):
+    section_details = TASTemplateSectionSerializer(source="section", read_only=True)
+    effective_label = serializers.CharField(read_only=True)
+    effective_description = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = TASTemplateSectionAssignment
+        fields = [
+            "id",
+            "template",
+            "section",
+            "section_details",
+            "section_order",
+            "is_required",
+            "custom_label",
+            "custom_description",
+            "effective_label",
+            "effective_description",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
 
 
 class TASTemplateSerializer(serializers.ModelSerializer):
@@ -49,7 +84,7 @@ class TASTemplateSerializer(serializers.ModelSerializer):
     template_type_display = serializers.CharField(
         source="get_template_type_display", read_only=True
     )
-    sections = TASTemplateSectionSerializer(many=True, read_only=True)
+    section_assignments = TASTemplateSectionAssignmentSerializer(many=True, read_only=True)
     section_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -71,13 +106,13 @@ class TASTemplateSerializer(serializers.ModelSerializer):
             "created_by_details",
             "created_at",
             "updated_at",
-            "sections",
+            "section_assignments",
             "section_count",
         ]
         read_only_fields = ["created_at", "updated_at", "created_by"]
 
     def get_section_count(self, obj):
-        return obj.sections.count()
+        return obj.section_assignments.count()
 
 
 class TASVersionSerializer(serializers.ModelSerializer):
