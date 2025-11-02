@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import TAS, TASTemplate, TASVersion, TASGenerationLog
+from .models import TAS, TASTemplate, TASTemplateSection, TASVersion, TASGenerationLog
 from django.contrib.auth.models import User
 
 
@@ -7,6 +7,38 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username", "email", "first_name", "last_name"]
+
+
+class TASTemplateSectionSerializer(serializers.ModelSerializer):
+    content_type_display = serializers.CharField(
+        source="get_content_type_display", read_only=True
+    )
+    has_subsections = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TASTemplateSection
+        fields = [
+            "id",
+            "template",
+            "section_name",
+            "section_code",
+            "description",
+            "content_type",
+            "content_type_display",
+            "default_content",
+            "is_editable",
+            "is_required",
+            "section_order",
+            "parent_section",
+            "gpt_prompt",
+            "has_subsections",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_at", "updated_at"]
+
+    def get_has_subsections(self, obj):
+        return obj.subsections.exists()
 
 
 class TASTemplateSerializer(serializers.ModelSerializer):
@@ -17,6 +49,8 @@ class TASTemplateSerializer(serializers.ModelSerializer):
     template_type_display = serializers.CharField(
         source="get_template_type_display", read_only=True
     )
+    sections = TASTemplateSectionSerializer(many=True, read_only=True)
+    section_count = serializers.SerializerMethodField()
 
     class Meta:
         model = TASTemplate
@@ -37,8 +71,13 @@ class TASTemplateSerializer(serializers.ModelSerializer):
             "created_by_details",
             "created_at",
             "updated_at",
+            "sections",
+            "section_count",
         ]
         read_only_fields = ["created_at", "updated_at", "created_by"]
+
+    def get_section_count(self, obj):
+        return obj.sections.count()
 
 
 class TASVersionSerializer(serializers.ModelSerializer):

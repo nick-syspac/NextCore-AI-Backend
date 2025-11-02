@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import TAS, TASTemplate, TASVersion, TASGenerationLog
+from .models import TAS, TASTemplate, TASTemplateSection, TASVersion, TASGenerationLog
 
 
 @admin.register(TASTemplate)
@@ -39,6 +39,67 @@ class TASTemplateAdmin(admin.ModelAdmin):
         if not change:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+
+
+@admin.register(TASTemplateSection)
+class TASTemplateSectionAdmin(admin.ModelAdmin):
+    list_display = [
+        "section_name",
+        "template",
+        "section_code",
+        "content_type",
+        "is_editable",
+        "is_required",
+        "section_order",
+        "parent_section",
+    ]
+    list_filter = ["template", "content_type", "is_editable", "is_required"]
+    search_fields = ["section_name", "section_code", "description"]
+    readonly_fields = ["created_at", "updated_at"]
+    ordering = ["template", "section_order", "section_name"]
+
+    fieldsets = (
+        (
+            "Section Identification",
+            {"fields": ("template", "section_name", "section_code")},
+        ),
+        (
+            "Content Configuration",
+            {
+                "fields": (
+                    "description",
+                    "content_type",
+                    "default_content",
+                )
+            },
+        ),
+        (
+            "Behavior",
+            {
+                "fields": (
+                    "is_editable",
+                    "is_required",
+                    "section_order",
+                    "parent_section",
+                )
+            },
+        ),
+        (
+            "AI Integration",
+            {"fields": ("gpt_prompt",), "classes": ("collapse",)},
+        ),
+        (
+            "Metadata",
+            {
+                "fields": ("created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related("template", "parent_section")
 
 
 @admin.register(TAS)

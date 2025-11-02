@@ -76,6 +76,99 @@ class TASTemplate(models.Model):
         return f"{self.name} ({self.get_aqf_level_display()})"
 
 
+class TASTemplateSection(models.Model):
+    """
+    Individual sections within a TAS template with editable configuration
+    """
+
+    CONTENT_TYPES = [
+        ("text", "Plain Text"),
+        ("rich_text", "Rich Text / HTML"),
+        ("table", "Table"),
+        ("list", "Bulleted/Numbered List"),
+        ("json", "JSON Data"),
+    ]
+
+    template = models.ForeignKey(
+        TASTemplate,
+        on_delete=models.CASCADE,
+        related_name="sections"
+    )
+    
+    # Section identification
+    section_name = models.CharField(
+        max_length=200,
+        help_text="Display name for the section (e.g., 'Cohort Profile')"
+    )
+    section_code = models.CharField(
+        max_length=50,
+        help_text="Unique code for the section (e.g., 'cohort_profile')"
+    )
+    
+    # Content configuration
+    description = models.TextField(
+        blank=True,
+        help_text="Help text/context for content creators"
+    )
+    content_type = models.CharField(
+        max_length=20,
+        choices=CONTENT_TYPES,
+        default="rich_text"
+    )
+    default_content = models.TextField(
+        blank=True,
+        help_text="Default/placeholder content for this section"
+    )
+    
+    # Behavior flags
+    is_editable = models.BooleanField(
+        default=True,
+        help_text="Whether users can edit this section"
+    )
+    is_required = models.BooleanField(
+        default=True,
+        help_text="Whether this section is required in the TAS document"
+    )
+    
+    # Ordering and organization
+    section_order = models.IntegerField(
+        default=0,
+        help_text="Display order within the template"
+    )
+    parent_section = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="subsections",
+        help_text="Parent section for nested structure"
+    )
+    
+    # AI/GPT integration
+    gpt_prompt = models.TextField(
+        blank=True,
+        help_text="GPT-4 prompt for auto-generating this section"
+    )
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "tas_template_sections"
+        ordering = ["template", "section_order", "section_name"]
+        unique_together = [["template", "section_code"]]
+        verbose_name = "TAS Template Section"
+        verbose_name_plural = "TAS Template Sections"
+        indexes = [
+            models.Index(fields=["template", "section_order"]),
+            models.Index(fields=["section_code"]),
+        ]
+
+    def __str__(self):
+        return f"{self.template.name} - {self.section_name}"
+
+
 class TAS(models.Model):
     """
     Training and Assessment Strategy documents with version control

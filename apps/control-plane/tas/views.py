@@ -7,10 +7,11 @@ from django.db import transaction
 import time
 import json
 
-from .models import TAS, TASTemplate, TASVersion, TASGenerationLog, QualificationCache
+from .models import TAS, TASTemplate, TASTemplateSection, TASVersion, TASGenerationLog, QualificationCache
 from .serializers import (
     TASSerializer,
     TASTemplateSerializer,
+    TASTemplateSectionSerializer,
     TASVersionSerializer,
     TASGenerationLogSerializer,
     TASGenerateRequestSerializer,
@@ -48,6 +49,144 @@ class TASTemplateViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return super().destroy(request, *args, **kwargs)
+
+
+class TASTemplateSectionViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing TAS template sections"""
+
+    serializer_class = TASTemplateSectionSerializer
+    permission_classes = [AllowAny]  # TODO: Change to IsAuthenticated in production
+    filterset_fields = ["template", "content_type", "is_editable", "is_required", "parent_section"]
+    search_fields = ["section_name", "section_code", "description"]
+    ordering_fields = ["section_order", "section_name", "created_at"]
+
+    def get_queryset(self):
+        queryset = TASTemplateSection.objects.all()
+        
+        # Filter by template if provided
+        template_id = self.request.query_params.get("template_id")
+        if template_id:
+            queryset = queryset.filter(template_id=template_id)
+        
+        # Filter for top-level sections only
+        top_level_only = self.request.query_params.get("top_level_only")
+        if top_level_only and top_level_only.lower() == "true":
+            queryset = queryset.filter(parent_section__isnull=True)
+        
+        return queryset
+
+    @action(detail=False, methods=["get"])
+    def by_template(self, request):
+        """Get all sections for a specific template, organized hierarchically"""
+        template_id = request.query_params.get("template_id")
+        if not template_id:
+            return Response(
+                {"error": "template_id parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            template = TASTemplate.objects.get(id=template_id)
+        except TASTemplate.DoesNotExist:
+            return Response(
+                {"error": "Template not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Get top-level sections
+        top_level_sections = TASTemplateSection.objects.filter(
+            template=template,
+            parent_section__isnull=True
+        ).order_by("section_order")
+
+        sections_data = []
+        for section in top_level_sections:
+            section_dict = TASTemplateSectionSerializer(section).data
+            
+            # Get subsections
+            subsections = TASTemplateSection.objects.filter(
+                parent_section=section
+            ).order_by("section_order")
+            section_dict["subsections"] = TASTemplateSectionSerializer(subsections, many=True).data
+            
+            sections_data.append(section_dict)
+
+        return Response({
+            "template": TASTemplateSerializer(template).data,
+            "sections": sections_data,
+        })
+
+    @action(detail=False, methods=["post"])
+    def reorder(self, request):
+        """Reorder sections within a template"""
+        section_orders = request.data.get("section_orders", [])
+        
+        if not section_orders:
+            return Response(
+                {"error": "section_orders array is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            with transaction.atomic():
+                for item in section_orders:
+                    section_id = item.get("id")
+                    new_order = item.get("section_order")
+                    
+                    if section_id is None or new_order is None:
+                        continue
+                    
+                    TASTemplateSection.objects.filter(id=section_id).update(
+                        section_order=new_order
+                    )
+            
+            return Response({"message": "Sections reordered successfully"})
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    @action(detail=True, methods=["post"])
+    def duplicate(self, request, pk=None):
+        """Duplicate a section (optionally to another template)"""
+        section = self.get_object()
+        target_template_id = request.data.get("target_template_id")
+        
+        try:
+            if target_template_id:
+                target_template = TASTemplate.objects.get(id=target_template_id)
+            else:
+                target_template = section.template
+
+            # Create duplicate
+            new_section = TASTemplateSection.objects.create(
+                template=target_template,
+                section_name=f"{section.section_name} (Copy)",
+                section_code=f"{section.section_code}_copy",
+                description=section.description,
+                content_type=section.content_type,
+                default_content=section.default_content,
+                is_editable=section.is_editable,
+                is_required=section.is_required,
+                section_order=section.section_order,
+                gpt_prompt=section.gpt_prompt,
+            )
+
+            return Response(
+                TASTemplateSectionSerializer(new_section).data,
+                status=status.HTTP_201_CREATED,
+            )
+        except TASTemplate.DoesNotExist:
+            return Response(
+                {"error": "Target template not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class TASViewSet(viewsets.ModelViewSet):
