@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.10...v1.1.0) (2025-11-02)
+
+
+### Features
+
+* add scripts to create Django superuser and run development server ([9bcf354](https://github.com/nick-syspac/NextCore-AI-Backend/commit/9bcf35461a8fdcbfc3888303ac8cd67ba509b4e0))
+
 ## [1.0.10](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.9...v1.0.10) (2025-11-01)
 
 
