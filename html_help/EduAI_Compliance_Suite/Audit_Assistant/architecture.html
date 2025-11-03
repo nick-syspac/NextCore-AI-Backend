@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture - Audit Assistant Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Audit Assistant</a> /
+            <strong>Architecture</strong>
+        </div>
+
+        <h1>🏗️ System Architecture</h1>
+        <p class="lead">
+            Technical architecture, NER pipeline design, and data flow for intelligent evidence management.
+        </p>
+
+        <div class="toc-box">
+            <h3>Architecture Topics</h3>
+            <ul>
+                <li><a href="#overview">Architecture Overview</a></li>
+                <li><a href="#data-flow">Data Flow & Processing</a></li>
+                <li><a href="#ner-pipeline">NER Pipeline Architecture</a></li>
+                <li><a href="#models">Data Model Relationships</a></li>
+                <li><a href="#async">Async Processing with Celery</a></li>
+                <li><a href="#storage">File Storage Strategy</a></li>
+                <li><a href="#multi-tenancy">Multi-Tenancy Architecture</a></li>
+            </ul>
+        </div>
+
+        <h2 id="overview">Architecture Overview</h2>
+        <p>
+            Audit Assistant follows a 4-layer architecture with async processing for text extraction and NER tagging.
+        </p>
+
+        <div class="code-block">
+            <code>
+┌──────────────────────────────────────────────────────────────┐
+│                    Presentation Layer                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │  REST API    │  │  File Upload │  │   Reports    │      │
+│  │  (ViewSets)  │  │ (Multipart)  │  │   (Export)   │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└──────────────────────────────────────────────────────────────┘
+                            ↓
+┌──────────────────────────────────────────────────────────────┐
+│                    Business Logic Layer                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │   Services   │  │ NER Pipeline │  │ Gap Analysis │      │
+│  │ (services.py)│  │(auto_tagging)│  │   (ViewSet)  │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└──────────────────────────────────────────────────────────────┘
+                            ↓
+┌──────────────────────────────────────────────────────────────┐
+│                    Async Processing Layer                     │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │Celery Workers│  │ Redis Queue  │  │Task Monitoring│      │
+│  │  (tasks.py)  │  │   (Broker)   │  │   (Flower)   │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└──────────────────────────────────────────────────────────────┘
+                            ↓
+┌──────────────────────────────────────────────────────────────┐
+│                     Data Layer                                │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │  PostgreSQL  │  │ File Storage │  │ ASQA Clauses │      │
+│  │  (4 models)  │  │   (S3/Local) │  │  (Shared)    │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└──────────────────────────────────────────────────────────────┘
+            </code>
+        </div>
+
+        <h2 id="data-flow">Data Flow & Processing</h2>
+        <p>Complete workflow from evidence upload to audit report generation.</p>
+
+        <div class="code-block">
+            <code>
+Evidence Upload → Audit Report Workflow:
+
+1. Evidence Upload (POST /evidence/upload/)
+   ├─ Client uploads file (PDF/DOCX/TXT)
+   ├─ EvidenceViewSet.upload() validates request
+   ├─ Evidence record created (status="processing")
+   └─ Celery task queued: process_evidence_document.delay()
+
+2. Async Text Extraction (Celery Worker)
+   ├─ Task: process_evidence_document(evidence_id, auto_tag=True)
+   ├─ extract_text_from_file()
+   │   ├─ PDF: PyPDF2 text extraction
+   │   ├─ DOCX: python-docx paragraph parsing
+   │   └─ TXT: UTF-8 decoding
+   ├─ Save extracted_text to Evidence
+   └─ Continue to NER if auto_tag=True
+
+3. NER Entity Detection
+   ├─ detect_ner_entities(text)
+   ├─ Regex pattern matching for 6 entity types:
+   │   ├─ STANDARD: "Standard 1.8", "Std. 2"
+   │   ├─ CLAUSE: "Clause 1.8.1", "1.8.1"
+   │   ├─ QUALIFICATION: "TAE40116", "BSB50120"
+   │   ├─ DATE: "01/01/2024", "January 2024"
+   │   ├─ ORG: "ASQA", "RTO", "VET"
+   │   └─ POLICY: "Policy HR-001"
+   ├─ Remove duplicates
+   └─ Return entities list [{entity, type, start, end, value}]
+
+4. Clause Auto-Tagging
+   ├─ auto_tag_clauses(evidence, text, entities)
+   ├─ For each ASQA clause in database:
+   │   ├─ Strategy A: Direct clause reference? (95% confidence)
+   │   ├─ Strategy B: Standard + keywords? (70-90% confidence)
+   │   ├─ Strategy C: High keyword density? (50-80% confidence)
+   │   └─ Strategy D: Title similarity? (40-60% confidence)
+   ├─ Create ClauseEvidence records for matches
+   └─ Update Evidence status="tagged"
+
+5. Manual Verification (Optional)
+   ├─ GET /evidence/{id}/tagged_clauses/
+   ├─ User reviews auto-tagged mappings
+   ├─ POST /evidence/{id}/verify_tagging/
+   └─ Update ClauseEvidence is_verified=True
+
+6. Audit Report Creation
+   ├─ POST /audit-reports/
+   ├─ Select ASQA standards for audit scope
+   ├─ Generate AuditReportClause entries for all clauses
+   ├─ For each clause:
+   │   ├─ Count evidence (verified + unverified)
+   │   ├─ Determine compliance status
+   │   └─ Link related evidence
+   └─ Calculate overall metrics
+
+7. Gap Analysis
+   ├─ GET /clause-evidence/gaps/
+   ├─ For each clause:
+   │   ├─ evidence_count = 0? → Critical/Major/Minor gap
+   │   ├─ verified_count < 2? → Major/Minor gap
+   │   └─ Generate recommendations
+   └─ Return gaps sorted by severity
+
+8. Report Generation
+   ├─ POST /audit-reports/{id}/generate_report/
+   ├─ Regenerate clause entries
+   ├─ Recalculate all metrics
+   └─ Return detailed report with findings
+            </code>
+        </div>
+
+        <h2 id="ner-pipeline">NER Pipeline Architecture</h2>
+        
+        <h3>Entity Detection Engine</h3>
+        <div class="code-block">
+            <code>
+def detect_ner_entities(text: str) -> List[dict]:
+    """Identify compliance entities using regex patterns"""
+    
+    entities: List[dict] = []
+    
+    # 1. STANDARD Detection
+    # Patterns: "Standard 1.8", "SNR 1", "Std. 2.1"
+    standard_pattern = r"\b(?:Standard|SNR|Std\.?)\s+(\d+(?:\.\d+)?)\b"
+    for match in re.finditer(standard_pattern, text, re.IGNORECASE):
+        entities.append({
+            "entity": match.group(0),       # "Standard 1.8"
+            "type": "STANDARD",
+            "start": match.start(),         # Character position
+            "end": match.end(),
+            "value": match.group(1)         # "1.8"
+        })
+    
+    # 2. CLAUSE Detection
+    # Patterns: "Clause 1.8.1", "1.8.1", "Section 2.1.3"
+    clause_pattern = r"\b(?:Clause\s+)?(\d+\.\d+(?:\.\d+)?)\b"
+    for match in re.finditer(clause_pattern, text):
+        entities.append({
+            "entity": match.group(0),
+            "type": "CLAUSE",
+            "start": match.start(),
+            "end": match.end(),
+            "value": match.group(1)
+        })
+    
+    # 3. QUALIFICATION Detection
+    # Pattern: 3-letter code + 5 digits (e.g., TAE40116, BSB50120)
+    qual_pattern = r"\b[A-Z]{3}\d{5}\b"
+    for match in re.finditer(qual_pattern, text):
+        entities.append({
+            "entity": match.group(0),
+            "type": "QUALIFICATION",
+            "start": match.start(),
+            "end": match.end()
+        })
+    
+    # 4. DATE Detection
+    # Patterns: "01/01/2024", "January 15, 2024"
+    date_patterns = [
+        r"\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b",
+        r"\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s+\d{4}\b"
+    ]
+    for pattern in date_patterns:
+        for match in re.finditer(pattern, text, re.IGNORECASE):
+            entities.append({
+                "entity": match.group(0),
+                "type": "DATE",
+                "start": match.start(),
+                "end": match.end()
+            })
+    
+    # 5. ORG Detection
+    # Known compliance organizations
+    org_keywords = ["ASQA", "RTO", "Training Organisation", "VET", "AQF", "TGA"]
+    for keyword in org_keywords:
+        for match in re.finditer(r"\b" + re.escape(keyword) + r"\b", text, re.IGNORECASE):
+            entities.append({
+                "entity": match.group(0),
+                "type": "ORG",
+                "start": match.start(),
+                "end": match.end()
+            })
+    
+    # 6. POLICY Detection
+    # Pattern: "Policy HR-001", "Procedure A-123"
+    policy_pattern = r"\b(?:Policy|Procedure)\s+([A-Z0-9-]+)\b"
+    for match in re.finditer(policy_pattern, text, re.IGNORECASE):
+        entities.append({
+            "entity": match.group(0),
+            "type": "POLICY",
+            "start": match.start(),
+            "end": match.end(),
+            "value": match.group(1)
+        })
+    
+    # Remove duplicates while preserving order
+    seen: set = set()
+    unique_entities: List[dict] = []
+    for entity in entities:
+        key = (entity["entity"], entity["type"], entity["start"])
+        if key not in seen:
+            unique_entities.append(entity)
+            seen.add(key)
+    
+    return unique_entities
+            </code>
+        </div>
+
+        <h3>Clause Auto-Tagging Strategies</h3>
+        <div class="code-block">
+            <code>
+def auto_tag_clauses(evidence: Evidence, text: str, ner_entities: List[dict]) -> int:
+    """Match evidence to ASQA clauses using 4 strategies"""
+    
+    text_lower = text.lower()
+    standard_refs = [e.get("value") for e in ner_entities if e.get("type") == "STANDARD"]
+    clause_refs = [e.get("value") for e in ner_entities if e.get("type") == "CLAUSE"]
+    
+    all_clauses = ASQAClause.objects.select_related("standard").all()
+    created = 0
+    
+    for clause in all_clauses:
+        mapping_type = None
+        confidence_score = 0.0
+        matched_entities: List[dict] = []
+        matched_keywords: List[str] = []
+        rule_name = None
+        
+        # STRATEGY A: Direct Clause Reference (Highest Priority)
+        # If clause number explicitly mentioned → 95% confidence
+        if clause.clause_number in clause_refs or f"clause {clause.clause_number}" in text_lower:
+            mapping_type = "auto_rule"
+            confidence_score = 0.95
+            rule_name = "direct_clause_reference"
+            matched_entities = [e for e in ner_entities if e.get("value") == clause.clause_number]
+        
+        # STRATEGY B: Standard Reference + Keywords
+        # If standard mentioned + 2+ clause keywords found → 70-90% confidence
+        if not mapping_type:
+            standard_num = clause.standard.standard_number if clause.standard else None
+            if standard_num and (standard_num in standard_refs or f"standard {standard_num}" in text_lower):
+                clause_keywords = clause.keywords or []
+                keywords_found = [kw for kw in clause_keywords if kw.lower() in text_lower]
+                
+                if len(keywords_found) >= 2:
+                    mapping_type = "auto_ner"
+                    confidence_score = min(0.7 + (len(keywords_found) * 0.05), 0.9)
+                    rule_name = "standard_reference_with_keywords"
+                    matched_keywords = keywords_found
+                    matched_entities = [e for e in ner_entities if e.get("value") == standard_num]
+        
+        # STRATEGY C: High Keyword Density
+        # If 60%+ of clause keywords present → 50-80% confidence
+        if not mapping_type:
+            clause_keywords = clause.keywords or []
+            if clause_keywords:
+                keywords_found = [kw for kw in clause_keywords if kw.lower() in text_lower]
+                keyword_ratio = len(keywords_found) / len(clause_keywords)
+                
+                if keyword_ratio >= 0.6:
+                    mapping_type = "auto_rule"
+                    confidence_score = min(0.5 + (keyword_ratio * 0.3), 0.8)
+                    rule_name = "high_keyword_density"
+                    matched_keywords = keywords_found
+        
+        # STRATEGY D: Title Similarity (Suggestion Only)
+        # If 50%+ of clause title words match → 40-60% confidence
+        if not mapping_type and clause.title:
+            title_words = {w for w in clause.title.lower().split() if len(w) > 3}
+            if title_words:
+                title_matches = [w for w in title_words if w in text_lower]
+                title_ratio = len(title_matches) / len(title_words)
+                
+                if title_ratio >= 0.5:
+                    mapping_type = "suggested"
+                    confidence_score = min(0.4 + (title_ratio * 0.2), 0.6)
+                    rule_name = "title_similarity"
+                    matched_keywords = title_matches
+        
+        # Only create mapping if confidence >= 0.4 (40%)
+        if not mapping_type or confidence_score < 0.4:
+            continue
+        
+        ClauseEvidence.objects.create(
+            asqa_clause=clause,
+            evidence=evidence,
+            mapping_type=mapping_type,
+            confidence_score=confidence_score,
+            matched_entities=matched_entities,
+            matched_keywords=matched_keywords,
+            rule_name=rule_name,
+            rule_metadata={
+                "processed_at": timezone.now().isoformat(),
+                "text_length": len(text),
+                "entity_count": len(ner_entities)
+            }
+        )
+        created += 1
+    
+    return created
+            </code>
+        </div>
+
+        <h2 id="models">Data Model Relationships</h2>
+        <div class="code-block">
+            <code>
+Database Schema:
+
+┌─────────────────────┐
+│      Tenant         │
+│  (Multi-tenancy)    │
+└──────────┬──────────┘
+           │
+           │ 1:N
+           │
+┌──────────▼──────────┐         ┌──────────────────────┐
+│      Evidence       │         │    ASQAStandard      │
+│ ─────────────────── │         │  (Policy Comparator) │
+│  evidence_number    │         └──────────┬───────────┘
+│  title              │                    │
+│  evidence_type      │                    │ 1:N
+│  file               │                    │
+│  extracted_text     │         ┌──────────▼───────────┐
+│  ner_entities       │         │     ASQAClause       │
+│  status             │         │  (Policy Comparator) │
+│  tags               │         └──────────┬───────────┘
+│  evidence_date      │                    │
+└──────────┬──────────┘                    │
+           │                                │
+           │ N:M (through ClauseEvidence)  │
+           │                                │
+           └────────────────┬───────────────┘
+                            │
+                 ┌──────────▼──────────┐
+                 │   ClauseEvidence    │
+                 │  (Mapping Table)    │
+                 │ ─────────────────── │
+                 │  asqa_clause_id     │
+                 │  evidence_id        │
+                 │  mapping_type       │
+                 │  confidence_score   │
+                 │  matched_entities   │
+                 │  matched_keywords   │
+                 │  is_verified        │
+                 └─────────────────────┘
+
+┌─────────────────────┐
+│    AuditReport      │
+│ ─────────────────── │
+│  report_number      │
+│  title              │
+│  asqa_standards (M2M)│
+│  audit_period_*     │
+│  status             │
+│  compliance_%       │
+│  critical_%         │
+└──────────┬──────────┘
+           │
+           │ 1:N
+           │
+┌──────────▼──────────┐
+│ AuditReportClause   │
+│ ─────────────────── │
+│  audit_report_id    │
+│  asqa_clause_id     │
+│  compliance_status  │
+│  evidence_count     │
+│  verified_count     │
+│  finding            │
+│  severity           │
+│  recommendation     │
+│  linked_evidence (M2M)│
+└─────────────────────┘
+            </code>
+        </div>
+
+        <h2 id="async">Async Processing with Celery</h2>
+        <p>
+            Background task processing for text extraction and NER tagging ensures responsive API performance.
+        </p>
+
+        <div class="code-block">
+            <code>
+# tasks.py - Celery async tasks
+
+from celery import shared_task
+from .models import Evidence
+from .services import extract_text_from_file, detect_ner_entities, auto_tag_clauses
+
+@shared_task(bind=True)
+def process_evidence_document(self, evidence_id: int, auto_tag: bool = True):
+    """
+    Async task to process uploaded evidence document
+    
+    Steps:
+    1. Extract text from file
+    2. Run NER entity detection
+    3. Auto-tag ASQA clauses (if enabled)
+    4. Update evidence status
+    """
+    try:
+        evidence = Evidence.objects.get(id=evidence_id)
+        
+        # Step 1: Extract text
+        self.update_state(state='PROCESSING', meta={'step': 'extracting_text'})
+        extracted_text = extract_text_from_file(evidence)
+        
+        if not extracted_text:
+            evidence.status = 'uploaded'
+            evidence.save()
+            return {'status': 'completed', 'auto_tagged': False, 'message': 'No text extracted'}
+        
+        evidence.extracted_text = extracted_text
+        evidence.save(update_fields=['extracted_text'])
+        
+        if not auto_tag:
+            evidence.status = 'uploaded'
+            evidence.save()
+            return {'status': 'completed', 'auto_tagged': False}
+        
+        # Step 2: NER entity detection
+        self.update_state(state='PROCESSING', meta={'step': 'detecting_entities'})
+        ner_entities = detect_ner_entities(extracted_text)
+        
+        evidence.ner_entities = ner_entities
+        evidence.ner_processed_at = timezone.now()
+        evidence.save(update_fields=['ner_entities', 'ner_processed_at'])
+        
+        # Step 3: Auto-tag clauses
+        self.update_state(state='PROCESSING', meta={'step': 'tagging_clauses'})
+        auto_tagged_count = auto_tag_clauses(evidence, extracted_text, ner_entities)
+        
+        # Step 4: Update status
+        evidence.status = 'tagged' if auto_tagged_count > 0 else 'uploaded'
+        evidence.save(update_fields=['status'])
+        
+        return {
+            'status': 'completed',
+            'evidence_id': evidence_id,
+            'entities_found': len(ner_entities),
+            'clauses_tagged': auto_tagged_count,
+            'auto_tagged': True
+        }
+        
+    except Exception as e:
+        evidence.status = 'uploaded'
+        evidence.save()
+        raise
+
+
+# Celery Configuration (settings.py)
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TIMEZONE = 'UTC'
+
+CELERY_TASK_ROUTES = {
+    'audit_assistant.tasks.process_evidence_document': {
+        'queue': 'evidence_processing'
+    }
+}
+
+# Task execution: EAGER mode in testing, async in production
+CELERY_TASK_ALWAYS_EAGER = False  # Set to True in tests
+            </code>
+        </div>
+
+        <h2 id="storage">File Storage Strategy</h2>
+        <div class="code-block">
+            <code>
+File Storage Architecture:
+
+Development:
+  - Local file system: /media/evidence/{tenant_id}/
+  - Folder structure:
+      /media/evidence/
+        /{tenant_id}/
+          {uuid}.{ext}
+
+Production (AWS S3):
+  - Bucket: nextcore-evidence-{environment}
+  - Folder structure:
+      /evidence/
+        /{tenant_id}/
+          {uuid}.{ext}
+  
+  - S3 Configuration:
+      * Server-side encryption (AES-256)
+      * Lifecycle policy: Archive after 7 years
+      * Versioning: Enabled
+      * Access: Pre-signed URLs (24h expiry)
+      * CloudFront CDN for frequently accessed files
+
+File Upload Path Generation:
+  def evidence_upload_path(instance, filename):
+      ext = filename.split(".")[-1]
+      filename = f"{uuid.uuid4()}.{ext}"
+      return os.path.join("evidence", str(instance.tenant.id), filename)
+
+Supported File Formats:
+  - Documents: PDF, DOCX, DOC, TXT
+  - Spreadsheets: XLSX, XLS
+  - Images: JPG, JPEG, PNG
+  - Max size: 50MB per file
+
+Text Extraction:
+  - PDF: PyPDF2.PdfReader
+  - DOCX: python-docx.Document
+  - TXT: Direct UTF-8 decoding
+  - Images: [Planned] Tesseract OCR
+            </code>
+        </div>
+
+        <h2 id="multi-tenancy">Multi-Tenancy Architecture</h2>
+        <p>
+            Audit Assistant uses tenant-based data isolation to support multiple RTOs on a single platform.
+        </p>
+
+        <div class="code-block">
+            <code>
+Multi-Tenancy Implementation:
+
+1. Tenant-Scoped Models
+   - Evidence: tenant ForeignKey
+   - AuditReport: tenant ForeignKey
+   - ClauseEvidence: Scoped via evidence.tenant
+   - AuditReportClause: Scoped via audit_report.tenant
+
+2. ViewSet Filtering
+   class TenantScopedViewSetMixin:
+       def get_tenant(self) -> Tenant:
+           tenant_slug = self.kwargs.get("tenant_slug")
+           return get_object_or_404(Tenant, slug=tenant_slug)
+       
+       def get_queryset(self):
+           tenant = self.get_tenant()
+           return Evidence.objects.filter(tenant=tenant)
+
+3. URL Structure
+   /api/v1/tenants/{tenant_slug}/audit-assistant/
+   /api/v1/tenants/{tenant_slug}/audit-assistant/evidence/
+   /api/v1/tenants/{tenant_slug}/audit-assistant/audit-reports/
+
+4. Shared Resources
+   - ASQAStandard: Shared across all tenants
+   - ASQAClause: Shared across all tenants
+   - Users: Can access multiple tenants (with permissions)
+
+5. Data Isolation
+   - Evidence files: Separate S3 folders per tenant
+   - Database queries: Always filtered by tenant_id
+   - API endpoints: Tenant slug in URL path
+   - Celery tasks: Tenant context preserved
+
+6. Security
+   - Row-level security via tenant filtering
+   - File access control via pre-signed URLs
+   - API authentication per tenant
+   - Audit logging per tenant
+            </code>
+        </div>
+
+        <div class="success-box" style="margin-top: 3rem;">
+            <h3>🎯 Architecture Highlights</h3>
+            <ul>
+                <li><strong>Async Processing:</strong> Non-blocking NER tagging via Celery workers</li>
+                <li><strong>Regex-Based NER:</strong> Fast, lightweight entity detection (no ML models required)</li>
+                <li><strong>4-Strategy Matching:</strong> Progressive confidence scoring from direct references to suggestions</li>
+                <li><strong>Multi-Format Support:</strong> PDF, DOCX, TXT, Excel, images (with OCR planned)</li>
+                <li><strong>Scalable Storage:</strong> S3 with CloudFront for production, local for development</li>
+                <li><strong>Tenant Isolation:</strong> Complete data separation for multi-RTO deployments</li>
+            </ul>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="quickstart.html" class="btn btn-secondary">← Quick Start</a>
+            <a href="models.html" class="btn btn-primary">Data Models →</a>
+        </div>
+    </div>
+</body>
+</html>

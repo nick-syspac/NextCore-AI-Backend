@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIR Examples - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="../index.html">Continuous Improvement Register</a> /
+            <strong>Examples</strong>
+        </div>
+
+        <h1>💡 Code Examples</h1>
+
+        <div class="intro-section">
+            <p>Real-world Python code examples for common CIR operations and integrations.</p>
+        </div>
+
+        <h2>Example 1: Complete Audit Finding Workflow</h2>
+        <div class="code-block">
+            <pre><code>import requests
+from datetime import datetime, timedelta
+
+API_BASE = "https://api.nextcore.ai/api/v1/continuous_improvement"
+HEADERS = {
+    "Authorization": "Bearer your_jwt_token",
+    "Content-Type": "application/json"
+}
+
+def handle_audit_finding(finding_data):
+    """Complete workflow for audit finding"""
+    
+    # Step 1: Create action
+    action_data = {
+        "title": f"Address {finding_data['clause_number']} finding",
+        "description": finding_data['description'],
+        "source": "audit",
+        "priority": "critical" if finding_data['severity'] == "major" else "high",
+        "assigned_to_id": finding_data['responsible_manager_id']
+    }
+    
+    response = requests.post(
+        f"{API_BASE}/actions/",
+        json=action_data,
+        headers=HEADERS
+    )
+    action = response.json()
+    print(f"Created action: {action['action_number']}")
+    
+    # Step 2: AI Classification
+    classify_response = requests.post(
+        f"{API_BASE}/actions/{action['id']}/classify/",
+        headers=HEADERS
+    )
+    classification = classify_response.json()
+    print(f"Classification: {classification['classification']['category']}")
+    print(f"Confidence: {classification['classification']['confidence']}")
+    
+    # Step 3: Create corrective steps
+    steps = [
+        {
+            "title": "Conduct gap analysis",
+            "description": "Document current vs required state",
+            "due_date": (datetime.now() + timedelta(days=7)).date().isoformat()
+        },
+        {
+            "title": "Develop action plan",
+            "description": "Create detailed remediation plan",
+            "due_date": (datetime.now() + timedelta(days=14)).date().isoformat()
+        },
+        {
+            "title": "Implement corrective actions",
+            "description": "Execute remediation plan",
+            "due_date": (datetime.now() + timedelta(days=30)).date().isoformat()
+        }
+    ]
+    
+    for idx, step in enumerate(steps, start=1):
+        step_data = {
+            "improvement_action_id": action['id'],
+            "sequence_order": idx * 10,
+            "owner_id": action_data['assigned_to_id'],
+            "status": "not_started",
+            **step
+        }
+        
+        step_response = requests.post(
+            f"{API_BASE}/steps/",
+            json=step_data,
+            headers=HEADERS
+        )
+        print(f"Created step {idx}: {step['title']}")
+    
+    return action['id']
+
+
+# Usage
+finding = {
+    "clause_number": "1.8",
+    "severity": "major",
+    "description": "Insufficient evidence of systematic monitoring of training and assessment",
+    "responsible_manager_id": 12
+}
+
+action_id = handle_audit_finding(finding)</code></pre>
+        </div>
+
+        <h2>Example 2: Bulk Action Classification</h2>
+        <div class="code-block">
+            <pre><code>def classify_all_unclassified_actions():
+    """Classify all actions without category"""
+    
+    # Get unclassified actions
+    response = requests.get(
+        f"{API_BASE}/actions/",
+        params={"category__isnull": "true", "page_size": 100},
+        headers=HEADERS
+    )
+    
+    actions = response.json()['results']
+    print(f"Found {len(actions)} unclassified actions")
+    
+    results = []
+    for action in actions:
+        print(f"Classifying {action['action_number']}...")
+        
+        # Trigger async classification
+        classify_response = requests.post(
+            f"{API_BASE}/actions/{action['id']}/ai_classify/",
+            headers=HEADERS
+        )
+        
+        if classify_response.status_code == 202:
+            task_id = classify_response.json()['task_id']
+            results.append({
+                "action_id": action['id'],
+                "action_number": action['action_number'],
+                "task_id": task_id,
+                "status": "queued"
+            })
+    
+    return results
+
+
+# Usage
+classification_results = classify_all_unclassified_actions()
+print(f"Queued {len(classification_results)} classification tasks")</code></pre>
+        </div>
+
+        <h2>Example 3: Compliance Dashboard Integration</h2>
+        <div class="code-block">
+            <pre><code>def get_compliance_dashboard_data():
+    """Fetch comprehensive compliance dashboard data"""
+    
+    # Get main stats
+    stats_response = requests.get(
+        f"{API_BASE}/actions/dashboard_stats/",
+        headers=HEADERS
+    )
+    stats = stats_response.json()
+    
+    # Get compliance overview
+    compliance_response = requests.get(
+        f"{API_BASE}/actions-cir/compliance_dashboard/",
+        headers=HEADERS
+    )
+    compliance = compliance_response.json()
+    
+    dashboard = {
+        "summary": {
+            "total_actions": stats['total_actions'],
+            "overdue_count": stats['overdue_count'],
+            "at_risk_count": stats['at_risk_count'],
+            "completion_rate": stats['completion_rate'],
+            "critical_compliance": stats['critical_compliance_count']
+        },
+        "by_status": stats['by_status'],
+        "by_priority": stats['by_priority'],
+        "by_category": stats['by_category'],
+        "clause_coverage": compliance.get('clause_heatmap', []),
+        "sla_breaches": compliance.get('sla_breaches', []),
+        "trends": compliance.get('trends', {})
+    }
+    
+    return dashboard
+
+
+# Usage
+dashboard_data = get_compliance_dashboard_data()
+
+# Display summary
+print(f"Total Actions: {dashboard_data['summary']['total_actions']}")
+print(f"Completion Rate: {dashboard_data['summary']['completion_rate']}%")
+print(f"Overdue: {dashboard_data['summary']['overdue_count']}")
+print(f"At Risk: {dashboard_data['summary']['at_risk_count']}")</code></pre>
+        </div>
+
+        <h2>Example 4: Automated SLA Monitoring</h2>
+        <div class="code-block">
+            <pre><code>from datetime import date
+
+def check_sla_compliance():
+    """Check for actions approaching or breaching SLA"""
+    
+    # Get all open/in-progress actions
+    response = requests.get(
+        f"{API_BASE}/actions/",
+        params={
+            "status": "open,in_progress",
+            "page_size": 100
+        },
+        headers=HEADERS
+    )
+    
+    actions = response.json()['results']
+    
+    at_risk = []
+    overdue = []
+    today = date.today()
+    
+    for action in actions:
+        if not action['due_date']:
+            continue
+        
+        due_date = date.fromisoformat(action['due_date'])
+        days_until_due = (due_date - today).days
+        
+        if days_until_due < 0:
+            overdue.append({
+                "action_number": action['action_number'],
+                "title": action['title'],
+                "days_overdue": abs(days_until_due),
+                "assigned_to": action['assigned_to']['full_name']
+            })
+        elif days_until_due <= 7:
+            at_risk.append({
+                "action_number": action['action_number'],
+                "title": action['title'],
+                "days_remaining": days_until_due,
+                "assigned_to": action['assigned_to']['full_name']
+            })
+    
+    return {
+        "overdue": overdue,
+        "at_risk": at_risk
+    }
+
+
+# Usage
+sla_status = check_sla_compliance()
+
+if sla_status['overdue']:
+    print(f"⚠️ {len(sla_status['overdue'])} OVERDUE ACTIONS:")
+    for action in sla_status['overdue']:
+        print(f"  - {action['action_number']}: {action['title']}")
+        print(f"    {action['days_overdue']} days overdue")
+
+if sla_status['at_risk']:
+    print(f"\n⏰ {len(sla_status['at_risk'])} AT-RISK ACTIONS:")
+    for action in sla_status['at_risk']:
+        print(f"  - {action['action_number']}: {action['title']}")
+        print(f"    Due in {action['days_remaining']} days")</code></pre>
+        </div>
+
+        <h2>Example 5: Integration with Audit Assistant</h2>
+        <div class="code-block">
+            <pre><code>def create_actions_from_audit_gaps(audit_report_id):
+    """Create improvement actions from Audit Assistant gaps"""
+    
+    # Get audit report gaps from Audit Assistant API
+    audit_response = requests.get(
+        f"https://api.nextcore.ai/api/v1/audit_assistant/reports/{audit_report_id}/",
+        headers=HEADERS
+    )
+    audit_report = audit_response.json()
+    
+    # Identify gaps
+    gaps = [
+        clause for clause in audit_report['clauses']
+        if clause['status'] == 'gap'
+    ]
+    
+    print(f"Found {len(gaps)} compliance gaps")
+    
+    created_actions = []
+    for gap in gaps:
+        # Create CIR action
+        action_data = {
+            "title": f"Address {gap['clause_number']} compliance gap",
+            "description": f"{gap['gap_description']}\n\nRequired: {gap['requirement']}\nGap: {gap['finding']}",
+            "source": "audit",
+            "priority": "critical" if gap['is_critical'] else "high",
+            "tags": ["audit_gap", f"clause_{gap['clause_number']}"]
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/actions/",
+            json=action_data,
+            headers=HEADERS
+        )
+        
+        if response.status_code == 201:
+            action = response.json()
+            created_actions.append(action)
+            
+            # Link to clause
+            link_data = {
+                "improvement_action_id": action['id'],
+                "clause_id": gap['clause_id'],
+                "source": "manual",
+                "confidence": 1.0
+            }
+            
+            requests.post(
+                f"{API_BASE}/clause-links/",
+                json=link_data,
+                headers=HEADERS
+            )
+            
+            print(f"✓ Created action: {action['action_number']}")
+    
+    return created_actions
+
+
+# Usage
+actions = create_actions_from_audit_gaps(audit_report_id=42)
+print(f"Created {len(actions)} improvement actions from audit gaps")</code></pre>
+        </div>
+
+        <h2>Example 6: Trend Analysis Report</h2>
+        <div class="code-block">
+            <pre><code>import pandas as pd
+from datetime import datetime, timedelta
+
+def generate_trend_analysis(months=6):
+    """Generate trend analysis for past N months"""
+    
+    # Get KPI snapshots
+    start_date = (datetime.now() - timedelta(days=months*30)).date()
+    
+    response = requests.get(
+        f"{API_BASE}/kpi-snapshots/",
+        params={
+            "snapshot_date_after": start_date.isoformat(),
+            "ordering": "snapshot_date"
+        },
+        headers=HEADERS
+    )
+    
+    snapshots = response.json()['results']
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(snapshots)
+    
+    # Calculate trends
+    trends = {
+        "completion_rate": {
+            "current": df['completion_rate'].iloc[-1],
+            "average": df['completion_rate'].mean(),
+            "trend": "improving" if df['completion_rate'].iloc[-1] > df['completion_rate'].mean() else "declining"
+        },
+        "avg_completion_days": {
+            "current": df['avg_completion_days'].iloc[-1],
+            "average": df['avg_completion_days'].mean(),
+            "trend": "improving" if df['avg_completion_days'].iloc[-1] < df['avg_completion_days'].mean() else "declining"
+        },
+        "overdue_actions": {
+            "current": df['overdue_actions'].iloc[-1],
+            "average": df['overdue_actions'].mean(),
+            "trend": "improving" if df['overdue_actions'].iloc[-1] < df['overdue_actions'].mean() else "declining"
+        }
+    }
+    
+    return {
+        "period": f"{months} months",
+        "snapshots_count": len(snapshots),
+        "trends": trends,
+        "data": df.to_dict('records')
+    }
+
+
+# Usage
+analysis = generate_trend_analysis(months=6)
+
+print(f"Trend Analysis ({analysis['period']}):")
+print(f"\nCompletion Rate: {analysis['trends']['completion_rate']['current']:.1f}%")
+print(f"  Average: {analysis['trends']['completion_rate']['average']:.1f}%")
+print(f"  Trend: {analysis['trends']['completion_rate']['trend']}")
+
+print(f"\nAverage Completion Time: {analysis['trends']['avg_completion_days']['current']:.0f} days")
+print(f"  Average: {analysis['trends']['avg_completion_days']['average']:.0f} days")
+print(f"  Trend: {analysis['trends']['avg_completion_days']['trend']}")</code></pre>
+        </div>
+
+        <div class="cta-section">
+            <h2>Next Steps</h2>
+            <p>Explore the roadmap to see planned features and enhancements for the CIR system.</p>
+            <a href="roadmap.html" class="btn btn-primary">View Roadmap →</a>
+        </div>
+    </div>
+</body>
+</html>

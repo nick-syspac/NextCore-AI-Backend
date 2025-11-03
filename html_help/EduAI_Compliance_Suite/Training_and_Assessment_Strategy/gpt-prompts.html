@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPT Prompts - TAS Documentation</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="index.html">TAS Home</a>
+            <span>›</span>
+            <span>GPT Prompts</span>
+        </div>
+
+        <a href="index.html" class="back-button">← Back to TAS Home</a>
+
+        <h1>🤖 GPT Prompts Configuration</h1>
+        <p class="subtitle" style="font-size: 1.25rem; color: #64748b; margin-bottom: 2rem;">Configure AI content generation for TAS documents</p>
+
+        <section>
+            <h2>What are GPT Prompts?</h2>
+            <p>GPT Prompts are configuration objects that tell the AI system (GPT-4) how to generate content for each section of a TAS document. They define:</p>
+            <ul>
+                <li>The AI's role and expertise (system prompt)</li>
+                <li>What content to generate (user prompt template)</li>
+                <li>How creative or factual to be (temperature)</li>
+                <li>How much content to generate (max_tokens)</li>
+                <li>What variables to inject from context</li>
+                <li>How to validate the generated content</li>
+            </ul>
+
+            <div class="alert alert-info">
+                <h4>🎯 Two Levels of Prompts</h4>
+                <p>You can configure GPT prompts at two levels:</p>
+                <ol>
+                    <li><strong>Section-level:</strong> Stored in <code>TASTemplateSection.gpt_prompt</code> - applies to this section everywhere</li>
+                    <li><strong>Template-level:</strong> Stored in <code>TASTemplate.gpt_prompts[section_code]</code> - overrides section-level for this template</li>
+                </ol>
+                <p><strong>Priority:</strong> Template-level overrides section-level. If neither exists, generation fails.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>GPT Prompt Structure</h2>
+            <p>A GPT prompt configuration is a JSON object with these fields:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>system_prompt</code></td>
+                        <td>String</td>
+                        <td>Yes</td>
+                        <td>Defines AI's role, expertise, and behavior</td>
+                    </tr>
+                    <tr>
+                        <td><code>user_prompt_template</code></td>
+                        <td>String</td>
+                        <td>Yes</td>
+                        <td>Instruction with placeholders like {variable_name}</td>
+                    </tr>
+                    <tr>
+                        <td><code>temperature</code></td>
+                        <td>Float</td>
+                        <td>No</td>
+                        <td>0.0-1.0, controls creativity (default: 0.7)</td>
+                    </tr>
+                    <tr>
+                        <td><code>max_tokens</code></td>
+                        <td>Integer</td>
+                        <td>No</td>
+                        <td>Maximum response length (default: 1000)</td>
+                    </tr>
+                    <tr>
+                        <td><code>variables</code></td>
+                        <td>Array</td>
+                        <td>No</td>
+                        <td>List of variables to inject from context</td>
+                    </tr>
+                    <tr>
+                        <td><code>validation_keywords</code></td>
+                        <td>Array</td>
+                        <td>No</td>
+                        <td>Keywords that must appear in response</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Complete Example</h2>
+            <p>Here's a fully configured GPT prompt for the Qualification Overview section:</p>
+
+            <pre><code>{
+  "system_prompt": "You are an expert in Australian VET qualifications, ASQA compliance, and training package development. You have deep knowledge of the Australian Qualifications Framework (AQF) and understand how to write compliant Training and Assessment Strategies. You write in clear, professional Australian English.",
+  
+  "user_prompt_template": "Generate a comprehensive Qualification Overview for {qualification_code} - {qualification_title} at AQF Level {aqf_level}. Include:\n1. Qualification purpose and outcomes\n2. Licensing or regulatory requirements (if applicable)\n3. Pathways (entry and exit)\n4. Career opportunities\n5. Industry relevance\n\nThe target audience is {target_audience}. Write in {writing_style} style.",
+  
+  "temperature": 0.7,
+  
+  "max_tokens": 1500,
+  
+  "variables": [
+    "qualification_code",
+    "qualification_title",
+    "aqf_level",
+    "target_audience",
+    "writing_style"
+  ],
+  
+  "validation_keywords": [
+    "purpose",
+    "pathways",
+    "outcomes",
+    "career"
+  ]
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>System Prompt Best Practices</h2>
+
+            <h3>Define the AI's Role</h3>
+            <p>Start by establishing who the AI is:</p>
+            <div class="card">
+                <pre><code>"You are an expert in Australian VET qualifications and ASQA compliance."</code></pre>
+            </div>
+
+            <h3>Specify Knowledge Areas</h3>
+            <p>Tell the AI what expertise it should draw upon:</p>
+            <div class="card">
+                <pre><code>"You have deep knowledge of:
+- Australian Qualifications Framework (AQF)
+- ASQA Standards for RTOs 2015
+- Training package development
+- Assessment validation procedures"</code></pre>
+            </div>
+
+            <h3>Set Tone and Style</h3>
+            <p>Guide the AI's writing style:</p>
+            <div class="card">
+                <pre><code>"You write in clear, professional Australian English suitable for RTO documentation. Your content is concise, well-structured, and compliance-focused."</code></pre>
+            </div>
+
+            <h3>Industry-Specific System Prompts</h3>
+
+            <h4>Trade/Technical</h4>
+            <pre><code>"You are an expert in Australian trade qualifications with extensive knowledge of workplace-based training, practical assessment, and WHS requirements in vocational education. You understand the hands-on nature of trade training and write accordingly in Australian English."</code></pre>
+
+            <h4>Business/Management</h4>
+            <pre><code>"You are an expert in business education and Australian VET qualifications, with deep knowledge of management principles, business operations, and professional skills development. You write in professional business language using Australian spelling."</code></pre>
+
+            <h4>Health/Community Services</h4>
+            <pre><code>"You are an expert in health and community services education with comprehensive knowledge of clinical practice, duty of care, infection control, and person-centered care principles in Australian context. You understand AHPRA requirements and write in clear, caring Australian English."</code></pre>
+        </section>
+
+        <section>
+            <h2>User Prompt Templates</h2>
+
+            <h3>Variable Injection</h3>
+            <p>Use curly braces to inject variables from context:</p>
+            <pre><code>"Generate content for {qualification_code} - {qualification_title}"</code></pre>
+
+            <p>At generation time, these are replaced with actual values:</p>
+            <pre><code>"Generate content for BSB50120 - Diploma of Business"</code></pre>
+
+            <h3>Common Variables</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Description</th>
+                        <th>Example Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>{qualification_code}</code></td>
+                        <td>Training package code</td>
+                        <td>BSB50120</td>
+                    </tr>
+                    <tr>
+                        <td><code>{qualification_title}</code></td>
+                        <td>Full qualification name</td>
+                        <td>Diploma of Business</td>
+                    </tr>
+                    <tr>
+                        <td><code>{aqf_level}</code></td>
+                        <td>AQF level</td>
+                        <td>diploma</td>
+                    </tr>
+                    <tr>
+                        <td><code>{target_audience}</code></td>
+                        <td>Intended students</td>
+                        <td>working professionals, school leavers</td>
+                    </tr>
+                    <tr>
+                        <td><code>{delivery_mode}</code></td>
+                        <td>How delivered</td>
+                        <td>blended, workplace-based</td>
+                    </tr>
+                    <tr>
+                        <td><code>{duration}</code></td>
+                        <td>Program length</td>
+                        <td>52 weeks, 18 months</td>
+                    </tr>
+                    <tr>
+                        <td><code>{units}</code></td>
+                        <td>Units of competency</td>
+                        <td>BSBWHS311, BSBCMM411, ...</td>
+                    </tr>
+                    <tr>
+                        <td><code>{industry}</code></td>
+                        <td>Industry sector</td>
+                        <td>hospitality, construction, healthcare</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Structured Instructions</h3>
+            <p>Use numbered lists or bullet points for clarity:</p>
+            <pre><code>"Generate an Assessment Strategy that includes:
+1. Overview of assessment approach
+2. Assessment principles (validity, reliability, flexibility, fairness)
+3. Rules of evidence (validity, sufficiency, authenticity, currency)
+4. Assessment methods to be used
+5. Validation and moderation procedures
+6. Reasonable adjustments process
+
+Context:
+- Qualification: {qualification_code} - {qualification_title}
+- AQF Level: {aqf_level}
+- Delivery Mode: {delivery_mode}
+- Duration: {duration}
+
+Write in professional language suitable for ASQA compliance."</code></pre>
+        </section>
+
+        <section>
+            <h2>Temperature Guidelines</h2>
+            <p>Temperature controls how creative vs. deterministic the AI's output is:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Range</th>
+                        <th>Behavior</th>
+                        <th>Best For</th>
+                        <th>Examples</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0.0 - 0.3</td>
+                        <td>Very focused, deterministic</td>
+                        <td>Factual content, compliance</td>
+                        <td>Entry requirements, trainer qualifications, ASQA compliance mapping</td>
+                    </tr>
+                    <tr>
+                        <td>0.4 - 0.6</td>
+                        <td>Balanced, some variation</td>
+                        <td>Structured descriptions</td>
+                        <td>Assessment procedures, resource lists, unit sequencing</td>
+                    </tr>
+                    <tr>
+                        <td>0.7 - 0.8</td>
+                        <td>Creative, varied</td>
+                        <td>Narratives, overviews</td>
+                        <td>Qualification overview, industry relevance, career pathways</td>
+                    </tr>
+                    <tr>
+                        <td>0.9 - 1.0</td>
+                        <td>Highly creative, unpredictable</td>
+                        <td>Brainstorming, examples</td>
+                        <td>Sample scenarios, case study ideas (rarely used for TAS)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="alert alert-warning">
+                <h4>⚠️ Recommended Range: 0.5 - 0.7</h4>
+                <p>For TAS generation, stay in the 0.5-0.7 range. Too low (<0.4) produces repetitive content. Too high (>0.8) produces inconsistent compliance language.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Max Tokens Guidelines</h2>
+            <p>Max tokens limits response length (1 token ≈ 0.75 words):</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Section Type</th>
+                        <th>Typical Word Count</th>
+                        <th>Recommended max_tokens</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Short descriptions</td>
+                        <td>100-200 words</td>
+                        <td>200-300</td>
+                    </tr>
+                    <tr>
+                        <td>Medium sections</td>
+                        <td>300-500 words</td>
+                        <td>500-800</td>
+                    </tr>
+                    <tr>
+                        <td>Large sections</td>
+                        <td>600-1000 words</td>
+                        <td>1000-1500</td>
+                    </tr>
+                    <tr>
+                        <td>Comprehensive sections</td>
+                        <td>1000-1500 words</td>
+                        <td>1500-2000</td>
+                    </tr>
+                    <tr>
+                        <td>Tables/Lists</td>
+                        <td>Varies</td>
+                        <td>500-1000</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="alert alert-info">
+                <h4>💡 Token Budget</h4>
+                <p>Set max_tokens generously but not wastefully. If section needs 500 words, set to 800-1000 to allow for completeness. GPT will stop naturally when content is complete if temperature is reasonable.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Validation Keywords</h2>
+            <p>Validation keywords ensure generated content covers required topics:</p>
+
+            <h3>How It Works</h3>
+            <ol>
+                <li>AI generates content</li>
+                <li>System checks if all validation_keywords appear in content (case-insensitive)</li>
+                <li>If any keyword missing, generation is flagged for review</li>
+                <li>Human reviewer can approve or regenerate</li>
+            </ol>
+
+            <h3>Examples by Section</h3>
+
+            <h4>Qualification Overview</h4>
+            <pre><code>"validation_keywords": ["purpose", "pathways", "outcomes", "career", "licensing"]</code></pre>
+
+            <h4>Assessment Strategy</h4>
+            <pre><code>"validation_keywords": ["validity", "reliability", "flexibility", "fairness", "moderation"]</code></pre>
+
+            <h4>Entry Requirements</h4>
+            <pre><code>"validation_keywords": ["prerequisites", "LLN", "age", "work experience"]</code></pre>
+
+            <h4>WHS Procedures</h4>
+            <pre><code>"validation_keywords": ["induction", "risk assessment", "PPE", "incident", "emergency"]</code></pre>
+
+            <div class="alert alert-success">
+                <h4>✅ Best Practice</h4>
+                <p>Include 3-7 validation keywords that represent must-have topics. Too many keywords make validation too strict. Too few don't provide enough quality control.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Section-Level vs Template-Level Prompts</h2>
+
+            <h3>Section-Level Prompts</h3>
+            <p>Stored in <code>TASTemplateSection.gpt_prompt</code></p>
+
+            <div class="card">
+                <h4>✅ Use Section-Level When:</h4>
+                <ul>
+                    <li>Content generation approach is the same across all templates</li>
+                    <li>You want consistent section content everywhere</li>
+                    <li>The section is truly generic (e.g., "Support Services")</li>
+                    <li>You want to update the prompt once for all templates</li>
+                </ul>
+            </div>
+
+            <h3>Template-Level Prompts</h3>
+            <p>Stored in <code>TASTemplate.gpt_prompts[section_code]</code></p>
+
+            <div class="card">
+                <h4>✅ Use Template-Level When:</h4>
+                <ul>
+                    <li>Different AQF levels need different language complexity</li>
+                    <li>Different industries need different emphasis</li>
+                    <li>Template type requires specific compliance mentions</li>
+                    <li>You want to override the section's default prompt</li>
+                </ul>
+            </div>
+
+            <h3>Example: Same Section, Different Prompts</h3>
+
+            <h4>Section-Level (Default)</h4>
+            <pre><code>// In TASTemplateSection for ENTRY_REQ
+{
+  "gpt_prompt": {
+    "system_prompt": "You are an expert in VET qualifications...",
+    "user_prompt_template": "Generate entry requirements for {qualification_code}...",
+    "temperature": 0.5,
+    "max_tokens": 500
+  }
+}</code></pre>
+
+            <h4>Template-Level Override for Certificate I</h4>
+            <pre><code>// In TASTemplate.gpt_prompts["ENTRY_REQ"]
+{
+  "system_prompt": "You are an expert in foundation skills education...",
+  "user_prompt_template": "Generate simple, plain-language entry requirements for {qualification_code}. Use short sentences. Focus on what students need to know, not formal prerequisites. Be encouraging and supportive in tone.",
+  "temperature": 0.6,
+  "max_tokens": 300,
+  "validation_keywords": ["basic", "simple", "need"]
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Prompt Resolution Flow</h2>
+
+            <div style="background: white; border: 2px solid var(--border-color); border-radius: 0.75rem; padding: 2rem; margin: 2rem 0;">
+                <div style="text-align: center;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; border-radius: 0.5rem; margin: 1rem auto; max-width: 400px; font-weight: 600;">
+                        Request to generate section "ENTRY_REQ"
+                    </div>
+                    <div style="font-size: 2rem; color: var(--primary-color); margin: 0.5rem 0;">↓</div>
+                    <div style="background: #fff3cd; color: #856404; padding: 1rem 2rem; border-radius: 0.5rem; margin: 1rem auto; max-width: 400px; font-weight: 600;">
+                        Check: Does template have gpt_prompts["ENTRY_REQ"]?
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0;">
+                        <div>
+                            <div style="font-weight: 600; color: #28a745;">YES ✓</div>
+                            <div style="font-size: 2rem; color: #28a745; margin: 0.5rem 0;">↓</div>
+                            <div style="background: #d4edda; color: #155724; padding: 1rem; border-radius: 0.5rem;">
+                                Use template-level prompt
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; color: #dc3545;">NO ✗</div>
+                            <div style="font-size: 2rem; color: #dc3545; margin: 0.5rem 0;">↓</div>
+                            <div style="background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 0.5rem;">
+                                Check: Does section have gpt_prompt?
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size: 2rem; color: var(--primary-color); margin: 0.5rem 0;">↓</div>
+                    <div style="background: #28a745; color: white; padding: 1rem 2rem; border-radius: 0.5rem; margin: 1rem auto; max-width: 400px; font-weight: 600;">
+                        Generate content with resolved prompt
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Complete Prompt Examples</h2>
+
+            <h3>Example 1: Assessment Strategy (Section-Level)</h3>
+            <pre><code>{
+  "system_prompt": "You are an expert in Australian VET assessment with deep knowledge of ASQA Standards 2015, particularly Clauses 1.8, 1.13-1.16. You understand assessment validation, moderation, and the principles and rules of evidence. You write clear, compliance-focused content in Australian English.",
+  
+  "user_prompt_template": "Generate a comprehensive Assessment Strategy for {qualification_code} - {qualification_title}.\n\nInclude:\n1. Overview of assessment approach\n2. Assessment principles (validity, reliability, flexibility, fairness) with examples\n3. Rules of evidence (validity, sufficiency, authenticity, currency)\n4. Assessment methods to be used (aligned with {delivery_mode})\n5. Assessment tools and their purpose\n6. Validation procedures and schedule\n7. Moderation processes\n8. Reasonable adjustments\n9. Appeals and reassessment procedures\n\nEnsure content demonstrates compliance with ASQA Clauses 1.8, 1.13, 1.14, 1.15, and 1.16.",
+  
+  "temperature": 0.6,
+  "max_tokens": 2000,
+  
+  "variables": [
+    "qualification_code",
+    "qualification_title",
+    "delivery_mode"
+  ],
+  
+  "validation_keywords": [
+    "validity",
+    "reliability",
+    "flexibility",
+    "fairness",
+    "sufficiency",
+    "authenticity",
+    "currency",
+    "moderation",
+    "validation"
+  ]
+}</code></pre>
+
+            <h3>Example 2: WHS Procedures (Trade Template)</h3>
+            <pre><code>{
+  "system_prompt": "You are an expert in workplace health and safety in Australian trade training environments. You understand WHS legislation, risk management, PPE requirements, and safe work procedures for workshop and construction settings. You write clear, practical safety content in Australian English.",
+  
+  "user_prompt_template": "Generate comprehensive WHS Procedures for {qualification_code} - {qualification_title} delivered in a trade training environment.\n\nInclude:\n1. WHS induction requirements\n2. Risk assessment procedures\n3. Required PPE for all practical activities\n4. Workshop safety rules\n5. Emergency procedures (fire, injury, spill)\n6. Incident reporting process\n7. Supervision requirements\n8. Equipment safety checks\n9. Hazardous materials handling (if applicable)\n10. Daily safety briefing procedures\n\nEmphasize that safety is non-negotiable and all procedures must be followed.",
+  
+  "temperature": 0.5,
+  "max_tokens": 1500,
+  
+  "variables": [
+    "qualification_code",
+    "qualification_title"
+  ],
+  
+  "validation_keywords": [
+    "induction",
+    "risk assessment",
+    "PPE",
+    "emergency",
+    "incident",
+    "supervisor",
+    "equipment"
+  ]
+}</code></pre>
+
+            <h3>Example 3: Support Services (Certificate I Template)</h3>
+            <pre><code>{
+  "system_prompt": "You are an expert in learner support services for foundation skills students in Australian VET. You understand LLN support, disability services, and the high support needs of Certificate I learners. You write in simple, encouraging, plain language.",
+  
+  "user_prompt_template": "Generate information about support services available to students in {qualification_code} - {qualification_title}.\n\nUse simple language (Year 8 reading level). Include:\n1. How we help with reading, writing, and numbers\n2. Support for people with disabilities\n3. Personal support and counseling\n4. Help with study skills\n5. How to ask for help\n\nMake it friendly and encouraging. Emphasize that asking for help is normal and encouraged.",
+  
+  "temperature": 0.7,
+  "max_tokens": 800,
+  
+  "variables": [
+    "qualification_code",
+    "qualification_title"
+  ],
+  
+  "validation_keywords": [
+    "help",
+    "support",
+    "ask",
+    "available"
+  ]
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Testing and Iteration</h2>
+
+            <h3>Test Your Prompts</h3>
+            <ol>
+                <li><strong>Generate sample content</strong> using the prompt</li>
+                <li><strong>Review for quality:</strong> Is it accurate? Complete? Compliant?</li>
+                <li><strong>Check validation:</strong> Do validation keywords appear?</li>
+                <li><strong>Adjust temperature:</strong> Too repetitive? Increase. Too random? Decrease.</li>
+                <li><strong>Refine instructions:</strong> Add more specific guidance if needed</li>
+                <li><strong>Update max_tokens:</strong> Content too short or cut off?</li>
+            </ol>
+
+            <h3>Common Refinements</h3>
+
+            <h4>If Content is Too Generic</h4>
+            <pre><code>// Add more context and examples to user prompt
+"Provide specific examples relevant to {industry} sector..."</code></pre>
+
+            <h4>If Content Lacks Detail</h4>
+            <pre><code>// Increase max_tokens and add more structured requirements
+"Include at least 5 specific assessment methods with examples of when each is used..."</code></pre>
+
+            <h4>If Content is Inconsistent</h4>
+            <pre><code>// Lower temperature and add stricter system prompt
+"temperature": 0.5  // was 0.8
+"You write in professional, formal language following ASQA documentation standards..."</code></pre>
+
+            <h4>If Content Misses Key Points</h4>
+            <pre><code>// Add more validation keywords and explicit requirements
+"validation_keywords": ["compliance", "ASQA", "standards", "requirements"]
+"You must reference ASQA Standards 2015..."</code></pre>
+        </section>
+
+        <section>
+            <h2>Best Practices Summary</h2>
+
+            <div class="card">
+                <h3>1. Write Clear System Prompts</h3>
+                <ul>
+                    <li>Define role and expertise</li>
+                    <li>Specify Australian context and spelling</li>
+                    <li>Set tone and style expectations</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>2. Structure User Prompts Well</h3>
+                <ul>
+                    <li>Use numbered lists for required elements</li>
+                    <li>Inject relevant variables</li>
+                    <li>Provide context about qualification/template</li>
+                    <li>Be specific about what's needed</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>3. Set Appropriate Temperature</h3>
+                <ul>
+                    <li>0.5-0.6 for compliance and factual content</li>
+                    <li>0.6-0.7 for descriptive and narrative content</li>
+                    <li>Avoid extremes (<0.4 or >0.8)</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>4. Size Max Tokens Correctly</h3>
+                <ul>
+                    <li>Generous but not wasteful</li>
+                    <li>Allow room for completeness</li>
+                    <li>Typical range: 500-2000 for TAS sections</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>5. Use Validation Keywords</h3>
+                <ul>
+                    <li>3-7 keywords representing must-have topics</li>
+                    <li>Mix of compliance and content keywords</li>
+                    <li>Test that they actually appear in good content</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>6. Choose Right Level</h3>
+                <ul>
+                    <li>Section-level for generic, reusable prompts</li>
+                    <li>Template-level for specialized or customized prompts</li>
+                    <li>Can always override section-level at template-level</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>API Examples</h2>
+
+            <h3>Adding GPT Prompt to Section</h3>
+            <div class="endpoint">
+                <span class="method method-patch">PATCH</span>
+                <code>/api/tenants/{tenant}/tas/template-sections/{id}/</code>
+            </div>
+
+            <pre><code>{
+  "gpt_prompt": {
+    "system_prompt": "You are an expert in...",
+    "user_prompt_template": "Generate...",
+    "temperature": 0.7,
+    "max_tokens": 1000,
+    "variables": ["qualification_code", "qualification_title"],
+    "validation_keywords": ["keyword1", "keyword2"]
+  }
+}</code></pre>
+
+            <h3>Adding GPT Prompts to Template</h3>
+            <div class="endpoint">
+                <span class="method method-patch">PATCH</span>
+                <code>/api/tenants/{tenant}/tas/templates/{id}/</code>
+            </div>
+
+            <pre><code>{
+  "gpt_prompts": {
+    "ENTRY_REQ": {
+      "system_prompt": "You are an expert in...",
+      "user_prompt_template": "Generate entry requirements...",
+      "temperature": 0.5,
+      "max_tokens": 500
+    },
+    "WHS_PROCEDURES": {
+      "system_prompt": "You are an expert in WHS...",
+      "user_prompt_template": "Generate WHS procedures...",
+      "temperature": 0.5,
+      "max_tokens": 1500
+    }
+  }
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Next Steps</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                <a href="api-reference.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>⚡ API Reference</h3>
+                    <p>Complete API documentation</p>
+                </a>
+                <a href="examples.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>📚 Examples</h3>
+                    <p>Real-world usage examples</p>
+                </a>
+                <a href="quickstart.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>🚀 Quick Start</h3>
+                    <p>Get started with TAS generation</p>
+                </a>
+            </div>
+        </section>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid #e2e8f0; text-align: center; color: #64748b;">
+            <p><a href="index.html" style="color: var(--primary-color);">Back to TAS Home</a></p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examples - TAS Documentation</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="index.html">TAS Home</a>
+            <span>›</span>
+            <span>Examples</span>
+        </div>
+
+        <a href="index.html" class="back-button">← Back to TAS Home</a>
+
+        <h1>📚 Real-World Examples</h1>
+        <p class="subtitle" style="font-size: 1.25rem; color: #64748b; margin-bottom: 2rem;">Complete workflows for common scenarios</p>
+
+        <section>
+            <h2>Example 1: Certificate I Foundation Skills</h2>
+            <p><strong>Scenario:</strong> Setting up a simple, high-support qualification for learners with basic literacy and numeracy needs.</p>
+
+            <div class="alert alert-info">
+                <h4>📋 Requirements</h4>
+                <ul>
+                    <li>Plain language throughout</li>
+                    <li>High level of learner support</li>
+                    <li>Simple assessment methods</li>
+                    <li>Face-to-face delivery emphasis</li>
+                </ul>
+            </div>
+
+            <h3>Step 1: Create Sections</h3>
+            <pre><code>POST /api/tenants/acme-rto/tas/template-sections/
+
+[
+  {
+    "section_name": "About This Course",
+    "section_code": "ABOUT_COURSE",
+    "content_type": "text",
+    "description": "Simple overview in plain language",
+    "is_editable": true,
+    "gpt_prompt": {
+      "system_prompt": "You are an expert in foundation skills education. Write in simple, clear language suitable for Year 6-8 reading level.",
+      "user_prompt_template": "Write a simple, friendly description of {qualification_code} - {qualification_title}. Explain what students will learn and why it's helpful. Use short sentences.",
+      "temperature": 0.7,
+      "max_tokens": 400,
+      "variables": ["qualification_code", "qualification_title"],
+      "validation_keywords": ["learn", "skills", "help"]
+    }
+  },
+  {
+    "section_name": "What You Need",
+    "section_code": "WHAT_YOU_NEED",
+    "content_type": "list",
+    "description": "Entry requirements in plain language",
+    "is_editable": true,
+    "gpt_prompt": {
+      "system_prompt": "You are an expert in foundation skills. Write entry requirements in simple language.",
+      "user_prompt_template": "List simple entry requirements for {qualification_code}. Use plain language. Be encouraging.",
+      "temperature": 0.6,
+      "max_tokens": 300,
+      "variables": ["qualification_code"],
+      "validation_keywords": ["need", "basic"]
+    }
+  },
+  {
+    "section_name": "Help Available",
+    "section_code": "HELP_AVAILABLE",
+    "content_type": "list",
+    "description": "Support services in friendly language",
+    "is_editable": true
+  }
+]</code></pre>
+
+            <h3>Step 2: Create Template</h3>
+            <pre><code>POST /api/tenants/acme-rto/tas/templates/
+
+{
+  "template_name": "Certificate I Foundation Skills",
+  "template_code": "CERT_I_FOUNDATION_2024",
+  "template_type": "general",
+  "aqf_level": "certificate_i",
+  "description": "For Certificate I foundation skills qualifications with high learner support",
+  "structure": {
+    "metadata": {
+      "version": "1.0",
+      "author": "Foundation Team",
+      "target_audience": ["foundation_trainers", "support_staff"]
+    },
+    "formatting": {
+      "document_style": "simple_clear",
+      "font_family": "Arial, sans-serif",
+      "font_size": "14pt",
+      "line_spacing": "1.8"
+    },
+    "template_specific_settings": {
+      "emphasis_areas": {
+        "practical_skills": 80,
+        "theoretical_knowledge": 20
+      },
+      "support_level": "very_high",
+      "assessment_methods": {
+        "preferred": ["observation", "oral_questions", "simple_tasks"],
+        "avoid": ["written_tests", "complex_projects"]
+      },
+      "delivery_preferences": {
+        "mode": ["face_to_face", "small_groups"],
+        "typical_class_size": "6-10 students",
+        "recommended_duration": "12-20 weeks"
+      },
+      "learner_support": {
+        "lln_assessment": "required",
+        "individual_plans": true,
+        "support_types": ["literacy", "numeracy", "mentoring", "counseling"]
+      }
+    },
+    "validation_rules": {
+      "required_sections": [
+        "ABOUT_COURSE",
+        "WHAT_YOU_NEED",
+        "HELP_AVAILABLE"
+      ],
+      "content_requirements": {
+        "min_word_count": 1000,
+        "max_word_count": 3000,
+        "plain_language": true,
+        "reading_level": "year_6_8"
+      }
+    }
+  }
+}</code></pre>
+
+            <h3>Step 3: Assign Sections</h3>
+            <pre><code>POST /api/tenants/acme-rto/tas/template-section-assignments/bulk_assign/
+
+{
+  "template_id": 20,
+  "assignments": [
+    {
+      "section_id": 101,
+      "section_order": 1,
+      "is_required": true,
+      "custom_label": "About This Course"
+    },
+    {
+      "section_id": 102,
+      "section_order": 2,
+      "is_required": true,
+      "custom_label": "What You Need to Start"
+    },
+    {
+      "section_id": 103,
+      "section_order": 3,
+      "is_required": true,
+      "custom_label": "Help We Can Give You"
+    }
+  ]
+}</code></pre>
+
+            <h3>Step 4: Generate TAS</h3>
+            <pre><code>POST /api/tenants/acme-rto/tas/generate/
+
+{
+  "template_id": 20,
+  "qualification_code": "10978NAT",
+  "qualification_title": "Certificate I in Foundation Skills",
+  "context": {
+    "target_audience": "adults returning to learning",
+    "delivery_mode": "face-to-face",
+    "duration": "16 weeks",
+    "campus": "Community Learning Centre"
+  }
+}
+
+// Response
+{
+  "job_id": "cert1-abc123",
+  "message": "TAS generation started",
+  "status": "generating"
+}</code></pre>
+
+            <h3>Step 5: Poll and Retrieve</h3>
+            <pre><code>GET /api/tenants/acme-rto/tas/generation-status/cert1-abc123/
+
+// Response (completed)
+{
+  "job_id": "cert1-abc123",
+  "status": "completed",
+  "tas_id": 501,
+  "progress": {
+    "total_sections": 3,
+    "completed_sections": 3,
+    "percentage": 100
+  }
+}
+
+GET /api/tenants/acme-rto/tas/501/
+
+// Response includes generated content for all sections</code></pre>
+        </section>
+
+        <section>
+            <h2>Example 2: Certificate III Electrotechnology</h2>
+            <p><strong>Scenario:</strong> Trade qualification with heavy practical component, WHS focus, and workplace requirements.</p>
+
+            <div class="alert alert-warning">
+                <h4>⚡ Key Characteristics</h4>
+                <ul>
+                    <li>75% practical, 25% theory</li>
+                    <li>Strict WHS procedures</li>
+                    <li>Minimum 240 hours workplace training</li>
+                    <li>Licensing requirements (electrical work)</li>
+                </ul>
+            </div>
+
+            <h3>Step 1: Create Trade-Specific Template</h3>
+            <pre><code>POST /api/tenants/acme-rto/tas/templates/
+
+{
+  "template_name": "Certificate III Electrotechnology",
+  "template_code": "CERT_III_ELECTRO_2024",
+  "template_type": "trade",
+  "aqf_level": "certificate_iii",
+  "structure": {
+    "template_specific_settings": {
+      "emphasis_areas": {
+        "practical_skills": 75,
+        "theoretical_knowledge": 15,
+        "safety_procedures": 10
+      },
+      "assessment_methods": {
+        "preferred": [
+          "workplace_observation",
+          "practical_demonstration",
+          "logbook",
+          "third_party_reports"
+        ],
+        "supplementary": ["written_tests", "safety_checklists"]
+      },
+      "delivery_preferences": {
+        "mode": ["workplace_based", "simulated_workshop", "block_release"],
+        "typical_class_size": "12-15 students",
+        "recommended_duration": "2-4 years (apprenticeship)"
+      },
+      "resources": {
+        "physical": [
+          "electrical_workshop",
+          "test_equipment",
+          "hand_tools",
+          "power_tools",
+          "ppe_equipment"
+        ],
+        "digital": [
+          "wiring_diagrams_software",
+          "online_theory_modules",
+          "AS/NZS standards_access"
+        ]
+      },
+      "industry_engagement": {
+        "work_placement_required": true,
+        "minimum_hours": 240,
+        "supervision_requirements": "Licensed electrician",
+        "logbook_mandatory": true
+      },
+      "safety_requirements": {
+        "whs_induction": "mandatory",
+        "electrical_safety_training": "required",
+        "ppe_requirements": ["safety_boots", "hard_hat", "safety_glasses", "insulated_gloves"],
+        "risk_assessments": "required for all practical work"
+      },
+      "licensing": {
+        "pathway_to_license": "Restricted Electrical License",
+        "regulatory_body": "Energy Safe Victoria / SafeWork NSW",
+        "post_completion_requirements": "Supervised electrical work"
+      }
+    }
+  }
+}</code></pre>
+
+            <h3>Step 2: Assign Trade-Specific Sections</h3>
+            <pre><code>POST /api/tenants/acme-rto/tas/template-section-assignments/bulk_assign/
+
+{
+  "template_id": 25,
+  "assignments": [
+    {
+      "section_id": 10,
+      "section_order": 1,
+      "is_required": true,
+      "custom_label": "Qualification Overview"
+    },
+    {
+      "section_id": 150,
+      "section_order": 2,
+      "is_required": true,
+      "custom_label": "Licensing and Regulatory Requirements",
+      "custom_description": "Requirements for electrical licensing in Victoria"
+    },
+    {
+      "section_id": 12,
+      "section_order": 3,
+      "is_required": true
+    },
+    {
+      "section_id": 200,
+      "section_order": 4,
+      "is_required": true,
+      "custom_label": "Electrical Safety Procedures",
+      "custom_description": "Comprehensive WHS for electrical work"
+    },
+    {
+      "section_id": 210,
+      "section_order": 5,
+      "is_required": true,
+      "custom_label": "Tools and Test Equipment"
+    },
+    {
+      "section_id": 220,
+      "section_order": 6,
+      "is_required": true,
+      "custom_label": "Workplace Training Requirements",
+      "custom_description": "240 hours minimum, supervised by licensed electrician"
+    },
+    {
+      "section_id": 15,
+      "section_order": 7,
+      "is_required": true
+    },
+    {
+      "section_id": 18,
+      "section_order": 8,
+      "is_required": true
+    }
+  ]
+}</code></pre>
+
+            <h3>Step 3: Generate with Industry Context</h3>
+            <pre><code>POST /api/tenants/acme-rto/tas/generate/
+
+{
+  "template_id": 25,
+  "qualification_code": "UEE30820",
+  "qualification_title": "Certificate III in Electrotechnology Electrician",
+  "context": {
+    "target_audience": "apprentices",
+    "delivery_mode": "workplace_based with block release",
+    "duration": "3-4 years",
+    "industry": "electrical contracting",
+    "state": "Victoria",
+    "licensing_pathway": "Restricted Electrical License (REL)",
+    "units": [
+      "UEENEEP001 - Use basic computer applications relevant to a workplace",
+      "UEENEEE101A - Apply Occupational Health and Safety regulations",
+      "UEENEEE104A - Solve problems in d.c. circuits"
+    ]
+  }
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Example 3: Diploma of Business</h2>
+            <p><strong>Scenario:</strong> Management-focused business qualification with case studies, projects, and theoretical depth.</p>
+
+            <div class="alert alert-success">
+                <h4>💼 Key Features</h4>
+                <ul>
+                    <li>Balanced practical and theoretical (50/50)</li>
+                    <li>Case study and project-based assessment</li>
+                    <li>Blended delivery</li>
+                    <li>Working professionals as target audience</li>
+                </ul>
+            </div>
+
+            <h3>Complete Workflow</h3>
+            <pre><code>// 1. Create Template
+POST /api/tenants/acme-rto/tas/templates/
+{
+  "template_name": "Diploma of Business",
+  "template_code": "DIP_BUSINESS_2024",
+  "template_type": "business",
+  "aqf_level": "diploma",
+  "structure": {
+    "template_specific_settings": {
+      "emphasis_areas": {
+        "practical_application": 40,
+        "theoretical_knowledge": 35,
+        "critical_thinking": 15,
+        "leadership_skills": 10
+      },
+      "assessment_methods": {
+        "preferred": [
+          "workplace_projects",
+          "case_study_analysis",
+          "business_reports",
+          "presentations",
+          "strategic_plans"
+        ]
+      },
+      "delivery_preferences": {
+        "mode": ["blended", "online", "evening_classes"],
+        "typical_class_size": "20-25 students",
+        "recommended_duration": "18-24 months"
+      }
+    }
+  }
+}
+
+// 2. Bulk Assign Business Sections
+POST /api/tenants/acme-rto/tas/template-section-assignments/bulk_assign/
+{
+  "template_id": 30,
+  "assignments": [
+    {"section_id": 10, "section_order": 1, "is_required": true},
+    {"section_id": 12, "section_order": 2, "is_required": true},
+    {"section_id": 15, "section_order": 3, "is_required": true},
+    {"section_id": 18, "section_order": 4, "is_required": true},
+    {"section_id": 300, "section_order": 5, "is_required": true, "custom_label": "Case Study Framework"},
+    {"section_id": 310, "section_order": 6, "is_required": true, "custom_label": "Workplace Project Requirements"},
+    {"section_id": 320, "section_order": 7, "is_required": false, "custom_label": "Optional: Industry Placement"}
+  ]
+}
+
+// 3. Generate TAS
+POST /api/tenants/acme-rto/tas/generate/
+{
+  "template_id": 30,
+  "qualification_code": "BSB50120",
+  "qualification_title": "Diploma of Business",
+  "context": {
+    "target_audience": "working professionals, career advancement seekers",
+    "delivery_mode": "blended (60% online, 40% face-to-face)",
+    "duration": "18 months",
+    "specialisations": ["Marketing", "Human Resources", "Project Management"],
+    "campus": "CBD Campus + Online",
+    "evening_classes": true,
+    "workplace_projects": "Students must complete 2 major projects in their workplace"
+  }
+}
+
+// 4. Monitor Progress
+GET /api/tenants/acme-rto/tas/generation-status/{job_id}/
+// Poll every 10 seconds until completed
+
+// 5. Review Generated TAS
+GET /api/tenants/acme-rto/tas/{tas_id}/
+
+// 6. Make Edits
+PATCH /api/tenants/acme-rto/tas/{tas_id}/
+{
+  "content": {
+    "QUAL_OVERVIEW": "&lt;h3&gt;Updated qualification purpose...&lt;/h3&gt;"
+  }
+}
+
+// 7. Approve
+PATCH /api/tenants/acme-rto/tas/{tas_id}/
+{
+  "status": "approved"
+}
+
+// 8. Download
+GET /api/tenants/acme-rto/tas/{tas_id}/download/?format=pdf</code></pre>
+        </section>
+
+        <section>
+            <h2>Example 4: Updating an Existing Template</h2>
+            <p><strong>Scenario:</strong> ASQA audit requires adding a new section about industry consultation to all business templates.</p>
+
+            <h3>Workflow</h3>
+            <pre><code>// 1. Create New Section
+POST /api/tenants/acme-rto/tas/template-sections/
+{
+  "section_name": "Industry Consultation",
+  "section_code": "INDUSTRY_CONSULT",
+  "description": "How we engage with industry to ensure currency",
+  "content_type": "rich_text",
+  "is_editable": true,
+  "gpt_prompt": {
+    "system_prompt": "You are an expert in VET industry engagement and ASQA compliance...",
+    "user_prompt_template": "Generate an industry consultation section for {qualification_code}. Include advisory committees, employer feedback, and currency validation processes. Address ASQA Clause 1.3.",
+    "temperature": 0.6,
+    "max_tokens": 800,
+    "validation_keywords": ["industry", "consultation", "currency", "employers", "advisory"]
+  }
+}
+// Response: { "id": 400, ... }
+
+// 2. Get All Business Templates
+GET /api/tenants/acme-rto/tas/templates/?template_type=business
+// Response: List of 12 business templates
+
+// 3. Add Section to Each Template (automation script)
+const templates = [5, 8, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39];
+
+for (const templateId of templates) {
+  // Get current max section_order
+  const assignments = await GET(`/template-section-assignments/by_template/?template_id=${templateId}`);
+  const maxOrder = Math.max(...assignments.map(a => a.section_order));
+  
+  // Add new section
+  await POST('/template-section-assignments/', {
+    template: templateId,
+    section: 400,
+    section_order: maxOrder + 1,
+    is_required: true,
+    custom_label: "Industry Consultation and Currency"
+  });
+}
+
+// 4. Verify Addition
+GET /api/tenants/acme-rto/tas/templates/5/
+// Confirm new section appears in section_assignments array</code></pre>
+        </section>
+
+        <section>
+            <h2>Example 5: Multi-Campus Customization</h2>
+            <p><strong>Scenario:</strong> Same qualification delivered at 3 campuses with different delivery modes.</p>
+
+            <h3>Approach: Template per Campus</h3>
+            <pre><code>// 1. Create Master Template
+POST /api/tenants/acme-rto/tas/templates/
+{
+  "template_name": "Certificate IV Business - Master",
+  "template_code": "CERT_IV_BUS_MASTER_2024",
+  // ... full config
+}
+// Response: { "id": 50 }
+
+// 2. Duplicate for City Campus (face-to-face)
+POST /api/tenants/acme-rto/tas/templates/50/duplicate/
+{
+  "new_name": "Certificate IV Business - City Campus",
+  "new_code": "CERT_IV_BUS_CITY_2024"
+}
+// Response: { "id": 51 }
+
+// 3. Update City Campus Template
+PATCH /api/tenants/acme-rto/tas/templates/51/
+{
+  "structure": {
+    "template_specific_settings": {
+      "delivery_preferences": {
+        "mode": ["face_to_face"],
+        "location": "City Campus",
+        "typical_class_size": "20-25 students",
+        "schedule": "Monday-Thursday, 9am-3pm"
+      }
+    }
+  }
+}
+
+// 4. Duplicate for Regional Campus (blended)
+POST /api/tenants/acme-rto/tas/templates/50/duplicate/
+{
+  "new_name": "Certificate IV Business - Regional Campus",
+  "new_code": "CERT_IV_BUS_REGIONAL_2024"
+}
+// Response: { "id": 52 }
+
+// 5. Update Regional Campus Template
+PATCH /api/tenants/acme-rto/tas/templates/52/
+{
+  "structure": {
+    "template_specific_settings": {
+      "delivery_preferences": {
+        "mode": ["blended"],
+        "location": "Regional Campus",
+        "online_component": "60%",
+        "face_to_face_component": "40% (monthly intensives)"
+      }
+    }
+  }
+}
+
+// 6. Duplicate for Online Campus
+POST /api/tenants/acme-rto/tas/templates/50/duplicate/
+{
+  "new_name": "Certificate IV Business - Online",
+  "new_code": "CERT_IV_BUS_ONLINE_2024"
+}
+// Response: { "id": 53 }
+
+// 7. Update Online Campus Template
+PATCH /api/tenants/acme-rto/tas/templates/53/
+{
+  "structure": {
+    "template_specific_settings": {
+      "delivery_preferences": {
+        "mode": ["fully_online"],
+        "lms_platform": "Moodle",
+        "synchronous_sessions": "Weekly 1-hour live sessions",
+        "self_paced": true
+      }
+    }
+  }
+}
+
+// Now each campus generates TAS from their specific template
+// City uses template 51, Regional uses 52, Online uses 53</code></pre>
+        </section>
+
+        <section>
+            <h2>Example 6: Batch Generation</h2>
+            <p><strong>Scenario:</strong> Generate TAS documents for 20 qualifications using the same template.</p>
+
+            <h3>Script Approach</h3>
+            <pre><code>const qualifications = [
+  { code: "BSB30120", title: "Certificate III in Business" },
+  { code: "BSB40120", title: "Certificate IV in Business" },
+  { code: "BSB50120", title: "Diploma of Business" },
+  // ... 17 more
+];
+
+const templateId = 30; // Business template
+const jobs = [];
+
+// Initiate all generations
+for (const qual of qualifications) {
+  const response = await POST('/api/tenants/acme-rto/tas/generate/', {
+    template_id: templateId,
+    qualification_code: qual.code,
+    qualification_title: qual.title,
+    context: {
+      target_audience: "working professionals",
+      delivery_mode: "blended",
+      duration: "calculated based on nominal hours"
+    }
+  });
+  
+  jobs.push({
+    job_id: response.job_id,
+    qual: qual.code
+  });
+}
+
+// Monitor all jobs
+const checkStatus = async () => {
+  const statuses = await Promise.all(
+    jobs.map(job => GET(`/api/tenants/acme-rto/tas/generation-status/${job.job_id}/`))
+  );
+  
+  const completed = statuses.filter(s => s.status === 'completed').length;
+  const failed = statuses.filter(s => s.status === 'failed').length;
+  const inProgress = statuses.filter(s => s.status === 'generating').length;
+  
+  console.log(`Completed: ${completed}, Failed: ${failed}, In Progress: ${inProgress}`);
+  
+  if (inProgress === 0) {
+    console.log('All generations complete!');
+    return statuses;
+  }
+  
+  // Check again in 15 seconds
+  await sleep(15000);
+  return checkStatus();
+};
+
+const results = await checkStatus();
+
+// Download all completed TAS documents
+for (const result of results.filter(r => r.status === 'completed')) {
+  await GET(`/api/tenants/acme-rto/tas/${result.tas_id}/download/?format=pdf`);
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Example 7: Template Testing Workflow</h2>
+            <p><strong>Scenario:</strong> Testing a new template before rolling out to production.</p>
+
+            <pre><code>// 1. Create Test Template (inactive)
+POST /api/tenants/acme-rto/tas/templates/
+{
+  "template_name": "Certificate III Hospitality - TEST",
+  "template_code": "CERT_III_HOSP_TEST_2024",
+  "template_type": "hospitality",
+  "aqf_level": "certificate_iii",
+  "is_active": false,  // Not visible to general users
+  // ... rest of config
+}
+
+// 2. Assign Sections
+POST /api/tenants/acme-rto/tas/template-section-assignments/bulk_assign/
+{ ... }
+
+// 3. Generate Test TAS
+POST /api/tenants/acme-rto/tas/generate/
+{
+  "template_id": 60,
+  "qualification_code": "SIT30816",
+  "qualification_title": "Certificate III in Commercial Cookery",
+  "context": { ... }
+}
+
+// 4. Review Generated Content
+GET /api/tenants/acme-rto/tas/{tas_id}/
+
+// 5. Adjust GPT Prompts Based on Output
+PATCH /api/tenants/acme-rto/tas/template-sections/150/
+{
+  "gpt_prompt": {
+    "temperature": 0.6,  // Was 0.8, content too varied
+    "max_tokens": 1200   // Was 800, content was cut off
+  }
+}
+
+// 6. Regenerate to Test Changes
+POST /api/tenants/acme-rto/tas/generate/
+{ ... same as step 3 ... }
+
+// 7. Compare Results, Iterate Until Satisfied
+
+// 8. When Ready, Activate Template
+PATCH /api/tenants/acme-rto/tas/templates/60/
+{
+  "is_active": true,
+  "template_code": "CERT_III_HOSP_2024"  // Remove TEST suffix
+}
+
+// 9. Archive Test TAS Documents
+DELETE /api/tenants/acme-rto/tas/{test_tas_id}/</code></pre>
+        </section>
+
+        <section>
+            <h2>Best Practices Summary</h2>
+
+            <div class="card">
+                <h3>1. Plan Before Building</h3>
+                <ul>
+                    <li>Map out all required sections</li>
+                    <li>Identify sections that can be reused</li>
+                    <li>Group similar qualifications under one template</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>2. Start Simple, Iterate</h3>
+                <ul>
+                    <li>Begin with basic template and core sections</li>
+                    <li>Generate sample TAS documents</li>
+                    <li>Refine prompts based on output quality</li>
+                    <li>Add complexity incrementally</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>3. Test Thoroughly</h3>
+                <ul>
+                    <li>Use <code>is_active=false</code> during development</li>
+                    <li>Generate multiple test TAS documents</li>
+                    <li>Have compliance team review before production</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>4. Document Your Templates</h3>
+                <ul>
+                    <li>Use meaningful names and codes</li>
+                    <li>Fill in description fields</li>
+                    <li>Document any template-specific quirks</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>5. Automate Repetitive Tasks</h3>
+                <ul>
+                    <li>Script bulk section assignments</li>
+                    <li>Automate batch TAS generation</li>
+                    <li>Create maintenance scripts for updates</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>6. Version Control</h3>
+                <ul>
+                    <li>Include year in template codes</li>
+                    <li>Duplicate before major changes</li>
+                    <li>Keep old templates inactive for reference</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Common Patterns</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Pattern</th>
+                        <th>When to Use</th>
+                        <th>Implementation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Master Template + Duplicates</strong></td>
+                        <td>Multiple similar configurations</td>
+                        <td>Create master, duplicate for variations</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Section Library First</strong></td>
+                        <td>Building from scratch</td>
+                        <td>Create all sections, then templates</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Template-Level Prompts</strong></td>
+                        <td>AQF-specific language</td>
+                        <td>Override section prompts in template.gpt_prompts</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Staged Rollout</strong></td>
+                        <td>Large changes</td>
+                        <td>Start inactive, test, then activate</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Batch Processing</strong></td>
+                        <td>Multiple TAS needed</td>
+                        <td>Script to loop through qualifications</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Troubleshooting Common Issues</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Issue</th>
+                        <th>Likely Cause</th>
+                        <th>Solution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Generated content too generic</td>
+                        <td>GPT prompt lacks specificity</td>
+                        <td>Add more context variables, refine user_prompt_template</td>
+                    </tr>
+                    <tr>
+                        <td>Content inconsistent across sections</td>
+                        <td>Temperature too high</td>
+                        <td>Lower temperature to 0.5-0.6</td>
+                    </tr>
+                    <tr>
+                        <td>Section content cut off</td>
+                        <td>max_tokens too low</td>
+                        <td>Increase max_tokens by 50%</td>
+                    </tr>
+                    <tr>
+                        <td>Validation failing</td>
+                        <td>Keywords don't appear naturally</td>
+                        <td>Adjust keywords or add explicit requirement in prompt</td>
+                    </tr>
+                    <tr>
+                        <td>Generation takes too long</td>
+                        <td>Too many sections, high max_tokens</td>
+                        <td>Split into batches, optimize max_tokens</td>
+                    </tr>
+                    <tr>
+                        <td>Wrong section order in document</td>
+                        <td>section_order values incorrect</td>
+                        <td>Use reorder endpoint to fix</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Next Steps</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                <a href="quickstart.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>🚀 Quick Start</h3>
+                    <p>Get started with TAS generation</p>
+                </a>
+                <a href="api-reference.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>⚡ API Reference</h3>
+                    <p>Complete API documentation</p>
+                </a>
+                <a href="overview.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>📖 Overview</h3>
+                    <p>Understand the TAS system</p>
+                </a>
+            </div>
+        </section>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid #e2e8f0; text-align: center; color: #64748b;">
+            <p><a href="index.html" style="color: var(--primary-color);">Back to TAS Home</a></p>
+        </footer>
+    </div>
+</body>
+</html>

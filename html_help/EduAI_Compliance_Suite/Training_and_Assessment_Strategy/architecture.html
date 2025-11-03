@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Architecture - TAS Documentation</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+    <style>
+        .flow-diagram {
+            background: white;
+            border: 2px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+        }
+        
+        .flow-step {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            margin: 1rem auto;
+            max-width: 500px;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+        }
+        
+        .flow-arrow {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin: 0.5rem 0;
+        }
+        
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .arch-layer {
+            background: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .arch-layer h4 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .architecture-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="index.html">TAS Home</a>
+            <span>›</span>
+            <span>Architecture</span>
+        </div>
+
+        <a href="index.html" class="back-button">← Back to TAS Home</a>
+
+        <h1>🏗️ System Architecture</h1>
+        <p class="subtitle" style="font-size: 1.25rem; color: #64748b; margin-bottom: 2rem;">Understanding the TAS generation system design</p>
+
+        <section>
+            <h2>Three-Tier Architecture</h2>
+            <p>The TAS generation system uses a flexible three-tier architecture that separates concerns and enables maximum reusability and customization.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-step">📚 Tier 1: TAS Templates<br><small>Define structure, formatting, AI settings</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">📝 Tier 2: Template Sections<br><small>Reusable content blocks library</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">🔗 Tier 3: Section Assignments<br><small>Link sections to templates with customization</small></div>
+            </div>
+
+            <div class="architecture-grid">
+                <div class="arch-layer">
+                    <h4>Tier 1: Templates</h4>
+                    <p><strong>TASTemplate Model</strong></p>
+                    <ul style="text-align: left; font-size: 0.875rem;">
+                        <li>Template type</li>
+                        <li>AQF level</li>
+                        <li>Structure JSON</li>
+                        <li>GPT prompts</li>
+                        <li>Validation rules</li>
+                    </ul>
+                </div>
+                
+                <div class="arch-layer">
+                    <h4>Tier 2: Sections</h4>
+                    <p><strong>TASTemplateSection Model</strong></p>
+                    <ul style="text-align: left; font-size: 0.875rem;">
+                        <li>Section code</li>
+                        <li>Content type</li>
+                        <li>GPT prompt</li>
+                        <li>Default content</li>
+                        <li>Is editable</li>
+                    </ul>
+                </div>
+                
+                <div class="arch-layer">
+                    <h4>Tier 3: Assignments</h4>
+                    <p><strong>TASTemplateSectionAssignment Model</strong></p>
+                    <ul style="text-align: left; font-size: 0.875rem;">
+                        <li>Template FK</li>
+                        <li>Section FK</li>
+                        <li>Section order</li>
+                        <li>Custom label</li>
+                        <li>Is required</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Database Models</h2>
+
+            <h3>1. TASTemplate</h3>
+            <p>The master template configuration for generating TAS documents.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td>Integer (PK)</td>
+                        <td>Unique identifier</td>
+                    </tr>
+                    <tr>
+                        <td><code>tenant</code></td>
+                        <td>FK (Tenant)</td>
+                        <td>RTO that owns this template</td>
+                    </tr>
+                    <tr>
+                        <td><code>template_name</code></td>
+                        <td>String (200)</td>
+                        <td>Display name for the template</td>
+                    </tr>
+                    <tr>
+                        <td><code>template_code</code></td>
+                        <td>String (50)</td>
+                        <td>Unique code identifier</td>
+                    </tr>
+                    <tr>
+                        <td><code>template_type</code></td>
+                        <td>Choice</td>
+                        <td>general, trade, business, health, creative, hospitality, technology, education</td>
+                    </tr>
+                    <tr>
+                        <td><code>aqf_level</code></td>
+                        <td>Choice</td>
+                        <td>certificate_i through graduate_diploma</td>
+                    </tr>
+                    <tr>
+                        <td><code>description</code></td>
+                        <td>Text</td>
+                        <td>Template description and purpose</td>
+                    </tr>
+                    <tr>
+                        <td><code>structure</code></td>
+                        <td>JSONField</td>
+                        <td>Complete structure configuration</td>
+                    </tr>
+                    <tr>
+                        <td><code>gpt_prompts</code></td>
+                        <td>JSONField</td>
+                        <td>AI generation prompts for all sections</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_active</code></td>
+                        <td>Boolean</td>
+                        <td>Whether template is available for use</td>
+                    </tr>
+                    <tr>
+                        <td><code>created_at</code></td>
+                        <td>DateTime</td>
+                        <td>When template was created</td>
+                    </tr>
+                    <tr>
+                        <td><code>updated_at</code></td>
+                        <td>DateTime</td>
+                        <td>Last modification timestamp</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>2. TASTemplateSection</h3>
+            <p>Reusable section definitions that can be used across multiple templates.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td>Integer (PK)</td>
+                        <td>Unique identifier</td>
+                    </tr>
+                    <tr>
+                        <td><code>tenant</code></td>
+                        <td>FK (Tenant)</td>
+                        <td>RTO that owns this section</td>
+                    </tr>
+                    <tr>
+                        <td><code>section_name</code></td>
+                        <td>String (200)</td>
+                        <td>Display name for the section</td>
+                    </tr>
+                    <tr>
+                        <td><code>section_code</code></td>
+                        <td>String (50, unique)</td>
+                        <td>Unique code identifier (globally unique)</td>
+                    </tr>
+                    <tr>
+                        <td><code>description</code></td>
+                        <td>Text</td>
+                        <td>Help text for content creators</td>
+                    </tr>
+                    <tr>
+                        <td><code>content_type</code></td>
+                        <td>Choice</td>
+                        <td>text, rich_text, table, list, json</td>
+                    </tr>
+                    <tr>
+                        <td><code>default_content</code></td>
+                        <td>Text (optional)</td>
+                        <td>Placeholder or example content</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_editable</code></td>
+                        <td>Boolean</td>
+                        <td>Whether users can edit section content</td>
+                    </tr>
+                    <tr>
+                        <td><code>parent_section</code></td>
+                        <td>FK (self, optional)</td>
+                        <td>For hierarchical/nested sections</td>
+                    </tr>
+                    <tr>
+                        <td><code>gpt_prompt</code></td>
+                        <td>JSONField (optional)</td>
+                        <td>AI generation configuration for this section</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_active</code></td>
+                        <td>Boolean</td>
+                        <td>Soft delete flag</td>
+                    </tr>
+                    <tr>
+                        <td><code>created_at</code></td>
+                        <td>DateTime</td>
+                        <td>When section was created</td>
+                    </tr>
+                    <tr>
+                        <td><code>updated_at</code></td>
+                        <td>DateTime</td>
+                        <td>Last modification timestamp</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>3. TASTemplateSectionAssignment (Junction Table)</h3>
+            <p>Links sections to templates with per-template customization.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td>Integer (PK)</td>
+                        <td>Unique identifier</td>
+                    </tr>
+                    <tr>
+                        <td><code>template</code></td>
+                        <td>FK (TASTemplate)</td>
+                        <td>Which template this section is assigned to</td>
+                    </tr>
+                    <tr>
+                        <td><code>section</code></td>
+                        <td>FK (TASTemplateSection)</td>
+                        <td>Which section is being assigned</td>
+                    </tr>
+                    <tr>
+                        <td><code>section_order</code></td>
+                        <td>Integer</td>
+                        <td>Display order within THIS template</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_required</code></td>
+                        <td>Boolean</td>
+                        <td>Whether required in THIS template</td>
+                    </tr>
+                    <tr>
+                        <td><code>custom_label</code></td>
+                        <td>String (optional)</td>
+                        <td>Override section_name for this template</td>
+                    </tr>
+                    <tr>
+                        <td><code>custom_description</code></td>
+                        <td>Text (optional)</td>
+                        <td>Override description for this template</td>
+                    </tr>
+                    <tr>
+                        <td><code>created_at</code></td>
+                        <td>DateTime</td>
+                        <td>When assignment was created</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="alert alert-info">
+                <h4>💡 Why Junction Table?</h4>
+                <p>The many-to-many relationship through TASTemplateSectionAssignment allows:</p>
+                <ul>
+                    <li>One section to be used in multiple templates</li>
+                    <li>Different ordering in different templates</li>
+                    <li>Different labels/descriptions per template</li>
+                    <li>Required in some templates, optional in others</li>
+                </ul>
+            </div>
+
+            <h3>4. TAS (Generated Document)</h3>
+            <p>The actual TAS document instance created for a specific qualification.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td>Integer (PK)</td>
+                        <td>Unique identifier</td>
+                    </tr>
+                    <tr>
+                        <td><code>tenant</code></td>
+                        <td>FK (Tenant)</td>
+                        <td>RTO that owns this document</td>
+                    </tr>
+                    <tr>
+                        <td><code>template</code></td>
+                        <td>FK (TASTemplate)</td>
+                        <td>Template used to generate this TAS</td>
+                    </tr>
+                    <tr>
+                        <td><code>qualification_code</code></td>
+                        <td>String</td>
+                        <td>Qualification code (e.g., BSB50120)</td>
+                    </tr>
+                    <tr>
+                        <td><code>qualification_title</code></td>
+                        <td>String</td>
+                        <td>Qualification full name</td>
+                    </tr>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td>Choice</td>
+                        <td>draft, generating, review, approved, published</td>
+                    </tr>
+                    <tr>
+                        <td><code>content</code></td>
+                        <td>JSONField</td>
+                        <td>Generated content for all sections</td>
+                    </tr>
+                    <tr>
+                        <td><code>version</code></td>
+                        <td>Integer</td>
+                        <td>Version number (for change tracking)</td>
+                    </tr>
+                    <tr>
+                        <td><code>created_by</code></td>
+                        <td>FK (User)</td>
+                        <td>Who created this TAS</td>
+                    </tr>
+                    <tr>
+                        <td><code>approved_by</code></td>
+                        <td>FK (User, optional)</td>
+                        <td>Who approved this TAS</td>
+                    </tr>
+                    <tr>
+                        <td><code>approved_at</code></td>
+                        <td>DateTime (optional)</td>
+                        <td>When TAS was approved</td>
+                    </tr>
+                    <tr>
+                        <td><code>created_at</code></td>
+                        <td>DateTime</td>
+                        <td>When TAS was created</td>
+                    </tr>
+                    <tr>
+                        <td><code>updated_at</code></td>
+                        <td>DateTime</td>
+                        <td>Last modification timestamp</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Data Flow</h2>
+            <p>Understanding how data flows through the system:</p>
+
+            <div class="flow-diagram">
+                <div class="flow-step">1. RTO Staff Creates Section Library<br><small>Define reusable sections with GPT prompts</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">2. Create Template Configuration<br><small>Define structure, formatting, template-level settings</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">3. Assign Sections to Template<br><small>Link sections with order, labels, requirements</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">4. Select Qualification<br><small>Choose qualification to generate TAS for</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">5. Provide Context<br><small>Qualification details, units, delivery info</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">6. AI Generation<br><small>GPT-4 generates content for each section</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">7. Review & Edit<br><small>Staff review and refine content</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">8. Validate & Approve<br><small>Check compliance and approve</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">9. Publish & Distribute<br><small>Make available to training teams</small></div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Component Interactions</h2>
+
+            <h3>Section Library → Template Assignment</h3>
+            <pre><code>GET /api/tenants/acme-rto/tas/template-sections/
+→ Returns list of available sections
+
+POST /api/tenants/acme-rto/tas/template-section-assignments/bulk_assign/
+→ Links sections to template with customization</code></pre>
+
+            <h3>Template → Content Generation</h3>
+            <pre><code>GET /api/tenants/acme-rto/tas/templates/5/
+→ Retrieve template configuration (structure, GPT prompts)
+
+POST /api/tenants/acme-rto/tas/templates/5/generate-section/
+→ Generate content using template's GPT prompts and structure</code></pre>
+
+            <h3>Generated Content → TAS Document</h3>
+            <pre><code>POST /api/tenants/acme-rto/tas/generate/
+→ Creates TAS document instance with all sections
+
+GET /api/tenants/acme-rto/tas/123/
+→ Retrieve complete TAS document</code></pre>
+        </section>
+
+        <section>
+            <h2>Relationships & Cardinality</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Relationship</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Tenant → TASTemplate</td>
+                        <td>One-to-Many</td>
+                        <td>Each RTO can have multiple templates</td>
+                    </tr>
+                    <tr>
+                        <td>Tenant → TASTemplateSection</td>
+                        <td>One-to-Many</td>
+                        <td>Each RTO has their section library</td>
+                    </tr>
+                    <tr>
+                        <td>TASTemplate ↔ TASTemplateSection</td>
+                        <td>Many-to-Many</td>
+                        <td>Through TASTemplateSectionAssignment</td>
+                    </tr>
+                    <tr>
+                        <td>TASTemplate → TAS</td>
+                        <td>One-to-Many</td>
+                        <td>One template generates many TAS documents</td>
+                    </tr>
+                    <tr>
+                        <td>TASTemplateSection → self</td>
+                        <td>One-to-Many</td>
+                        <td>Parent-child for nested sections</td>
+                    </tr>
+                    <tr>
+                        <td>User → TAS</td>
+                        <td>One-to-Many</td>
+                        <td>Users create and approve TAS documents</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>API Layer Architecture</h2>
+
+            <h3>ViewSets</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ViewSet</th>
+                        <th>Model</th>
+                        <th>Endpoints</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>TASTemplateViewSet</code></td>
+                        <td>TASTemplate</td>
+                        <td>CRUD + generate-section, duplicate</td>
+                    </tr>
+                    <tr>
+                        <td><code>TASTemplateSectionViewSet</code></td>
+                        <td>TASTemplateSection</td>
+                        <td>CRUD + duplicate</td>
+                    </tr>
+                    <tr>
+                        <td><code>TASTemplateSectionAssignmentViewSet</code></td>
+                        <td>TASTemplateSectionAssignment</td>
+                        <td>CRUD + by_template, bulk_assign, reorder</td>
+                    </tr>
+                    <tr>
+                        <td><code>TASViewSet</code></td>
+                        <td>TAS</td>
+                        <td>CRUD + generate, generation-status, download</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Serializers</h3>
+            <ul>
+                <li><code>TASTemplateSerializer</code> - Full template with nested section_assignments</li>
+                <li><code>TASTemplateSectionSerializer</code> - Section with computed template_count</li>
+                <li><code>TASTemplateSectionAssignmentSerializer</code> - Assignment with nested section_details, effective_label/description</li>
+                <li><code>TASSerializer</code> - TAS document with template details</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>AI Integration Architecture</h2>
+
+            <h3>Content Generation Pipeline</h3>
+            <div class="flow-diagram">
+                <div class="flow-step">1. Request Received<br><small>section_code + context</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">2. Fetch GPT Prompt<br><small>From section or template</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">3. Variable Injection<br><small>Replace {placeholders} with context</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">4. Call GPT-4 API<br><small>Send system + user prompt</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">5. Validate Response<br><small>Check keywords, length, format</small></div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-step">6. Return Content<br><small>Store in TAS document</small></div>
+            </div>
+
+            <h3>Prompt Resolution Priority</h3>
+            <ol>
+                <li><strong>Section-level GPT prompt</strong> in TASTemplateSection.gpt_prompt (highest priority)</li>
+                <li><strong>Template-level GPT prompt</strong> in TASTemplate.gpt_prompts[section_code]</li>
+                <li><strong>Fallback to default</strong> if neither exists</li>
+            </ol>
+
+            <div class="alert alert-info">
+                <h4>🎯 Why This Priority?</h4>
+                <p>Section-level prompts allow for maximum flexibility - a section can have a specific prompt that's used everywhere, or be overridden at the template level for specific qualification types.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Scalability Considerations</h2>
+
+            <h3>Caching Strategy</h3>
+            <ul>
+                <li><strong>Template structure:</strong> Cached after first load (rarely changes)</li>
+                <li><strong>Section library:</strong> Cached per tenant (changes infrequently)</li>
+                <li><strong>Generated content:</strong> Stored in database, not regenerated unless requested</li>
+            </ul>
+
+            <h3>Asynchronous Generation</h3>
+            <p>For complete TAS generation (multiple sections), the system uses:</p>
+            <ul>
+                <li><strong>Celery tasks:</strong> Background processing for long-running generation</li>
+                <li><strong>Job tracking:</strong> Status updates via polling endpoint</li>
+                <li><strong>Progress reporting:</strong> Real-time updates on completion percentage</li>
+            </ul>
+
+            <h3>Rate Limiting</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>Limit</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Generate section</td>
+                        <td>50 requests/hour</td>
+                        <td>AI API cost management</td>
+                    </tr>
+                    <tr>
+                        <td>Generate full TAS</td>
+                        <td>10 requests/hour</td>
+                        <td>Resource intensive operation</td>
+                    </tr>
+                    <tr>
+                        <td>CRUD operations</td>
+                        <td>1000 requests/hour</td>
+                        <td>Standard API rate</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Security Architecture</h2>
+
+            <h3>Multi-Tenancy</h3>
+            <p>All models include tenant foreign key:</p>
+            <ul>
+                <li>Data isolation at database level</li>
+                <li>Automatic tenant filtering in all queries</li>
+                <li>No cross-tenant data access possible</li>
+            </ul>
+
+            <h3>Authorization</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Action</th>
+                        <th>Required Permission</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>View templates/sections</td>
+                        <td>Authenticated tenant user</td>
+                    </tr>
+                    <tr>
+                        <td>Create/Edit templates</td>
+                        <td>Admin or Compliance role</td>
+                    </tr>
+                    <tr>
+                        <td>Generate TAS</td>
+                        <td>Trainer or Admin role</td>
+                    </tr>
+                    <tr>
+                        <td>Approve TAS</td>
+                        <td>Compliance Manager role</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Audit Trail</h3>
+            <p>All operations are logged:</p>
+            <ul>
+                <li>Who created/modified templates and sections</li>
+                <li>When TAS documents were generated</li>
+                <li>Who approved TAS documents</li>
+                <li>Changes to TAS content (versioning)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Technology Stack</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Layer</th>
+                        <th>Technology</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Backend Framework</td>
+                        <td>Django 5.1.13</td>
+                        <td>Web framework and ORM</td>
+                    </tr>
+                    <tr>
+                        <td>API Framework</td>
+                        <td>Django REST Framework</td>
+                        <td>RESTful API implementation</td>
+                    </tr>
+                    <tr>
+                        <td>Database</td>
+                        <td>PostgreSQL 15+</td>
+                        <td>Data storage with JSONField support</td>
+                    </tr>
+                    <tr>
+                        <td>Multi-Tenancy</td>
+                        <td>django-tenants</td>
+                        <td>Schema-based tenant isolation</td>
+                    </tr>
+                    <tr>
+                        <td>AI Integration</td>
+                        <td>OpenAI GPT-4 API</td>
+                        <td>Content generation</td>
+                    </tr>
+                    <tr>
+                        <td>Task Queue</td>
+                        <td>Celery + Redis</td>
+                        <td>Asynchronous TAS generation</td>
+                    </tr>
+                    <tr>
+                        <td>Caching</td>
+                        <td>Redis</td>
+                        <td>Template and section caching</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Next Steps</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                <a href="templates.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>📋 Template Details</h3>
+                    <p>Learn about template structure and configuration</p>
+                </a>
+                <a href="sections.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>📝 Section Library</h3>
+                    <p>Explore available sections</p>
+                </a>
+                <a href="api-reference.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>⚡ API Reference</h3>
+                    <p>Complete API documentation</p>
+                </a>
+            </div>
+        </section>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid #e2e8f0; text-align: center; color: #64748b;">
+            <p><a href="index.html" style="color: var(--primary-color);">Back to TAS Home</a></p>
+        </footer>
+    </div>
+</body>
+</html>

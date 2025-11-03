@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funding Eligibility - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 2rem;
+            border-radius: 0.75rem;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .hero p {
+            font-size: 1.25rem;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+            line-height: 1.6;
+        }
+        .status-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1.5rem;
+            border-radius: 2rem;
+            border: 2px solid white;
+            font-weight: 600;
+        }
+        .features-section {
+            margin: 3rem 0;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        .feature-item {
+            display: flex;
+            gap: 1rem;
+        }
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        .feature-content h3 {
+            margin: 0 0 0.5rem 0;
+            color: #1e293b;
+        }
+        .feature-content p {
+            margin: 0;
+            color: #64748b;
+            line-height: 1.6;
+        }
+        .compliance-section {
+            background: linear-gradient(to right, #f0f9ff, #e0f2fe);
+            border-left: 4px solid #0284c7;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin: 3rem 0;
+        }
+        .compliance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        .compliance-stat {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #0284c7;
+            margin-bottom: 0.5rem;
+        }
+        .stat-label {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 3rem 0;
+        }
+        .nav-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.3s ease;
+            border-top: 4px solid #667eea;
+        }
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+            border-top-color: #764ba2;
+        }
+        .nav-card h3 {
+            margin: 0 0 0.5rem 0;
+            color: #1e293b;
+        }
+        .nav-card p {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+        .related-section {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            margin: 3rem 0;
+        }
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .related-link {
+            padding: 1rem;
+            background: white;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .related-link:hover {
+            background: #667eea;
+            color: white;
+        }
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <strong>Funding Eligibility</strong>
+        </div>
+
+        <div class="hero">
+            <h1>💰 Funding Eligibility System</h1>
+            <p>
+                Deterministic funding eligibility verification with rules engine, hard-block enforcement, 
+                and comprehensive audit trail for Australian VET sector compliance. Ensure accurate funding 
+                decisions with immutable records and reproducible outcomes.
+            </p>
+            <div class="status-badge">v1.0.0 Production Ready</div>
+        </div>
+
+        <section class="features-section">
+            <h2>Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-content">
+                        <h3>Deterministic Decisions</h3>
+                        <p>Every eligibility outcome is fully reproducible from stored facts and rule versions, ensuring audit compliance and transparency.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🔒</div>
+                    <div class="feature-content">
+                        <h3>Hard-Block Enforcement</h3>
+                        <p>Non-eligible enrolments blocked at API level. SMS/LMS must check eligibility endpoint before allowing enrolment.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">⚙️</div>
+                    <div class="feature-content">
+                        <h3>Rules Engine</h3>
+                        <p>Flexible JSONLogic-based rules engine with support for complex eligibility criteria. Extensible to OPA/Rego.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🔍</div>
+                    <div class="feature-content">
+                        <h3>External Verification</h3>
+                        <p>Automated USI validation, postcode lookups (LGA/RAI), concession card verification, and visa status checks with caching.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📋</div>
+                    <div class="feature-content">
+                        <h3>Immutable Audit Trail</h3>
+                        <p>All decisions, evaluations, and overrides stored permanently with complete context for 30-year compliance retention.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🌏</div>
+                    <div class="feature-content">
+                        <h3>Jurisdiction-Specific Rules</h3>
+                        <p>Separate rulesets for NSW, VIC, QLD, SA, WA, TAS, NT, ACT with versioning and checksums for integrity.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🔄</div>
+                    <div class="feature-content">
+                        <h3>Override Workflow</h3>
+                        <p>Manual decision overrides with approver tracking, justification, and evidence attachments for exceptional cases.</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🔗</div>
+                    <div class="feature-content">
+                        <h3>Webhook Integration</h3>
+                        <p>Real-time notifications to SMS/LMS with HMAC signatures for secure event delivery and retry logic.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="compliance-section">
+            <h2>System Capabilities</h2>
+            <div class="compliance-grid">
+                <div class="compliance-stat">
+                    <div class="stat-number">10+</div>
+                    <div class="stat-label">Data Models</div>
+                </div>
+                <div class="compliance-stat">
+                    <div class="stat-number">25+</div>
+                    <div class="stat-label">API Endpoints</div>
+                </div>
+                <div class="compliance-stat">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Jurisdictions</div>
+                </div>
+                <div class="compliance-stat">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Audit Compliance</div>
+                </div>
+            </div>
+        </div>
+
+        <section>
+            <h2>Documentation Navigation</h2>
+            <div class="nav-grid">
+                <a href="overview.html" class="nav-card">
+                    <h3>📖 Overview</h3>
+                    <p>Comprehensive guide to funding eligibility features, rules engine, and compliance requirements.</p>
+                </a>
+
+                <a href="quickstart.html" class="nav-card">
+                    <h3>🚀 Quick Start</h3>
+                    <p>Get started with creating eligibility requests, running evaluations, and checking hard-block status.</p>
+                </a>
+
+                <a href="architecture.html" class="nav-card">
+                    <h3>🏗️ Architecture</h3>
+                    <p>System design, rules engine internals, connector framework, and evaluation pipeline.</p>
+                </a>
+
+                <a href="models.html" class="nav-card">
+                    <h3>💾 Data Models</h3>
+                    <p>Complete database schema covering rulesets, requests, decisions, lookups, and webhooks.</p>
+                </a>
+
+                <a href="api-reference.html" class="nav-card">
+                    <h3>🔌 API Reference</h3>
+                    <p>REST API endpoints for jurisdictions, rulesets, eligibility requests, and decision management.</p>
+                </a>
+
+                <a href="rules-engine.html" class="nav-card">
+                    <h3>⚙️ Rules Engine</h3>
+                    <p>JSONLogic operators, evaluation context, reference tables, and custom rule development.</p>
+                </a>
+
+                <a href="examples.html" class="nav-card">
+                    <h3>💡 Examples</h3>
+                    <p>Real-world code examples for NSW, VIC, QLD eligibility checks and webhook integrations.</p>
+                </a>
+
+                <a href="roadmap.html" class="nav-card">
+                    <h3>🚀 Roadmap</h3>
+                    <p>Future enhancements including OPA/Rego support, real API integration, and ML predictions.</p>
+                </a>
+            </div>
+        </section>
+
+        <div class="related-section">
+            <h2>Related Components</h2>
+            <p>Funding Eligibility works seamlessly with other EduAI Compliance Suite components:</p>
+            <div class="related-grid">
+                <a href="../Audit_Assistant/index.html" class="related-link">→ Audit Assistant</a>
+                <a href="../Policy_Comparator/index.html" class="related-link">→ Policy Comparator</a>
+                <a href="../Continuous_Improvement_Register/index.html" class="related-link">→ Continuous Improvement Register</a>
+                <a href="../TAS/index.html" class="related-link">→ Training & Assessment System</a>
+            </div>
+        </div>
+
+        <footer>
+            <p>Funding Eligibility System v1.0.0 Production Ready | Last Updated: November 4, 2025</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funding Eligibility Architecture - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Funding Eligibility</a> /
+            <strong>Architecture</strong>
+        </div>
+
+        <h1>🏗️ System Architecture</h1>
+
+        <div class="intro-section">
+            <p>
+                The Funding Eligibility System uses a deterministic, event-driven architecture with rules engine evaluation, 
+                external API connectors, and immutable decision storage for complete audit compliance.
+            </p>
+        </div>
+
+        <h2>High-Level Architecture</h2>
+        <div class="code-block">
+            <pre><code>┌─────────────┐
+│   SMS/LMS   │
+│   Frontend  │
+└──────┬──────┘
+       │ HTTP/REST
+       ▼
+┌─────────────────────────────────────┐
+│      Django REST Framework API      │
+│  ┌───────────┐  ┌────────────────┐ │
+│  │  Views    │  │  Serializers   │ │
+│  └─────┬─────┘  └────────┬───────┘ │
+│        │                 │          │
+│  ┌─────▼──────────────────▼───────┐ │
+│  │         Models Layer          │ │
+│  │  (Immutable Decision Store)   │ │
+│  └────────────┬──────────────────┘ │
+└───────────────┼────────────────────┘
+                │
+       ┌────────┴────────┐
+       │                 │
+       ▼                 ▼
+┌──────────────┐  ┌─────────────┐
+│  PostgreSQL  │  │    Redis    │
+│  (Decisions) │  │   (Cache)   │
+└──────────────┘  └─────────────┘
+       │
+       ▼
+┌──────────────────────────────────┐
+│         Celery Workers           │
+│  ┌────────────┐  ┌─────────────┐ │
+│  │  Lookups   │  │  Evaluation │ │
+│  │  (Async)   │  │   (Async)   │ │
+│  └─────┬──────┘  └──────┬──────┘ │
+└────────┼─────────────────┼────────┘
+         │                 │
+         ▼                 ▼
+┌─────────────────┐  ┌────────────┐
+│  External APIs  │  │   Rules    │
+│  • USI Registry │  │   Engine   │
+│  • Postcode API │  │ (JSONLogic)│
+│  • Concession   │  └────────────┘
+│  • VEVO (Visa)  │
+└─────────────────┘
+
+         │ Webhooks (HMAC)
+         ▼
+┌─────────────────┐
+│   SMS/LMS       │
+│   (Callbacks)   │
+└─────────────────┘</code></pre>
+        </div>
+
+        <h2>Data Flow</h2>
+
+        <h3>1. Request Creation Flow</h3>
+        <div class="code-block">
+            <pre><code>Student → SMS/LMS → API
+                       │
+                       ▼
+            POST /requests/
+                       │
+                       ▼
+           EligibilityRequest created
+              (status: pending)
+                       │
+                       ▼
+      Celery: enqueue_external_lookups(request_id)
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+          ▼                         ▼
+    USI Lookup               Postcode Lookup
+    (2-3s)                   (cached, <1s)
+          │                         │
+          ▼                         ▼
+    Concession Lookup         Visa Lookup
+    (1-2s)                    (if needed)
+          │                         │
+          └────────────┬────────────┘
+                       ▼
+           All lookups completed
+           (status: ready_to_evaluate)</code></pre>
+        </div>
+
+        <h3>2. Evaluation Flow</h3>
+        <div class="code-block">
+            <pre><code>POST /requests/{id}/evaluate/
+            │
+            ▼
+Celery: evaluate_eligibility(request_id, ruleset_id)
+            │
+            ▼
+┌───────────────────────────┐
+│   Build Context           │
+│   • Input data            │
+│   • External lookups      │
+│   • Reference tables      │
+└────────────┬──────────────┘
+             ▼
+┌───────────────────────────┐
+│   Rules Engine            │
+│   • Load ruleset          │
+│   • Parse JSONLogic       │
+│   • Evaluate expression   │
+└────────────┬──────────────┘
+             ▼
+┌───────────────────────────┐
+│   Generate Result         │
+│   • Outcome (eligible)    │
+│   • Reasons (array)       │
+│   • Clause refs           │
+│   • Explanation           │
+└────────────┬──────────────┘
+             ▼
+    EligibilityDecision created
+         (immutable)
+             │
+             ▼
+    Webhook delivery queued
+             │
+             ▼
+    SMS/LMS notified</code></pre>
+        </div>
+
+        <h2>Rules Engine Architecture</h2>
+
+        <h3>Core Components</h3>
+        <div class="code-block">
+            <pre><code>┌──────────────────────────────────────┐
+│         RulesEngine                  │
+│                                      │
+│  ┌────────────────────────────────┐ │
+│  │   JSONLogicEvaluator           │ │
+│  │   • Operators (==, >, and, or) │ │
+│  │   • Functions (var, lookup)    │ │
+│  │   • Date calculations          │ │
+│  └───────────┬────────────────────┘ │
+│              │                       │
+│  ┌───────────▼────────────────────┐ │
+│  │   EvaluationContext            │ │
+│  │   • Input data (student/course)│ │
+│  │   • Lookups (cached results)   │ │
+│  │   • Reference tables           │ │
+│  └────────────────────────────────┘ │
+└──────────────────────────────────────┘</code></pre>
+        </div>
+
+        <h3>Evaluation Process</h3>
+        <div class="code-block">
+            <pre><code>def evaluate(context: EvaluationContext) -> EvaluationResult:
+    # Step 1: Load ruleset
+    ruleset = Ruleset.objects.get(id=ruleset_id)
+    artifacts = ruleset.artifacts.all()
+    
+    # Step 2: For each artifact
+    results = []
+    for artifact in artifacts:
+        # Parse JSONLogic
+        rule = json.loads(artifact.blob)
+        
+        # Evaluate with context
+        result = jsonlogic_evaluate(rule, context.to_dict())
+        results.append(result)
+    
+    # Step 3: Aggregate results
+    if all(results):
+        outcome = "eligible"
+    elif any(r.get("requires_review") for r in results):
+        outcome = "review"
+    else:
+        outcome = "ineligible"
+    
+    # Step 4: Generate explanation
+    reasons = extract_reasons(results)
+    clause_refs = extract_clauses(results)
+    
+    return EvaluationResult(
+        outcome=outcome,
+        reasons=reasons,
+        clause_refs=clause_refs,
+        explanation=generate_explanation(outcome, reasons)
+    )</code></pre>
+        </div>
+
+        <h2>Connector Framework</h2>
+
+        <h3>Base Connector Architecture</h3>
+        <div class="code-block">
+            <pre><code>class BaseConnector:
+    """Abstract base for external API connectors"""
+    
+    def __init__(self, timeout=30, cache_ttl=3600):
+        self.timeout = timeout
+        self.cache_ttl = cache_ttl
+    
+    def lookup(self, data: dict) -> dict:
+        # Check cache first
+        cache_key = self.generate_cache_key(data)
+        cached = redis.get(cache_key)
+        if cached:
+            return json.loads(cached)
+        
+        # Call external API
+        result = self._call_api(data)
+        
+        # Cache result
+        redis.setex(cache_key, self.cache_ttl, json.dumps(result))
+        
+        # Store in database
+        ExternalLookup.objects.create(
+            request=request,
+            provider=self.provider_name,
+            lookup_data=data,
+            result_data=result,
+            cached=False
+        )
+        
+        return result
+    
+    def _call_api(self, data: dict) -> dict:
+        raise NotImplementedError</code></pre>
+        </div>
+
+        <h3>Connector Implementations</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Connector</th>
+                    <th>Provider</th>
+                    <th>Cache TTL</th>
+                    <th>Timeout</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>USIConnector</strong></td>
+                    <td>USI Registry API</td>
+                    <td>7 days</td>
+                    <td>10s</td>
+                </tr>
+                <tr>
+                    <td><strong>PostcodeConnector</strong></td>
+                    <td>ABS/Internal DB</td>
+                    <td>90 days</td>
+                    <td>5s</td>
+                </tr>
+                <tr>
+                    <td><strong>ConcessionConnector</strong></td>
+                    <td>Services Australia</td>
+                    <td>1 day</td>
+                    <td>15s</td>
+                </tr>
+                <tr>
+                    <td><strong>VisaConnector</strong></td>
+                    <td>VEVO (Home Affairs)</td>
+                    <td>1 day</td>
+                    <td>20s</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Async Task Pipeline</h2>
+
+        <h3>Task Definitions</h3>
+        <div class="code-block">
+            <pre><code>@shared_task
+def enqueue_external_lookups(request_id):
+    """Determine which lookups are needed"""
+    request = EligibilityRequest.objects.get(id=request_id)
+    
+    # Always lookup USI and postcode
+    tasks = [
+        perform_external_lookup.s(request_id, "USI", {...}),
+        perform_external_lookup.s(request_id, "Postcode", {...})
+    ]
+    
+    # Conditional lookups
+    if request.student_data.get("has_concession_card"):
+        tasks.append(perform_external_lookup.s(request_id, "Concession", {...}))
+    
+    if request.student_data.get("citizenship") == "Visa":
+        tasks.append(perform_external_lookup.s(request_id, "Visa", {...}))
+    
+    # Execute in parallel
+    group(tasks).apply_async()
+
+
+@shared_task(bind=True, max_retries=3)
+def perform_external_lookup(self, request_id, provider, data):
+    """Execute single external lookup with retry"""
+    try:
+        connector = ConnectorFactory.create(provider)
+        result = connector.lookup(data)
+        return {"provider": provider, "result": result, "success": True}
+    except Exception as exc:
+        self.retry(exc=exc, countdown=30)
+
+
+@shared_task
+def evaluate_eligibility(request_id, ruleset_id):
+    """Run rules engine evaluation"""
+    request = EligibilityRequest.objects.get(id=request_id)
+    ruleset = Ruleset.objects.get(id=ruleset_id)
+    
+    # Build context
+    context = EvaluationContext(
+        input_data=request.get_input_snapshot(),
+        lookups=request.get_lookup_results(),
+        reference_tables=ruleset.get_reference_tables()
+    )
+    
+    # Evaluate
+    engine = RulesEngine()
+    result = engine.evaluate(context, ruleset)
+    
+    # Store decision
+    decision = EligibilityDecision.objects.create(
+        request=request,
+        outcome=result.outcome,
+        reasons=result.reasons,
+        clause_refs=result.clause_refs,
+        decision_data=result.to_dict(),
+        ruleset=ruleset
+    )
+    
+    # Update request status
+    request.status = "evaluated"
+    request.save()
+    
+    # Queue webhook
+    deliver_webhook.delay(request_id, "decision.finalized")</code></pre>
+        </div>
+
+        <h2>Webhook Delivery System</h2>
+
+        <h3>Delivery Flow</h3>
+        <div class="code-block">
+            <pre><code>@shared_task(bind=True, max_retries=5)
+def deliver_webhook(self, request_id, event_type):
+    """Deliver webhook with HMAC signature"""
+    request = EligibilityRequest.objects.get(id=request_id)
+    
+    # Get active webhooks for event
+    endpoints = WebhookEndpoint.objects.filter(
+        tenant=request.tenant,
+        active=True,
+        events__contains=[event_type]
+    )
+    
+    for endpoint in endpoints:
+        # Build payload
+        payload = {
+            "event_type": event_type,
+            "request_id": request_id,
+            "person_id": request.person_id,
+            "course_id": request.course_id,
+            "jurisdiction": request.jurisdiction_code,
+            "timestamp": timezone.now().isoformat()
+        }
+        
+        # Generate HMAC signature
+        signature = hmac.new(
+            endpoint.secret.encode(),
+            json.dumps(payload).encode(),
+            hashlib.sha256
+        ).hexdigest()
+        
+        # Send HTTP POST
+        response = requests.post(
+            endpoint.url,
+            json=payload,
+            headers={
+                "X-Webhook-Signature": signature,
+                "X-Webhook-Event": event_type,
+                "Content-Type": "application/json"
+            },
+            timeout=30
+        )
+        
+        # Log delivery
+        WebhookDelivery.objects.create(
+            endpoint=endpoint,
+            request=request,
+            event_type=event_type,
+            payload=payload,
+            response_status=response.status_code,
+            success=(200 <= response.status_code < 300)
+        )</code></pre>
+        </div>
+
+        <h2>Storage Architecture</h2>
+
+        <h3>PostgreSQL Schema</h3>
+        <ul>
+            <li><strong>Jurisdictions:</strong> Active funding programs</li>
+            <li><strong>Rulesets:</strong> Versioned rules with checksums</li>
+            <li><strong>EligibilityRequests:</strong> Input snapshots (immutable)</li>
+            <li><strong>ExternalLookups:</strong> Cached API responses</li>
+            <li><strong>EligibilityDecisions:</strong> Evaluation outcomes (immutable)</li>
+            <li><strong>DecisionOverrides:</strong> Manual overrides with audit</li>
+            <li><strong>EvidenceAttachments:</strong> File metadata (S3 references)</li>
+        </ul>
+
+        <h3>Redis Caching Strategy</h3>
+        <div class="code-block">
+            <pre><code>Cache Keys:
+  lookup:usi:{usi}                    TTL: 7 days
+  lookup:postcode:{postcode}          TTL: 90 days
+  lookup:concession:{card_number}     TTL: 1 day
+  lookup:visa:{passport_number}       TTL: 1 day
+
+Cache Invalidation:
+  • Manual: Staff can force re-lookup
+  • Automatic: TTL expiry
+  • Event-driven: Concession card expiry</code></pre>
+        </div>
+
+        <h3>S3 File Storage</h3>
+        <div class="code-block">
+            <pre><code>Bucket: nextcore-eligibility-evidence
+Structure:
+  /{tenant_id}/
+    /{request_id}/
+      /{attachment_id}/
+        /original_filename.pdf
+        /metadata.json
+
+Retention: 30 years (compliance)
+Encryption: AES-256 at rest
+Access: Pre-signed URLs (15 min expiry)</code></pre>
+        </div>
+
+        <h2>Security Architecture</h2>
+
+        <div class="info-box">
+            <h3>Security Layers</h3>
+            <ul>
+                <li><strong>Authentication:</strong> JWT tokens (30 min expiry)</li>
+                <li><strong>Authorization:</strong> Role-based (staff, manager, admin)</li>
+                <li><strong>Tenant Isolation:</strong> All queries scoped to tenant</li>
+                <li><strong>Data Encryption:</strong> TLS 1.3 in transit, AES-256 at rest</li>
+                <li><strong>Webhook Security:</strong> HMAC-SHA256 signatures</li>
+                <li><strong>Rate Limiting:</strong> 100 req/min per user</li>
+                <li><strong>Audit Logging:</strong> All access logged to CloudWatch</li>
+            </ul>
+        </div>
+
+        <h2>Performance Optimization</h2>
+
+        <h3>Database Indexes</h3>
+        <div class="code-block">
+            <pre><code>-- EligibilityRequest
+CREATE INDEX idx_request_status ON eligibility_requests(tenant_id, status);
+CREATE INDEX idx_request_person ON eligibility_requests(person_id, jurisdiction_code);
+CREATE INDEX idx_request_created ON eligibility_requests(created_at DESC);
+
+-- ExternalLookup
+CREATE INDEX idx_lookup_provider ON external_lookups(provider, cached);
+CREATE INDEX idx_lookup_created ON external_lookups(created_at);
+
+-- EligibilityDecision
+CREATE INDEX idx_decision_outcome ON eligibility_decisions(outcome, evaluated_at);</code></pre>
+        </div>
+
+        <h3>Caching Strategy</h3>
+        <ul>
+            <li><strong>API responses:</strong> Cache for 1-5 minutes</li>
+            <li><strong>External lookups:</strong> Cache per provider TTL</li>
+            <li><strong>Rulesets:</strong> Cache active rulesets (invalidate on update)</li>
+            <li><strong>Reference tables:</strong> Cache for 24 hours</li>
+        </ul>
+
+        <h2>Deployment Architecture</h2>
+
+        <div class="code-block">
+            <pre><code>┌──────────────────────────────────────┐
+│         AWS Cloud Formation          │
+│                                      │
+│  ┌────────────────────────────────┐ │
+│  │  Application Load Balancer     │ │
+│  │  (HTTPS termination)           │ │
+│  └─────────────┬──────────────────┘ │
+│                │                     │
+│  ┌─────────────▼──────────────────┐ │
+│  │  ECS Fargate                   │ │
+│  │  • API (3 tasks)               │ │
+│  │  • Worker (5 tasks)            │ │
+│  └────────────────────────────────┘ │
+│                                      │
+│  ┌────────────────────────────────┐ │
+│  │  RDS PostgreSQL (Multi-AZ)     │ │
+│  └────────────────────────────────┘ │
+│                                      │
+│  ┌────────────────────────────────┐ │
+│  │  ElastiCache Redis (Cluster)   │ │
+│  └────────────────────────────────┘ │
+│                                      │
+│  ┌────────────────────────────────┐ │
+│  │  S3 (Evidence Storage)         │ │
+│  └────────────────────────────────┘ │
+└──────────────────────────────────────┘</code></pre>
+        </div>
+
+        <div class="cta-section">
+            <h2>Next Steps</h2>
+            <p>Explore the complete data model to understand all database entities and relationships.</p>
+            <a href="models.html" class="btn btn-primary">View Data Models →</a>
+        </div>
+    </div>
+</body>
+</html>

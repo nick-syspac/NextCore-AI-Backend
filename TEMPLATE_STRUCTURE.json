@@ -1,0 +1,115 @@
+{
+    "version": "1.0",
+    "document_type": "TAS",
+    "template_type": "business",
+    "aqf_level": "diploma",
+    "metadata": {
+        "author_guidelines": "Follow ASQA Standards for Training and Assessment. Focus on theoretical knowledge, case studies, and workplace scenarios relevant to business and commerce sectors.",
+        "review_frequency": "annually",
+        "compliance_framework": "ASQA Standards 2015",
+        "industry_focus": "Business Services, Administration, Management",
+        "typical_qualifications": ["BSB50120", "BSB50420", "BSB60120"]
+    },
+    "formatting": {
+        "font": "Arial",
+        "font_size": 11,
+        "line_spacing": 1.5,
+        "margins": {
+            "top": 2.5,
+            "bottom": 2.5,
+            "left": 2.5,
+            "right": 2.5
+        },
+        "page_numbering": true,
+        "header_footer": true,
+        "include_tables": true,
+        "include_charts": false
+    },
+    "template_specific_settings": {
+        "emphasis_areas": [
+            "theoretical_frameworks",
+            "case_study_analysis",
+            "workplace_scenarios",
+            "business_simulations",
+            "report_writing",
+            "presentation_skills"
+        ],
+        "assessment_methods": [
+            "written_reports",
+            "case_study_analysis",
+            "business_plans",
+            "presentations",
+            "role_plays",
+            "portfolios",
+            "projects"
+        ],
+        "delivery_preferences": [
+            "classroom",
+            "online",
+            "blended",
+            "workshop"
+        ],
+        "typical_resources": [
+            "textbooks",
+            "online_learning_management_system",
+            "business_case_studies",
+            "industry_publications",
+            "simulation_software",
+            "presentation_equipment"
+        ],
+        "industry_engagement": {
+            "frequency": "quarterly",
+            "methods": ["advisory_committees", "employer_feedback", "guest_speakers", "industry_visits"],
+            "focus": "business_trends_and_practices"
+        }
+    },
+    "validation_rules": {
+        "min_sections": 5,
+        "required_sections": [
+            "cohort_profile",
+            "delivery_model",
+            "assessment_overview",
+            "unit_clustering",
+            "resources_and_equipment"
+        ],
+        "max_length": 50000,
+        "min_length": 5000
+    },
+    "generation_settings": {
+        "gpt_model": "gpt-4",
+        "temperature": 0.7,
+        "max_tokens": 2000,
+        "include_examples": true,
+        "tone": "professional",
+        "audience": "RTO staff and auditors",
+        "context_emphasis": "business_environment"
+    },
+    "compliance_mapping": {
+        "clause_1_1": [
+            "cohort_profile",
+            "entry_requirements"
+        ],
+        "clause_1_8": [
+            "delivery_model",
+            "learning_resources"
+        ],
+        "clause_1_13": [
+            "assessment_overview",
+            "assessment_validation"
+        ],
+        "clause_2_2": [
+            "trainer_qualifications",
+            "industry_engagement"
+        ]
+    },
+    "workflow": {
+        "approval_required": true,
+        "version_control": true,
+        "review_stages": [
+            "draft",
+            "review",
+            "approved",
+            "published"
+        ]
+    }
+}

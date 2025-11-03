@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Common Workflows - Audit Assistant Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Audit Assistant</a> /
+            <strong>Workflows</strong>
+        </div>
+
+        <h1>🔄 Common Workflows</h1>
+        <p class="lead">
+            Step-by-step guides for typical audit preparation scenarios using Audit Assistant.
+        </p>
+
+        <div class="toc-box">
+            <h3>Workflows</h3>
+            <ul>
+                <li><a href="#evidence-upload">Evidence Upload & Verification</a></li>
+                <li><a href="#ner-review">NER Processing & Review</a></li>
+                <li><a href="#gap-remediation">Gap Identification & Remediation</a></li>
+                <li><a href="#report-generation">Audit Report Generation</a></li>
+                <li><a href="#continuous-monitoring">Continuous Compliance Monitoring</a></li>
+                <li><a href="#collaboration">Multi-User Collaboration</a></li>
+            </ul>
+        </div>
+
+        <h2 id="evidence-upload">Workflow 1: Evidence Upload & Verification</h2>
+        <p>
+            Systematically upload and verify compliance evidence documents.
+        </p>
+
+        <h3>Step 1: Prepare Evidence Documents</h3>
+        <div class="step-box">
+            <h4>Actions:</h4>
+            <ul>
+                <li>Gather all relevant compliance documents (policies, procedures, records, certificates)</li>
+                <li>Organize files with clear naming conventions (e.g., "Assessment-Policy-2024.pdf")</li>
+                <li>Ensure documents are in supported formats (PDF, DOCX, TXT preferred)</li>
+                <li>Assign unique evidence numbers (e.g., "POL-001", "PROC-002", "REC-003")</li>
+            </ul>
+        </div>
+
+        <h3>Step 2: Upload Evidence (Single Document)</h3>
+        <div class="code-block">
+            <code>
+import requests
+
+url = "https://api.example.com/api/v1/tenants/123/audit-assistant/evidence/upload/"
+headers = {"Authorization": "Bearer your_jwt_token"}
+
+files = {"file": open("Assessment-Policy-2024.pdf", "rb")}
+data = {
+    "evidence_number": "POL-001",
+    "title": "Assessment Policy 2024",
+    "description": "Comprehensive assessment policy covering validation, marking, and moderation",
+    "evidence_type": "policy",
+    "evidence_date": "2024-01-15",
+    "tags": '["assessment", "policy", "validation", "2024"]'
+}
+
+response = requests.post(url, headers=headers, files=files, data=data)
+print(response.json())
+# Output: {"id": 1, "status": "processing", "message": "Evidence uploaded successfully"}
+            </code>
+        </div>
+
+        <h3>Step 3: Wait for NER Processing</h3>
+        <div class="info-box">
+            <p><strong>Processing Time:</strong> 2-5 seconds for typical documents (10-50 pages)</p>
+            <p><strong>Status Changes:</strong> uploaded → processing → tagged</p>
+        </div>
+
+        <h3>Step 4: Review Auto-Tagged Clauses</h3>
+        <div class="code-block">
+            <code>
+# Check tagged clauses
+response = requests.get(
+    f"{url}/evidence/1/tagged_clauses/",
+    headers=headers
+)
+tagged_data = response.json()
+
+print(f"Total tagged clauses: {tagged_data['total_tagged_clauses']}")
+for clause in tagged_data['tagged_clauses']:
+    print(f"  - Clause {clause['asqa_clause']['clause_number']}: {clause['confidence_score']:.2f}")
+    print(f"    Mapping type: {clause['mapping_type']}")
+    print(f"    Matched keywords: {', '.join(clause['matched_keywords'][:5])}")
+            </code>
+        </div>
+
+        <h3>Step 5: Verify High-Confidence Mappings</h3>
+        <div class="code-block">
+            <code>
+# Verify mappings with confidence >= 0.7
+high_confidence_ids = [
+    clause['id'] for clause in tagged_data['tagged_clauses']
+    if clause['confidence_score'] >= 0.7
+]
+
+response = requests.post(
+    f"{url}/evidence/1/verify_tagging/",
+    headers=headers,
+    json={
+        "clause_evidence_ids": high_confidence_ids,
+        "action": "verify"
+    }
+)
+print(response.json())
+# Output: {"message": "8 clause mappings verified successfully", "verified_count": 8}
+            </code>
+        </div>
+
+        <h3>Step 6: Bulk Upload (Multiple Documents)</h3>
+        <div class="code-block">
+            <code>
+import os
+from pathlib import Path
+
+evidence_dir = Path("./evidence_documents")
+evidence_files = [
+    {"file": "Assessment-Policy-2024.pdf", "type": "policy", "number": "POL-001"},
+    {"file": "Assessment-Procedure-2024.docx", "type": "procedure", "number": "PROC-001"},
+    {"file": "Trainer-Qualifications.xlsx", "type": "record", "number": "REC-001"},
+    {"file": "RTO-Certificate.pdf", "type": "certificate", "number": "CERT-001"},
+]
+
+uploaded_ids = []
+for evidence in evidence_files:
+    file_path = evidence_dir / evidence["file"]
+    
+    files = {"file": open(file_path, "rb")}
+    data = {
+        "evidence_number": evidence["number"],
+        "title": evidence["file"].replace("-", " ").replace(".pdf", "").replace(".docx", ""),
+        "evidence_type": evidence["type"],
+        "evidence_date": "2024-01-15"
+    }
+    
+    response = requests.post(url, headers=headers, files=files, data=data)
+    result = response.json()
+    uploaded_ids.append(result["id"])
+    print(f"✓ Uploaded: {evidence['file']} (ID: {result['id']})")
+
+print(f"\nTotal uploaded: {len(uploaded_ids)} documents")
+            </code>
+        </div>
+
+        <div class="success-box">
+            <h4>✅ Workflow Outcome</h4>
+            <p>Evidence documents uploaded, NER-processed, auto-tagged with clauses, and high-confidence mappings verified.</p>
+        </div>
+
+        <h2 id="ner-review">Workflow 2: NER Processing & Review</h2>
+        <p>
+            Review and refine NER-detected entities and auto-tagged clause mappings.
+        </p>
+
+        <h3>Step 1: Review NER Entities</h3>
+        <div class="code-block">
+            <code>
+# Get evidence with NER entities
+response = requests.get(f"{url}/evidence/1/", headers=headers)
+evidence = response.json()
+
+print(f"Evidence: {evidence['title']}")
+print(f"NER Entities detected: {len(evidence['ner_entities'])}")
+print("\nEntity breakdown:")
+
+entity_types = {}
+for entity in evidence['ner_entities']:
+    entity_type = entity['type']
+    entity_types[entity_type] = entity_types.get(entity_type, 0) + 1
+
+for entity_type, count in entity_types.items():
+    print(f"  - {entity_type}: {count}")
+
+# Output:
+# Evidence: Assessment Policy 2024
+# NER Entities detected: 24
+# Entity breakdown:
+#   - STANDARD: 5
+#   - CLAUSE: 12
+#   - QUALIFICATION: 3
+#   - DATE: 4
+            </code>
+        </div>
+
+        <h3>Step 2: Review Low-Confidence Mappings</h3>
+        <div class="code-block">
+            <code>
+# Get tagged clauses
+response = requests.get(f"{url}/evidence/1/tagged_clauses/", headers=headers)
+tagged_data = response.json()
+
+# Identify low-confidence mappings for manual review
+low_confidence = [
+    clause for clause in tagged_data['tagged_clauses']
+    if 0.4 <= clause['confidence_score'] < 0.7
+]
+
+print(f"Low-confidence mappings requiring review: {len(low_confidence)}")
+for clause in low_confidence:
+    print(f"\n  Clause {clause['asqa_clause']['clause_number']}: {clause['asqa_clause']['title']}")
+    print(f"  Confidence: {clause['confidence_score']:.2f}")
+    print(f"  Strategy: {clause['mapping_type']}")
+    print(f"  Keywords matched: {', '.join(clause['matched_keywords'][:3])}")
+            </code>
+        </div>
+
+        <h3>Step 3: Manually Verify or Reject Mappings</h3>
+        <div class="code-block">
+            <code>
+# After manual review, verify relevant mappings
+verify_ids = [45, 47, 52]  # Relevant clause mappings
+reject_ids = [48, 51]      # Irrelevant mappings
+
+# Verify
+requests.post(
+    f"{url}/evidence/1/verify_tagging/",
+    headers=headers,
+    json={"clause_evidence_ids": verify_ids, "action": "verify"}
+)
+
+# Reject (delete)
+for reject_id in reject_ids:
+    requests.delete(f"{url}/clause-evidence/{reject_id}/", headers=headers)
+
+print(f"✓ Verified {len(verify_ids)} mappings")
+print(f"✗ Rejected {len(reject_ids)} mappings")
+            </code>
+        </div>
+
+        <h3>Step 4: Add Manual Mappings</h3>
+        <div class="code-block">
+            <code>
+# Add manual mapping for clause not auto-detected
+response = requests.post(
+    f"{url}/clause-evidence/",
+    headers=headers,
+    json={
+        "asqa_clause": 28,  # Clause 1.7.2
+        "evidence": 1,
+        "mapping_type": "manual",
+        "relevance_notes": "Section 4.2 of policy addresses continuous improvement requirements"
+    }
+)
+print("✓ Manual mapping created")
+            </code>
+        </div>
+
+        <h3>Step 5: Re-process Evidence (if needed)</h3>
+        <div class="code-block">
+            <code>
+# Trigger manual NER re-processing (e.g., if auto-processing failed)
+response = requests.post(
+    f"{url}/evidence/1/process_ner/",
+    headers=headers
+)
+task_id = response.json()['task_id']
+print(f"NER processing re-started: {task_id}")
+
+# Check status after 5 seconds
+import time
+time.sleep(5)
+
+response = requests.get(f"{url}/evidence/1/", headers=headers)
+print(f"Status: {response.json()['status']}")  # Should be 'tagged'
+            </code>
+        </div>
+
+        <div class="success-box">
+            <h4>✅ Workflow Outcome</h4>
+            <p>NER entities reviewed, low-confidence mappings manually verified or rejected, manual mappings added for missed clauses.</p>
+        </div>
+
+        <h2 id="gap-remediation">Workflow 3: Gap Identification & Remediation</h2>
+        <p>
+            Systematically identify and address compliance gaps before audit.
+        </p>
+
+        <h3>Step 1: Identify All Gaps</h3>
+        <div class="code-block">
+            <code>
+# Get gaps for Standards 1-3
+response = requests.get(
+    f"{url}/clause-evidence/gaps/",
+    headers=headers,
+    params={"standard_ids": "1,2,3"}
+)
+gap_data = response.json()
+
+print(f"Coverage: {gap_data['coverage_percentage']:.1f}%")
+print(f"Total clauses: {gap_data['total_clauses']}")
+print(f"Clauses without evidence: {gap_data['clauses_without_evidence']}")
+print(f"\nGaps by severity:")
+
+severity_counts = {}
+for gap in gap_data['gaps']:
+    severity = gap['severity']
+    severity_counts[severity] = severity_counts.get(severity, 0) + 1
+
+for severity, count in severity_counts.items():
+    print(f"  - {severity.upper()}: {count}")
+            </code>
+        </div>
+
+        <h3>Step 2: Prioritize Critical Gaps</h3>
+        <div class="code-block">
+            <code>
+# Extract critical gaps for immediate action
+critical_gaps = [
+    gap for gap in gap_data['gaps']
+    if gap['severity'] == 'critical'
+]
+
+print(f"\n🔴 CRITICAL GAPS ({len(critical_gaps)}):")
+for i, gap in enumerate(critical_gaps, 1):
+    clause = gap['clause']
+    print(f"\n{i}. Clause {clause['clause_number']}: {clause['title']}")
+    print(f"   Standard: {clause['standard_number']}")
+    print(f"   Recommendation: {gap['recommendation']}")
+            </code>
+        </div>
+
+        <h3>Step 3: Upload Missing Evidence</h3>
+        <div class="code-block">
+            <code>
+# Address critical gap: Upload marketing compliance policy
+files = {"file": open("Marketing-Compliance-Policy.pdf", "rb")}
+data = {
+    "evidence_number": "POL-005",
+    "title": "Marketing and Advertising Compliance Policy",
+    "description": "Policy addressing ASQA marketing and advertising requirements",
+    "evidence_type": "policy",
+    "evidence_date": "2024-02-01",
+    "tags": '["marketing", "advertising", "compliance", "policy"]'
+}
+
+response = requests.post(url, headers=headers, files=files, data=data)
+evidence_id = response.json()['id']
+print(f"✓ Uploaded marketing policy (ID: {evidence_id})")
+
+# Wait for NER processing
+import time
+time.sleep(5)
+
+# Manually map to critical clause if not auto-detected
+response = requests.post(
+    f"{url}/clause-evidence/",
+    headers=headers,
+    json={
+        "asqa_clause": 25,  # Clause 1.5.3 (Marketing compliance)
+        "evidence": evidence_id,
+        "mapping_type": "manual",
+        "relevance_notes": "Comprehensive marketing compliance policy addressing all ASQA requirements"
+    }
+)
+print("✓ Mapped to Clause 1.5.3")
+            </code>
+        </div>
+
+        <h3>Step 4: Re-check Gap Coverage</h3>
+        <div class="code-block">
+            <code>
+# Re-run gap analysis after uploading evidence
+response = requests.get(
+    f"{url}/clause-evidence/gaps/",
+    headers=headers,
+    params={"standard_ids": "1,2,3"}
+)
+updated_gap_data = response.json()
+
+print(f"\n📊 Updated Coverage:")
+print(f"  Before: {gap_data['coverage_percentage']:.1f}%")
+print(f"  After: {updated_gap_data['coverage_percentage']:.1f}%")
+print(f"  Improvement: +{updated_gap_data['coverage_percentage'] - gap_data['coverage_percentage']:.1f}%")
+print(f"\n  Remaining gaps: {updated_gap_data['clauses_without_evidence']}")
+
+# Check if critical gap was addressed
+remaining_critical = [
+    gap for gap in updated_gap_data['gaps']
+    if gap['severity'] == 'critical'
+]
+print(f"  Critical gaps remaining: {len(remaining_critical)}")
+            </code>
+        </div>
+
+        <h3>Step 5: Generate Gap Remediation Report</h3>
+        <div class="code-block">
+            <code>
+# Export gap data for stakeholder review
+import json
+
+remediation_report = {
+    "report_date": "2024-04-01",
+    "total_clauses": updated_gap_data['total_clauses'],
+    "coverage_percentage": updated_gap_data['coverage_percentage'],
+    "gaps_by_severity": {
+        "critical": len([g for g in updated_gap_data['gaps'] if g['severity'] == 'critical']),
+        "major": len([g for g in updated_gap_data['gaps'] if g['severity'] == 'major']),
+        "minor": len([g for g in updated_gap_data['gaps'] if g['severity'] == 'minor'])
+    },
+    "gaps": [
+        {
+            "clause": f"{g['clause']['clause_number']}: {g['clause']['title']}",
+            "severity": g['severity'],
+            "recommendation": g['recommendation']
+        }
+        for g in updated_gap_data['gaps']
+    ]
+}
+
+with open('gap_remediation_report.json', 'w') as f:
+    json.dump(remediation_report, f, indent=2)
+
+print("✓ Remediation report exported to gap_remediation_report.json")
+            </code>
+        </div>
+
+        <div class="success-box">
+            <h4>✅ Workflow Outcome</h4>
+            <p>All compliance gaps identified, prioritized by severity, critical gaps addressed with evidence uploads, and remediation report generated.</p>
+        </div>
+
+        <h2 id="report-generation">Workflow 4: Audit Report Generation</h2>
+        <p>
+            Generate comprehensive audit reports ready for ASQA submission.
+        </p>
+
+        <h3>Step 1: Select Standards and Generate Report</h3>
+        <div class="code-block">
+            <code>
+# Generate audit report for all 8 ASQA standards
+response = requests.post(
+    f"{url}/audit-reports/generate_report/",
+    headers=headers,
+    json={
+        "report_number": "AR-2024-Q1",
+        "title": "Q1 2024 Compliance Audit Report",
+        "description": "Comprehensive audit covering all ASQA standards for Q1 2024",
+        "asqa_standards": [1, 2, 3, 4, 5, 6, 7, 8],  # All standards
+        "audit_period_start": "2024-01-01",
+        "audit_period_end": "2024-03-31"
+    }
+)
+report = response.json()
+report_id = report['id']
+
+print(f"✓ Audit report generated (ID: {report_id})")
+print(f"  Status: {report['status']}")
+print(f"  Total clauses: {report['total_clauses']}")
+print(f"  Compliance: {report['compliance_percentage']:.1f}%")
+print(f"  Critical compliance: {report['critical_compliance_percentage']:.1f}%")
+            </code>
+        </div>
+
+        <h3>Step 2: Review Detailed Clause Entries</h3>
+        <div class="code-block">
+            <code>
+# Get detailed report with all clause entries
+response = requests.get(f"{url}/audit-reports/{report_id}/", headers=headers)
+detailed_report = response.json()
+
+print(f"\n📋 Clause-by-Clause Breakdown:")
+print(f"Total entries: {len(detailed_report['clause_entries'])}")
+
+# Group by compliance status
+status_groups = {}
+for entry in detailed_report['clause_entries']:
+    status = entry['compliance_status']
+    status_groups[status] = status_groups.get(status, 0) + 1
+
+for status, count in status_groups.items():
+    print(f"  - {status.replace('_', ' ').title()}: {count}")
+
+# Show non-compliant clauses
+non_compliant = [
+    entry for entry in detailed_report['clause_entries']
+    if entry['compliance_status'] == 'non_compliant'
+]
+
+print(f"\n🔴 Non-Compliant Clauses ({len(non_compliant)}):")
+for entry in non_compliant[:5]:  # Show first 5
+    clause = entry['asqa_clause']
+    print(f"  - {clause['clause_number']}: {clause['title']}")
+    print(f"    Finding: {entry['finding']}")
+    print(f"    Severity: {entry['severity']}")
+            </code>
+        </div>
+
+        <h3>Step 3: Add Findings and Recommendations</h3>
+        <div class="code-block">
+            <code>
+# Update report with auditor findings
+findings = []
+recommendations = []
+
+for entry in non_compliant:
+    clause_num = entry['asqa_clause']['clause_number']
+    finding = {
+        "clause": clause_num,
+        "finding": entry['finding'],
+        "severity": entry['severity'],
+        "recommendation": entry['recommendation']
+    }
+    findings.append(finding)
+
+# Add overall recommendations
+recommendations = [
+    "Address all critical gaps before ASQA submission",
+    "Verify all auto-tagged evidence with compliance officer",
+    "Upload missing trainer qualification certificates for Standard 2",
+    "Complete financial viability documentation for Standard 3",
+    "Implement continuous improvement tracking system"
+]
+
+# Update report
+response = requests.patch(
+    f"{url}/audit-reports/{report_id}/",
+    headers=headers,
+    json={
+        "findings": findings,
+        "recommendations": recommendations,
+        "status": "review"
+    }
+)
+print("✓ Report updated with findings and recommendations")
+            </code>
+        </div>
+
+        <h3>Step 4: Export Report for Review</h3>
+        <div class="code-block">
+            <code>
+import json
+from datetime import datetime
+
+# Export comprehensive report
+export_data = {
+    "report_metadata": {
+        "report_number": detailed_report['report_number'],
+        "title": detailed_report['title'],
+        "audit_period": f"{detailed_report['audit_period_start']} to {detailed_report['audit_period_end']}",
+        "generated_date": datetime.now().isoformat(),
+        "status": detailed_report['status']
+    },
+    "compliance_summary": {
+        "overall_compliance": f"{detailed_report['compliance_metrics']['compliance_percentage']:.1f}%",
+        "critical_compliance": f"{detailed_report['compliance_metrics']['critical_compliance_percentage']:.1f}%",
+        "total_clauses": detailed_report['compliance_metrics']['total_clauses'],
+        "clauses_with_evidence": detailed_report['compliance_metrics']['clauses_with_evidence'],
+        "clauses_without_evidence": detailed_report['compliance_metrics']['clauses_without_evidence']
+    },
+    "evidence_summary": detailed_report['evidence_summary'],
+    "findings": detailed_report['findings'],
+    "recommendations": detailed_report['recommendations'],
+    "clause_entries": [
+        {
+            "clause": f"{e['asqa_clause']['clause_number']}: {e['asqa_clause']['title']}",
+            "status": e['compliance_status'],
+            "evidence_count": e['evidence_count'],
+            "verified_evidence_count": e['verified_evidence_count']
+        }
+        for e in detailed_report['clause_entries']
+    ]
+}
+
+with open(f"audit_report_{report_id}.json", "w") as f:
+    json.dump(export_data, f, indent=2)
+
+print(f"✓ Report exported to audit_report_{report_id}.json")
+            </code>
+        </div>
+
+        <h3>Step 5: Submit Report to ASQA</h3>
+        <div class="code-block">
+            <code>
+# After final review and approval, mark as submitted
+response = requests.post(
+    f"{url}/audit-reports/{report_id}/submit/",
+    headers=headers
+)
+result = response.json()
+
+print(f"✓ Audit report submitted to ASQA")
+print(f"  Submitted at: {result['submitted_at']}")
+print(f"  Report ID: {result['report_id']}")
+            </code>
+        </div>
+
+        <div class="success-box">
+            <h4>✅ Workflow Outcome</h4>
+            <p>Comprehensive audit report generated with clause-by-clause compliance assessment, findings documented, recommendations provided, and submitted to ASQA.</p>
+        </div>
+
+        <h2 id="continuous-monitoring">Workflow 5: Continuous Compliance Monitoring</h2>
+        <p>
+            Maintain ongoing compliance with regular evidence updates and gap monitoring.
+        </p>
+
+        <h3>Quarterly Compliance Review Process</h3>
+        <div class="step-box">
+            <h4>Quarter Start:</h4>
+            <ol>
+                <li>Generate gap analysis for all standards</li>
+                <li>Identify new or persistent gaps</li>
+                <li>Create action plan for gap remediation</li>
+                <li>Assign responsibilities to compliance team</li>
+            </ol>
+        </div>
+
+        <div class="step-box">
+            <h4>Monthly Activities:</h4>
+            <ol>
+                <li>Upload new evidence documents (policies, procedures, records)</li>
+                <li>Review and verify auto-tagged clause mappings</li>
+                <li>Address gaps identified in previous month</li>
+                <li>Generate compliance summary report</li>
+            </ol>
+        </div>
+
+        <div class="step-box">
+            <h4>Quarter End:</h4>
+            <ol>
+                <li>Generate comprehensive audit report</li>
+                <li>Review compliance percentage trends</li>
+                <li>Document improvements and remaining gaps</li>
+                <li>Plan next quarter activities</li>
+            </ol>
+        </div>
+
+        <h3>Automated Monitoring Script</h3>
+        <div class="code-block">
+            <code>
+from datetime import datetime, timedelta
+
+def quarterly_compliance_check(tenant_id, jwt_token):
+    """Run quarterly compliance check"""
+    base_url = f"https://api.example.com/api/v1/tenants/{tenant_id}/audit-assistant"
+    headers = {"Authorization": f"Bearer {jwt_token}"}
+    
+    # Get current quarter dates
+    today = datetime.now()
+    quarter_start = datetime(today.year, ((today.month - 1) // 3) * 3 + 1, 1)
+    quarter_end = quarter_start + timedelta(days=90)
+    
+    print(f"Quarterly Compliance Check: {quarter_start.date()} to {quarter_end.date()}")
+    
+    # 1. Identify gaps
+    response = requests.get(
+        f"{base_url}/clause-evidence/gaps/",
+        headers=headers,
+        params={"standard_ids": "1,2,3,4,5,6,7,8"}
+    )
+    gap_data = response.json()
+    
+    print(f"\n📊 Compliance Status:")
+    print(f"  Coverage: {gap_data['coverage_percentage']:.1f}%")
+    print(f"  Gaps: {gap_data['clauses_without_evidence']}")
+    
+    # 2. Count critical gaps
+    critical_gaps = [g for g in gap_data['gaps'] if g['severity'] == 'critical']
+    print(f"  Critical gaps: {len(critical_gaps)}")
+    
+    # 3. Generate quarterly report
+    response = requests.post(
+        f"{base_url}/audit-reports/generate_report/",
+        headers=headers,
+        json={
+            "report_number": f"AR-{today.year}-Q{(today.month - 1) // 3 + 1}",
+            "title": f"Q{(today.month - 1) // 3 + 1} {today.year} Compliance Report",
+            "asqa_standards": list(range(1, 9)),
+            "audit_period_start": quarter_start.date().isoformat(),
+            "audit_period_end": quarter_end.date().isoformat()
+        }
+    )
+    report = response.json()
+    
+    print(f"\n✓ Quarterly report generated (ID: {report['id']})")
+    print(f"  Overall compliance: {report['compliance_percentage']:.1f}%")
+    print(f"  Critical compliance: {report['critical_compliance_percentage']:.1f}%")
+    
+    return {
+        "coverage": gap_data['coverage_percentage'],
+        "critical_gaps": len(critical_gaps),
+        "report_id": report['id']
+    }
+
+# Run check
+result = quarterly_compliance_check(123, "your_jwt_token")
+            </code>
+        </div>
+
+        <div class="success-box">
+            <h4>✅ Workflow Outcome</h4>
+            <p>Continuous compliance monitoring established with quarterly reviews, monthly evidence updates, and automated gap tracking.</p>
+        </div>
+
+        <h2 id="collaboration">Workflow 6: Multi-User Collaboration</h2>
+        <p>
+            Coordinate compliance activities across multiple team members.
+        </p>
+
+        <h3>Role-Based Workflow</h3>
+
+        <div class="step-box">
+            <h4>Compliance Officer:</h4>
+            <ul>
+                <li>Generate gap analysis reports</li>
+                <li>Assign evidence collection tasks to department heads</li>
+                <li>Review and verify all clause mappings</li>
+                <li>Approve evidence before inclusion in audit reports</li>
+                <li>Submit final reports to ASQA</li>
+            </ul>
+        </div>
+
+        <div class="step-box">
+            <h4>Department Heads:</h4>
+            <ul>
+                <li>Upload department-specific evidence (policies, procedures)</li>
+                <li>Add relevant tags for categorization</li>
+                <li>Provide descriptions and context for evidence</li>
+                <li>Respond to evidence requests from compliance officer</li>
+            </ul>
+        </div>
+
+        <div class="step-box">
+            <h4>Auditors (External/Internal):</h4>
+            <ul>
+                <li>Review audit reports and clause entries</li>
+                <li>Add findings and recommendations</li>
+                <li>Request additional evidence for specific clauses</li>
+                <li>Validate evidence quality and relevance</li>
+            </ul>
+        </div>
+
+        <h3>Collaboration Example: Trainer Qualifications</h3>
+        <div class="code-block">
+            <code>
+# Department Head: Upload trainer qualification certificate
+files = {"file": open("Trainer-John-Smith-Cert-IV-TAE.pdf", "rb")}
+data = {
+    "evidence_number": "QUAL-001",
+    "title": "John Smith - Certificate IV in Training and Assessment",
+    "description": "TAE40116 qualification certificate for lead trainer",
+    "evidence_type": "qualification",
+    "evidence_date": "2023-06-15",
+    "tags": '["trainer", "qualification", "TAE", "John Smith"]'
+}
+response = requests.post(url, headers=headers, files=files, data=data)
+evidence_id = response.json()['id']
+
+# Compliance Officer: Review and verify mapping
+response = requests.get(f"{url}/evidence/{evidence_id}/tagged_clauses/", headers=headers)
+tagged = response.json()
+
+# Verify mappings to Standard 2 (Trainer qualifications)
+standard_2_mappings = [
+    clause['id'] for clause in tagged['tagged_clauses']
+    if clause['asqa_clause']['standard_number'].startswith('2.')
+]
+
+requests.post(
+    f"{url}/evidence/{evidence_id}/verify_tagging/",
+    headers=headers,
+    json={"clause_evidence_ids": standard_2_mappings, "action": "verify"}
+)
+
+# Compliance Officer: Approve evidence
+requests.patch(
+    f"{url}/evidence/{evidence_id}/",
+    headers=headers,
+    json={
+        "status": "approved",
+        "reviewer_notes": "Qualification certificate verified and approved for audit"
+    }
+)
+
+print("✓ Trainer qualification processed and approved")
+            </code>
+        </div>
+
+        <div class="success-box">
+            <h4>✅ Workflow Outcome</h4>
+            <p>Multi-user collaboration established with clear role assignments, department-specific evidence uploads, and coordinated review/approval process.</p>
+        </div>
+
+        <div class="info-box" style="margin-top: 3rem;">
+            <h3>💡 Workflow Best Practices</h3>
+            <ul>
+                <li><strong>Systematic Approach:</strong> Follow workflows in order for comprehensive audit preparation</li>
+                <li><strong>Regular Monitoring:</strong> Run gap analysis monthly to track compliance progress</li>
+                <li><strong>Verification Priority:</strong> Always verify high-confidence auto-tags first (≥0.7)</li>
+                <li><strong>Documentation:</strong> Add detailed descriptions and tags to all evidence for easy retrieval</li>
+                <li><strong>Collaboration:</strong> Assign clear responsibilities to team members for evidence collection</li>
+                <li><strong>Continuous Improvement:</strong> Review and update evidence quarterly to maintain compliance</li>
+            </ul>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="api-reference.html" class="btn btn-secondary">← API Reference</a>
+            <a href="examples.html" class="btn btn-primary">Examples →</a>
+        </div>
+    </div>
+</body>
+</html>

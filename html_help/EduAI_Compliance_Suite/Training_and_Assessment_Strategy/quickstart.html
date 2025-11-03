@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Start Guide - TAS Documentation</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="index.html">TAS Home</a>
+            <span>›</span>
+            <span>Quick Start</span>
+        </div>
+
+        <a href="index.html" class="back-button">← Back to TAS Home</a>
+
+        <h1>🚀 Quick Start Guide</h1>
+        <p class="subtitle" style="font-size: 1.25rem; color: #64748b; margin-bottom: 2rem;">Get started with TAS generation in 5 minutes</p>
+
+        <div class="alert alert-success">
+            <h4>✨ What You'll Accomplish</h4>
+            <p>In this guide, you'll learn how to:</p>
+            <ul>
+                <li>Create reusable template sections</li>
+                <li>Set up a TAS template</li>
+                <li>Assign sections to your template</li>
+                <li>Generate AI-powered TAS content</li>
+            </ul>
+        </div>
+
+        <section>
+            <h2>Prerequisites</h2>
+            <ul>
+                <li>API access to NextCore AI platform</li>
+                <li>Authentication token (see <a href="api-reference.html#auth">Authentication</a>)</li>
+                <li>Tenant slug (your RTO identifier)</li>
+                <li>Basic understanding of REST APIs</li>
+            </ul>
+
+            <div class="alert alert-info">
+                <h4>📌 API Base URL</h4>
+                <code>https://api.nextcore-ai.com</code> or <code>http://localhost:8000</code> for development
+            </div>
+        </section>
+
+        <section>
+            <h2>Step 1: Create Reusable Sections</h2>
+            <p>First, create sections that can be reused across multiple templates. These form your section library.</p>
+
+            <h3>Example: Create a Cohort Profile Section</h3>
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/tenants/{tenant_slug}/tas/template-sections/</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Request Body:</strong></p>
+                    <pre><code>{
+  "section_name": "Cohort Profile and Entry Requirements",
+  "section_code": "cohort_profile",
+  "description": "Profile of target learners including demographics, LLN levels, and entry requirements",
+  "content_type": "rich_text",
+  "is_editable": true,
+  "default_content": "This section describes the target student cohort...",
+  "gpt_prompt": {
+    "system_prompt": "You are an expert VET educator specializing in Australian RTO compliance and ASQA standards.",
+    "user_prompt_template": "Create a comprehensive cohort profile for {qualification_code} - {qualification_title}, a {aqf_level} qualification in {industry_sector}. Include: target demographics, entry requirements, LLN considerations, and support needs.",
+    "temperature": 0.7,
+    "max_tokens": 1500,
+    "variables": ["qualification_code", "qualification_title", "aqf_level", "industry_sector"],
+    "validation_keywords": ["demographics", "LLN", "entry requirements"]
+  }
+}</code></pre>
+                    <p><strong>Response:</strong></p>
+                    <pre><code>{
+  "id": 1,
+  "section_name": "Cohort Profile and Entry Requirements",
+  "section_code": "cohort_profile",
+  "content_type": "rich_text",
+  "is_active": true,
+  "created_at": "2024-11-03T10:00:00Z"
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="alert alert-warning">
+                <h4>💡 Pro Tip</h4>
+                <p>Create multiple sections at once for your template. Common sections include: cohort_profile, lln_support, delivery_model, assessment_overview, unit_clustering, trainer_requirements, and quality_assurance.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Step 2: Create a TAS Template</h2>
+            <p>Define a template with structure configuration and GPT prompts.</p>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/tenants/{tenant_slug}/tas/templates/</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Request Body:</strong></p>
+                    <pre><code>{
+  "template_name": "Certificate I - General Foundation Skills",
+  "template_code": "CERT1_GENERAL_001",
+  "aqf_level": "certificate_i",
+  "template_type": "general",
+  "description": "Foundation skills template for entry-level qualifications",
+  "structure": {
+    "version": "1.0",
+    "template_type": "general",
+    "aqf_level": "certificate_i",
+    "metadata": {
+      "author_guidelines": "Focus on basic foundational skills. Use plain language.",
+      "compliance_framework": "ASQA Standards 2015",
+      "industry_focus": "Multi-sector introductory skills"
+    },
+    "formatting": {
+      "font": "Arial",
+      "font_size": 12,
+      "line_spacing": 1.5
+    },
+    "validation_rules": {
+      "required_sections": ["cohort_profile", "delivery_model", "assessment_overview"],
+      "min_length": 3000
+    },
+    "template_specific_settings": {
+      "emphasis_areas": [
+        "basic_foundational_skills",
+        "workplace_readiness",
+        "high_support"
+      ],
+      "assessment_methods": [
+        "simple_practical_demonstrations",
+        "observation_checklists",
+        "verbal_questioning"
+      ]
+    }
+  },
+  "is_active": true
+}</code></pre>
+                    <p><strong>Response:</strong></p>
+                    <pre><code>{
+  "id": 5,
+  "template_name": "Certificate I - General Foundation Skills",
+  "template_code": "CERT1_GENERAL_001",
+  "aqf_level": "certificate_i",
+  "template_type": "general",
+  "created_at": "2024-11-03T10:05:00Z"
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <h4>📖 Template Structure</h4>
+                <p>The <code>structure</code> field is a comprehensive JSON configuration. See <a href="templates.html">Template Details</a> for complete structure examples.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Step 3: Assign Sections to Template</h2>
+            <p>Link your reusable sections to the template with customization options.</p>
+
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/tenants/{tenant_slug}/tas/template-section-assignments/bulk_assign/</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Request Body:</strong></p>
+                    <pre><code>{
+  "template_id": 5,
+  "sections": [
+    {
+      "section_id": 1,
+      "section_order": 1,
+      "is_required": true,
+      "custom_label": "Foundation Skills Cohort Profile"
+    },
+    {
+      "section_id": 2,
+      "section_order": 2,
+      "is_required": true,
+      "custom_label": "LLN Support Strategies"
+    },
+    {
+      "section_id": 3,
+      "section_order": 3,
+      "is_required": true
+    },
+    {
+      "section_id": 4,
+      "section_order": 4,
+      "is_required": true
+    },
+    {
+      "section_id": 5,
+      "section_order": 5,
+      "is_required": false,
+      "custom_description": "Optional pathways section for this level"
+    }
+  ]
+}</code></pre>
+                    <p><strong>Response:</strong></p>
+                    <pre><code>{
+  "template_id": 5,
+  "assigned_count": 5,
+  "assignments": [
+    {
+      "id": 42,
+      "section_id": 1,
+      "section_order": 1,
+      "is_required": true,
+      "effective_label": "Foundation Skills Cohort Profile"
+    },
+    // ... more assignments
+  ]
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Step 4: Generate TAS Content</h2>
+            <p>Use AI to generate content for individual sections or the entire TAS document.</p>
+
+            <h3>Option A: Generate Single Section</h3>
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/tenants/{tenant_slug}/tas/templates/{template_id}/generate-section/</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Request Body:</strong></p>
+                    <pre><code>{
+  "section_code": "cohort_profile",
+  "context": {
+    "qualification_code": "FSK10119",
+    "qualification_title": "Certificate I in Foundation Skills",
+    "aqf_level": "certificate_i",
+    "industry_sector": "Foundation Skills",
+    "nominal_hours": 200,
+    "unit_count": 8
+  }
+}</code></pre>
+                    <p><strong>Response:</strong></p>
+                    <pre><code>{
+  "section_code": "cohort_profile",
+  "section_name": "Foundation Skills Cohort Profile",
+  "content": "The Certificate I in Foundation Skills (FSK10119) targets learners who are new to formal education or training...",
+  "word_count": 1245,
+  "generation_time_ms": 3421,
+  "model_used": "gpt-4",
+  "validation": {
+    "passed": true,
+    "keywords_found": ["demographics", "LLN", "entry requirements"],
+    "missing_keywords": []
+  }
+}</code></pre>
+                </div>
+            </div>
+
+            <h3>Option B: Generate Complete TAS</h3>
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="endpoint-method method-post">POST</span>
+                    <span class="endpoint-path">/api/tenants/{tenant_slug}/tas/generate/</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Request Body:</strong></p>
+                    <pre><code>{
+  "template_id": 5,
+  "qualification_id": 42,
+  "context": {
+    "qualification_code": "FSK10119",
+    "qualification_title": "Certificate I in Foundation Skills",
+    "aqf_level": "certificate_i",
+    "industry_sector": "Foundation Skills",
+    "nominal_hours": 200,
+    "unit_count": 8,
+    "unit_list": [
+      {"code": "FSKDIG01", "title": "Use digital technology for routine and simple workplace tasks"},
+      {"code": "FSKNUM01", "title": "Use basic addition, subtraction and familiar multiplication"}
+    ],
+    "delivery_location": "Melbourne Campus"
+  }
+}</code></pre>
+                    <p><strong>Response:</strong></p>
+                    <pre><code>{
+  "tas_id": 123,
+  "status": "generating",
+  "progress": 0,
+  "estimated_completion_time": "2024-11-03T10:25:00Z",
+  "job_id": "abc-123-def-456"
+}</code></pre>
+                </div>
+            </div>
+
+            <h3>Check Generation Status</h3>
+            <div class="endpoint">
+                <div class="endpoint-header">
+                    <span class="endpoint-method method-get">GET</span>
+                    <span class="endpoint-path">/api/tenants/{tenant_slug}/tas/{tas_id}/generation-status/</span>
+                </div>
+                <div class="endpoint-body">
+                    <p><strong>Response:</strong></p>
+                    <pre><code>{
+  "tas_id": 123,
+  "status": "completed",
+  "progress": 100,
+  "sections_completed": [
+    "cohort_profile",
+    "lln_support",
+    "delivery_model",
+    "assessment_overview",
+    "unit_clustering"
+  ],
+  "generation_time_seconds": 45,
+  "download_url": "/api/tenants/acme-rto/tas/123/download/"
+}</code></pre>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Step 5: Review and Refine</h2>
+            <p>Once generated, you can:</p>
+            <ul>
+                <li>Review the generated content</li>
+                <li>Edit sections as needed</li>
+                <li>Regenerate specific sections</li>
+                <li>Add custom content</li>
+                <li>Export to Word/PDF</li>
+            </ul>
+
+            <div class="alert alert-success">
+                <h4>🎉 Congratulations!</h4>
+                <p>You've created your first AI-powered TAS document. What took 8-16 hours manually now takes 1-2 hours with 90% time savings.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Common Workflows</h2>
+
+            <h3>Creating Multiple Qualifications from Same Template</h3>
+            <ol>
+                <li>Create template and section library once</li>
+                <li>For each qualification:
+                    <ul>
+                        <li>Call generate endpoint with qualification-specific context</li>
+                        <li>Review and customize content</li>
+                        <li>Approve and publish</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>Updating Existing TAS</h3>
+            <ol>
+                <li>Fetch existing TAS document</li>
+                <li>Regenerate specific sections that need updates</li>
+                <li>Merge with existing content</li>
+                <li>Create new version</li>
+            </ol>
+
+            <h3>Creating Custom Template</h3>
+            <ol>
+                <li>Start with closest matching template type</li>
+                <li>Duplicate template</li>
+                <li>Modify structure and GPT prompts</li>
+                <li>Test with sample qualification</li>
+                <li>Refine based on output quality</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Troubleshooting</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Issue</th>
+                        <th>Solution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Section validation fails</td>
+                        <td>Check that required validation keywords are mentioned in GPT prompt and adjust temperature</td>
+                    </tr>
+                    <tr>
+                        <td>Content too generic</td>
+                        <td>Add more specific context variables and refine system prompt for that section</td>
+                    </tr>
+                    <tr>
+                        <td>Generation times out</td>
+                        <td>Reduce max_tokens in GPT prompts or generate sections individually</td>
+                    </tr>
+                    <tr>
+                        <td>Inconsistent tone</td>
+                        <td>Ensure all section prompts have consistent tone guidelines in system prompt</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Next Steps</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                <a href="templates.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>📋 Template Details</h3>
+                    <p>Learn about template structure and configuration</p>
+                </a>
+                <a href="sections.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>📝 Section Library</h3>
+                    <p>Explore 150+ available sections</p>
+                </a>
+                <a href="gpt-prompts.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>🤖 GPT Prompts</h3>
+                    <p>Master AI content generation</p>
+                </a>
+                <a href="examples.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>💡 Examples</h3>
+                    <p>See real-world use cases</p>
+                </a>
+            </div>
+        </section>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid #e2e8f0; text-align: center; color: #64748b;">
+            <p><a href="index.html" style="color: var(--primary-color);">Back to TAS Home</a></p>
+        </footer>
+    </div>
+</body>
+</html>
