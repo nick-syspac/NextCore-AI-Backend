@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import TAS, TASTemplate, TASVersion, TASGenerationLog
+from .models import (
+    TAS, 
+    TASTemplate, 
+    TASTemplateSection, 
+    TASTemplateSectionAssignment,
+    TASVersion, 
+    TASGenerationLog
+)
 
 
 @admin.register(TASTemplate)
@@ -39,6 +46,126 @@ class TASTemplateAdmin(admin.ModelAdmin):
         if not change:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+
+
+@admin.register(TASTemplateSection)
+class TASTemplateSectionAdmin(admin.ModelAdmin):
+    list_display = [
+        "section_name",
+        "section_code",
+        "content_type",
+        "is_editable",
+        "is_active",
+        "parent_section",
+        "template_count",
+    ]
+    list_filter = ["content_type", "is_editable", "is_active"]
+    search_fields = ["section_name", "section_code", "description"]
+    readonly_fields = ["created_at", "updated_at"]
+    ordering = ["section_name"]
+
+    fieldsets = (
+        (
+            "Section Identification",
+            {"fields": ("section_name", "section_code")},
+        ),
+        (
+            "Content Configuration",
+            {
+                "fields": (
+                    "description",
+                    "content_type",
+                    "default_content",
+                )
+            },
+        ),
+        (
+            "Behavior",
+            {
+                "fields": (
+                    "is_editable",
+                    "is_active",
+                    "parent_section",
+                )
+            },
+        ),
+        (
+            "AI Integration",
+            {"fields": ("gpt_prompt",), "classes": ("collapse",)},
+        ),
+        (
+            "Metadata",
+            {
+                "fields": ("created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related("parent_section")
+    
+    def template_count(self, obj):
+        """Show how many templates use this section"""
+        return obj.template_assignments.count()
+    template_count.short_description = "Templates"
+
+
+class TASTemplateSectionAssignmentInline(admin.TabularInline):
+    model = TASTemplateSectionAssignment
+    extra = 1
+    fields = ["section", "section_order", "is_required", "custom_label"]
+    autocomplete_fields = ["section"]
+
+
+@admin.register(TASTemplateSectionAssignment)
+class TASTemplateSectionAssignmentAdmin(admin.ModelAdmin):
+    list_display = [
+        "template",
+        "section",
+        "section_order",
+        "is_required",
+        "effective_label",
+    ]
+    list_filter = ["template", "is_required"]
+    search_fields = [
+        "template__name",
+        "section__section_name",
+        "section__section_code",
+        "custom_label",
+    ]
+    readonly_fields = ["effective_label", "effective_description", "created_at", "updated_at"]
+    ordering = ["template", "section_order"]
+
+    fieldsets = (
+        (
+            "Assignment",
+            {"fields": ("template", "section", "section_order", "is_required")},
+        ),
+        (
+            "Customization",
+            {
+                "fields": (
+                    "custom_label",
+                    "custom_description",
+                    "effective_label",
+                    "effective_description",
+                )
+            },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": ("created_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.select_related("template", "section")
 
 
 @admin.register(TAS)

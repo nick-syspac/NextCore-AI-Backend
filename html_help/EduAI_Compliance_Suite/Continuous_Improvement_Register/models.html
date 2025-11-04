@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIR Data Models - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Continuous Improvement Register</a> /
+            <strong>Data Models</strong>
+        </div>
+
+        <h1>🗃️ Data Models Reference</h1>
+
+        <div class="intro-section">
+            <p>
+                Complete database schema reference for all 14 CIR models. Each model includes field definitions, 
+                relationships, indexes, and business logic properties.
+            </p>
+        </div>
+
+        <h2>📋 Model Overview</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Core Models (4)</h3>
+                <ul>
+                    <li>ImprovementAction</li>
+                    <li>ImprovementCategory</li>
+                    <li>ActionTracking</li>
+                    <li>ImprovementReview</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Workflow Models (4)</h3>
+                <ul>
+                    <li>ActionStep</li>
+                    <li>Comment</li>
+                    <li>Attachment</li>
+                    <li>Verification</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Compliance Models (4)</h3>
+                <ul>
+                    <li>ClauseLink</li>
+                    <li>SLAPolicy</li>
+                    <li>KPISnapshot</li>
+                    <li>TaxonomyLabel</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>AI Models (2)</h3>
+                <ul>
+                    <li>AIRun</li>
+                    <li>Embedding</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>1. ImprovementAction</h2>
+        <p>Main entity tracking individual improvement actions with AI classification and compliance features.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Auto-incrementing primary key</td>
+                </tr>
+                <tr>
+                    <td><code>tenant</code></td>
+                    <td>ForeignKey</td>
+                    <td>Tenant isolation (required)</td>
+                </tr>
+                <tr>
+                    <td><code>action_number</code></td>
+                    <td>CharField(50)</td>
+                    <td>Unique identifier (e.g., CIR-2025-0123)</td>
+                </tr>
+                <tr>
+                    <td><code>title</code></td>
+                    <td>CharField(255)</td>
+                    <td>Action title (required)</td>
+                </tr>
+                <tr>
+                    <td><code>description</code></td>
+                    <td>TextField</td>
+                    <td>Detailed description</td>
+                </tr>
+                <tr>
+                    <td><code>category</code></td>
+                    <td>ForeignKey</td>
+                    <td>ImprovementCategory (nullable, AI-set)</td>
+                </tr>
+                <tr>
+                    <td><code>priority</code></td>
+                    <td>CharField(20)</td>
+                    <td>Choices: critical, high, medium, low</td>
+                </tr>
+                <tr>
+                    <td><code>status</code></td>
+                    <td>CharField(20)</td>
+                    <td>Choices: identified, planned, in_progress, on_hold, completed, cancelled</td>
+                </tr>
+                <tr>
+                    <td><code>source</code></td>
+                    <td>CharField(30)</td>
+                    <td>11 source types (audit, complaint, feedback, etc.)</td>
+                </tr>
+                <tr>
+                    <td><code>risk_level</code></td>
+                    <td>CharField(20)</td>
+                    <td>AI-assessed: critical, high, medium, low (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>root_cause</code></td>
+                    <td>TextField</td>
+                    <td>Root cause analysis (optional)</td>
+                </tr>
+                <tr>
+                    <td><code>expected_impact</code></td>
+                    <td>TextField</td>
+                    <td>Expected outcome description</td>
+                </tr>
+                <tr>
+                    <td><code>actual_impact</code></td>
+                    <td>TextField</td>
+                    <td>Post-implementation results</td>
+                </tr>
+                <tr>
+                    <td><code>effectiveness_rating</code></td>
+                    <td>Integer</td>
+                    <td>1-5 rating after completion (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>compliance_status</code></td>
+                    <td>CharField(20)</td>
+                    <td>Choices: compliant, at_risk, overdue, completed</td>
+                </tr>
+                <tr>
+                    <td><code>is_critical_compliance</code></td>
+                    <td>Boolean</td>
+                    <td>Affects RTO registration (default: False)</td>
+                </tr>
+                <tr>
+                    <td><code>requires_approval</code></td>
+                    <td>Boolean</td>
+                    <td>Needs management approval (default: False)</td>
+                </tr>
+                <tr>
+                    <td><code>approved_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Approval timestamp (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>tags</code></td>
+                    <td>JSONField</td>
+                    <td>Custom tags array (default: [])</td>
+                </tr>
+                <tr>
+                    <td><code>ai_summary</code></td>
+                    <td>TextField</td>
+                    <td>AI-generated summary (optional)</td>
+                </tr>
+                <tr>
+                    <td><code>ai_classification_metadata</code></td>
+                    <td>JSONField</td>
+                    <td>Classification confidence, keywords, reasoning</td>
+                </tr>
+                <tr>
+                    <td><code>identified_by</code></td>
+                    <td>ForeignKey(User)</td>
+                    <td>User who created action</td>
+                </tr>
+                <tr>
+                    <td><code>assigned_to</code></td>
+                    <td>ForeignKey(User)</td>
+                    <td>Current owner (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>approved_by</code></td>
+                    <td>ForeignKey(User)</td>
+                    <td>Approver (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>target_date</code></td>
+                    <td>DateField</td>
+                    <td>Target completion date (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>due_date</code></td>
+                    <td>DateField</td>
+                    <td>SLA-based due date (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>started_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>When work began (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>completed_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Completion timestamp (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Record creation (auto)</td>
+                </tr>
+                <tr>
+                    <td><code>updated_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Last update (auto)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="info-box">
+            <h3>Properties & Methods</h3>
+            <ul>
+                <li><code>is_overdue</code> - Boolean property checking if past due_date</li>
+                <li><code>days_since_creation</code> - Integer days since created</li>
+                <li><code>time_to_completion</code> - Timedelta between created and completed</li>
+                <li><code>save()</code> - Generates action_number if not set</li>
+            </ul>
+        </div>
+
+        <h2>2. ImprovementCategory</h2>
+        <p>ASQA-aligned categories for organizing improvement actions.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>tenant</code></td>
+                    <td>ForeignKey</td>
+                    <td>Tenant isolation</td>
+                </tr>
+                <tr>
+                    <td><code>name</code></td>
+                    <td>CharField(200)</td>
+                    <td>Category name</td>
+                </tr>
+                <tr>
+                    <td><code>category_type</code></td>
+                    <td>CharField(50)</td>
+                    <td>12 predefined types (training_assessment, student_support, etc.)</td>
+                </tr>
+                <tr>
+                    <td><code>description</code></td>
+                    <td>TextField</td>
+                    <td>Category description</td>
+                </tr>
+                <tr>
+                    <td><code>color_code</code></td>
+                    <td>CharField(7)</td>
+                    <td>Hex color for UI (default: #3B82F6)</td>
+                </tr>
+                <tr>
+                    <td><code>related_standards</code></td>
+                    <td>JSONField</td>
+                    <td>ASQA standard numbers array</td>
+                </tr>
+                <tr>
+                    <td><code>is_active</code></td>
+                    <td>Boolean</td>
+                    <td>Active status (default: True)</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>created_by</code></td>
+                    <td>ForeignKey(User)</td>
+                    <td>Creator (nullable)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>3. ActionStep</h2>
+        <p>Individual workflow steps within an improvement action for detailed tracking.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>improvement_action</code></td>
+                    <td>ForeignKey</td>
+                    <td>Parent action (required)</td>
+                </tr>
+                <tr>
+                    <td><code>sequence_order</code></td>
+                    <td>Integer</td>
+                    <td>Step order (10, 20, 30...)</td>
+                </tr>
+                <tr>
+                    <td><code>title</code></td>
+                    <td>CharField(255)</td>
+                    <td>Step title</td>
+                </tr>
+                <tr>
+                    <td><code>description</code></td>
+                    <td>TextField</td>
+                    <td>Step details</td>
+                </tr>
+                <tr>
+                    <td><code>status</code></td>
+                    <td>CharField(20)</td>
+                    <td>Choices: not_started, in_progress, completed, cancelled</td>
+                </tr>
+                <tr>
+                    <td><code>owner</code></td>
+                    <td>ForeignKey(User)</td>
+                    <td>Step owner (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>due_date</code></td>
+                    <td>DateField</td>
+                    <td>Step due date (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>started_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>When started (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>completed_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Completion time (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>progress_notes</code></td>
+                    <td>TextField</td>
+                    <td>Progress documentation</td>
+                </tr>
+                <tr>
+                    <td><code>evidence_refs</code></td>
+                    <td>JSONField</td>
+                    <td>Evidence references array</td>
+                </tr>
+                <tr>
+                    <td><code>is_blocked</code></td>
+                    <td>Boolean</td>
+                    <td>Blocker flag (default: False)</td>
+                </tr>
+                <tr>
+                    <td><code>blocker_description</code></td>
+                    <td>TextField</td>
+                    <td>Blocker details</td>
+                </tr>
+                <tr>
+                    <td><code>blocker_resolved_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>When blocker resolved (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>updated_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Last update</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="info-box">
+            <h3>Properties</h3>
+            <ul>
+                <li><code>is_overdue</code> - Boolean: True if past due_date and not completed/cancelled</li>
+            </ul>
+        </div>
+
+        <h2>4. Comment</h2>
+        <p>Threaded comments on improvement actions with @mention support.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>improvement_action</code></td>
+                    <td>ForeignKey</td>
+                    <td>Parent action</td>
+                </tr>
+                <tr>
+                    <td><code>author</code></td>
+                    <td>ForeignKey(User)</td>
+                    <td>Comment author</td>
+                </tr>
+                <tr>
+                    <td><code>body</code></td>
+                    <td>TextField</td>
+                    <td>Comment text (supports Markdown)</td>
+                </tr>
+                <tr>
+                    <td><code>parent_comment</code></td>
+                    <td>ForeignKey(self)</td>
+                    <td>Parent for threaded replies (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>mentions</code></td>
+                    <td>ManyToManyField</td>
+                    <td>Mentioned users</td>
+                </tr>
+                <tr>
+                    <td><code>is_internal</code></td>
+                    <td>Boolean</td>
+                    <td>Internal note vs public (default: False)</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>updated_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Last edit timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>5. Attachment</h2>
+        <p>File attachments with integrity hashing and metadata.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>improvement_action</code></td>
+                    <td>ForeignKey</td>
+                    <td>Parent action</td>
+                </tr>
+                <tr>
+                    <td><code>file</code></td>
+                    <td>FileField</td>
+                    <td>Uploaded file</td>
+                </tr>
+                <tr>
+                    <td><code>filename</code></td>
+                    <td>CharField(255)</td>
+                    <td>Original filename</td>
+                </tr>
+                <tr>
+                    <td><code>file_size</code></td>
+                    <td>BigInteger</td>
+                    <td>Size in bytes</td>
+                </tr>
+                <tr>
+                    <td><code>content_type</code></td>
+                    <td>CharField(100)</td>
+                    <td>MIME type</td>
+                </tr>
+                <tr>
+                    <td><code>hash_sha256</code></td>
+                    <td>CharField(64)</td>
+                    <td>SHA-256 integrity hash</td>
+                </tr>
+                <tr>
+                    <td><code>kind</code></td>
+                    <td>CharField(50)</td>
+                    <td>8 types: evidence, analysis, report, approval, photo, correspondence, policy, other</td>
+                </tr>
+                <tr>
+                    <td><code>description</code></td>
+                    <td>TextField</td>
+                    <td>File description</td>
+                </tr>
+                <tr>
+                    <td><code>uploaded_by</code></td>
+                    <td>ForeignKey(User)</td>
+                    <td>Uploader</td>
+                </tr>
+                <tr>
+                    <td><code>uploaded_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Upload timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>6. Verification</h2>
+        <p>Post-implementation effectiveness verification records.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>improvement_action</code></td>
+                    <td>ForeignKey</td>
+                    <td>Parent action</td>
+                </tr>
+                <tr>
+                    <td><code>outcome</code></td>
+                    <td>CharField(30)</td>
+                    <td>Choices: verified, verified_partial, not_verified, requires_rework</td>
+                </tr>
+                <tr>
+                    <td><code>notes</code></td>
+                    <td>TextField</td>
+                    <td>Verification findings</td>
+                </tr>
+                <tr>
+                    <td><code>evidence_reviewed</code></td>
+                    <td>JSONField</td>
+                    <td>List of evidence items</td>
+                </tr>
+                <tr>
+                    <td><code>effectiveness_score</code></td>
+                    <td>Integer</td>
+                    <td>1-5 rating (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>requires_followup</code></td>
+                    <td>Boolean</td>
+                    <td>Follow-up needed flag</td>
+                </tr>
+                <tr>
+                    <td><code>followup_actions</code></td>
+                    <td>TextField</td>
+                    <td>Follow-up description</td>
+                </tr>
+                <tr>
+                    <td><code>followup_due_date</code></td>
+                    <td>DateField</td>
+                    <td>Follow-up deadline (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>verifier</code></td>
+                    <td>ForeignKey(User)</td>
+                    <td>Verifier (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>verified_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Verification timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>updated_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Last update</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>7. ClauseLink</h2>
+        <p>Links between improvement actions and ASQA/ISO clauses.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>improvement_action</code></td>
+                    <td>ForeignKey</td>
+                    <td>Parent action</td>
+                </tr>
+                <tr>
+                    <td><code>clause</code></td>
+                    <td>ForeignKey</td>
+                    <td>ASQA/ISO clause</td>
+                </tr>
+                <tr>
+                    <td><code>source</code></td>
+                    <td>CharField(20)</td>
+                    <td>Choices: ai, manual, suggested</td>
+                </tr>
+                <tr>
+                    <td><code>confidence</code></td>
+                    <td>DecimalField</td>
+                    <td>0.0-1.0 confidence score</td>
+                </tr>
+                <tr>
+                    <td><code>matched_keywords</code></td>
+                    <td>JSONField</td>
+                    <td>Keywords that triggered match</td>
+                </tr>
+                <tr>
+                    <td><code>created_by</code></td>
+                    <td>ForeignKey(User)</td>
+                    <td>Creator (nullable for AI)</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>8. SLAPolicy</h2>
+        <p>Service Level Agreement policies for improvement action timelines.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>tenant</code></td>
+                    <td>ForeignKey</td>
+                    <td>Tenant isolation</td>
+                </tr>
+                <tr>
+                    <td><code>name</code></td>
+                    <td>CharField(200)</td>
+                    <td>Policy name</td>
+                </tr>
+                <tr>
+                    <td><code>description</code></td>
+                    <td>TextField</td>
+                    <td>Policy description</td>
+                </tr>
+                <tr>
+                    <td><code>target_days</code></td>
+                    <td>Integer</td>
+                    <td>Target completion days</td>
+                </tr>
+                <tr>
+                    <td><code>applies_to_priorities</code></td>
+                    <td>JSONField</td>
+                    <td>Priority list (e.g., ["critical", "high"])</td>
+                </tr>
+                <tr>
+                    <td><code>applies_to_sources</code></td>
+                    <td>JSONField</td>
+                    <td>Source type list</td>
+                </tr>
+                <tr>
+                    <td><code>applies_to_categories</code></td>
+                    <td>JSONField</td>
+                    <td>Category ID list</td>
+                </tr>
+                <tr>
+                    <td><code>warning_days_before</code></td>
+                    <td>Integer</td>
+                    <td>Warning notification days</td>
+                </tr>
+                <tr>
+                    <td><code>auto_escalate</code></td>
+                    <td>Boolean</td>
+                    <td>Enable auto-escalation</td>
+                </tr>
+                <tr>
+                    <td><code>escalation_level</code></td>
+                    <td>Integer</td>
+                    <td>Escalation tier (1-5)</td>
+                </tr>
+                <tr>
+                    <td><code>is_active</code></td>
+                    <td>Boolean</td>
+                    <td>Policy active status</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>updated_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Last update</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>9. KPISnapshot</h2>
+        <p>Point-in-time metrics for historical trend analysis.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>tenant</code></td>
+                    <td>ForeignKey</td>
+                    <td>Tenant isolation</td>
+                </tr>
+                <tr>
+                    <td><code>snapshot_date</code></td>
+                    <td>DateField</td>
+                    <td>Snapshot date</td>
+                </tr>
+                <tr>
+                    <td><code>total_actions</code></td>
+                    <td>Integer</td>
+                    <td>Total action count</td>
+                </tr>
+                <tr>
+                    <td><code>open_actions</code></td>
+                    <td>Integer</td>
+                    <td>Open status count</td>
+                </tr>
+                <tr>
+                    <td><code>in_progress_actions</code></td>
+                    <td>Integer</td>
+                    <td>In progress count</td>
+                </tr>
+                <tr>
+                    <td><code>completed_actions</code></td>
+                    <td>Integer</td>
+                    <td>Completed count</td>
+                </tr>
+                <tr>
+                    <td><code>overdue_actions</code></td>
+                    <td>Integer</td>
+                    <td>Overdue count</td>
+                </tr>
+                <tr>
+                    <td><code>at_risk_actions</code></td>
+                    <td>Integer</td>
+                    <td>At risk count</td>
+                </tr>
+                <tr>
+                    <td><code>critical_compliance_count</code></td>
+                    <td>Integer</td>
+                    <td>Critical actions</td>
+                </tr>
+                <tr>
+                    <td><code>completion_rate</code></td>
+                    <td>DecimalField</td>
+                    <td>Percentage (0-100)</td>
+                </tr>
+                <tr>
+                    <td><code>avg_completion_days</code></td>
+                    <td>DecimalField</td>
+                    <td>Average days to complete</td>
+                </tr>
+                <tr>
+                    <td><code>category_breakdown</code></td>
+                    <td>JSONField</td>
+                    <td>Actions by category</td>
+                </tr>
+                <tr>
+                    <td><code>priority_breakdown</code></td>
+                    <td>JSONField</td>
+                    <td>Actions by priority</td>
+                </tr>
+                <tr>
+                    <td><code>source_breakdown</code></td>
+                    <td>JSONField</td>
+                    <td>Actions by source</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Snapshot timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>10. TaxonomyLabel</h2>
+        <p>Configurable taxonomy labels for custom classification.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>tenant</code></td>
+                    <td>ForeignKey</td>
+                    <td>Tenant isolation</td>
+                </tr>
+                <tr>
+                    <td><code>key</code></td>
+                    <td>CharField(100)</td>
+                    <td>Label key (e.g., "type:non-conformance")</td>
+                </tr>
+                <tr>
+                    <td><code>name</code></td>
+                    <td>CharField(200)</td>
+                    <td>Display name</td>
+                </tr>
+                <tr>
+                    <td><code>description</code></td>
+                    <td>TextField</td>
+                    <td>Label description</td>
+                </tr>
+                <tr>
+                    <td><code>color</code></td>
+                    <td>CharField(7)</td>
+                    <td>Hex color (default: #6B7280)</td>
+                </tr>
+                <tr>
+                    <td><code>icon</code></td>
+                    <td>CharField(50)</td>
+                    <td>Icon identifier</td>
+                </tr>
+                <tr>
+                    <td><code>category</code></td>
+                    <td>CharField(50)</td>
+                    <td>Label category (type, origin, risk, etc.)</td>
+                </tr>
+                <tr>
+                    <td><code>is_active</code></td>
+                    <td>Boolean</td>
+                    <td>Active status</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>11. AIRun</h2>
+        <p>Audit trail for AI operations with performance metrics.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>tenant</code></td>
+                    <td>ForeignKey</td>
+                    <td>Tenant isolation</td>
+                </tr>
+                <tr>
+                    <td><code>target_entity</code></td>
+                    <td>CharField(50)</td>
+                    <td>Entity type (e.g., "improvement_action")</td>
+                </tr>
+                <tr>
+                    <td><code>target_id</code></td>
+                    <td>Integer</td>
+                    <td>Entity primary key</td>
+                </tr>
+                <tr>
+                    <td><code>task_type</code></td>
+                    <td>CharField(20)</td>
+                    <td>Choices: classify, summarize, clause_link, sentiment, extract, embed</td>
+                </tr>
+                <tr>
+                    <td><code>input_ref</code></td>
+                    <td>TextField</td>
+                    <td>Input data reference</td>
+                </tr>
+                <tr>
+                    <td><code>output_json</code></td>
+                    <td>JSONField</td>
+                    <td>AI output/predictions</td>
+                </tr>
+                <tr>
+                    <td><code>success</code></td>
+                    <td>Boolean</td>
+                    <td>Operation success flag</td>
+                </tr>
+                <tr>
+                    <td><code>error_message</code></td>
+                    <td>TextField</td>
+                    <td>Error details if failed</td>
+                </tr>
+                <tr>
+                    <td><code>tokens_used</code></td>
+                    <td>Integer</td>
+                    <td>API token count (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>latency_ms</code></td>
+                    <td>Integer</td>
+                    <td>Response time in milliseconds</td>
+                </tr>
+                <tr>
+                    <td><code>model_name</code></td>
+                    <td>CharField(100)</td>
+                    <td>AI model identifier</td>
+                </tr>
+                <tr>
+                    <td><code>model_version</code></td>
+                    <td>CharField(50)</td>
+                    <td>Model version</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Operation timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>12. Embedding</h2>
+        <p>Vector embeddings for semantic search (pgvector).</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>tenant</code></td>
+                    <td>ForeignKey</td>
+                    <td>Tenant isolation</td>
+                </tr>
+                <tr>
+                    <td><code>entity</code></td>
+                    <td>CharField(50)</td>
+                    <td>Entity type</td>
+                </tr>
+                <tr>
+                    <td><code>entity_id</code></td>
+                    <td>Integer</td>
+                    <td>Entity primary key</td>
+                </tr>
+                <tr>
+                    <td><code>vector</code></td>
+                    <td>JSONField</td>
+                    <td>Embedding vector (production: pgvector)</td>
+                </tr>
+                <tr>
+                    <td><code>model</code></td>
+                    <td>CharField(100)</td>
+                    <td>Embedding model name</td>
+                </tr>
+                <tr>
+                    <td><code>dimension</code></td>
+                    <td>Integer</td>
+                    <td>Vector dimension (e.g., 1536)</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>updated_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Last update</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>13. ActionTracking</h2>
+        <p>Progress updates and milestones for improvement actions.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>improvement_action</code></td>
+                    <td>ForeignKey</td>
+                    <td>Parent action</td>
+                </tr>
+                <tr>
+                    <td><code>update_type</code></td>
+                    <td>CharField(50)</td>
+                    <td>Choices: progress, milestone, status_change, assignment, other</td>
+                </tr>
+                <tr>
+                    <td><code>description</code></td>
+                    <td>TextField</td>
+                    <td>Update description</td>
+                </tr>
+                <tr>
+                    <td><code>progress_percentage</code></td>
+                    <td>Integer</td>
+                    <td>0-100% completion (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>created_by</code></td>
+                    <td>ForeignKey(User)</td>
+                    <td>Update author</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Update timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>14. ImprovementReview</h2>
+        <p>Periodic reviews of the continuous improvement register.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>Integer (PK)</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>tenant</code></td>
+                    <td>ForeignKey</td>
+                    <td>Tenant isolation</td>
+                </tr>
+                <tr>
+                    <td><code>review_period_start</code></td>
+                    <td>DateField</td>
+                    <td>Period start date</td>
+                </tr>
+                <tr>
+                    <td><code>review_period_end</code></td>
+                    <td>DateField</td>
+                    <td>Period end date</td>
+                </tr>
+                <tr>
+                    <td><code>review_date</code></td>
+                    <td>DateField</td>
+                    <td>Review conducted date</td>
+                </tr>
+                <tr>
+                    <td><code>total_actions_reviewed</code></td>
+                    <td>Integer</td>
+                    <td>Total actions in period</td>
+                </tr>
+                <tr>
+                    <td><code>actions_completed</code></td>
+                    <td>Integer</td>
+                    <td>Completed count</td>
+                </tr>
+                <tr>
+                    <td><code>actions_at_risk</code></td>
+                    <td>Integer</td>
+                    <td>At risk count</td>
+                </tr>
+                <tr>
+                    <td><code>actions_overdue</code></td>
+                    <td>Integer</td>
+                    <td>Overdue count</td>
+                </tr>
+                <tr>
+                    <td><code>ai_summary</code></td>
+                    <td>TextField</td>
+                    <td>AI-generated review summary</td>
+                </tr>
+                <tr>
+                    <td><code>ai_trends</code></td>
+                    <td>JSONField</td>
+                    <td>AI-identified trends</td>
+                </tr>
+                <tr>
+                    <td><code>ai_recommendations</code></td>
+                    <td>JSONField</td>
+                    <td>AI recommendations</td>
+                </tr>
+                <tr>
+                    <td><code>key_findings</code></td>
+                    <td>TextField</td>
+                    <td>Review findings</td>
+                </tr>
+                <tr>
+                    <td><code>areas_of_concern</code></td>
+                    <td>TextField</td>
+                    <td>Concerns identified</td>
+                </tr>
+                <tr>
+                    <td><code>recommendations</code></td>
+                    <td>TextField</td>
+                    <td>Review recommendations</td>
+                </tr>
+                <tr>
+                    <td><code>action_items</code></td>
+                    <td>JSONField</td>
+                    <td>New actions from review</td>
+                </tr>
+                <tr>
+                    <td><code>reviewed_by</code></td>
+                    <td>ForeignKey(User)</td>
+                    <td>Reviewer (nullable)</td>
+                </tr>
+                <tr>
+                    <td><code>attendees</code></td>
+                    <td>ManyToManyField</td>
+                    <td>Review attendees</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>updated_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Last update</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="cta-section">
+            <h2>Next Steps</h2>
+            <p>Now that you understand the data models, explore the API Reference for endpoint documentation, 
+            or check the Workflows guide for common usage patterns.</p>
+            <a href="api-reference.html" class="btn btn-primary">API Reference →</a>
+            <a href="workflows.html" class="btn btn-secondary">View Workflows →</a>
+        </div>
+    </div>
+</body>
+</html>

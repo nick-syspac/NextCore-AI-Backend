@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture - Policy Comparator Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Policy Comparator</a> /
+            <strong>Architecture</strong>
+        </div>
+
+        <h1>🏗️ System Architecture</h1>
+        <p class="lead">
+            Understanding Policy Comparator's system design, data flow, NLP pipeline, database models, 
+            and threshold-based scoring system.
+        </p>
+
+        <div class="toc-box">
+            <h3>On This Page</h3>
+            <ul>
+                <li><a href="#overview">Architecture Overview</a></li>
+                <li><a href="#data-flow">Data Flow</a></li>
+                <li><a href="#models">Database Models</a></li>
+                <li><a href="#nlp-pipeline">NLP Processing Pipeline</a></li>
+                <li><a href="#threshold-system">Threshold System</a></li>
+                <li><a href="#multi-tenancy">Multi-Tenancy Architecture</a></li>
+                <li><a href="#future-architecture">Future Architecture</a></li>
+            </ul>
+        </div>
+
+        <h2 id="overview">📐 Architecture Overview</h2>
+        <p>
+            Policy Comparator is built as a Django application within the NextCore AI control-plane. 
+            It follows a layered architecture with clear separation of concerns:
+        </p>
+
+        <div class="architecture-diagram">
+            <div class="arch-layer">
+                <h4>Presentation Layer</h4>
+                <p>REST API (Django REST Framework)</p>
+                <ul>
+                    <li>ViewSets & Serializers</li>
+                    <li>Authentication & Permissions</li>
+                    <li>Request/Response Handling</li>
+                </ul>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-layer">
+                <h4>Business Logic Layer</h4>
+                <p>Comparison Engine & NLP Processing</p>
+                <ul>
+                    <li>Text Similarity Algorithms</li>
+                    <li>Gap Detection Logic</li>
+                    <li>Compliance Scoring</li>
+                </ul>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-layer">
+                <h4>Data Access Layer</h4>
+                <p>Django ORM Models</p>
+                <ul>
+                    <li>ASQAStandard & ASQAClause</li>
+                    <li>Policy & ComparisonResult</li>
+                    <li>ComparisonSession</li>
+                </ul>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-layer">
+                <h4>Persistence Layer</h4>
+                <p>PostgreSQL Database</p>
+                <ul>
+                    <li>Relational Data Storage</li>
+                    <li>ACID Transactions</li>
+                    <li>Indexes & Constraints</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 id="data-flow">🔄 Data Flow</h2>
+        <p>The comparison process follows a well-defined data flow:</p>
+
+        <div class="workflow-diagram">
+            <div class="workflow-step">
+                <div class="step-number">1</div>
+                <h4>Policy Upload/Entry</h4>
+                <p>RTO policy text entered or uploaded</p>
+                <ul>
+                    <li>Manual text entry</li>
+                    <li>Policy metadata (number, title, type)</li>
+                    <li>Version tracking</li>
+                </ul>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <div class="step-number">2</div>
+                <h4>Store in Database</h4>
+                <p>Policy saved to database</p>
+                <ul>
+                    <li>Tenant association</li>
+                    <li>Audit trail (created_by, created_at)</li>
+                    <li>Status management</li>
+                </ul>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <div class="step-number">3</div>
+                <h4>Comparison Request</h4>
+                <p>User initiates comparison</p>
+                <ul>
+                    <li>Select policy</li>
+                    <li>Choose standards (or all)</li>
+                    <li>Create comparison session</li>
+                </ul>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <div class="step-number">4</div>
+                <h4>NLP Processing</h4>
+                <p>Hybrid similarity analysis</p>
+                <ul>
+                    <li>Keyword matching (30%)</li>
+                    <li>Sequence similarity (40%)</li>
+                    <li>Phrase matching (30%)</li>
+                </ul>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <div class="step-number">5</div>
+                <h4>Generate Scores</h4>
+                <p>Calculate similarity scores</p>
+                <ul>
+                    <li>Combined score (0.0-1.0)</li>
+                    <li>Classify match type</li>
+                    <li>Identify matched text</li>
+                </ul>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <div class="step-number">6</div>
+                <h4>Gap Detection</h4>
+                <p>Identify compliance gaps</p>
+                <ul>
+                    <li>Apply thresholds</li>
+                    <li>Find missing keywords</li>
+                    <li>Generate recommendations</li>
+                </ul>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <div class="step-number">7</div>
+                <h4>Store Results</h4>
+                <p>Save comparison outcomes</p>
+                <ul>
+                    <li>ComparisonResult records</li>
+                    <li>Session summary</li>
+                    <li>Overall compliance score</li>
+                </ul>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <div class="step-number">8</div>
+                <h4>Return Results</h4>
+                <p>Present to user</p>
+                <ul>
+                    <li>Summary statistics</li>
+                    <li>Detailed results</li>
+                    <li>Gap analysis</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2 id="models">🗃️ Database Models</h2>
+        <p>Policy Comparator uses 5 core models in the Foundation Phase:</p>
+
+        <h3>Model Relationships</h3>
+        <div class="code-block">
+            <code>
+ASQAStandard (1) ────┬──────> (many) ASQAClause
+                     │
+Tenant (1) ──────────┼──────> (many) Policy
+                     │
+Policy (1) ──────────┼──────> (many) ComparisonResult
+                     │                      │
+ASQAClause (1) ──────┴──────> (many) ComparisonResult
+                     │
+Policy (1) ──────────┴──────> (many) ComparisonSession
+Tenant (1) ──────────┴──────> (many) ComparisonSession
+            </code>
+        </div>
+
+        <h3>Core Model Definitions</h3>
+
+        <h4>1. ASQAStandard</h4>
+        <p>Repository of ASQA standards (Standards for RTOs 2015)</p>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>standard_number</code></td>
+                        <td>CharField(20)</td>
+                        <td>Standard identifier (e.g., "1.1", "2.1")</td>
+                    </tr>
+                    <tr>
+                        <td><code>title</code></td>
+                        <td>CharField(300)</td>
+                        <td>Standard title</td>
+                    </tr>
+                    <tr>
+                        <td><code>description</code></td>
+                        <td>TextField</td>
+                        <td>Standard overview</td>
+                    </tr>
+                    <tr>
+                        <td><code>standard_type</code></td>
+                        <td>CharField(50)</td>
+                        <td>Category (training_assessment, trainer_assessor, etc.)</td>
+                    </tr>
+                    <tr>
+                        <td><code>full_text</code></td>
+                        <td>TextField</td>
+                        <td>Complete standard text</td>
+                    </tr>
+                    <tr>
+                        <td><code>requirements</code></td>
+                        <td>JSONField</td>
+                        <td>List of specific requirements</td>
+                    </tr>
+                    <tr>
+                        <td><code>version</code></td>
+                        <td>CharField(20)</td>
+                        <td>Standard version (default: "2015")</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>2. ASQAClause</h4>
+        <p>Individual clauses within ASQA standards for granular comparison</p>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>standard</code></td>
+                        <td>ForeignKey</td>
+                        <td>Parent ASQAStandard</td>
+                    </tr>
+                    <tr>
+                        <td><code>clause_number</code></td>
+                        <td>CharField(20)</td>
+                        <td>Clause identifier (e.g., "1.1", "1.2")</td>
+                    </tr>
+                    <tr>
+                        <td><code>title</code></td>
+                        <td>CharField(300)</td>
+                        <td>Clause title</td>
+                    </tr>
+                    <tr>
+                        <td><code>clause_text</code></td>
+                        <td>TextField</td>
+                        <td>Full clause text for comparison</td>
+                    </tr>
+                    <tr>
+                        <td><code>keywords</code></td>
+                        <td>JSONField</td>
+                        <td>Key terms for NLP matching</td>
+                    </tr>
+                    <tr>
+                        <td><code>compliance_level</code></td>
+                        <td>CharField(20)</td>
+                        <td>critical, essential, or recommended</td>
+                    </tr>
+                    <tr>
+                        <td><code>evidence_required</code></td>
+                        <td>JSONField</td>
+                        <td>Types of evidence needed</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>3. Policy</h4>
+        <p>RTO policies to be compared against ASQA standards</p>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>tenant</code></td>
+                        <td>ForeignKey</td>
+                        <td>Multi-tenant isolation</td>
+                    </tr>
+                    <tr>
+                        <td><code>policy_number</code></td>
+                        <td>CharField(50)</td>
+                        <td>Policy identifier</td>
+                    </tr>
+                    <tr>
+                        <td><code>title</code></td>
+                        <td>CharField(300)</td>
+                        <td>Policy title</td>
+                    </tr>
+                    <tr>
+                        <td><code>policy_type</code></td>
+                        <td>CharField(50)</td>
+                        <td>Category (training_delivery, assessment, etc.)</td>
+                    </tr>
+                    <tr>
+                        <td><code>content</code></td>
+                        <td>TextField</td>
+                        <td>Full policy text for comparison</td>
+                    </tr>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td>CharField(20)</td>
+                        <td>draft, under_review, approved, archived</td>
+                    </tr>
+                    <tr>
+                        <td><code>compliance_score</code></td>
+                        <td>FloatField</td>
+                        <td>Overall compliance score (0-100)</td>
+                    </tr>
+                    <tr>
+                        <td><code>last_compared_at</code></td>
+                        <td>DateTimeField</td>
+                        <td>Most recent comparison timestamp</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>4. ComparisonResult</h4>
+        <p>Detailed NLP-based comparison results for each policy-clause pair</p>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>policy</code></td>
+                        <td>ForeignKey</td>
+                        <td>Policy being compared</td>
+                    </tr>
+                    <tr>
+                        <td><code>asqa_clause</code></td>
+                        <td>ForeignKey</td>
+                        <td>ASQA clause being compared against</td>
+                    </tr>
+                    <tr>
+                        <td><code>similarity_score</code></td>
+                        <td>FloatField</td>
+                        <td>NLP similarity score (0.0-1.0)</td>
+                    </tr>
+                    <tr>
+                        <td><code>match_type</code></td>
+                        <td>CharField(20)</td>
+                        <td>full, partial, weak, no_match</td>
+                    </tr>
+                    <tr>
+                        <td><code>matched_text</code></td>
+                        <td>TextField</td>
+                        <td>Relevant policy text excerpt</td>
+                    </tr>
+                    <tr>
+                        <td><code>gap_description</code></td>
+                        <td>TextField</td>
+                        <td>Description of compliance gap</td>
+                    </tr>
+                    <tr>
+                        <td><code>recommendations</code></td>
+                        <td>JSONField</td>
+                        <td>Suggestions to improve compliance</td>
+                    </tr>
+                    <tr>
+                        <td><code>keywords_matched</code></td>
+                        <td>JSONField</td>
+                        <td>Keywords found in policy</td>
+                    </tr>
+                    <tr>
+                        <td><code>keywords_missing</code></td>
+                        <td>JSONField</td>
+                        <td>Keywords missing from policy</td>
+                    </tr>
+                    <tr>
+                        <td><code>nlp_metadata</code></td>
+                        <td>JSONField</td>
+                        <td>NLP processing details (scores breakdown)</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_compliant</code></td>
+                        <td>BooleanField</td>
+                        <td>Meets ASQA requirements</td>
+                    </tr>
+                    <tr>
+                        <td><code>requires_action</code></td>
+                        <td>BooleanField</td>
+                        <td>Action needed for compliance</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>5. ComparisonSession</h4>
+        <p>Track batch comparison sessions for historical analysis</p>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>tenant</code></td>
+                        <td>ForeignKey</td>
+                        <td>Tenant isolation</td>
+                    </tr>
+                    <tr>
+                        <td><code>policy</code></td>
+                        <td>ForeignKey</td>
+                        <td>Policy being compared</td>
+                    </tr>
+                    <tr>
+                        <td><code>session_name</code></td>
+                        <td>CharField(200)</td>
+                        <td>User-defined session identifier</td>
+                    </tr>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td>CharField(20)</td>
+                        <td>pending, processing, completed, failed</td>
+                    </tr>
+                    <tr>
+                        <td><code>standards_compared</code></td>
+                        <td>JSONField</td>
+                        <td>List of ASQA standard IDs compared</td>
+                    </tr>
+                    <tr>
+                        <td><code>total_clauses_checked</code></td>
+                        <td>IntegerField</td>
+                        <td>Number of clauses analyzed</td>
+                    </tr>
+                    <tr>
+                        <td><code>compliant_count</code></td>
+                        <td>IntegerField</td>
+                        <td>Full matches count</td>
+                    </tr>
+                    <tr>
+                        <td><code>partial_match_count</code></td>
+                        <td>IntegerField</td>
+                        <td>Partial matches count</td>
+                    </tr>
+                    <tr>
+                        <td><code>gap_count</code></td>
+                        <td>IntegerField</td>
+                        <td>Weak/no matches count</td>
+                    </tr>
+                    <tr>
+                        <td><code>overall_compliance_score</code></td>
+                        <td>FloatField</td>
+                        <td>Weighted compliance score (0-100)</td>
+                    </tr>
+                    <tr>
+                        <td><code>processing_time_seconds</code></td>
+                        <td>FloatField</td>
+                        <td>Comparison execution time</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h2 id="nlp-pipeline">🧠 NLP Processing Pipeline</h2>
+        <p>
+            Policy Comparator uses a hybrid NLP approach combining multiple text similarity techniques 
+            for robust compliance checking:
+        </p>
+
+        <h3>Hybrid Scoring Formula</h3>
+        <div class="code-block">
+            <code>
+Similarity Score = (Keyword Score × 0.3) + 
+                   (Sequence Score × 0.4) + 
+                   (Phrase Score × 0.3)
+
+Result: Float between 0.0 (no similarity) and 1.0 (identical)
+            </code>
+        </div>
+
+        <h3>1. Keyword Matching (30% Weight)</h3>
+        <p>Checks presence of domain-specific keywords from ASQA clauses:</p>
+        <div class="code-block">
+            <code>
+def _calculate_keyword_score(text, keywords):
+    """Calculate score based on keyword presence"""
+    if not keywords:
+        return 0.5  # Neutral score if no keywords
+    
+    matched = sum(1 for kw in keywords if kw.lower() in text)
+    return matched / len(keywords)
+
+# Example: 
+# Clause keywords: ["training strategy", "assessment", "competency", "scope"]
+# Policy contains: ["training strategy", "assessment"]
+# Score: 2/4 = 0.5 (50% keyword coverage)
+            </code>
+        </div>
+
+        <h3>2. Sequence Similarity (40% Weight)</h3>
+        <p>Uses Python's SequenceMatcher for character-level text similarity:</p>
+        <div class="code-block">
+            <code>
+from difflib import SequenceMatcher
+
+def _calculate_sequence_similarity(text1, text2):
+    """Calculate sequence similarity using SequenceMatcher"""
+    # Sample first 2000 chars for performance
+    sample1 = text1[:2000]
+    sample2 = text2[:2000]
+    
+    matcher = SequenceMatcher(None, sample1, sample2)
+    return matcher.ratio()
+
+# Returns: Float 0.0-1.0 indicating longest common subsequence ratio
+            </code>
+        </div>
+
+        <h3>3. Phrase Matching (30% Weight)</h3>
+        <p>Analyzes sentence-level semantic similarity:</p>
+        <div class="code-block">
+            <code>
+def _calculate_phrase_similarity(policy_text, clause_text):
+    """Calculate phrase-level similarity"""
+    # Extract key phrases from clause (sentences)
+    clause_sentences = [s.strip() for s in clause_text.split(".") 
+                       if len(s.strip()) > 20]
+    
+    matches = 0
+    for sentence in clause_sentences[:5]:  # Check first 5
+        words = set(sentence.lower().split())
+        # Remove common words
+        words = words - {"the", "a", "an", "and", "or", "but", 
+                        "in", "on", "at", "to", "for"}
+        
+        # Count word matches in policy
+        word_matches = sum(1 for w in words if w in policy_text)
+        if word_matches / len(words) > 0.5:
+            matches += 1
+    
+    return matches / min(len(clause_sentences), 5)
+            </code>
+        </div>
+
+        <h3>NLP Pipeline Execution</h3>
+        <div class="workflow-diagram">
+            <div class="workflow-step">
+                <h4>Input Normalization</h4>
+                <p>Convert to lowercase, trim whitespace</p>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <h4>Keyword Analysis</h4>
+                <p>Check keyword presence (30% weight)</p>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <h4>Sequence Matching</h4>
+                <p>Calculate character-level similarity (40%)</p>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <h4>Phrase Analysis</h4>
+                <p>Sentence-level matching (30%)</p>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <h4>Combined Score</h4>
+                <p>Weighted average (0.0-1.0)</p>
+            </div>
+            <div class="workflow-arrow">→</div>
+            <div class="workflow-step">
+                <h4>Gap Detection</h4>
+                <p>Apply thresholds & classify</p>
+            </div>
+        </div>
+
+        <h2 id="threshold-system">⚙️ Threshold System</h2>
+        <p>
+            Similarity scores are classified into match types based on configurable thresholds. This enables 
+            flexible compliance standards:
+        </p>
+
+        <h3>Default Thresholds</h3>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Threshold</th>
+                        <th>Default Value</th>
+                        <th>Match Type</th>
+                        <th>Compliance Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="success-row">
+                        <td><code>THRESHOLD_FULL_MATCH</code></td>
+                        <td><strong>0.8</strong></td>
+                        <td>Full Match</td>
+                        <td>✓ Compliant</td>
+                    </tr>
+                    <tr class="warning-row">
+                        <td><code>THRESHOLD_PARTIAL_MATCH</code></td>
+                        <td><strong>0.6</strong></td>
+                        <td>Partial Match</td>
+                        <td>⚠ Review Needed</td>
+                    </tr>
+                    <tr class="danger-row">
+                        <td><code>THRESHOLD_WEAK_MATCH</code></td>
+                        <td><strong>0.4</strong></td>
+                        <td>Weak Match</td>
+                        <td>⚡ Action Required</td>
+                    </tr>
+                    <tr class="danger-row">
+                        <td>Below Weak</td>
+                        <td><strong>&lt; 0.4</strong></td>
+                        <td>No Match</td>
+                        <td>⚡ Critical Gap</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Auto-Classification Logic</h3>
+        <p>Match types are automatically determined on save:</p>
+        <div class="code-block">
+            <code>
+def save(self, *args, **kwargs):
+    """Auto-classify match type based on similarity score"""
+    if self.similarity_score >= 0.8:
+        self.match_type = "full"
+        self.is_compliant = True
+    elif self.similarity_score >= 0.6:
+        self.match_type = "partial"
+        self.requires_action = True
+    elif self.similarity_score >= 0.4:
+        self.match_type = "weak"
+        self.requires_action = True
+    else:
+        self.match_type = "no_match"
+        self.requires_action = True
+    
+    super().save(*args, **kwargs)
+            </code>
+        </div>
+
+        <h3>Compliance Scoring Formula</h3>
+        <p>Overall compliance score uses weighted average:</p>
+        <div class="code-block">
+            <code>
+def calculate_compliance_score(self):
+    """Calculate overall compliance score"""
+    if self.total_clauses_checked == 0:
+        return 0.0
+    
+    # Weight different match types
+    score = (
+        (self.compliant_count * 100) +        # Full matches: 100 points
+        (self.partial_match_count * 60) +     # Partial: 60 points  
+        (self.gap_count * 0)                  # Gaps: 0 points
+    ) / self.total_clauses_checked
+    
+    self.overall_compliance_score = round(score, 2)
+    return self.overall_compliance_score
+
+# Example:
+# Total clauses: 10
+# Full matches: 6 (6 × 100 = 600)
+# Partial matches: 3 (3 × 60 = 180)
+# Gaps: 1 (1 × 0 = 0)
+# Score: (600 + 180 + 0) / 10 = 78.0%
+            </code>
+        </div>
+
+        <h2 id="multi-tenancy">🏢 Multi-Tenancy Architecture</h2>
+        <p>
+            Policy Comparator supports full tenant isolation using django-tenants. Each tenant has 
+            separate policy and comparison data:
+        </p>
+
+        <h3>Tenant Isolation Strategy</h3>
+        <ul>
+            <li><strong>Policy Model:</strong> ForeignKey to Tenant ensures policies are tenant-specific</li>
+            <li><strong>ComparisonSession:</strong> ForeignKey to Tenant for session isolation</li>
+            <li><strong>ASQAStandard:</strong> Global (no tenant FK) - shared across all tenants</li>
+            <li><strong>Row-Level Filtering:</strong> ViewSets automatically filter by tenant_slug</li>
+            <li><strong>URL Routing:</strong> Tenant slug in URL path (<code>/v1/{tenant_slug}/policies/</code>)</li>
+        </ul>
+
+        <h3>Tenant Context in ViewSets</h3>
+        <div class="code-block">
+            <code>
+class PolicyViewSet(viewsets.ModelViewSet):
+    def get_queryset(self):
+        tenant_slug = self.kwargs.get('tenant_slug')
+        tenant = Tenant.objects.get(slug=tenant_slug)
+        return Policy.objects.filter(tenant=tenant)
+    
+    def perform_create(self, serializer):
+        tenant_slug = self.kwargs.get('tenant_slug')
+        tenant = Tenant.objects.get(slug=tenant_slug)
+        serializer.save(tenant=tenant, created_by=self.request.user)
+            </code>
+        </div>
+
+        <h2 id="future-architecture">🚀 Future Architecture</h2>
+        <p>
+            Planned architectural enhancements in upcoming phases:
+        </p>
+
+        <h3>Phase 2-5 Architecture Changes</h3>
+        <div class="grid-2">
+            <div class="card">
+                <h4>Document Processing Layer</h4>
+                <ul>
+                    <li>S3 storage for PDF/DOCX files</li>
+                    <li>Text extraction pipeline (PyPDF2, python-docx)</li>
+                    <li>OCR for scanned documents</li>
+                    <li>Document chunking (300-800 tokens)</li>
+                    <li>Version control for documents</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h4>Vector Embedding Layer</h4>
+                <ul>
+                    <li>pgvector extension for PostgreSQL</li>
+                    <li>Embedding model (E5-large-v2, 1024 dims)</li>
+                    <li>Vector similarity search (HNSW index)</li>
+                    <li>Re-ranking with cross-encoders</li>
+                    <li>Semantic search capabilities</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h4>Async Processing Layer</h4>
+                <ul>
+                    <li>Celery task queues (ingest, embed, compare, report)</li>
+                    <li>Redis for job tracking</li>
+                    <li>Long-running comparison jobs</li>
+                    <li>Background embedding generation</li>
+                    <li>Async report generation</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h4>Advanced UI Components</h4>
+                <ul>
+                    <li>Interactive coverage heatmaps</li>
+                    <li>Real-time job progress tracking</li>
+                    <li>Side-by-side evidence viewer</li>
+                    <li>PDF/CSV report export</li>
+                    <li>Dynamic threshold controls</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Future Architecture Diagram</h3>
+        <div class="architecture-diagram">
+            <div class="arch-layer">
+                <h4>Frontend Layer (Phase 5)</h4>
+                <p>React UI with interactive visualizations</p>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-layer">
+                <h4>API Gateway (Current)</h4>
+                <p>REST API + WebSocket for real-time updates</p>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-layer">
+                <h4>Async Task Layer (Phase 4)</h4>
+                <p>Celery workers for background processing</p>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-layer">
+                <h4>NLP Engine (Phase 3)</h4>
+                <p>Transformer models + Vector search</p>
+            </div>
+            <div class="arch-arrow">↓</div>
+            <div class="arch-layer">
+                <h4>Storage Layer (Phase 2)</h4>
+                <p>PostgreSQL + pgvector + S3</p>
+            </div>
+        </div>
+
+        <div class="info-box" style="margin-top: 2rem;">
+            <h4>📚 Learn More</h4>
+            <p>
+                For detailed model field definitions, see <a href="models.html">Data Models</a>. 
+                For API endpoint documentation, see <a href="api-reference.html">API Reference</a>.
+                For implementation roadmap, see <a href="roadmap.html">Roadmap</a>.
+            </p>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="quickstart.html" class="btn btn-secondary">← Quick Start</a>
+            <a href="models.html" class="btn btn-primary">Data Models →</a>
+        </div>
+    </div>
+</body>
+</html>

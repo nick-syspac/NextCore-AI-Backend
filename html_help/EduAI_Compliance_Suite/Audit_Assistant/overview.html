@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overview - Audit Assistant Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Audit Assistant</a> /
+            <strong>Overview</strong>
+        </div>
+
+        <h1>📖 Audit Assistant Overview</h1>
+        <p class="lead">
+            Comprehensive audit preparation platform that combines intelligent evidence management with 
+            automated ASQA clause tagging using Named Entity Recognition (NER).
+        </p>
+
+        <div class="toc-box">
+            <h3>On This Page</h3>
+            <ul>
+                <li><a href="#what-is">What is Audit Assistant?</a></li>
+                <li><a href="#problem">The Audit Preparation Challenge</a></li>
+                <li><a href="#solution">How Audit Assistant Solves It</a></li>
+                <li><a href="#ner-pipeline">NER Auto-Tagging Pipeline</a></li>
+                <li><a href="#evidence-types">Evidence Types & Categories</a></li>
+                <li><a href="#audit-reports">Audit Report Generation</a></li>
+                <li><a href="#gap-analysis">Gap Analysis & Recommendations</a></li>
+                <li><a href="#benefits">Benefits by Role</a></li>
+            </ul>
+        </div>
+
+        <h2 id="what-is">What is Audit Assistant?</h2>
+        <p>
+            Audit Assistant is an AI-powered evidence management system designed specifically for ASQA compliance 
+            audits. It automates the tedious process of matching evidence documents to ASQA standards and clauses, 
+            using Named Entity Recognition (NER) to intelligently identify compliance references within documents.
+        </p>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🤖 Intelligent Auto-Tagging</h4>
+                <p>
+                    NER engine automatically detects ASQA standard references, clause numbers, qualification codes, 
+                    and policy mentions in uploaded documents, creating evidence-to-clause mappings with confidence scores.
+                </p>
+            </div>
+            <div class="feature-card">
+                <h4>📊 Compliance Tracking</h4>
+                <p>
+                    Real-time visibility into evidence coverage across all ASQA clauses, with separate tracking 
+                    for critical requirements and automated compliance percentage calculations.
+                </p>
+            </div>
+            <div class="feature-card">
+                <h4>📄 Audit-Ready Reports</h4>
+                <p>
+                    Generate comprehensive clause-by-clause reports showing which evidence supports each ASQA 
+                    requirement, complete with findings, severity ratings, and recommendations.
+                </p>
+            </div>
+            <div class="feature-card">
+                <h4>🔍 Gap Identification</h4>
+                <p>
+                    Automatically identify clauses with insufficient or missing evidence, prioritized by severity 
+                    (critical/major/minor) with actionable recommendations for remediation.
+                </p>
+            </div>
+        </div>
+
+        <h2 id="problem">The Audit Preparation Challenge</h2>
+        <p>
+            ASQA audits require RTOs to demonstrate compliance across 8 standards and 50+ individual clauses. 
+            Traditional audit preparation involves:
+        </p>
+
+        <div class="warning-box">
+            <h4>⚠️ Manual Audit Preparation Pain Points</h4>
+            <ul>
+                <li><strong>Time-Intensive:</strong> 40-80 hours manually mapping evidence to clauses</li>
+                <li><strong>Error-Prone:</strong> Easy to miss critical clauses or duplicate evidence</li>
+                <li><strong>No Visibility:</strong> Unclear which clauses lack sufficient evidence until audit</li>
+                <li><strong>Document Sprawl:</strong> Evidence scattered across file systems and formats</li>
+                <li><strong>Version Control:</strong> Difficult to track which documents are current</li>
+                <li><strong>Late Discovery:</strong> Gaps identified during audit, too late to remediate</li>
+            </ul>
+        </div>
+
+        <h2 id="solution">How Audit Assistant Solves It</h2>
+        
+        <h3>1. Centralized Evidence Repository</h3>
+        <p>
+            All compliance evidence stored in one secure, organized system with metadata, categorization, 
+            and full-text search capabilities.
+        </p>
+
+        <h3>2. Automated Intelligence</h3>
+        <p>
+            NER engine reads uploaded documents and automatically creates evidence-to-clause mappings based on:
+        </p>
+        <ul>
+            <li><strong>Direct References:</strong> "Standard 1.8", "Clause 2.1" → 95% confidence</li>
+            <li><strong>Keyword Matching:</strong> Multiple clause keywords found → 70-90% confidence</li>
+            <li><strong>Context Analysis:</strong> Standard reference + related keywords → 60-80% confidence</li>
+            <li><strong>Title Similarity:</strong> Document title matches clause topic → 40-60% confidence (suggested)</li>
+        </ul>
+
+        <h3>3. Human-in-the-Loop Verification</h3>
+        <p>
+            Auto-tagged mappings can be reviewed and verified by compliance officers, combining AI efficiency 
+            with human expertise.
+        </p>
+
+        <h3>4. Continuous Compliance Monitoring</h3>
+        <p>
+            Track evidence coverage in real-time, identify gaps early, and maintain audit readiness year-round 
+            instead of cramming before audits.
+        </p>
+
+        <h2 id="ner-pipeline">NER Auto-Tagging Pipeline</h2>
+        <p>
+            The Named Entity Recognition pipeline uses pattern matching and keyword analysis to identify 
+            compliance-related entities in documents.
+        </p>
+
+        <div class="code-block">
+            <code>
+NER Pipeline Workflow:
+
+1. Document Upload
+   ↓
+2. Text Extraction (format-specific)
+   - PDF: PyPDF2 text extraction
+   - DOCX: python-docx paragraph parsing
+   - TXT: Direct UTF-8 decoding
+   - Images: [Planned] OCR with Tesseract
+   ↓
+3. Entity Detection (detect_ner_entities)
+   Identifies 6 entity types:
+   - STANDARD: "Standard 1.8", "Std. 2.1"
+   - CLAUSE: "Clause 1.8.1", "1.8.1"
+   - QUALIFICATION: "TAE40116", "BSB50120"
+   - DATE: "01/01/2024", "January 2024"
+   - ORG: "ASQA", "RTO", "VET", "AQF"
+   - POLICY: "Policy HR-001", "Procedure A-123"
+   ↓
+4. Clause Matching (auto_tag_clauses)
+   3 tagging strategies with priority:
+   
+   A. Direct Clause Reference (95% confidence)
+      → Clause number found in text
+      → mapping_type: "auto_rule"
+   
+   B. Standard + Keywords (70-90% confidence)
+      → Standard referenced + 2+ clause keywords
+      → mapping_type: "auto_ner"
+   
+   C. High Keyword Density (50-80% confidence)
+      → 60%+ of clause keywords present
+      → mapping_type: "auto_rule"
+   
+   D. Title Similarity (40-60% confidence)
+      → 50%+ of clause title words match
+      → mapping_type: "suggested"
+   ↓
+5. ClauseEvidence Creation
+   - Store matched entities
+   - Record confidence score
+   - Save rule metadata
+   - Set status to "tagged"
+   ↓
+6. Manual Verification (optional)
+   - Review suggested mappings
+   - Verify high-confidence auto-tags
+   - Add manual mappings
+   - Mark status as "reviewed"
+            </code>
+        </div>
+
+        <h3>Entity Detection Examples</h3>
+        <div class="code-block">
+            <code>
+Sample Document Text:
+"This policy addresses Standard 1.8 requirements for assessment 
+validation. All trainers holding TAE40116 must participate in 
+moderation activities as per Clause 1.8.1. Updated January 2024."
+
+Detected Entities:
+1. {entity: "Standard 1.8", type: "STANDARD", value: "1.8"}
+2. {entity: "TAE40116", type: "QUALIFICATION"}
+3. {entity: "Clause 1.8.1", type: "CLAUSE", value: "1.8.1"}
+4. {entity: "January 2024", type: "DATE"}
+
+Auto-Tagged Clauses:
+- Clause 1.8.1 (Assessment Validation) → 95% confidence
+  - Rule: direct_clause_reference
+  - Matched entities: ["Clause 1.8.1"]
+  - Matched keywords: ["validation", "moderation"]
+            </code>
+        </div>
+
+        <h2 id="evidence-types">Evidence Types & Categories</h2>
+        <p>Audit Assistant supports 14 evidence types covering all ASQA compliance requirements:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Evidence Type</th>
+                    <th>Description</th>
+                    <th>Common ASQA Standards</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Policy Document</strong></td>
+                    <td>Organizational policies (assessment, complaints, etc.)</td>
+                    <td>All standards (1-8)</td>
+                </tr>
+                <tr>
+                    <td><strong>Procedure</strong></td>
+                    <td>Step-by-step operational procedures</td>
+                    <td>Standards 1, 2, 5, 6</td>
+                </tr>
+                <tr>
+                    <td><strong>Record/Log</strong></td>
+                    <td>Compliance records, attendance logs, assessment records</td>
+                    <td>Standards 1, 2, 3, 5</td>
+                </tr>
+                <tr>
+                    <td><strong>Template/Form</strong></td>
+                    <td>Assessment templates, enrolment forms, feedback forms</td>
+                    <td>Standards 1, 5, 6</td>
+                </tr>
+                <tr>
+                    <td><strong>Certificate</strong></td>
+                    <td>Qualification certificates, registrations</td>
+                    <td>Standards 3, 4</td>
+                </tr>
+                <tr>
+                    <td><strong>Qualification Document</strong></td>
+                    <td>Training packages, unit requirements</td>
+                    <td>Standard 1</td>
+                </tr>
+                <tr>
+                    <td><strong>Training Material</strong></td>
+                    <td>Learning resources, learner guides</td>
+                    <td>Standards 1, 5</td>
+                </tr>
+                <tr>
+                    <td><strong>Assessment Document</strong></td>
+                    <td>Assessment tasks, marking guides, validation reports</td>
+                    <td>Standard 1</td>
+                </tr>
+                <tr>
+                    <td><strong>Quality Assurance</strong></td>
+                    <td>Validation reports, moderation records, audit findings</td>
+                    <td>Standards 1, 2, 7</td>
+                </tr>
+                <tr>
+                    <td><strong>Financial Document</strong></td>
+                    <td>Fee schedules, refund policies, financial records</td>
+                    <td>Standards 5, 8</td>
+                </tr>
+                <tr>
+                    <td><strong>Contract/Agreement</strong></td>
+                    <td>Student contracts, third-party agreements</td>
+                    <td>Standards 3, 5</td>
+                </tr>
+                <tr>
+                    <td><strong>Correspondence</strong></td>
+                    <td>ASQA communications, stakeholder emails</td>
+                    <td>All standards</td>
+                </tr>
+                <tr>
+                    <td><strong>Meeting Minutes</strong></td>
+                    <td>Compliance meetings, quality meetings, IAC minutes</td>
+                    <td>Standards 1, 2, 7</td>
+                </tr>
+                <tr>
+                    <td><strong>Other</strong></td>
+                    <td>Miscellaneous compliance evidence</td>
+                    <td>Varies</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="audit-reports">Audit Report Generation</h2>
+        <p>
+            Audit reports provide a comprehensive view of compliance readiness across selected ASQA standards.
+        </p>
+
+        <h3>Report Structure</h3>
+        <div class="code-block">
+            <code>
+Audit Report Components:
+
+1. Report Metadata
+   - Report number, title, description
+   - Audit period (start/end dates)
+   - Selected ASQA standards
+   - Status (draft → in_progress → review → completed → submitted)
+
+2. Compliance Metrics
+   - Total clauses: 50+
+   - Clauses with evidence: 45
+   - Clauses without evidence: 5
+   - Overall compliance: 90%
+   
+   Critical Clause Tracking:
+   - Critical clauses count: 15
+   - Critical covered: 13
+   - Critical compliance: 86.7%
+
+3. Evidence Summary
+   - Total evidence documents: 120
+   - Auto-tagged: 95 (79%)
+   - Manually tagged: 25 (21%)
+   - Verified: 85 (71%)
+
+4. Clause Entries (AuditReportClause)
+   For each clause:
+   - Compliance status: compliant/partial/non_compliant/not_assessed
+   - Evidence count: 3
+   - Verified evidence count: 2
+   - Finding: "Sufficient evidence demonstrates compliance"
+   - Severity: N/A (or critical/major/minor for issues)
+   - Recommendation: "Maintain current practices"
+   - Linked evidence: [Evidence IDs]
+
+5. Findings & Recommendations
+   - Overall findings list
+   - Priority recommendations
+   - Action items
+            </code>
+        </div>
+
+        <h3>Compliance Status Determination</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Compliance Status</th>
+                    <th>Criteria</th>
+                    <th>Audit Interpretation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Compliant</strong></td>
+                    <td>2+ verified evidence items</td>
+                    <td>Clause requirements fully met with quality evidence</td>
+                </tr>
+                <tr>
+                    <td><strong>Partially Compliant</strong></td>
+                    <td>1+ evidence items (not verified)</td>
+                    <td>Some evidence exists but needs verification/expansion</td>
+                </tr>
+                <tr>
+                    <td><strong>Non-Compliant</strong></td>
+                    <td>0 evidence items</td>
+                    <td>No evidence available - critical gap</td>
+                </tr>
+                <tr>
+                    <td><strong>Not Assessed</strong></td>
+                    <td>Not yet reviewed</td>
+                    <td>Clause not yet evaluated in this audit</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="gap-analysis">Gap Analysis & Recommendations</h2>
+        <p>
+            Gap analysis identifies clauses with insufficient evidence and provides actionable recommendations.
+        </p>
+
+        <h3>Gap Severity Classification</h3>
+        <div class="code-block">
+            <code>
+Gap Severity Algorithm:
+
+For CRITICAL compliance level clauses:
+  - No evidence → Critical gap
+  - <2 verified evidence → Major gap
+  - 2+ verified evidence → No gap
+
+For ESSENTIAL compliance level clauses:
+  - No evidence → Major gap
+  - <1 verified evidence → Minor gap
+  - 1+ verified evidence → No gap
+
+For DESIRABLE compliance level clauses:
+  - No evidence → Minor gap
+  - Any evidence → No gap
+
+Recommendation Generation:
+  - Critical gap: "Upload evidence immediately"
+  - Major gap: "Verify existing evidence + upload additional"
+  - Minor gap: "Review and verify current evidence"
+            </code>
+        </div>
+
+        <h3>Gap Analysis Output</h3>
+        <div class="code-block">
+            <code>
+Example Gap Analysis Response:
+
+{
+  "total_clauses": 52,
+  "clauses_with_gaps": 8,
+  "critical_gaps": 2,
+  "major_gaps": 3,
+  "minor_gaps": 3,
+  "gaps": [
+    {
+      "clause_number": "1.8.1",
+      "clause_title": "Assessment Validation",
+      "compliance_level": "critical",
+      "evidence_count": 0,
+      "verified_evidence_count": 0,
+      "has_sufficient_evidence": false,
+      "gap_severity": "critical",
+      "recommendations": [
+        "Upload evidence for 1.8.1",
+        "Review policies related to: validation, moderation, quality assurance"
+      ]
+    },
+    {
+      "clause_number": "2.1",
+      "clause_title": "Recruitment and Induction",
+      "compliance_level": "essential",
+      "evidence_count": 2,
+      "verified_evidence_count": 0,
+      "has_sufficient_evidence": false,
+      "gap_severity": "major",
+      "recommendations": [
+        "Verify existing evidence for 2.1",
+        "Upload additional supporting evidence"
+      ]
+    }
+  ]
+}
+            </code>
+        </div>
+
+        <h2 id="benefits">Benefits by Role</h2>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>Compliance Officers</h4>
+                <ul>
+                    <li>80% reduction in audit preparation time</li>
+                    <li>Real-time visibility into compliance status</li>
+                    <li>Early gap identification with remediation plans</li>
+                    <li>Automated evidence-to-clause mapping</li>
+                    <li>Confidence in audit readiness</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h4>Quality Managers</h4>
+                <ul>
+                    <li>Continuous compliance monitoring dashboard</li>
+                    <li>Evidence quality verification workflows</li>
+                    <li>Critical clause coverage tracking</li>
+                    <li>Audit report generation on-demand</li>
+                    <li>Historical compliance trending</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h4>Senior Management</h4>
+                <ul>
+                    <li>Executive compliance dashboards</li>
+                    <li>Risk visibility (gaps by severity)</li>
+                    <li>Audit readiness confidence metrics</li>
+                    <li>Resource allocation guidance</li>
+                    <li>Regulatory confidence</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h4>Admin Staff</h4>
+                <ul>
+                    <li>Simple evidence upload interface</li>
+                    <li>Automated document categorization</li>
+                    <li>No compliance expertise required</li>
+                    <li>Bulk upload capabilities</li>
+                    <li>Clear task assignments</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="success-box" style="margin-top: 3rem;">
+            <h3>💡 Best Practices</h3>
+            <ul>
+                <li><strong>Upload Early:</strong> Add evidence throughout the year, not just before audits</li>
+                <li><strong>Verify Auto-Tags:</strong> Review AI-generated mappings for accuracy</li>
+                <li><strong>Track Critical Clauses:</strong> Prioritize evidence for critical compliance requirements</li>
+                <li><strong>Multiple Evidence:</strong> Aim for 2-3 verified evidence items per clause</li>
+                <li><strong>Regular Reports:</strong> Generate quarterly audit reports to identify gaps early</li>
+                <li><strong>Use Metadata:</strong> Add tags and descriptions for easier evidence search</li>
+            </ul>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="index.html" class="btn btn-secondary">← Back to Index</a>
+            <a href="quickstart.html" class="btn btn-primary">Quick Start →</a>
+        </div>
+    </div>
+</body>
+</html>

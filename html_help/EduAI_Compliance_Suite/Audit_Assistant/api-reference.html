@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - Audit Assistant Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Audit Assistant</a> /
+            <strong>API Reference</strong>
+        </div>
+
+        <h1>🔌 REST API Reference</h1>
+        <p class="lead">
+            Complete REST API documentation for Audit Assistant including all endpoints, request/response formats, and authentication requirements.
+        </p>
+
+        <div class="toc-box">
+            <h3>Endpoints</h3>
+            <ul>
+                <li><a href="#authentication">Authentication</a></li>
+                <li><a href="#evidence-viewset">Evidence Management</a></li>
+                <li><a href="#clause-evidence-viewset">Clause Evidence</a></li>
+                <li><a href="#audit-report-viewset">Audit Reports</a></li>
+                <li><a href="#pagination">Pagination</a></li>
+                <li><a href="#error-handling">Error Handling</a></li>
+            </ul>
+        </div>
+
+        <h2 id="authentication">Authentication</h2>
+        <p>
+            All API requests require authentication using JWT tokens in the Authorization header:
+        </p>
+        <div class="code-block">
+            <code>
+Authorization: Bearer &lt;your_jwt_token&gt;
+            </code>
+        </div>
+
+        <p><strong>Base URL:</strong> <code>/api/v1/tenants/{tenant_id}/audit-assistant/</code></p>
+
+        <h2 id="evidence-viewset">Evidence Management API</h2>
+
+        <h3>List Evidence</h3>
+        <p><strong>Endpoint:</strong> <code>GET /evidence/</code></p>
+        <p>Retrieve paginated list of evidence documents for the tenant.</p>
+
+        <h4>Query Parameters</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>status</td>
+                    <td>string</td>
+                    <td>Filter by status: uploaded, processing, tagged, reviewed, approved, rejected</td>
+                </tr>
+                <tr>
+                    <td>evidence_type</td>
+                    <td>string</td>
+                    <td>Filter by type: policy, procedure, record, etc.</td>
+                </tr>
+                <tr>
+                    <td>search</td>
+                    <td>string</td>
+                    <td>Search in title, description, evidence_number</td>
+                </tr>
+                <tr>
+                    <td>ordering</td>
+                    <td>string</td>
+                    <td>Sort field: uploaded_at, title, evidence_date</td>
+                </tr>
+                <tr>
+                    <td>page</td>
+                    <td>integer</td>
+                    <td>Page number (default: 1)</td>
+                </tr>
+                <tr>
+                    <td>page_size</td>
+                    <td>integer</td>
+                    <td>Items per page (default: 20, max: 100)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Response Example</h4>
+        <div class="code-block">
+            <code>
+{
+  "count": 45,
+  "next": "/api/v1/tenants/123/audit-assistant/evidence/?page=2",
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "evidence_number": "EV-2024-001",
+      "title": "Assessment Policy",
+      "description": "Comprehensive assessment policy document",
+      "evidence_type": "policy",
+      "file": "/media/evidence/123/assessment-policy.pdf",
+      "file_url": "https://cdn.example.com/evidence/123/assessment-policy.pdf",
+      "file_size": 245760,
+      "status": "tagged",
+      "tags": ["assessment", "policy", "2024"],
+      "evidence_date": "2024-01-15",
+      "uploaded_at": "2024-01-16T10:30:00Z",
+      "uploaded_by_name": "Jane Doe",
+      "ner_processed_at": "2024-01-16T10:30:05Z",
+      "tagged_clauses_count": 8,
+      "reviewed_at": null,
+      "reviewed_by": null
+    }
+  ]
+}
+            </code>
+        </div>
+
+        <h3>Upload Evidence</h3>
+        <p><strong>Endpoint:</strong> <code>POST /evidence/upload/</code></p>
+        <p>Upload evidence document with automatic NER processing.</p>
+
+        <h4>Request Headers</h4>
+        <div class="code-block">
+            <code>
+Content-Type: multipart/form-data
+            </code>
+        </div>
+
+        <h4>Request Body (Form Data)</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Required</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>file</td>
+                    <td>file</td>
+                    <td>Yes</td>
+                    <td>Evidence file (PDF, DOCX, TXT, etc.)</td>
+                </tr>
+                <tr>
+                    <td>evidence_number</td>
+                    <td>string</td>
+                    <td>Yes</td>
+                    <td>Unique evidence identifier</td>
+                </tr>
+                <tr>
+                    <td>title</td>
+                    <td>string</td>
+                    <td>Yes</td>
+                    <td>Evidence title</td>
+                </tr>
+                <tr>
+                    <td>description</td>
+                    <td>string</td>
+                    <td>No</td>
+                    <td>Detailed description</td>
+                </tr>
+                <tr>
+                    <td>evidence_type</td>
+                    <td>string</td>
+                    <td>Yes</td>
+                    <td>Type: policy, procedure, record, etc.</td>
+                </tr>
+                <tr>
+                    <td>evidence_date</td>
+                    <td>date</td>
+                    <td>Yes</td>
+                    <td>Date evidence was created (YYYY-MM-DD)</td>
+                </tr>
+                <tr>
+                    <td>tags</td>
+                    <td>array</td>
+                    <td>No</td>
+                    <td>Custom tags (JSON array)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Python Example</h4>
+        <div class="code-block">
+            <code>
+import requests
+
+url = "https://api.example.com/api/v1/tenants/123/audit-assistant/evidence/upload/"
+headers = {
+    "Authorization": "Bearer your_jwt_token"
+}
+files = {
+    "file": open("assessment-policy.pdf", "rb")
+}
+data = {
+    "evidence_number": "EV-2024-001",
+    "title": "Assessment Policy",
+    "description": "Comprehensive assessment policy document",
+    "evidence_type": "policy",
+    "evidence_date": "2024-01-15",
+    "tags": '["assessment", "policy", "2024"]'
+}
+
+response = requests.post(url, headers=headers, files=files, data=data)
+print(response.json())
+            </code>
+        </div>
+
+        <h4>Response (201 Created)</h4>
+        <div class="code-block">
+            <code>
+{
+  "id": 1,
+  "evidence_number": "EV-2024-001",
+  "title": "Assessment Policy",
+  "status": "processing",
+  "message": "Evidence uploaded successfully. NER processing started.",
+  "task_id": "a8b7c6d5-e4f3-2g1h-0i9j-8k7l6m5n4o3p"
+}
+            </code>
+        </div>
+
+        <h3>Get Evidence Details</h3>
+        <p><strong>Endpoint:</strong> <code>GET /evidence/{id}/</code></p>
+        <p>Retrieve detailed information for a specific evidence document.</p>
+
+        <h4>Response Example</h4>
+        <div class="code-block">
+            <code>
+{
+  "id": 1,
+  "evidence_number": "EV-2024-001",
+  "title": "Assessment Policy",
+  "description": "Comprehensive assessment policy document",
+  "evidence_type": "policy",
+  "file": "/media/evidence/123/assessment-policy.pdf",
+  "file_url": "https://cdn.example.com/evidence/123/assessment-policy.pdf",
+  "file_size": 245760,
+  "extracted_text": "Assessment Policy\n\nThis policy outlines...",
+  "ner_entities": [
+    {
+      "entity": "Standard 1.1",
+      "type": "STANDARD",
+      "start": 42,
+      "end": 53,
+      "value": "1.1"
+    },
+    {
+      "entity": "Clause 1.1.1",
+      "type": "CLAUSE",
+      "start": 120,
+      "end": 132,
+      "value": "1.1.1"
+    }
+  ],
+  "ner_processed_at": "2024-01-16T10:30:05Z",
+  "status": "tagged",
+  "tags": ["assessment", "policy", "2024"],
+  "evidence_date": "2024-01-15",
+  "uploaded_at": "2024-01-16T10:30:00Z",
+  "uploaded_by_name": "Jane Doe",
+  "tagged_clauses_count": 8
+}
+            </code>
+        </div>
+
+        <h3>Review Tagged Clauses</h3>
+        <p><strong>Endpoint:</strong> <code>GET /evidence/{id}/tagged_clauses/</code></p>
+        <p>Retrieve auto-tagged clauses for an evidence document with confidence scores.</p>
+
+        <h4>Response Example</h4>
+        <div class="code-block">
+            <code>
+{
+  "evidence_id": 1,
+  "evidence_title": "Assessment Policy",
+  "total_tagged_clauses": 8,
+  "tagged_clauses": [
+    {
+      "id": 45,
+      "asqa_clause": {
+        "id": 12,
+        "clause_number": "1.1.1",
+        "title": "RTO operations are quality assured",
+        "standard_number": "1.1"
+      },
+      "mapping_type": "auto_rule",
+      "confidence_score": 0.95,
+      "matched_entities": [
+        {"entity": "Clause 1.1.1", "type": "CLAUSE"}
+      ],
+      "matched_keywords": [
+        "quality assurance",
+        "operations",
+        "RTO"
+      ],
+      "is_verified": false,
+      "created_at": "2024-01-16T10:30:06Z"
+    },
+    {
+      "id": 46,
+      "asqa_clause": {
+        "id": 18,
+        "clause_number": "1.2.1",
+        "title": "Assessment systems meet requirements",
+        "standard_number": "1.2"
+      },
+      "mapping_type": "auto_ner",
+      "confidence_score": 0.82,
+      "matched_entities": [
+        {"entity": "assessment", "type": "KEYWORD"}
+      ],
+      "matched_keywords": [
+        "assessment",
+        "systems",
+        "requirements"
+      ],
+      "is_verified": false,
+      "created_at": "2024-01-16T10:30:06Z"
+    }
+  ]
+}
+            </code>
+        </div>
+
+        <h3>Verify Clause Mapping</h3>
+        <p><strong>Endpoint:</strong> <code>POST /evidence/{id}/verify_tagging/</code></p>
+        <p>Verify or reject auto-tagged clause mappings.</p>
+
+        <h4>Request Body</h4>
+        <div class="code-block">
+            <code>
+{
+  "clause_evidence_ids": [45, 46, 47],
+  "action": "verify"  // or "reject"
+}
+            </code>
+        </div>
+
+        <h4>Response (200 OK)</h4>
+        <div class="code-block">
+            <code>
+{
+  "message": "3 clause mappings verified successfully",
+  "verified_count": 3,
+  "rejected_count": 0
+}
+            </code>
+        </div>
+
+        <h3>Process NER Manually</h3>
+        <p><strong>Endpoint:</strong> <code>POST /evidence/{id}/process_ner/</code></p>
+        <p>Trigger NER processing manually (if auto-processing failed).</p>
+
+        <h4>Response (200 OK)</h4>
+        <div class="code-block">
+            <code>
+{
+  "message": "NER processing started",
+  "task_id": "a8b7c6d5-e4f3-2g1h-0i9j-8k7l6m5n4o3p"
+}
+            </code>
+        </div>
+
+        <h3>Update Evidence</h3>
+        <p><strong>Endpoint:</strong> <code>PUT /evidence/{id}/</code> or <code>PATCH /evidence/{id}/</code></p>
+        <p>Update evidence metadata (not the file itself).</p>
+
+        <h4>Request Body</h4>
+        <div class="code-block">
+            <code>
+{
+  "title": "Updated Assessment Policy",
+  "description": "Updated description",
+  "tags": ["assessment", "policy", "2024", "updated"],
+  "status": "reviewed"
+}
+            </code>
+        </div>
+
+        <h3>Delete Evidence</h3>
+        <p><strong>Endpoint:</strong> <code>DELETE /evidence/{id}/</code></p>
+        <p>Delete evidence document and all associated clause mappings.</p>
+
+        <h4>Response (204 No Content)</h4>
+
+        <h2 id="clause-evidence-viewset">Clause Evidence API</h2>
+
+        <h3>List Clause Evidence</h3>
+        <p><strong>Endpoint:</strong> <code>GET /clause-evidence/</code></p>
+        <p>Retrieve clause-to-evidence mappings with filtering options.</p>
+
+        <h4>Query Parameters</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>mapping_type</td>
+                    <td>string</td>
+                    <td>Filter: auto_ner, auto_rule, manual, suggested</td>
+                </tr>
+                <tr>
+                    <td>is_verified</td>
+                    <td>boolean</td>
+                    <td>Filter by verification status</td>
+                </tr>
+                <tr>
+                    <td>min_confidence</td>
+                    <td>float</td>
+                    <td>Minimum confidence score (0.0-1.0)</td>
+                </tr>
+                <tr>
+                    <td>asqa_clause</td>
+                    <td>integer</td>
+                    <td>Filter by specific clause ID</td>
+                </tr>
+                <tr>
+                    <td>evidence</td>
+                    <td>integer</td>
+                    <td>Filter by specific evidence ID</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Identify Gaps</h3>
+        <p><strong>Endpoint:</strong> <code>GET /clause-evidence/gaps/</code></p>
+        <p>Identify ASQA clauses without evidence (compliance gaps).</p>
+
+        <h4>Query Parameters</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>standard_ids</td>
+                    <td>array</td>
+                    <td>Comma-separated standard IDs (e.g., "1,2,3")</td>
+                </tr>
+                <tr>
+                    <td>severity</td>
+                    <td>string</td>
+                    <td>Filter by severity: critical, major, minor</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>Response Example</h4>
+        <div class="code-block">
+            <code>
+{
+  "total_clauses": 150,
+  "clauses_with_evidence": 120,
+  "clauses_without_evidence": 30,
+  "coverage_percentage": 80.0,
+  "gaps": [
+    {
+      "clause": {
+        "id": 25,
+        "clause_number": "1.5.3",
+        "title": "Marketing and advertising compliance",
+        "standard_number": "1.5",
+        "is_critical": true
+      },
+      "evidence_count": 0,
+      "verified_evidence_count": 0,
+      "severity": "critical",
+      "recommendation": "Upload marketing compliance policy and recent advertising materials"
+    },
+    {
+      "clause": {
+        "id": 42,
+        "clause_number": "2.3.1",
+        "title": "Trainer qualifications verification",
+        "standard_number": "2.3",
+        "is_critical": false
+      },
+      "evidence_count": 0,
+      "verified_evidence_count": 0,
+      "severity": "major",
+      "recommendation": "Provide trainer qualification certificates and verification records"
+    }
+  ]
+}
+            </code>
+        </div>
+
+        <h3>Create Manual Mapping</h3>
+        <p><strong>Endpoint:</strong> <code>POST /clause-evidence/</code></p>
+        <p>Create manual clause-to-evidence mapping.</p>
+
+        <h4>Request Body</h4>
+        <div class="code-block">
+            <code>
+{
+  "asqa_clause": 25,
+  "evidence": 15,
+  "mapping_type": "manual",
+  "relevance_notes": "This policy directly addresses clause requirements"
+}
+            </code>
+        </div>
+
+        <h3>Delete Mapping</h3>
+        <p><strong>Endpoint:</strong> <code>DELETE /clause-evidence/{id}/</code></p>
+        <p>Remove clause-to-evidence mapping.</p>
+
+        <h2 id="audit-report-viewset">Audit Reports API</h2>
+
+        <h3>List Audit Reports</h3>
+        <p><strong>Endpoint:</strong> <code>GET /audit-reports/</code></p>
+        <p>Retrieve paginated list of audit reports.</p>
+
+        <h4>Query Parameters</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>status</td>
+                    <td>string</td>
+                    <td>Filter: draft, in_progress, review, completed, submitted</td>
+                </tr>
+                <tr>
+                    <td>ordering</td>
+                    <td>string</td>
+                    <td>Sort: created_at, compliance_percentage</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Generate Report</h3>
+        <p><strong>Endpoint:</strong> <code>POST /audit-reports/generate_report/</code></p>
+        <p>Generate comprehensive audit report for selected standards.</p>
+
+        <h4>Request Body</h4>
+        <div class="code-block">
+            <code>
+{
+  "report_number": "AR-2024-001",
+  "title": "Initial Registration Audit Report",
+  "description": "Comprehensive audit for initial ASQA registration",
+  "asqa_standards": [1, 2, 3, 4, 5, 6, 7, 8],
+  "audit_period_start": "2024-01-01",
+  "audit_period_end": "2024-03-31"
+}
+            </code>
+        </div>
+
+        <h4>Response (201 Created)</h4>
+        <div class="code-block">
+            <code>
+{
+  "id": 5,
+  "report_number": "AR-2024-001",
+  "title": "Initial Registration Audit Report",
+  "status": "in_progress",
+  "total_clauses": 150,
+  "clauses_with_evidence": 120,
+  "clauses_without_evidence": 30,
+  "compliance_percentage": 80.0,
+  "critical_clauses_count": 45,
+  "critical_clauses_covered": 38,
+  "critical_compliance_percentage": 84.4,
+  "total_evidence_count": 245,
+  "auto_tagged_count": 198,
+  "manually_tagged_count": 47,
+  "verified_evidence_count": 210,
+  "created_at": "2024-04-01T14:30:00Z"
+}
+            </code>
+        </div>
+
+        <h3>Get Report Details</h3>
+        <p><strong>Endpoint:</strong> <code>GET /audit-reports/{id}/</code></p>
+        <p>Retrieve detailed audit report with all clause entries.</p>
+
+        <h4>Response Example</h4>
+        <div class="code-block">
+            <code>
+{
+  "id": 5,
+  "report_number": "AR-2024-001",
+  "title": "Initial Registration Audit Report",
+  "description": "Comprehensive audit for initial ASQA registration",
+  "status": "in_progress",
+  "standards_details": [
+    {
+      "id": 1,
+      "standard_number": "1",
+      "title": "Training and Assessment"
+    }
+  ],
+  "audit_period_start": "2024-01-01",
+  "audit_period_end": "2024-03-31",
+  "compliance_metrics": {
+    "total_clauses": 150,
+    "clauses_with_evidence": 120,
+    "clauses_without_evidence": 30,
+    "compliance_percentage": 80.0,
+    "critical_clauses_count": 45,
+    "critical_clauses_covered": 38,
+    "critical_compliance_percentage": 84.4
+  },
+  "evidence_summary": {
+    "total_evidence_count": 245,
+    "auto_tagged_count": 198,
+    "manually_tagged_count": 47,
+    "verified_evidence_count": 210
+  },
+  "clause_entries": [
+    {
+      "id": 1,
+      "asqa_clause": {
+        "clause_number": "1.1.1",
+        "title": "RTO operations are quality assured",
+        "standard_number": "1.1"
+      },
+      "compliance_status": "compliant",
+      "evidence_count": 5,
+      "verified_evidence_count": 4,
+      "finding": "",
+      "severity": "",
+      "recommendation": ""
+    },
+    {
+      "id": 2,
+      "asqa_clause": {
+        "clause_number": "1.5.3",
+        "title": "Marketing and advertising compliance",
+        "standard_number": "1.5"
+      },
+      "compliance_status": "non_compliant",
+      "evidence_count": 0,
+      "verified_evidence_count": 0,
+      "finding": "No evidence of marketing compliance policy",
+      "severity": "critical",
+      "recommendation": "Develop and implement marketing compliance policy"
+    }
+  ],
+  "findings": [],
+  "recommendations": [],
+  "created_at": "2024-04-01T14:30:00Z",
+  "created_by": "Jane Doe"
+}
+            </code>
+        </div>
+
+        <h3>Submit Report</h3>
+        <p><strong>Endpoint:</strong> <code>POST /audit-reports/{id}/submit/</code></p>
+        <p>Mark audit report as submitted to ASQA.</p>
+
+        <h4>Response (200 OK)</h4>
+        <div class="code-block">
+            <code>
+{
+  "message": "Audit report submitted successfully",
+  "report_id": 5,
+  "submitted_at": "2024-04-02T09:15:00Z"
+}
+            </code>
+        </div>
+
+        <h3>Update Report</h3>
+        <p><strong>Endpoint:</strong> <code>PATCH /audit-reports/{id}/</code></p>
+        <p>Update report metadata or findings.</p>
+
+        <h4>Request Body</h4>
+        <div class="code-block">
+            <code>
+{
+  "status": "review",
+  "findings": [
+    {
+      "clause": "1.5.3",
+      "finding": "No marketing compliance policy",
+      "severity": "critical",
+      "recommendation": "Develop policy immediately"
+    }
+  ],
+  "recommendations": [
+    "Address all critical gaps before submission",
+    "Verify all auto-tagged evidence",
+    "Upload missing qualification documents"
+  ]
+}
+            </code>
+        </div>
+
+        <h2 id="pagination">Pagination</h2>
+        <p>All list endpoints support cursor-based pagination:</p>
+        <div class="code-block">
+            <code>
+{
+  "count": 245,
+  "next": "/api/v1/tenants/123/audit-assistant/evidence/?page=3",
+  "previous": "/api/v1/tenants/123/audit-assistant/evidence/?page=1",
+  "results": [...]
+}
+            </code>
+        </div>
+
+        <h2 id="error-handling">Error Handling</h2>
+
+        <h3>HTTP Status Codes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Status Code</th>
+                    <th>Meaning</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>200</td>
+                    <td>OK</td>
+                    <td>Request succeeded</td>
+                </tr>
+                <tr>
+                    <td>201</td>
+                    <td>Created</td>
+                    <td>Resource created successfully</td>
+                </tr>
+                <tr>
+                    <td>204</td>
+                    <td>No Content</td>
+                    <td>Resource deleted successfully</td>
+                </tr>
+                <tr>
+                    <td>400</td>
+                    <td>Bad Request</td>
+                    <td>Invalid request data</td>
+                </tr>
+                <tr>
+                    <td>401</td>
+                    <td>Unauthorized</td>
+                    <td>Missing or invalid authentication</td>
+                </tr>
+                <tr>
+                    <td>403</td>
+                    <td>Forbidden</td>
+                    <td>Insufficient permissions</td>
+                </tr>
+                <tr>
+                    <td>404</td>
+                    <td>Not Found</td>
+                    <td>Resource does not exist</td>
+                </tr>
+                <tr>
+                    <td>409</td>
+                    <td>Conflict</td>
+                    <td>Duplicate resource (e.g., evidence_number)</td>
+                </tr>
+                <tr>
+                    <td>413</td>
+                    <td>Payload Too Large</td>
+                    <td>File exceeds maximum size</td>
+                </tr>
+                <tr>
+                    <td>500</td>
+                    <td>Internal Server Error</td>
+                    <td>Server error occurred</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Error Response Format</h3>
+        <div class="code-block">
+            <code>
+{
+  "error": "Validation Error",
+  "detail": "Evidence with this number already exists",
+  "field": "evidence_number",
+  "code": "unique"
+}
+            </code>
+        </div>
+
+        <div class="info-box" style="margin-top: 3rem;">
+            <h3>📋 Endpoint Summary</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>Method</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>/evidence/</td>
+                        <td>GET</td>
+                        <td>List evidence documents</td>
+                    </tr>
+                    <tr>
+                        <td>/evidence/upload/</td>
+                        <td>POST</td>
+                        <td>Upload evidence file</td>
+                    </tr>
+                    <tr>
+                        <td>/evidence/{id}/</td>
+                        <td>GET</td>
+                        <td>Get evidence details</td>
+                    </tr>
+                    <tr>
+                        <td>/evidence/{id}/</td>
+                        <td>PUT/PATCH</td>
+                        <td>Update evidence</td>
+                    </tr>
+                    <tr>
+                        <td>/evidence/{id}/</td>
+                        <td>DELETE</td>
+                        <td>Delete evidence</td>
+                    </tr>
+                    <tr>
+                        <td>/evidence/{id}/tagged_clauses/</td>
+                        <td>GET</td>
+                        <td>Review auto-tagged clauses</td>
+                    </tr>
+                    <tr>
+                        <td>/evidence/{id}/verify_tagging/</td>
+                        <td>POST</td>
+                        <td>Verify/reject clause mappings</td>
+                    </tr>
+                    <tr>
+                        <td>/evidence/{id}/process_ner/</td>
+                        <td>POST</td>
+                        <td>Trigger NER processing</td>
+                    </tr>
+                    <tr>
+                        <td>/clause-evidence/</td>
+                        <td>GET</td>
+                        <td>List clause mappings</td>
+                    </tr>
+                    <tr>
+                        <td>/clause-evidence/</td>
+                        <td>POST</td>
+                        <td>Create manual mapping</td>
+                    </tr>
+                    <tr>
+                        <td>/clause-evidence/gaps/</td>
+                        <td>GET</td>
+                        <td>Identify compliance gaps</td>
+                    </tr>
+                    <tr>
+                        <td>/clause-evidence/{id}/</td>
+                        <td>DELETE</td>
+                        <td>Remove mapping</td>
+                    </tr>
+                    <tr>
+                        <td>/audit-reports/</td>
+                        <td>GET</td>
+                        <td>List audit reports</td>
+                    </tr>
+                    <tr>
+                        <td>/audit-reports/generate_report/</td>
+                        <td>POST</td>
+                        <td>Generate new report</td>
+                    </tr>
+                    <tr>
+                        <td>/audit-reports/{id}/</td>
+                        <td>GET</td>
+                        <td>Get report details</td>
+                    </tr>
+                    <tr>
+                        <td>/audit-reports/{id}/</td>
+                        <td>PATCH</td>
+                        <td>Update report</td>
+                    </tr>
+                    <tr>
+                        <td>/audit-reports/{id}/submit/</td>
+                        <td>POST</td>
+                        <td>Submit report to ASQA</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="models.html" class="btn btn-secondary">← Data Models</a>
+            <a href="workflows.html" class="btn btn-primary">Workflows →</a>
+        </div>
+    </div>
+</body>
+</html>

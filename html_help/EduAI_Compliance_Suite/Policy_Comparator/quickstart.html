@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Start - Policy Comparator Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Policy Comparator</a> /
+            <strong>Quick Start</strong>
+        </div>
+
+        <h1>⚡ Quick Start Guide</h1>
+        <p class="lead">
+            Get started with Policy Comparator in minutes. This guide will walk you through seeding ASQA standards, 
+            creating policies, running your first comparison, and interpreting results.
+        </p>
+
+        <div class="toc-box">
+            <h3>On This Page</h3>
+            <ul>
+                <li><a href="#prerequisites">Prerequisites</a></li>
+                <li><a href="#environment">Environment Setup</a></li>
+                <li><a href="#seeding-standards">Step 1: Seed ASQA Standards</a></li>
+                <li><a href="#create-policy">Step 2: Create a Policy</a></li>
+                <li><a href="#run-comparison">Step 3: Run Comparison</a></li>
+                <li><a href="#interpret-results">Step 4: Interpret Results</a></li>
+                <li><a href="#threshold-config">Threshold Configuration</a></li>
+                <li><a href="#next-steps">Next Steps</a></li>
+            </ul>
+        </div>
+
+        <h2 id="prerequisites">📋 Prerequisites</h2>
+        <div class="checklist">
+            <div class="checklist-item">
+                <input type="checkbox" id="prereq1">
+                <label for="prereq1"><strong>NextCore AI Platform:</strong> Access to NextCore AI backend (apps/control-plane)</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="prereq2">
+                <label for="prereq2"><strong>Database:</strong> PostgreSQL database with Policy Comparator models migrated</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="prereq3">
+                <label for="prereq3"><strong>Python Environment:</strong> Python 3.11+ with Django 5.1.13</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="prereq4">
+                <label for="prereq4"><strong>Authentication:</strong> Valid authentication token for API access</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="prereq5">
+                <label for="prereq5"><strong>Tenant:</strong> Active tenant account in the system</label>
+            </div>
+        </div>
+
+        <h2 id="environment">🔧 Environment Setup</h2>
+        
+        <h3>Install Dependencies</h3>
+        <p>Policy Comparator is included in the standard control-plane requirements:</p>
+        <div class="code-block">
+            <code>
+# Navigate to control-plane directory
+cd apps/control-plane
+
+# Install requirements
+pip install -r requirements.txt
+
+# Run migrations
+python manage.py migrate
+            </code>
+        </div>
+
+        <h3>Verify Installation</h3>
+        <p>Check that Policy Comparator models are available:</p>
+        <div class="code-block">
+            <code>
+python manage.py shell
+
+# In Django shell
+from policy_comparator.models import ASQAStandard, Policy, ComparisonResult
+print("Policy Comparator models loaded successfully!")
+exit()
+            </code>
+        </div>
+
+        <h3>Configuration Settings</h3>
+        <p>Default threshold settings (in <code>control_plane/settings.py</code>):</p>
+        <div class="code-block">
+            <code>
+# Policy Comparator Configuration
+POLICY_COMPARATOR = {
+    'THRESHOLD_FULL_MATCH': 0.8,      # Full match: similarity >= 0.8
+    'THRESHOLD_PARTIAL_MATCH': 0.6,   # Partial: 0.6 <= similarity < 0.8
+    'THRESHOLD_WEAK_MATCH': 0.4,      # Weak: 0.4 <= similarity < 0.6
+    # Below 0.4 = No match / Gap
+}
+            </code>
+        </div>
+
+        <h2 id="seeding-standards">📚 Step 1: Seed ASQA Standards</h2>
+        <p>
+            Before comparing policies, you need to populate the ASQA standards database. Here's how to seed 
+            Standard 1.1 (Training and Assessment Strategies) as an example:
+        </p>
+
+        <div class="code-block">
+            <code>
+# save as: seed_asqa_standards.py
+from policy_comparator.models import ASQAStandard, ASQAClause
+
+# Create Standard 1.1
+standard = ASQAStandard.objects.create(
+    standard_number="1.1",
+    title="Training and Assessment Strategies",
+    description="RTOs must have training and assessment strategies that meet the requirements of the training package",
+    standard_type="training_assessment",
+    full_text="""
+    The RTO's training and assessment strategies and practices, including the amount of 
+    training they provide, are consistent with the requirements of training packages and 
+    VET accredited courses and enable each learner to meet the requirements for each unit 
+    of competency or module in which they are enrolled.
+    """,
+    requirements=[
+        "Develop training and assessment strategies for each training product",
+        "Ensure strategies are consistent with training package requirements",
+        "Provide sufficient training to meet competency requirements",
+        "Adapt strategies to meet learner needs",
+        "Document and implement strategies effectively"
+    ],
+    is_active=True,
+    version="2015"
+)
+
+# Create clauses for Standard 1.1
+clauses_data = [
+    {
+        "clause_number": "1.1.1",
+        "title": "Training and Assessment Strategy Requirements",
+        "clause_text": "The RTO must develop and implement a training and assessment strategy for each training product on its scope of registration.",
+        "keywords": ["training and assessment strategy", "training product", "scope of registration", "develop", "implement"],
+        "compliance_level": "critical",
+        "evidence_required": ["TAS documents", "Implementation evidence", "Scope of registration"]
+    },
+    {
+        "clause_number": "1.1.2", 
+        "title": "Training Package Consistency",
+        "clause_text": "Training and assessment must be consistent with the requirements specified in the training package.",
+        "keywords": ["training package requirements", "consistency", "units of competency", "assessment requirements"],
+        "compliance_level": "critical",
+        "evidence_required": ["Training materials", "Assessment tools", "Mapping documents"]
+    },
+    {
+        "clause_number": "1.1.3",
+        "title": "Sufficient Training Duration",
+        "clause_text": "The amount and nature of training provided must be sufficient to enable learners to meet the requirements of each unit of competency.",
+        "keywords": ["training duration", "sufficient training", "learner needs", "competency requirements"],
+        "compliance_level": "essential",
+        "evidence_required": ["Training schedules", "Delivery plans", "Learner contact hours"]
+    }
+]
+
+for clause_data in clauses_data:
+    ASQAClause.objects.create(
+        standard=standard,
+        **clause_data
+    )
+
+print(f"✅ Created Standard {standard.standard_number} with {len(clauses_data)} clauses")
+            </code>
+        </div>
+
+        <div class="success-box">
+            <h4>💡 Pro Tip: Bulk Import</h4>
+            <p>
+                For production use, create a comprehensive seed script with all 8 ASQA standards and their clauses. 
+                You can also import from JSON/CSV files using Django's <code>loaddata</code> command or custom 
+                management commands.
+            </p>
+        </div>
+
+        <h2 id="create-policy">📝 Step 2: Create a Policy</h2>
+        <p>Create an RTO policy to compare against ASQA standards:</p>
+
+        <div class="code-block">
+            <code>
+import requests
+from datetime import date
+
+# API endpoint (replace with your tenant slug)
+url = "https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator/policies/"
+
+# Authentication header
+headers = {
+    "Authorization": "Bearer YOUR_AUTH_TOKEN",
+    "Content-Type": "application/json"
+}
+
+# Policy data
+policy_data = {
+    "policy_number": "TAS-001",
+    "title": "Training and Assessment Strategy Policy",
+    "description": "Policy outlining TAS development and implementation requirements",
+    "policy_type": "training_delivery",
+    "content": """
+    Training and Assessment Strategy Policy
+    
+    1. Purpose
+    Our RTO develops comprehensive training and assessment strategies for each 
+    qualification and unit of competency on our scope of registration. These 
+    strategies ensure consistent delivery of quality training that meets the 
+    requirements of training packages.
+    
+    2. Strategy Development
+    - TAS documents are created for all training products
+    - Strategies are reviewed annually and updated as needed
+    - Training package requirements are incorporated into all strategies
+    - Industry consultation informs strategy development
+    
+    3. Training Delivery
+    - Sufficient training duration to meet competency requirements
+    - Flexible delivery modes to accommodate learner needs
+    - Resources and facilities appropriate for training delivery
+    - Regular monitoring of training effectiveness
+    
+    4. Assessment Practices
+    - Assessment tools aligned with unit requirements
+    - Valid and reliable assessment methods
+    - Assessment conducted by qualified assessors
+    - Reasonable adjustment provided where needed
+    
+    5. Documentation and Review
+    - All TAS documents maintained and accessible
+    - Strategies reviewed after each delivery
+    - Continuous improvement based on feedback
+    """,
+    "version": "1.0",
+    "status": "approved",
+    "effective_date": date.today().isoformat()
+}
+
+# Create policy
+response = requests.post(url, json=policy_data, headers=headers)
+
+if response.status_code == 201:
+    policy = response.json()
+    print(f"✅ Policy created with ID: {policy['id']}")
+    print(f"   Policy Number: {policy['policy_number']}")
+    print(f"   Title: {policy['title']}")
+else:
+    print(f"❌ Error: {response.status_code} - {response.text}")
+            </code>
+        </div>
+
+        <h2 id="run-comparison">🔍 Step 3: Run Comparison</h2>
+        <p>
+            Now compare the policy against ASQA standards. The comparison will analyze the policy text using NLP 
+            and identify compliance gaps:
+        </p>
+
+        <div class="code-block">
+            <code>
+import requests
+
+# Comparison endpoint
+url = f"https://api.nextcore.ai/v1/{{tenant_slug}}/policy-comparator/policies/{policy['id']}/compare/"
+
+headers = {
+    "Authorization": "Bearer YOUR_AUTH_TOKEN",
+    "Content-Type": "application/json"
+}
+
+# Comparison request
+comparison_data = {
+    "policy_id": policy['id'],
+    "standard_ids": [1],  # Compare against Standard 1 only, or omit for all
+    "session_name": "Initial TAS Policy Comparison",
+    "use_nlp": True
+}
+
+# Start comparison
+response = requests.post(url, json=comparison_data, headers=headers)
+
+if response.status_code == 200:
+    result = response.json()
+    
+    print("✅ Comparison Completed!")
+    print(f"   Session ID: {result['session']['id']}")
+    print(f"   Processing Time: {result['processing_time']:.2f} seconds")
+    print(f"\n📊 Results Summary:")
+    print(f"   Total Clauses Checked: {result['results_summary']['total_checked']}")
+    print(f"   Compliant: {result['results_summary']['compliant']}")
+    print(f"   Partial Matches: {result['results_summary']['partial_match']}")
+    print(f"   Gaps Found: {result['results_summary']['gaps']}")
+    print(f"   Overall Compliance Score: {result['results_summary']['compliance_score']:.1f}%")
+else:
+    print(f"❌ Error: {response.status_code} - {response.text}")
+            </code>
+        </div>
+
+        <h3>Expected Output</h3>
+        <div class="output-box">
+            <code>
+✅ Comparison Completed!
+   Session ID: 1
+   Processing Time: 0.45 seconds
+
+📊 Results Summary:
+   Total Clauses Checked: 3
+   Compliant: 2
+   Partial Matches: 1
+   Gaps Found: 0
+   Overall Compliance Score: 86.7%
+            </code>
+        </div>
+
+        <h2 id="interpret-results">📈 Step 4: Interpret Results</h2>
+        
+        <h3>Get Detailed Results</h3>
+        <p>Retrieve detailed comparison results with similarity scores and recommendations:</p>
+        <div class="code-block">
+            <code>
+# Get detailed results
+results_url = f"https://api.nextcore.ai/v1/{{tenant_slug}}/policy-comparator/policies/{policy['id']}/results/"
+
+response = requests.get(results_url, headers=headers)
+
+if response.status_code == 200:
+    results = response.json()
+    
+    for result in results:
+        clause = result['asqa_clause_details']
+        print(f"\n{'='*70}")
+        print(f"Clause: {clause['clause_number']} - {clause['title']}")
+        print(f"Similarity Score: {result['similarity_score']:.3f}")
+        print(f"Match Type: {result['match_type_display']}")
+        print(f"Compliance: {'✓ Yes' if result['is_compliant'] else '✗ No'}")
+        
+        if result['matched_text']:
+            print(f"\nMatched Text:")
+            print(f"  {result['matched_text'][:200]}...")
+        
+        if result['keywords_missing']:
+            print(f"\nMissing Keywords: {', '.join(result['keywords_missing'])}")
+        
+        if result['recommendations']:
+            print(f"\nRecommendations:")
+            for rec in result['recommendations']:
+                print(f"  • {rec}")
+            </code>
+        </div>
+
+        <h3>Understanding Similarity Scores</h3>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Score Range</th>
+                        <th>Match Type</th>
+                        <th>Interpretation</th>
+                        <th>Recommended Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="success-row">
+                        <td><strong>0.8 - 1.0</strong></td>
+                        <td><span class="badge badge-success">Full Match</span></td>
+                        <td>Policy fully addresses ASQA requirements with clear evidence</td>
+                        <td>No action required. Policy is compliant.</td>
+                    </tr>
+                    <tr class="warning-row">
+                        <td><strong>0.6 - 0.8</strong></td>
+                        <td><span class="badge badge-warning">Partial Match</span></td>
+                        <td>Policy covers most requirements but may need additional detail</td>
+                        <td>Review and consider adding more specific evidence or procedures</td>
+                    </tr>
+                    <tr class="danger-row">
+                        <td><strong>0.4 - 0.6</strong></td>
+                        <td><span class="badge badge-danger">Weak Match</span></td>
+                        <td>Policy has weak coverage with missing key concepts</td>
+                        <td>Update policy to include missing requirements and keywords</td>
+                    </tr>
+                    <tr class="danger-row">
+                        <td><strong>0.0 - 0.4</strong></td>
+                        <td><span class="badge badge-danger">No Match</span></td>
+                        <td>Policy does not adequately address this ASQA clause</td>
+                        <td>Create new policy section or significantly revise existing content</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Gap Analysis</h3>
+        <p>Get a comprehensive gap analysis with severity classification:</p>
+        <div class="code-block">
+            <code>
+# Get gap analysis
+gap_url = f"https://api.nextcore.ai/v1/{{tenant_slug}}/policy-comparator/policies/{policy['id']}/gap_analysis/"
+
+response = requests.get(gap_url, headers=headers)
+
+if response.status_code == 200:
+    gaps = response.json()
+    
+    print(f"\n🎯 Gap Analysis Summary")
+    print(f"{'='*70}")
+    print(f"Total Gaps: {gaps['summary']['total_gaps']}")
+    print(f"  🔴 Critical: {gaps['summary']['critical_gaps']}")
+    print(f"  🟡 Moderate: {gaps['summary']['moderate_gaps']}")
+    print(f"  🟢 Minor: {gaps['summary']['minor_gaps']}")
+    print(f"\nOverall Compliance Score: {gaps['summary']['compliance_score']:.1f}%")
+    
+    # Show critical gaps
+    if gaps['critical_gaps']:
+        print(f"\n🔴 Critical Gaps Requiring Immediate Attention:")
+        for gap in gaps['critical_gaps']:
+            clause = gap['clause']
+            print(f"\n  Clause {clause['clause_number']}: {clause['title']}")
+            print(f"  Similarity: {gap['similarity_score']:.3f}")
+            print(f"  Missing: {', '.join(gap['missing_keywords'][:3])}")
+            </code>
+        </div>
+
+        <h2 id="threshold-config">⚙️ Threshold Configuration</h2>
+        <p>
+            You can customize similarity thresholds to match your organization's compliance requirements. 
+            Thresholds are configured in Django settings:
+        </p>
+
+        <div class="code-block">
+            <code>
+# In control_plane/settings.py or environment-specific settings
+
+POLICY_COMPARATOR = {
+    # More strict thresholds (higher compliance bar)
+    'THRESHOLD_FULL_MATCH': 0.85,     # Require 85% similarity for full match
+    'THRESHOLD_PARTIAL_MATCH': 0.70,  # Partial match at 70%
+    'THRESHOLD_WEAK_MATCH': 0.50,     # Weak match at 50%
+    
+    # Or more lenient thresholds (for initial assessments)
+    # 'THRESHOLD_FULL_MATCH': 0.75,
+    # 'THRESHOLD_PARTIAL_MATCH': 0.55,
+    # 'THRESHOLD_WEAK_MATCH': 0.35,
+}
+            </code>
+        </div>
+
+        <div class="info-box">
+            <h4>📊 Threshold Guidelines</h4>
+            <ul>
+                <li><strong>Strict (0.85/0.70/0.50):</strong> Use for audit preparation or high-stakes compliance verification</li>
+                <li><strong>Standard (0.80/0.60/0.40):</strong> Default balanced approach for regular compliance checking</li>
+                <li><strong>Lenient (0.75/0.55/0.35):</strong> Use for initial policy development or exploratory analysis</li>
+            </ul>
+            <p>
+                <strong>Note:</strong> Threshold changes affect how similarity scores are classified into match types. 
+                Existing comparison results maintain their original scores but may be reclassified when viewed.
+            </p>
+        </div>
+
+        <h2 id="next-steps">🚀 Next Steps</h2>
+        <p>Now that you've completed your first comparison, explore these advanced features:</p>
+
+        <div class="grid-2">
+            <div class="card">
+                <h3>📚 Comprehensive Standards</h3>
+                <p>Seed all 8 ASQA standards (Standards 1-8) for complete compliance coverage</p>
+                <ul>
+                    <li>Training and Assessment (Standard 1)</li>
+                    <li>Trainer and Assessor (Standard 2)</li>
+                    <li>Educational Support Services (Standard 3)</li>
+                    <li>Certification (Standard 4)</li>
+                    <li>Engagement with Employers (Standard 5)</li>
+                    <li>Complaints and Appeals (Standard 6)</li>
+                    <li>Governance and Administration (Standard 7)</li>
+                    <li>Financial Management (Standard 8)</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>🔄 Batch Processing</h3>
+                <p>Run bulk comparisons across multiple policies</p>
+                <ul>
+                    <li>Compare all policies against specific standards</li>
+                    <li>Track compliance across policy categories</li>
+                    <li>Generate organization-wide compliance reports</li>
+                    <li>Monitor improvement trends over time</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>🔗 Integration</h3>
+                <p>Connect with other NextCore AI modules</p>
+                <ul>
+                    <li><strong>Audit Assistant:</strong> Use comparison results for audit prep</li>
+                    <li><strong>Continuous Improvement:</strong> Track compliance improvements</li>
+                    <li><strong>TAS Module:</strong> Verify TAS document compliance</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>📊 Advanced Analysis</h3>
+                <p>Deep dive into compliance metrics</p>
+                <ul>
+                    <li>Historical trend analysis</li>
+                    <li>Clause-level coverage reports</li>
+                    <li>Keyword gap analysis</li>
+                    <li>Evidence sufficiency tracking</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="success-box" style="margin-top: 2rem;">
+            <h4>✅ Quick Start Complete!</h4>
+            <p>
+                You've successfully set up Policy Comparator, seeded ASQA standards, created a policy, and 
+                run your first comparison. Continue to the <a href="workflows.html">Workflows</a> guide for 
+                common usage patterns, or explore the <a href="api-reference.html">API Reference</a> for 
+                complete endpoint documentation.
+            </p>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="overview.html" class="btn btn-secondary">← Overview</a>
+            <a href="architecture.html" class="btn btn-primary">Architecture →</a>
+        </div>
+    </div>
+</body>
+</html>

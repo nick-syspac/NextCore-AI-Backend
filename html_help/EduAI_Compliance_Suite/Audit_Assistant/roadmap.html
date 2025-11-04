@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmap - Audit Assistant Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Audit Assistant</a> /
+            <strong>Roadmap</strong>
+        </div>
+
+        <h1>🚀 Product Roadmap</h1>
+        <p class="lead">
+            Future enhancements and planned features for Audit Assistant.
+        </p>
+
+        <div class="toc-box">
+            <h3>Roadmap Phases</h3>
+            <ul>
+                <li><a href="#current">Current State (v1.0.0)</a></li>
+                <li><a href="#phase1">Phase 1: ML-Based NER (v1.1.0)</a></li>
+                <li><a href="#phase2">Phase 2: Advanced OCR (v1.2.0)</a></li>
+                <li><a href="#phase3">Phase 3: AI Recommendations (v2.0.0)</a></li>
+                <li><a href="#phase4">Phase 4: Advanced Analytics (v2.1.0)</a></li>
+                <li><a href="#future">Future Considerations</a></li>
+            </ul>
+        </div>
+
+        <h2 id="current">Current State: v1.0.0 (Production Ready)</h2>
+        <p><strong>Status:</strong> ✅ Released - March 2024</p>
+
+        <h3>Core Features</h3>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>✅ Evidence Management</h4>
+                <ul>
+                    <li>Upload evidence documents (PDF, DOCX, TXT, XLSX, XLS)</li>
+                    <li>Multi-file format support</li>
+                    <li>File size validation and storage optimization</li>
+                    <li>Tag-based categorization</li>
+                    <li>Evidence status workflow (uploaded → processing → tagged → reviewed → approved)</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h4>✅ Regex-Based NER</h4>
+                <ul>
+                    <li>6 entity types: STANDARD, CLAUSE, QUALIFICATION, DATE, ORG, POLICY</li>
+                    <li>Pattern-based entity detection</li>
+                    <li>Fast processing (2-5 seconds per document)</li>
+                    <li>No external dependencies</li>
+                    <li>Duplicate entity removal</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h4>✅ Auto-Tagging</h4>
+                <ul>
+                    <li>4 progressive matching strategies</li>
+                    <li>Confidence scoring (0.4-1.0)</li>
+                    <li>Keyword density analysis</li>
+                    <li>Title similarity matching</li>
+                    <li>Manual verification workflow</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h4>✅ Audit Reports</h4>
+                <ul>
+                    <li>Comprehensive clause-by-clause reports</li>
+                    <li>Compliance percentage calculation</li>
+                    <li>Critical clause tracking</li>
+                    <li>Gap severity classification (critical/major/minor)</li>
+                    <li>Evidence summary statistics</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h4>✅ Gap Analysis</h4>
+                <ul>
+                    <li>Identify clauses without evidence</li>
+                    <li>Severity-based prioritization</li>
+                    <li>Automated recommendations</li>
+                    <li>Coverage percentage tracking</li>
+                    <li>Standard-level gap reporting</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h4>✅ Async Processing</h4>
+                <ul>
+                    <li>Celery + Redis architecture</li>
+                    <li>Background NER processing</li>
+                    <li>Task status tracking</li>
+                    <li>Error handling and retry logic</li>
+                    <li>Processing queue monitoring</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Technical Foundation</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Technology</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Backend Framework</td>
+                    <td>Django 5.1.13</td>
+                    <td>✅ Stable</td>
+                </tr>
+                <tr>
+                    <td>Database</td>
+                    <td>PostgreSQL with JSONField</td>
+                    <td>✅ Stable</td>
+                </tr>
+                <tr>
+                    <td>NER Engine</td>
+                    <td>Regex-based (Python re module)</td>
+                    <td>✅ Production</td>
+                </tr>
+                <tr>
+                    <td>Text Extraction</td>
+                    <td>PyPDF2, python-docx</td>
+                    <td>✅ Production</td>
+                </tr>
+                <tr>
+                    <td>Async Processing</td>
+                    <td>Celery 5.3+, Redis</td>
+                    <td>✅ Production</td>
+                </tr>
+                <tr>
+                    <td>File Storage</td>
+                    <td>S3 + CloudFront (Production), Local (Dev)</td>
+                    <td>✅ Production</td>
+                </tr>
+                <tr>
+                    <td>Multi-tenancy</td>
+                    <td>django-tenants</td>
+                    <td>✅ Production</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="phase1">Phase 1: ML-Based NER (v1.1.0)</h2>
+        <p><strong>Target Release:</strong> Q3 2024</p>
+        <p><strong>Priority:</strong> High</p>
+
+        <h3>Objectives</h3>
+        <ul>
+            <li>Improve NER accuracy from 75-80% to 90-95%</li>
+            <li>Detect complex entity relationships</li>
+            <li>Handle ambiguous references and context</li>
+            <li>Reduce false positives in auto-tagging</li>
+        </ul>
+
+        <h3>Planned Features</h3>
+
+        <div class="feature-card">
+            <h4>🔄 Transformer-Based NER Models</h4>
+            <p>Replace regex patterns with pre-trained transformer models for entity detection.</p>
+            
+            <h5>Implementation Details:</h5>
+            <ul>
+                <li><strong>Models:</strong> BERT, RoBERTa, or spaCy transformers fine-tuned on ASQA documents</li>
+                <li><strong>Entity Types:</strong> Expand to 10+ types including EVIDENCE_TYPE, RESPONSIBILITY, TIMEFRAME</li>
+                <li><strong>Context Understanding:</strong> Handle multi-sentence entity references</li>
+                <li><strong>Coreference Resolution:</strong> Link pronouns and references to entities</li>
+            </ul>
+
+            <h5>Technical Stack:</h5>
+            <div class="code-block">
+                <code>
+# Proposed NER implementation with transformers
+from transformers import AutoTokenizer, AutoModelForTokenClassification
+import torch
+
+class TransformerNER:
+    """ML-based NER using fine-tuned BERT"""
+    
+    def __init__(self):
+        self.tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+        self.model = AutoModelForTokenClassification.from_pretrained(
+            "asqa-ner-bert-finetuned"  # Custom fine-tuned model
+        )
+        self.entity_labels = [
+            "STANDARD", "CLAUSE", "QUALIFICATION", "DATE", 
+            "ORG", "POLICY", "EVIDENCE_TYPE", "RESPONSIBILITY",
+            "TIMEFRAME", "REQUIREMENT"
+        ]
+    
+    def detect_entities(self, text):
+        """Detect entities using transformer model"""
+        inputs = self.tokenizer(
+            text,
+            return_tensors="pt",
+            truncation=True,
+            max_length=512
+        )
+        
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+        
+        predictions = torch.argmax(outputs.logits, dim=2)
+        entities = self._decode_entities(predictions, inputs)
+        
+        return entities
+    
+    def _decode_entities(self, predictions, inputs):
+        """Decode model predictions to entity list"""
+        # Implementation details...
+        pass
+                </code>
+            </div>
+        </div>
+
+        <div class="feature-card">
+            <h4>🔄 Entity Linking & Disambiguation</h4>
+            <p>Link detected entities to ASQA standards database for validation.</p>
+            
+            <ul>
+                <li>Verify clause numbers against official ASQA standards</li>
+                <li>Disambiguate similar entity mentions (e.g., "Standard 1" vs "Standard 1.1")</li>
+                <li>Link qualifications to AQF framework</li>
+                <li>Resolve organization name variations</li>
+            </ul>
+        </div>
+
+        <div class="feature-card">
+            <h4>🔄 Improved Confidence Scoring</h4>
+            <p>ML-based confidence scoring for auto-tagged clause mappings.</p>
+            
+            <h5>Confidence Factors:</h5>
+            <ul>
+                <li>Entity detection probability (model output)</li>
+                <li>Semantic similarity between evidence and clause text</li>
+                <li>Historical verification patterns</li>
+                <li>Document structure analysis</li>
+            </ul>
+
+            <h5>Expected Accuracy:</h5>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Confidence Range</th>
+                        <th>Current (v1.0)</th>
+                        <th>Target (v1.1)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>0.9 - 1.0 (Very High)</td>
+                        <td>85% accurate</td>
+                        <td>95% accurate</td>
+                    </tr>
+                    <tr>
+                        <td>0.7 - 0.9 (High)</td>
+                        <td>70% accurate</td>
+                        <td>85% accurate</td>
+                    </tr>
+                    <tr>
+                        <td>0.4 - 0.7 (Medium)</td>
+                        <td>50% accurate</td>
+                        <td>70% accurate</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Implementation Timeline</h3>
+        <ul>
+            <li><strong>Months 1-2:</strong> Model training on ASQA corpus, initial testing</li>
+            <li><strong>Month 3:</strong> Integration with existing codebase, A/B testing</li>
+            <li><strong>Month 4:</strong> Beta release to select customers, feedback collection</li>
+            <li><strong>Month 5:</strong> General availability (v1.1.0 release)</li>
+        </ul>
+
+        <h2 id="phase2">Phase 2: Advanced OCR (v1.2.0)</h2>
+        <p><strong>Target Release:</strong> Q4 2024</p>
+        <p><strong>Priority:</strong> Medium</p>
+
+        <h3>Objectives</h3>
+        <ul>
+            <li>Support scanned documents and images</li>
+            <li>Extract text from handwritten notes</li>
+            <li>Process forms and structured documents</li>
+            <li>Handle low-quality scans</li>
+        </ul>
+
+        <h3>Planned Features</h3>
+
+        <div class="feature-card">
+            <h4>🔄 Tesseract OCR Integration</h4>
+            <p>Add OCR capabilities for image-based evidence documents.</p>
+            
+            <h5>Supported Formats:</h5>
+            <ul>
+                <li>JPG, JPEG, PNG images</li>
+                <li>Scanned PDFs</li>
+                <li>Multi-page TIFFs</li>
+                <li>Screenshots</li>
+            </ul>
+
+            <h5>OCR Pipeline:</h5>
+            <div class="code-block">
+                <code>
+import pytesseract
+from PIL import Image
+import cv2
+import numpy as np
+
+class OCRProcessor:
+    """Extract text from images using Tesseract"""
+    
+    def __init__(self):
+        pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+    
+    def preprocess_image(self, image_path):
+        """Enhance image quality before OCR"""
+        img = cv2.imread(image_path)
+        
+        # Convert to grayscale
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        # Denoise
+        denoised = cv2.fastNlMeansDenoising(gray)
+        
+        # Thresholding
+        _, thresh = cv2.threshold(
+            denoised, 0, 255,
+            cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        )
+        
+        return thresh
+    
+    def extract_text(self, image_path):
+        """Extract text from image"""
+        processed = self.preprocess_image(image_path)
+        
+        # OCR with custom config
+        text = pytesseract.image_to_string(
+            processed,
+            config='--psm 6'  # Assume uniform block of text
+        )
+        
+        return text
+    
+    def extract_with_layout(self, image_path):
+        """Extract text preserving layout information"""
+        img = Image.open(image_path)
+        
+        # Get detailed OCR data
+        data = pytesseract.image_to_data(
+            img,
+            output_type=pytesseract.Output.DICT
+        )
+        
+        # Reconstruct text with structure
+        structured_text = self._reconstruct_layout(data)
+        return structured_text
+                </code>
+            </div>
+        </div>
+
+        <div class="feature-card">
+            <h4>🔄 Handwriting Recognition</h4>
+            <p>Experimental support for handwritten evidence notes.</p>
+            
+            <ul>
+                <li>Google Cloud Vision API integration</li>
+                <li>Azure Cognitive Services fallback</li>
+                <li>Confidence scoring for OCR results</li>
+                <li>Manual correction interface</li>
+            </ul>
+        </div>
+
+        <div class="feature-card">
+            <h4>🔄 Form Field Extraction</h4>
+            <p>Intelligent extraction from structured forms and tables.</p>
+            
+            <ul>
+                <li>Detect form fields and checkboxes</li>
+                <li>Extract table data</li>
+                <li>Recognize signatures and stamps</li>
+                <li>Validate extracted data against expected formats</li>
+            </ul>
+        </div>
+
+        <h2 id="phase3">Phase 3: AI Recommendations (v2.0.0)</h2>
+        <p><strong>Target Release:</strong> Q1 2025</p>
+        <p><strong>Priority:</strong> High</p>
+
+        <h3>Objectives</h3>
+        <ul>
+            <li>Provide actionable gap remediation recommendations</li>
+            <li>Generate evidence quality assessments</li>
+            <li>Automate report generation with AI insights</li>
+            <li>Predict compliance risks</li>
+        </ul>
+
+        <h3>Planned Features</h3>
+
+        <div class="feature-card">
+            <h4>🔄 GPT-Based Gap Remediation</h4>
+            <p>AI-powered recommendations for addressing compliance gaps.</p>
+            
+            <h5>Capabilities:</h5>
+            <ul>
+                <li>Analyze clause requirements and suggest specific evidence to upload</li>
+                <li>Generate policy templates addressing gaps</li>
+                <li>Recommend procedure improvements</li>
+                <li>Prioritize gaps based on audit likelihood</li>
+            </ul>
+
+            <h5>Example Output:</h5>
+            <div class="code-block">
+                <code>
+{
+  "clause": "1.5.3",
+  "title": "Marketing and advertising compliance",
+  "gap_analysis": {
+    "current_state": "No evidence of marketing compliance policy",
+    "severity": "critical",
+    "asqa_requirements": [
+      "Written policy on marketing and advertising",
+      "Process for reviewing marketing materials",
+      "Evidence of staff training on marketing compliance"
+    ]
+  },
+  "ai_recommendations": [
+    {
+      "action": "Create Marketing Compliance Policy",
+      "priority": "immediate",
+      "description": "Develop comprehensive policy covering ASQA Standards for RTOs clauses 1.5.1-1.5.3",
+      "suggested_content": "Policy should include: 1) Accuracy of marketing materials, 2) Review and approval process...",
+      "estimated_effort": "2-3 days",
+      "template_available": true
+    },
+    {
+      "action": "Upload Recent Marketing Materials",
+      "priority": "high",
+      "description": "Provide examples of website content, brochures, and advertisements for compliance review",
+      "required_documents": ["Website screenshots", "Course brochures", "Social media posts"]
+    }
+  ]
+}
+                </code>
+            </div>
+        </div>
+
+        <div class="feature-card">
+            <h4>🔄 Evidence Quality Scoring</h4>
+            <p>AI assessment of evidence document quality and relevance.</p>
+            
+            <h5>Quality Factors:</h5>
+            <ul>
+                <li><strong>Relevance:</strong> How well evidence addresses clause requirements</li>
+                <li><strong>Currency:</strong> Document age and update frequency</li>
+                <li><strong>Completeness:</strong> Coverage of all clause aspects</li>
+                <li><strong>Clarity:</strong> Document structure and readability</li>
+                <li><strong>Verifiability:</strong> Presence of dates, signatures, approval records</li>
+            </ul>
+
+            <h5>Quality Score Output:</h5>
+            <div class="code-block">
+                <code>
+{
+  "evidence_id": 15,
+  "quality_score": 8.2,
+  "max_score": 10.0,
+  "rating": "Strong",
+  "breakdown": {
+    "relevance": {"score": 9.0, "notes": "Directly addresses all clause requirements"},
+    "currency": {"score": 7.0, "notes": "Document is 18 months old, consider updating"},
+    "completeness": {"score": 8.5, "notes": "Covers most requirements, missing implementation timeline"},
+    "clarity": {"score": 9.0, "notes": "Well-structured with clear sections"},
+    "verifiability": {"score": 7.5, "notes": "Has approval signature but lacks version control"}
+  },
+  "improvement_suggestions": [
+    "Update document to reflect 2024 regulatory changes",
+    "Add implementation timeline section",
+    "Implement version control with change log"
+  ]
+}
+                </code>
+            </div>
+        </div>
+
+        <div class="feature-card">
+            <h4>🔄 Automated Report Narrative</h4>
+            <p>AI-generated narrative summaries for audit reports.</p>
+            
+            <ul>
+                <li>Executive summary generation</li>
+                <li>Findings description in natural language</li>
+                <li>Trend analysis across quarters</li>
+                <li>Comparison with industry benchmarks</li>
+            </ul>
+        </div>
+
+        <h2 id="phase4">Phase 4: Advanced Analytics (v2.1.0)</h2>
+        <p><strong>Target Release:</strong> Q2 2025</p>
+        <p><strong>Priority:</strong> Medium</p>
+
+        <h3>Planned Features</h3>
+
+        <div class="feature-card">
+            <h4>🔄 Compliance Trending Dashboard</h4>
+            <p>Visual analytics showing compliance trends over time.</p>
+            
+            <ul>
+                <li>Quarterly compliance percentage tracking</li>
+                <li>Evidence upload velocity</li>
+                <li>Gap closure rate</li>
+                <li>Standard-level compliance heatmaps</li>
+                <li>Critical clause coverage trends</li>
+            </ul>
+        </div>
+
+        <div class="feature-card">
+            <h4>🔄 Predictive Gap Identification</h4>
+            <p>ML models predicting future compliance gaps.</p>
+            
+            <ul>
+                <li>Identify patterns leading to gaps</li>
+                <li>Predict which clauses may become non-compliant</li>
+                <li>Forecast evidence expiry and renewal needs</li>
+                <li>Alert on potential audit risks</li>
+            </ul>
+        </div>
+
+        <div class="feature-card">
+            <h4>🔄 Benchmark Comparisons</h4>
+            <p>Compare compliance metrics against industry averages.</p>
+            
+            <ul>
+                <li>Anonymous benchmarking across similar RTOs</li>
+                <li>Standard-specific performance comparison</li>
+                <li>Evidence count and quality benchmarks</li>
+                <li>Best practice identification</li>
+            </ul>
+        </div>
+
+        <h2 id="future">Future Considerations</h2>
+
+        <h3>Long-Term Vision (v3.0+)</h3>
+        <ul>
+            <li><strong>Multi-Regulatory Support:</strong> Expand beyond ASQA to other VET regulators (e.g., TAC, VRQA)</li>
+            <li><strong>International Standards:</strong> Support ISO 9001, ISO 29993 quality standards</li>
+            <li><strong>Blockchain Verification:</strong> Immutable evidence audit trail</li>
+            <li><strong>Mobile App:</strong> iOS/Android app for evidence capture and review</li>
+            <li><strong>Collaborative Auditing:</strong> Multi-stakeholder audit workflows with external auditors</li>
+            <li><strong>Smart Contracts:</strong> Automated compliance verification and reporting</li>
+        </ul>
+
+        <h3>Technology Evolution</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Current</th>
+                    <th>Future</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>NER Engine</td>
+                    <td>Regex patterns</td>
+                    <td>Transformer models (BERT, GPT)</td>
+                </tr>
+                <tr>
+                    <td>OCR</td>
+                    <td>Not available</td>
+                    <td>Tesseract + Cloud Vision API</td>
+                </tr>
+                <tr>
+                    <td>Recommendations</td>
+                    <td>Rule-based</td>
+                    <td>GPT-4 powered insights</td>
+                </tr>
+                <tr>
+                    <td>Analytics</td>
+                    <td>Basic metrics</td>
+                    <td>Predictive ML models</td>
+                </tr>
+                <tr>
+                    <td>Integration</td>
+                    <td>REST API</td>
+                    <td>REST + GraphQL + Webhooks</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="info-box" style="margin-top: 3rem;">
+            <h3>📅 Release Timeline Summary</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Version</th>
+                        <th>Release Date</th>
+                        <th>Key Features</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>v1.0.0</strong></td>
+                        <td>✅ March 2024</td>
+                        <td>Regex NER, Auto-tagging, Audit Reports</td>
+                    </tr>
+                    <tr>
+                        <td><strong>v1.1.0</strong></td>
+                        <td>Q3 2024</td>
+                        <td>ML-based NER, Entity Linking</td>
+                    </tr>
+                    <tr>
+                        <td><strong>v1.2.0</strong></td>
+                        <td>Q4 2024</td>
+                        <td>OCR, Handwriting Recognition</td>
+                    </tr>
+                    <tr>
+                        <td><strong>v2.0.0</strong></td>
+                        <td>Q1 2025</td>
+                        <td>AI Recommendations, Quality Scoring</td>
+                    </tr>
+                    <tr>
+                        <td><strong>v2.1.0</strong></td>
+                        <td>Q2 2025</td>
+                        <td>Analytics Dashboard, Predictive Models</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="success-box" style="margin-top: 2rem;">
+            <h3>🎯 Strategic Priorities</h3>
+            <p>Our roadmap focuses on three key areas:</p>
+            <ol>
+                <li><strong>Accuracy:</strong> Improve NER and auto-tagging precision to 95%+</li>
+                <li><strong>Intelligence:</strong> Add AI-powered recommendations and insights</li>
+                <li><strong>Scalability:</strong> Support high-volume evidence processing and advanced analytics</li>
+            </ol>
+            <p>We remain committed to maintaining backward compatibility and ensuring smooth upgrades for all customers.</p>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="examples.html" class="btn btn-secondary">← Examples</a>
+            <a href="index.html" class="btn btn-primary">Back to Home</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roadmap - Policy Comparator Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Policy Comparator</a> /
+            <strong>Roadmap</strong>
+        </div>
+
+        <h1>🗺️ Development Roadmap</h1>
+        <p class="lead">
+            Policy Comparator's evolution from Foundation Phase to advanced compliance intelligence platform.
+        </p>
+
+        <div class="status-grid" style="margin: 2rem 0;">
+            <div class="status-card">
+                <h4>✅ Foundation Phase</h4>
+                <p><strong>v0.1.0 - Complete</strong></p>
+                <ul>
+                    <li>Manual text entry</li>
+                    <li>Basic NLP comparison</li>
+                    <li>REST APIs</li>
+                    <li>Session tracking</li>
+                </ul>
+            </div>
+            <div class="status-card">
+                <h4>🔄 Phase 1</h4>
+                <p><strong>Enhanced Models - In Progress</strong></p>
+                <ul>
+                    <li>Document management</li>
+                    <li>Version control</li>
+                    <li>Chunk processing</li>
+                    <li>Clause packs</li>
+                </ul>
+            </div>
+            <div class="status-card">
+                <h4>🚀 Phases 2-5</h4>
+                <p><strong>Planned - 2025-2026</strong></p>
+                <ul>
+                    <li>File processing (PDF/DOCX)</li>
+                    <li>Vector embeddings</li>
+                    <li>Async processing</li>
+                    <li>Advanced UI/dashboards</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="toc-box">
+            <h3>Roadmap Phases</h3>
+            <ul>
+                <li><a href="#foundation">Foundation Phase (v0.1.0) - Complete</a></li>
+                <li><a href="#phase-1">Phase 1: Enhanced Models & Architecture</a></li>
+                <li><a href="#phase-2">Phase 2: File Processing & Storage</a></li>
+                <li><a href="#phase-3">Phase 3: NLP Enhancement & Vector Search</a></li>
+                <li><a href="#phase-4">Phase 4: Async Processing & Scalability</a></li>
+                <li><a href="#phase-5">Phase 5: Advanced UI & Intelligence</a></li>
+                <li><a href="#technical-decisions">Technical Decisions & Architecture</a></li>
+                <li><a href="#integration-roadmap">Integration Roadmap</a></li>
+            </ul>
+        </div>
+
+        <h2 id="foundation">✅ Foundation Phase (v0.1.0) - Complete</h2>
+        <p>
+            The Foundation Phase established core Policy Comparator functionality with manual text entry 
+            and basic NLP comparison.
+        </p>
+
+        <h3>Completed Features</h3>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>✅ Core Models</h4>
+                <ul>
+                    <li>ASQAStandard model with metadata</li>
+                    <li>ASQAClause with keywords</li>
+                    <li>Policy model with tenant isolation</li>
+                    <li>ComparisonResult with auto-classification</li>
+                    <li>ComparisonSession with scoring</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h4>✅ NLP Comparison</h4>
+                <ul>
+                    <li>Keyword matching (30% weight)</li>
+                    <li>Sequence similarity (40% weight)</li>
+                    <li>Phrase matching (30% weight)</li>
+                    <li>Threshold-based classification</li>
+                    <li>Gap detection & recommendations</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h4>✅ REST APIs</h4>
+                <ul>
+                    <li>CRUD operations for all models</li>
+                    <li>Compare action with session creation</li>
+                    <li>Gap analysis endpoint</li>
+                    <li>Comparison history tracking</li>
+                    <li>Results retrieval with filtering</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h4>✅ Multi-Tenancy</h4>
+                <ul>
+                    <li>Tenant-based data isolation</li>
+                    <li>Shared ASQA standards</li>
+                    <li>Per-tenant policies & sessions</li>
+                    <li>ViewSet filtering by tenant</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Foundation Phase Metrics</h3>
+        <div class="code-block">
+            <code>
+Foundation Phase v0.1.0 Completion:
+✅ 5 core models implemented
+✅ 16 REST API endpoints
+✅ 3-part NLP algorithm (keyword/sequence/phrase)
+✅ 4 threshold-based match types
+✅ Compliance scoring formula
+✅ Multi-tenant architecture
+✅ Session tracking & history
+✅ Gap detection & recommendations
+
+Lines of Code:
+- models.py: ~600 lines (10 models)
+- views.py: ~800 lines (4 viewsets + NLP logic)
+- serializers.py: ~400 lines (8 serializers)
+- Total: ~1,800 lines core functionality
+            </code>
+        </div>
+
+        <h2 id="phase-1">🔄 Phase 1: Enhanced Models & Architecture</h2>
+        <p>
+            <strong>Status:</strong> 🔄 In Progress<br>
+            <strong>Target Completion:</strong> Q1 2025<br>
+            <strong>Priority:</strong> High
+        </p>
+
+        <h3>Objectives</h3>
+        <p>
+            Expand data models to support document management, version control, and intelligent 
+            document chunking for improved comparison accuracy.
+        </p>
+
+        <h3>New Models</h3>
+        <div class="code-block">
+            <code>
+class Document(TenantAwareModel):
+    """
+    Represents uploaded policy documents (PDF, DOCX, TXT)
+    """
+    title = models.CharField(max_length=500)
+    document_type = models.CharField(
+        max_length=50,
+        choices=[
+            ('policy', 'Policy'),
+            ('procedure', 'Procedure'),
+            ('form', 'Form'),
+            ('guideline', 'Guideline')
+        ]
+    )
+    file = models.FileField(upload_to='policy_documents/')
+    file_type = models.CharField(max_length=10)  # pdf, docx, txt
+    file_size = models.IntegerField()
+    upload_date = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    
+    # Metadata
+    metadata = models.JSONField(default=dict)  # Author, creation date, etc.
+    tags = models.JSONField(default=list)
+    
+    # Status
+    processing_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('pending', 'Pending'),
+            ('processing', 'Processing'),
+            ('completed', 'Completed'),
+            ('failed', 'Failed')
+        ],
+        default='pending'
+    )
+    error_message = models.TextField(blank=True, null=True)
+
+
+class DocumentVersion(models.Model):
+    """
+    Track document versions for change management
+    """
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, 
+                                related_name='versions')
+    version_number = models.CharField(max_length=20)
+    file = models.FileField(upload_to='policy_documents/versions/')
+    uploaded_date = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    
+    # Changes
+    change_summary = models.TextField()
+    previous_version = models.ForeignKey('self', on_delete=models.SET_NULL, 
+                                        null=True, blank=True)
+    
+    is_active = models.BooleanField(default=True)
+
+
+class DocumentChunk(models.Model):
+    """
+    Store document segments for granular comparison
+    Prepared for vector embeddings in Phase 3
+    """
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, 
+                                related_name='chunks')
+    chunk_index = models.IntegerField()
+    content = models.TextField()
+    
+    # Positioning
+    page_number = models.IntegerField(null=True, blank=True)
+    start_position = models.IntegerField(null=True, blank=True)
+    end_position = models.IntegerField(null=True, blank=True)
+    
+    # Vector embedding (for Phase 3)
+    embedding = VectorField(dimensions=1024, null=True, blank=True)
+    
+    # Metadata
+    word_count = models.IntegerField()
+    chunk_type = models.CharField(
+        max_length=50,
+        choices=[
+            ('paragraph', 'Paragraph'),
+            ('section', 'Section'),
+            ('heading', 'Heading'),
+            ('list_item', 'List Item')
+        ]
+    )
+
+
+class AsqaClausePack(models.Model):
+    """
+    Predefined sets of ASQA clauses for specific compliance areas
+    """
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    
+    # Clause selection
+    clauses = models.ManyToManyField(ASQAClause, related_name='clause_packs')
+    
+    # Use cases
+    use_case = models.CharField(
+        max_length=100,
+        choices=[
+            ('initial_registration', 'Initial Registration'),
+            ('continuing_registration', 'Continuing Registration'),
+            ('scope_extension', 'Scope Extension'),
+            ('audit_preparation', 'Audit Preparation')
+        ]
+    )
+    
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+            </code>
+        </div>
+
+        <h3>Phase 1 Deliverables</h3>
+        <ul class="checklist">
+            <li>✅ Document model with file storage</li>
+            <li>✅ DocumentVersion for change tracking</li>
+            <li>✅ DocumentChunk for segmentation</li>
+            <li>✅ AsqaClausePack for compliance scenarios</li>
+            <li>🔄 REST APIs for document management</li>
+            <li>🔄 Version comparison functionality</li>
+            <li>⏳ Chunk-level comparison endpoints</li>
+            <li>⏳ Clause pack management UI</li>
+        </ul>
+
+        <h3>Technical Impact</h3>
+        <div class="code-block">
+            <code>
+New Capabilities:
+✅ Upload policy documents (PDF, DOCX, TXT)
+✅ Track document versions over time
+✅ Compare specific document versions
+✅ Segment documents into semantic chunks
+✅ Prepare for vector embeddings (Phase 3)
+✅ Create clause packs for audit scenarios
+✅ Reuse clause packs across comparisons
+
+Database Changes:
++ 4 new tables (Document, DocumentVersion, DocumentChunk, AsqaClausePack)
++ Foreign key relationships to existing models
++ File storage integration (S3 or local)
++ Indexing on document metadata
+
+API Additions:
++ /documents/ endpoint (CRUD)
++ /documents/{id}/versions/ (version history)
++ /documents/{id}/compare-versions/ (version diff)
++ /document-chunks/ (chunk management)
++ /clause-packs/ (clause set management)
+            </code>
+        </div>
+
+        <h2 id="phase-2">🚀 Phase 2: File Processing & Storage</h2>
+        <p>
+            <strong>Status:</strong> 🚀 Planned<br>
+            <strong>Target Completion:</strong> Q2 2025<br>
+            <strong>Priority:</strong> High
+        </p>
+
+        <h3>Objectives</h3>
+        <p>
+            Enable automatic extraction of text content from uploaded documents, eliminating manual 
+            text entry and supporting multiple file formats.
+        </p>
+
+        <h3>File Processing Pipeline</h3>
+        <div class="code-block">
+            <code>
+"""
+Document Processing Pipeline
+Extracts text from uploaded files and creates chunks
+"""
+from PyPDF2 import PdfReader
+from docx import Document as DocxDocument
+import io
+
+class DocumentProcessor:
+    """Process uploaded documents and extract text"""
+    
+    SUPPORTED_FORMATS = ['pdf', 'docx', 'txt']
+    
+    def process_document(self, document_id):
+        """Main processing entry point"""
+        document = Document.objects.get(id=document_id)
+        
+        try:
+            document.processing_status = 'processing'
+            document.save()
+            
+            # Extract text based on file type
+            if document.file_type == 'pdf':
+                text = self._extract_from_pdf(document.file)
+            elif document.file_type == 'docx':
+                text = self._extract_from_docx(document.file)
+            elif document.file_type == 'txt':
+                text = self._extract_from_txt(document.file)
+            else:
+                raise ValueError(f"Unsupported file type: {document.file_type}")
+            
+            # Create chunks
+            chunks = self._create_chunks(text, document)
+            
+            # Update document status
+            document.processing_status = 'completed'
+            document.save()
+            
+            return chunks
+            
+        except Exception as e:
+            document.processing_status = 'failed'
+            document.error_message = str(e)
+            document.save()
+            raise
+    
+    def _extract_from_pdf(self, file_obj):
+        """Extract text from PDF"""
+        reader = PdfReader(file_obj)
+        
+        text_by_page = []
+        for page_num, page in enumerate(reader.pages, 1):
+            page_text = page.extract_text()
+            text_by_page.append({
+                'page': page_num,
+                'text': page_text
+            })
+        
+        return text_by_page
+    
+    def _extract_from_docx(self, file_obj):
+        """Extract text from DOCX"""
+        doc = DocxDocument(file_obj)
+        
+        text_sections = []
+        for para_num, paragraph in enumerate(doc.paragraphs):
+            if paragraph.text.strip():
+                text_sections.append({
+                    'index': para_num,
+                    'text': paragraph.text,
+                    'style': paragraph.style.name
+                })
+        
+        return text_sections
+    
+    def _extract_from_txt(self, file_obj):
+        """Extract text from TXT"""
+        content = file_obj.read().decode('utf-8')
+        
+        # Split into paragraphs
+        paragraphs = [p.strip() for p in content.split('\n\n') if p.strip()]
+        
+        return [{'index': i, 'text': p} for i, p in enumerate(paragraphs)]
+    
+    def _create_chunks(self, extracted_text, document, chunk_size=500):
+        """Create document chunks for comparison"""
+        chunks = []
+        
+        for item in extracted_text:
+            text = item['text']
+            
+            # Split long sections into chunks
+            if len(text) > chunk_size:
+                words = text.split()
+                for i in range(0, len(words), chunk_size):
+                    chunk_text = ' '.join(words[i:i+chunk_size])
+                    
+                    chunk = DocumentChunk.objects.create(
+                        document=document,
+                        chunk_index=len(chunks),
+                        content=chunk_text,
+                        page_number=item.get('page'),
+                        word_count=len(chunk_text.split()),
+                        chunk_type='paragraph'
+                    )
+                    chunks.append(chunk)
+            else:
+                chunk = DocumentChunk.objects.create(
+                    document=document,
+                    chunk_index=len(chunks),
+                    content=text,
+                    page_number=item.get('page'),
+                    word_count=len(text.split()),
+                    chunk_type='paragraph'
+                )
+                chunks.append(chunk)
+        
+        return chunks
+            </code>
+        </div>
+
+        <h3>Storage Strategy</h3>
+        <div class="code-block">
+            <code>
+Storage Architecture:
+
+Local Development:
+- Media files: /media/policy_documents/
+- Chunks stored in PostgreSQL
+
+Production (AWS):
+- S3 bucket: nextcore-policy-documents-{env}
+- Folder structure:
+  /tenant_{id}/
+    /documents/
+      /{year}/{month}/
+        {document_id}.{ext}
+    /versions/
+      /{document_id}/
+        v{version}.{ext}
+
+Configuration:
+- Max file size: 50MB
+- Allowed formats: PDF, DOCX, TXT
+- Retention: 7 years (compliance requirement)
+- Access: Pre-signed URLs (24h expiry)
+- Encryption: S3 server-side encryption (AES-256)
+
+Cost Optimization:
+- S3 Intelligent-Tiering for older documents
+- Lifecycle policy: Archive after 2 years
+- CloudFront CDN for frequently accessed documents
+            </code>
+        </div>
+
+        <h3>Phase 2 Deliverables</h3>
+        <ul class="checklist">
+            <li>⏳ PDF text extraction (PyPDF2)</li>
+            <li>⏳ DOCX text extraction (python-docx)</li>
+            <li>⏳ TXT file processing</li>
+            <li>⏳ OCR support for scanned PDFs (Tesseract)</li>
+            <li>⏳ S3 integration for file storage</li>
+            <li>⏳ Automatic chunking on upload</li>
+            <li>⏳ Chunk-level comparison API</li>
+            <li>⏳ File upload UI component</li>
+        </ul>
+
+        <h3>Dependencies</h3>
+        <div class="code-block">
+            <code>
+# requirements.txt additions
+PyPDF2==3.0.1              # PDF text extraction
+python-docx==1.1.0         # DOCX processing
+pytesseract==0.3.10        # OCR for scanned PDFs
+Pillow==10.1.0            # Image processing
+boto3==1.34.0             # AWS S3 integration
+django-storages==1.14     # Django S3 backend
+            </code>
+        </div>
+
+        <h2 id="phase-3">🚀 Phase 3: NLP Enhancement & Vector Search</h2>
+        <p>
+            <strong>Status:</strong> 🚀 Planned<br>
+            <strong>Target Completion:</strong> Q3 2025<br>
+            <strong>Priority:</strong> Medium-High
+        </p>
+
+        <h3>Objectives</h3>
+        <p>
+            Replace basic NLP with transformer-based embeddings and vector similarity search for 
+            significantly improved comparison accuracy.
+        </p>
+
+        <h3>Embedding Strategy</h3>
+        <div class="code-block">
+            <code>
+"""
+Vector Embedding Architecture
+Uses E5-large-v2 model for semantic understanding
+"""
+from transformers import AutoTokenizer, AutoModel
+import torch
+import numpy as np
+
+class EmbeddingService:
+    """Generate and manage document embeddings"""
+    
+    MODEL_NAME = "intfloat/e5-large-v2"
+    EMBEDDING_DIMS = 1024
+    
+    def __init__(self):
+        self.tokenizer = AutoTokenizer.from_pretrained(self.MODEL_NAME)
+        self.model = AutoModel.from_pretrained(self.MODEL_NAME)
+        self.model.eval()
+    
+    def generate_embedding(self, text, prefix="passage: "):
+        """
+        Generate embedding for text
+        Uses 'query: ' prefix for ASQA clauses
+        Uses 'passage: ' prefix for policy chunks
+        """
+        # Prepare input
+        inputs = self.tokenizer(
+            prefix + text,
+            max_length=512,
+            padding=True,
+            truncation=True,
+            return_tensors='pt'
+        )
+        
+        # Generate embedding
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+            # Mean pooling
+            embedding = outputs.last_hidden_state.mean(dim=1)
+        
+        return embedding.numpy()[0]
+    
+    def embed_asqa_clause(self, clause):
+        """Embed ASQA clause as query"""
+        text = f"{clause.title}. {clause.clause_text}"
+        embedding = self.generate_embedding(text, prefix="query: ")
+        
+        # Store embedding
+        clause.embedding = embedding.tolist()
+        clause.save()
+        
+        return embedding
+    
+    def embed_document_chunk(self, chunk):
+        """Embed policy document chunk"""
+        embedding = self.generate_embedding(chunk.content, prefix="passage: ")
+        
+        # Store in DocumentChunk
+        chunk.embedding = embedding.tolist()
+        chunk.save()
+        
+        return embedding
+    
+    def batch_embed_document(self, document):
+        """Embed all chunks of a document"""
+        chunks = document.chunks.all()
+        
+        embeddings = []
+        for chunk in chunks:
+            emb = self.embed_document_chunk(chunk)
+            embeddings.append(emb)
+        
+        return embeddings
+
+
+class VectorSimilarityComparator:
+    """Compare using vector similarity with pgvector"""
+    
+    def __init__(self):
+        self.embedding_service = EmbeddingService()
+    
+    def compare_clause_to_document(self, clause, document):
+        """
+        Find most similar chunks using vector search
+        """
+        # Ensure clause has embedding
+        if not clause.embedding:
+            self.embedding_service.embed_asqa_clause(clause)
+        
+        # Vector similarity search using pgvector
+        similar_chunks = DocumentChunk.objects.filter(
+            document=document
+        ).annotate(
+            similarity=CosineDistance('embedding', clause.embedding)
+        ).order_by('similarity')[:5]
+        
+        results = []
+        for chunk in similar_chunks:
+            # Calculate similarity score (0-1)
+            similarity_score = 1 - chunk.similarity  # Convert distance to similarity
+            
+            results.append({
+                'chunk': chunk,
+                'similarity_score': similarity_score,
+                'content': chunk.content,
+                'page': chunk.page_number
+            })
+        
+        return results
+    
+    def hybrid_comparison(self, clause, document):
+        """
+        Combine vector similarity with keyword matching
+        50% vector similarity + 30% keyword + 20% exact phrase
+        """
+        # Vector similarity
+        vector_results = self.compare_clause_to_document(clause, document)
+        best_vector_score = vector_results[0]['similarity_score'] if vector_results else 0
+        
+        # Keyword matching (from Foundation Phase)
+        keyword_score = self._calculate_keyword_score(clause, document)
+        
+        # Phrase matching
+        phrase_score = self._calculate_phrase_match(clause, document)
+        
+        # Combined score
+        combined_score = (
+            best_vector_score * 0.50 +
+            keyword_score * 0.30 +
+            phrase_score * 0.20
+        )
+        
+        return {
+            'combined_score': combined_score,
+            'vector_score': best_vector_score,
+            'keyword_score': keyword_score,
+            'phrase_score': phrase_score,
+            'best_match_chunk': vector_results[0] if vector_results else None
+        }
+            </code>
+        </div>
+
+        <h3>pgvector Integration</h3>
+        <div class="code-block">
+            <code>
+# Database setup for pgvector
+
+-- Enable pgvector extension
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Update DocumentChunk table
+ALTER TABLE policy_comparator_documentchunk
+ADD COLUMN embedding vector(1024);
+
+-- Create HNSW index for fast similarity search
+CREATE INDEX ON policy_comparator_documentchunk
+USING hnsw (embedding vector_cosine_ops);
+
+-- Update ASQAClause table
+ALTER TABLE policy_comparator_asqaclause
+ADD COLUMN embedding vector(1024);
+
+CREATE INDEX ON policy_comparator_asqaclause
+USING hnsw (embedding vector_cosine_ops);
+
+-- Query performance
+-- Without index: ~500ms for 10K chunks
+-- With HNSW index: ~10ms for 10K chunks (50x faster)
+            </code>
+        </div>
+
+        <h3>Phase 3 Deliverables</h3>
+        <ul class="checklist">
+            <li>⏳ E5-large-v2 model integration</li>
+            <li>⏳ Embedding generation service</li>
+            <li>⏳ pgvector extension setup</li>
+            <li>⏳ HNSW index for fast search</li>
+            <li>⏳ Hybrid comparison algorithm (vector + keyword)</li>
+            <li>⏳ Cross-encoder re-ranking</li>
+            <li>⏳ Batch embedding endpoints</li>
+            <li>⏳ Similarity visualization</li>
+        </ul>
+
+        <h3>Expected Improvements</h3>
+        <div class="code-block">
+            <code>
+Comparison Accuracy Improvements (estimated):
+
+Foundation Phase (Basic NLP):
+- Keyword match: 60-70% accuracy
+- Sequence similarity: 65-75% accuracy
+- Combined: 70-80% accuracy
+
+Phase 3 (Vector Embeddings):
+- Vector similarity: 85-90% accuracy
+- Hybrid (vector + keyword): 90-95% accuracy
+- With re-ranking: 92-97% accuracy
+
+Performance Metrics:
+- Comparison time: 2-3s → 0.5-1s (3x faster)
+- False positives: 20% → 5% (4x reduction)
+- Semantic understanding: Limited → Excellent
+- Context awareness: Low → High
+
+Real-World Impact:
+✅ Better handling of paraphrased content
+✅ Semantic similarity detection (synonyms, concepts)
+✅ Reduced manual review burden
+✅ Higher confidence in compliance scores
+            </code>
+        </div>
+
+        <h2 id="phase-4">🚀 Phase 4: Async Processing & Scalability</h2>
+        <p>
+            <strong>Status:</strong> 🚀 Planned<br>
+            <strong>Target Completion:</strong> Q4 2025<br>
+            <strong>Priority:</strong> Medium
+        </p>
+
+        <h3>Objectives</h3>
+        <p>
+            Move document processing and comparisons to background tasks for improved performance 
+            and scalability.
+        </p>
+
+        <h3>Celery Task Architecture</h3>
+        <div class="code-block">
+            <code>
+"""
+Async Task Processing with Celery
+"""
+from celery import shared_task
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+@shared_task(bind=True)
+def process_document_async(self, document_id):
+    """
+    Process uploaded document asynchronously
+    - Extract text
+    - Create chunks
+    - Generate embeddings
+    """
+    try:
+        document = Document.objects.get(id=document_id)
+        
+        # Update progress: 0%
+        self.update_state(state='PROCESSING', meta={'progress': 0})
+        
+        # Step 1: Extract text (25%)
+        processor = DocumentProcessor()
+        extracted_text = processor._extract_text(document)
+        self.update_state(state='PROCESSING', meta={'progress': 25})
+        
+        # Step 2: Create chunks (50%)
+        chunks = processor._create_chunks(extracted_text, document)
+        self.update_state(state='PROCESSING', meta={'progress': 50})
+        
+        # Step 3: Generate embeddings (75%)
+        embedding_service = EmbeddingService()
+        embedding_service.batch_embed_document(document)
+        self.update_state(state='PROCESSING', meta={'progress': 75})
+        
+        # Step 4: Complete (100%)
+        document.processing_status = 'completed'
+        document.save()
+        
+        # Send WebSocket notification
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"tenant_{document.tenant.id}",
+            {
+                'type': 'document_processed',
+                'document_id': document_id,
+                'status': 'completed'
+            }
+        )
+        
+        return {'status': 'completed', 'document_id': document_id}
+        
+    except Exception as e:
+        document.processing_status = 'failed'
+        document.error_message = str(e)
+        document.save()
+        raise
+
+
+@shared_task(bind=True)
+def compare_policy_async(self, policy_id, standard_ids, session_name):
+    """
+    Run policy comparison asynchronously
+    Useful for batch processing multiple policies
+    """
+    try:
+        policy = Policy.objects.get(id=policy_id)
+        standards = ASQAStandard.objects.filter(id__in=standard_ids)
+        
+        # Create session
+        session = ComparisonSession.objects.create(
+            policy=policy,
+            session_name=session_name,
+            status='processing'
+        )
+        
+        total_clauses = sum(s.clauses.count() for s in standards)
+        processed = 0
+        
+        # Process each standard
+        for standard in standards:
+            for clause in standard.clauses.all():
+                # Run comparison
+                comparator = VectorSimilarityComparator()
+                result = comparator.hybrid_comparison(clause, policy)
+                
+                # Save result
+                ComparisonResult.objects.create(
+                    session=session,
+                    policy=policy,
+                    asqa_clause=clause,
+                    similarity_score=result['combined_score'],
+                    # ... other fields
+                )
+                
+                processed += 1
+                progress = int((processed / total_clauses) * 100)
+                self.update_state(state='PROCESSING', meta={'progress': progress})
+        
+        # Calculate session metrics
+        session.calculate_compliance_score()
+        session.status = 'completed'
+        session.save()
+        
+        # Notify via WebSocket
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            f"tenant_{policy.tenant.id}",
+            {
+                'type': 'comparison_completed',
+                'session_id': session.id,
+                'compliance_score': session.overall_compliance_score
+            }
+        )
+        
+        return {'status': 'completed', 'session_id': session.id}
+        
+    except Exception as e:
+        session.status = 'failed'
+        session.save()
+        raise
+
+
+@shared_task
+def batch_compare_policies(policy_ids, session_name_prefix):
+    """
+    Process multiple policies in parallel
+    Creates subtask for each policy
+    """
+    from celery import group
+    
+    # Create parallel tasks
+    job = group(
+        compare_policy_async.s(
+            policy_id=pid,
+            standard_ids=list(ASQAStandard.objects.values_list('id', flat=True)),
+            session_name=f"{session_name_prefix} - Policy {pid}"
+        )
+        for pid in policy_ids
+    )
+    
+    result = job.apply_async()
+    
+    return {
+        'batch_id': result.id,
+        'total_policies': len(policy_ids),
+        'status': 'processing'
+    }
+            </code>
+        </div>
+
+        <h3>Infrastructure Requirements</h3>
+        <div class="code-block">
+            <code>
+Celery + Redis Architecture:
+
+Components:
+1. Celery Workers (3 types):
+   - document_processing (CPU-intensive)
+   - embedding_generation (GPU-optional)
+   - comparison_tasks (mixed workload)
+
+2. Redis:
+   - Broker: Task queue management
+   - Backend: Result storage
+   - Cache: Session data, embeddings
+
+3. Flower:
+   - Task monitoring dashboard
+   - Worker management
+   - Performance metrics
+
+Configuration:
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
+
+CELERY_TASK_ROUTES = {
+    'policy_comparator.tasks.process_document_async': {'queue': 'document_processing'},
+    'policy_comparator.tasks.compare_policy_async': {'queue': 'comparison'},
+    'policy_comparator.tasks.batch_compare_policies': {'queue': 'batch'},
+}
+
+CELERY_WORKER_CONCURRENCY = 4
+CELERY_TASK_TIME_LIMIT = 300  # 5 minutes
+CELERY_TASK_SOFT_TIME_LIMIT = 240  # 4 minutes
+
+Scaling:
+- Development: 1 worker, 2 queues
+- Production: 5-10 workers, 3 queues
+- High load: Auto-scaling based on queue depth
+            </code>
+        </div>
+
+        <h3>Phase 4 Deliverables</h3>
+        <ul class="checklist">
+            <li>⏳ Celery task queue setup</li>
+            <li>⏳ Redis broker configuration</li>
+            <li>⏳ Async document processing</li>
+            <li>⏳ Async comparison tasks</li>
+            <li>⏳ Batch processing workflows</li>
+            <li>⏳ WebSocket notifications</li>
+            <li>⏳ Task monitoring with Flower</li>
+            <li>⏳ Progress tracking UI</li>
+        </ul>
+
+        <h2 id="phase-5">🚀 Phase 5: Advanced UI & Intelligence</h2>
+        <p>
+            <strong>Status:</strong> 🚀 Planned<br>
+            <strong>Target Completion:</strong> Q1 2026<br>
+            <strong>Priority:</strong> Low-Medium
+        </p>
+
+        <h3>Objectives</h3>
+        <p>
+            Develop advanced user interfaces and intelligence features for enhanced compliance insights.
+        </p>
+
+        <h3>Planned Features</h3>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🗺️ Coverage Heatmaps</h4>
+                <ul>
+                    <li>Visual clause coverage matrix</li>
+                    <li>Standard-by-policy heatmap</li>
+                    <li>Gap identification overlay</li>
+                    <li>Drill-down to clause details</li>
+                    <li>Export as PNG/PDF</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h4>📊 Interactive Dashboards</h4>
+                <ul>
+                    <li>Real-time compliance metrics</li>
+                    <li>Trend analysis charts</li>
+                    <li>Policy comparison timeline</li>
+                    <li>Standard coverage overview</li>
+                    <li>Customizable widgets</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h4>📄 Report Generation</h4>
+                <ul>
+                    <li>PDF compliance reports</li>
+                    <li>Excel data exports</li>
+                    <li>Audit-ready evidence packs</li>
+                    <li>Executive summaries</li>
+                    <li>Scheduled report delivery</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <h4>🤖 AI Recommendations</h4>
+                <ul>
+                    <li>Policy improvement suggestions</li>
+                    <li>Clause wording recommendations</li>
+                    <li>Best practice guidance</li>
+                    <li>Risk assessment</li>
+                    <li>Automated policy drafting</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Phase 5 Deliverables</h3>
+        <ul class="checklist">
+            <li>⏳ Coverage heatmap visualization</li>
+            <li>⏳ Interactive compliance dashboard</li>
+            <li>⏳ PDF report generation</li>
+            <li>⏳ Excel export functionality</li>
+            <li>⏳ AI-powered recommendations</li>
+            <li>⏳ Policy drafting assistant</li>
+            <li>⏳ Scheduled reporting</li>
+            <li>⏳ Mobile-responsive UI</li>
+        </ul>
+
+        <h2 id="technical-decisions">🔧 Technical Decisions & Architecture</h2>
+
+        <h3>Key Technical Decisions</h3>
+        <div class="decision-card">
+            <h4>Decision: E5-large-v2 Embedding Model</h4>
+            <p><strong>Rationale:</strong> Superior performance on semantic similarity tasks with 1024-dimensional embeddings</p>
+            <ul>
+                <li><strong>Performance:</strong> 90%+ accuracy on text similarity benchmarks</li>
+                <li><strong>Size:</strong> 335M parameters - manageable for deployment</li>
+                <li><strong>Speed:</strong> ~50ms per embedding on CPU, ~5ms on GPU</li>
+                <li><strong>Alternatives considered:</strong> SBERT, MPNet, BGE</li>
+            </ul>
+        </div>
+
+        <div class="decision-card">
+            <h4>Decision: pgvector for Vector Storage</h4>
+            <p><strong>Rationale:</strong> Native PostgreSQL extension, no additional infrastructure</p>
+            <ul>
+                <li><strong>Performance:</strong> HNSW index provides <10ms queries at scale</li>
+                <li><strong>Simplicity:</strong> No separate vector database needed</li>
+                <li><strong>Cost:</strong> No additional licensing or infrastructure costs</li>
+                <li><strong>Alternatives considered:</strong> Pinecone, Weaviate, Milvus</li>
+            </ul>
+        </div>
+
+        <div class="decision-card">
+            <h4>Decision: Celery + Redis for Async Processing</h4>
+            <p><strong>Rationale:</strong> Mature Python ecosystem with excellent Django integration</p>
+            <ul>
+                <li><strong>Reliability:</strong> Battle-tested in production environments</li>
+                <li><strong>Monitoring:</strong> Flower dashboard for task visibility</li>
+                <li><strong>Scaling:</strong> Easy horizontal scaling with worker pools</li>
+                <li><strong>Alternatives considered:</strong> RQ, Dramatiq, AWS Lambda</li>
+            </ul>
+        </div>
+
+        <h3>Architecture Evolution</h3>
+        <div class="code-block">
+            <code>
+Foundation Phase → Phase 5 Architecture Evolution:
+
+Foundation (v0.1.0):
+┌─────────────┐
+│   Django    │
+│   Views     │ → Synchronous NLP → Database
+└─────────────┘
+
+Phase 3 (Vector Search):
+┌─────────────┐
+│   Django    │
+│   Views     │ → Embedding Service → pgvector
+└─────────────┘           ↓
+                  E5-large-v2 Model
+
+Phase 4 (Async):
+┌─────────────┐
+│   Django    │      ┌──────────┐
+│   Views     │ →    │  Celery  │ → Embedding → pgvector
+└─────────────┘      │  Workers │
+                     └──────────┘
+                          ↓
+                      Redis Queue
+
+Phase 5 (Complete):
+┌─────────────┐
+│   Django    │      ┌──────────┐
+│   REST API  │ →    │  Celery  │ → Processing Pipeline
+└─────────────┘      │  Workers │
+      ↓              └──────────┘
+┌─────────────┐           ↓
+│   React     │      Redis + WebSockets
+│   Frontend  │           ↓
+└─────────────┘      ┌──────────┐
+      ↓              │ pgvector │
+Dashboards/Reports   │ Database │
+                     └──────────┘
+            </code>
+        </div>
+
+        <h2 id="integration-roadmap">🔗 Integration Roadmap</h2>
+
+        <h3>Current Integrations</h3>
+        <ul>
+            <li>✅ <strong>audit_assistant:</strong> Compliance evidence preparation</li>
+            <li>✅ <strong>continuous_improvement:</strong> Policy review cycles</li>
+        </ul>
+
+        <h3>Planned Integrations</h3>
+        <div class="integration-card">
+            <h4>📚 TAS (Training and Assessment Strategy)</h4>
+            <p><strong>Timeline:</strong> Phase 2</p>
+            <ul>
+                <li>Compare TAS documents against Standard 1 requirements</li>
+                <li>Auto-generate TAS compliance reports</li>
+                <li>Link TAS to related policies</li>
+            </ul>
+        </div>
+
+        <div class="integration-card">
+            <h4>🔍 risk_engine</h4>
+            <p><strong>Timeline:</strong> Phase 3</p>
+            <ul>
+                <li>Assess compliance risk based on gap analysis</li>
+                <li>Risk scoring for policy gaps</li>
+                <li>Prioritize policy updates by risk level</li>
+            </ul>
+        </div>
+
+        <div class="integration-card">
+            <h4>📧 email_assistant</h4>
+            <p><strong>Timeline:</strong> Phase 5</p>
+            <ul>
+                <li>Automated compliance report delivery</li>
+                <li>Gap notification emails</li>
+                <li>Scheduled compliance updates</li>
+            </ul>
+        </div>
+
+        <div class="success-box" style="margin-top: 3rem;">
+            <h4>🎯 Success Metrics</h4>
+            <p>Key performance indicators across all phases:</p>
+            <ul>
+                <li><strong>Comparison Accuracy:</strong> 70% → 95% (Phase 3)</li>
+                <li><strong>Processing Time:</strong> 3s → 0.5s per policy (Phase 3-4)</li>
+                <li><strong>User Adoption:</strong> Track active comparisons per month</li>
+                <li><strong>Audit Success:</strong> Monitor ASQA audit outcomes for users</li>
+                <li><strong>Time Savings:</strong> Reduce policy review time by 60%</li>
+            </ul>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="examples.html" class="btn btn-secondary">← Examples</a>
+            <a href="index.html" class="btn btn-primary">Back to Index →</a>
+        </div>
+    </div>
+</body>
+</html>

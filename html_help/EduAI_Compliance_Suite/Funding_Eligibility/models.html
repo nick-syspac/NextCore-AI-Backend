@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funding Eligibility Data Models - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Funding Eligibility</a> /
+            <strong>Data Models</strong>
+        </div>
+
+        <h1>💾 Data Models</h1>
+
+        <div class="intro-section">
+            <p>
+                Complete database schema for the Funding Eligibility System covering 11 core models with immutable 
+                audit trails and deterministic evaluation support.
+            </p>
+        </div>
+
+        <h2>Model Overview</h2>
+        <p>The system uses 11 primary models organized into 4 functional groups:</p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>📋 Rules & Configuration</h3>
+                <ul>
+                    <li>Jurisdiction</li>
+                    <li>Ruleset</li>
+                    <li>RulesetArtifact</li>
+                    <li>ReferenceTable</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>🎯 Eligibility Workflow</h3>
+                <ul>
+                    <li>EligibilityRequest</li>
+                    <li>ExternalLookup</li>
+                    <li>EligibilityDecision</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>🔄 Override & Evidence</h3>
+                <ul>
+                    <li>DecisionOverride</li>
+                    <li>EvidenceAttachment</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>🔗 Integration</h3>
+                <ul>
+                    <li>WebhookEndpoint</li>
+                    <li>WebhookDelivery</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>1. Jurisdiction</h2>
+        <p>Australian jurisdictions with active funding programs.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>code</code></td>
+                    <td>CharField(10) PK</td>
+                    <td>Jurisdiction code (NSW, VIC, QLD, SA, WA, TAS, NT, ACT)</td>
+                </tr>
+                <tr>
+                    <td><code>name</code></td>
+                    <td>CharField(100)</td>
+                    <td>Full jurisdiction name (e.g., "Victoria")</td>
+                </tr>
+                <tr>
+                    <td><code>active</code></td>
+                    <td>BooleanField</td>
+                    <td>Whether jurisdiction has active funding programs</td>
+                </tr>
+                <tr>
+                    <td><code>default_ruleset</code></td>
+                    <td>FK(Ruleset)</td>
+                    <td>Default ruleset for new evaluations</td>
+                </tr>
+                <tr>
+                    <td><code>config</code></td>
+                    <td>JSONField</td>
+                    <td>Jurisdiction-specific configuration settings</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>2. Ruleset</h2>
+        <p>Versioned rulesets for eligibility evaluation. Immutable once activated.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>AutoField PK</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>version</code></td>
+                    <td>CharField(20)</td>
+                    <td>Semantic version (e.g., "2024.2")</td>
+                </tr>
+                <tr>
+                    <td><code>jurisdiction_code</code></td>
+                    <td>CharField(10)</td>
+                    <td>Jurisdiction this ruleset applies to</td>
+                </tr>
+                <tr>
+                    <td><code>status</code></td>
+                    <td>CharField(10)</td>
+                    <td>Status: draft, active, retired</td>
+                </tr>
+                <tr>
+                    <td><code>checksum</code></td>
+                    <td>CharField(64)</td>
+                    <td>SHA256 hash of all artifacts for integrity</td>
+                </tr>
+                <tr>
+                    <td><code>description</code></td>
+                    <td>TextField</td>
+                    <td>Human-readable description</td>
+                </tr>
+                <tr>
+                    <td><code>changelog</code></td>
+                    <td>TextField</td>
+                    <td>Changes from previous version</td>
+                </tr>
+                <tr>
+                    <td><code>created_by</code></td>
+                    <td>FK(User)</td>
+                    <td>User who created the ruleset</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>activated_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Activation timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>retired_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Retirement timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="info-box">
+            <h3>Unique Constraint</h3>
+            <p><code>unique_together = [["jurisdiction_code", "version"]]</code></p>
+            <p>Each jurisdiction can have multiple versions, but version numbers must be unique per jurisdiction.</p>
+        </div>
+
+        <h2>3. RulesetArtifact</h2>
+        <p>Rule content for a ruleset (JSONLogic, Rego, Python expressions).</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>ruleset</code></td>
+                    <td>FK(Ruleset)</td>
+                    <td>Parent ruleset</td>
+                </tr>
+                <tr>
+                    <td><code>type</code></td>
+                    <td>CharField(20)</td>
+                    <td>Type: jsonlogic, rego, python</td>
+                </tr>
+                <tr>
+                    <td><code>name</code></td>
+                    <td>CharField(100)</td>
+                    <td>Artifact name/identifier</td>
+                </tr>
+                <tr>
+                    <td><code>blob</code></td>
+                    <td>TextField</td>
+                    <td>Rule content (JSON, Rego code, etc.)</td>
+                </tr>
+                <tr>
+                    <td><code>description</code></td>
+                    <td>TextField</td>
+                    <td>Purpose and logic explanation</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>4. ReferenceTable</h2>
+        <p>Reference data for rule evaluation (concession types, postcode mappings, income caps).</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>namespace</code></td>
+                    <td>CharField(100)</td>
+                    <td>Data namespace (e.g., "vic.concessions")</td>
+                </tr>
+                <tr>
+                    <td><code>version</code></td>
+                    <td>CharField(20)</td>
+                    <td>Version number</td>
+                </tr>
+                <tr>
+                    <td><code>data</code></td>
+                    <td>JSONField</td>
+                    <td>Reference data as JSON</td>
+                </tr>
+                <tr>
+                    <td><code>source</code></td>
+                    <td>CharField(200)</td>
+                    <td>Data source URL or description</td>
+                </tr>
+                <tr>
+                    <td><code>checksum</code></td>
+                    <td>CharField(64)</td>
+                    <td>SHA256 hash of data for integrity</td>
+                </tr>
+                <tr>
+                    <td><code>valid_from</code></td>
+                    <td>DateField</td>
+                    <td>Start date of validity</td>
+                </tr>
+                <tr>
+                    <td><code>valid_until</code></td>
+                    <td>DateField</td>
+                    <td>End date of validity (optional)</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>updated_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Last update timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>5. EligibilityRequest</h2>
+        <p>Request for eligibility evaluation. Immutable input snapshot for audit trail.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>AutoField PK</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>tenant</code></td>
+                    <td>FK(Tenant)</td>
+                    <td>Tenant/organization</td>
+                </tr>
+                <tr>
+                    <td><code>person_id</code></td>
+                    <td>CharField(100)</td>
+                    <td>Person identifier in SMS/LMS</td>
+                </tr>
+                <tr>
+                    <td><code>course_id</code></td>
+                    <td>CharField(100)</td>
+                    <td>Course identifier</td>
+                </tr>
+                <tr>
+                    <td><code>jurisdiction_code</code></td>
+                    <td>CharField(10)</td>
+                    <td>Jurisdiction for evaluation</td>
+                </tr>
+                <tr>
+                    <td><code>input</code></td>
+                    <td>JSONField</td>
+                    <td>Complete input data snapshot (immutable)</td>
+                </tr>
+                <tr>
+                    <td><code>evidence_refs</code></td>
+                    <td>JSONField</td>
+                    <td>References to attached evidence</td>
+                </tr>
+                <tr>
+                    <td><code>status</code></td>
+                    <td>CharField(20)</td>
+                    <td>Status: pending, evaluating, evaluated, error</td>
+                </tr>
+                <tr>
+                    <td><code>requested_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Request creation timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>evaluated_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Evaluation completion timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>requested_by</code></td>
+                    <td>FK(User)</td>
+                    <td>User who created the request</td>
+                </tr>
+                <tr>
+                    <td><code>metadata</code></td>
+                    <td>JSONField</td>
+                    <td>Additional metadata</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>6. ExternalLookup</h2>
+        <p>External API lookups with caching for USI, postcode, concession, visa verification.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>request</code></td>
+                    <td>FK(EligibilityRequest)</td>
+                    <td>Parent eligibility request</td>
+                </tr>
+                <tr>
+                    <td><code>provider</code></td>
+                    <td>CharField(100)</td>
+                    <td>API provider (USI, Postcode, Concession, Visa)</td>
+                </tr>
+                <tr>
+                    <td><code>request_data</code></td>
+                    <td>JSONField</td>
+                    <td>Data sent to external API</td>
+                </tr>
+                <tr>
+                    <td><code>response_data</code></td>
+                    <td>JSONField</td>
+                    <td>Response from external API</td>
+                </tr>
+                <tr>
+                    <td><code>status</code></td>
+                    <td>CharField(20)</td>
+                    <td>Status: pending, success, error, timeout</td>
+                </tr>
+                <tr>
+                    <td><code>error_message</code></td>
+                    <td>TextField</td>
+                    <td>Error details if lookup failed</td>
+                </tr>
+                <tr>
+                    <td><code>latency_ms</code></td>
+                    <td>IntegerField</td>
+                    <td>Lookup duration in milliseconds</td>
+                </tr>
+                <tr>
+                    <td><code>cached_until</code></td>
+                    <td>DateTimeField</td>
+                    <td>Cache expiry timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Lookup timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="info-box">
+            <h3>Cache Duration by Provider</h3>
+            <ul>
+                <li><strong>USI:</strong> 7 days</li>
+                <li><strong>Postcode:</strong> 90 days</li>
+                <li><strong>Concession:</strong> 1 day</li>
+                <li><strong>Visa:</strong> 1 day</li>
+            </ul>
+        </div>
+
+        <h2>7. EligibilityDecision</h2>
+        <p>Final eligibility decision. Immutable once created.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>id</code></td>
+                    <td>AutoField PK</td>
+                    <td>Primary key</td>
+                </tr>
+                <tr>
+                    <td><code>request</code></td>
+                    <td>OneToOneField(EligibilityRequest)</td>
+                    <td>Associated request</td>
+                </tr>
+                <tr>
+                    <td><code>ruleset</code></td>
+                    <td>FK(Ruleset)</td>
+                    <td>Ruleset used for evaluation</td>
+                </tr>
+                <tr>
+                    <td><code>outcome</code></td>
+                    <td>CharField(20)</td>
+                    <td>Outcome: eligible, ineligible, review</td>
+                </tr>
+                <tr>
+                    <td><code>reasons</code></td>
+                    <td>JSONField</td>
+                    <td>Array of reason codes/descriptions</td>
+                </tr>
+                <tr>
+                    <td><code>clause_refs</code></td>
+                    <td>JSONField</td>
+                    <td>Relevant policy/clause references</td>
+                </tr>
+                <tr>
+                    <td><code>decision_data</code></td>
+                    <td>JSONField</td>
+                    <td>Complete rules engine output</td>
+                </tr>
+                <tr>
+                    <td><code>explanation</code></td>
+                    <td>TextField</td>
+                    <td>Human-readable explanation</td>
+                </tr>
+                <tr>
+                    <td><code>decided_by</code></td>
+                    <td>CharField(20)</td>
+                    <td>Decision maker: system, user</td>
+                </tr>
+                <tr>
+                    <td><code>decided_by_user</code></td>
+                    <td>FK(User)</td>
+                    <td>User if manual decision</td>
+                </tr>
+                <tr>
+                    <td><code>decided_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Decision timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>8. DecisionOverride</h2>
+        <p>Manual override of automated decisions with approval tracking.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>decision</code></td>
+                    <td>FK(EligibilityDecision)</td>
+                    <td>Decision being overridden</td>
+                </tr>
+                <tr>
+                    <td><code>reason_code</code></td>
+                    <td>CharField(50)</td>
+                    <td>Override reason code</td>
+                </tr>
+                <tr>
+                    <td><code>justification</code></td>
+                    <td>TextField</td>
+                    <td>Detailed justification</td>
+                </tr>
+                <tr>
+                    <td><code>final_outcome</code></td>
+                    <td>CharField(20)</td>
+                    <td>Overridden outcome</td>
+                </tr>
+                <tr>
+                    <td><code>approver</code></td>
+                    <td>FK(User)</td>
+                    <td>User who approved override</td>
+                </tr>
+                <tr>
+                    <td><code>approved_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Approval timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>policy_version</code></td>
+                    <td>CharField(20)</td>
+                    <td>Override policy version reference</td>
+                </tr>
+                <tr>
+                    <td><code>evidence_refs</code></td>
+                    <td>JSONField</td>
+                    <td>Supporting evidence references</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>9. EvidenceAttachment</h2>
+        <p>Evidence documents attached to eligibility requests.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>request</code></td>
+                    <td>FK(EligibilityRequest)</td>
+                    <td>Associated request</td>
+                </tr>
+                <tr>
+                    <td><code>file_uri</code></td>
+                    <td>CharField(500)</td>
+                    <td>S3 storage URI</td>
+                </tr>
+                <tr>
+                    <td><code>filename</code></td>
+                    <td>CharField(255)</td>
+                    <td>Original filename</td>
+                </tr>
+                <tr>
+                    <td><code>file_size</code></td>
+                    <td>BigIntegerField</td>
+                    <td>File size in bytes</td>
+                </tr>
+                <tr>
+                    <td><code>mime_type</code></td>
+                    <td>CharField(100)</td>
+                    <td>File MIME type</td>
+                </tr>
+                <tr>
+                    <td><code>type</code></td>
+                    <td>CharField(20)</td>
+                    <td>Type: id, concession, residency, visa, qualification, employment, income, other</td>
+                </tr>
+                <tr>
+                    <td><code>verified</code></td>
+                    <td>BooleanField</td>
+                    <td>Verification status</td>
+                </tr>
+                <tr>
+                    <td><code>verifier</code></td>
+                    <td>FK(User)</td>
+                    <td>User who verified</td>
+                </tr>
+                <tr>
+                    <td><code>verified_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Verification timestamp</td>
+                </tr>
+                <tr>
+                    <td><code>verification_notes</code></td>
+                    <td>TextField</td>
+                    <td>Verification notes</td>
+                </tr>
+                <tr>
+                    <td><code>uploaded_by</code></td>
+                    <td>FK(User)</td>
+                    <td>User who uploaded</td>
+                </tr>
+                <tr>
+                    <td><code>uploaded_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Upload timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>10. WebhookEndpoint</h2>
+        <p>Webhook configuration for SMS/LMS integration.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>tenant</code></td>
+                    <td>FK(Tenant)</td>
+                    <td>Tenant/organization</td>
+                </tr>
+                <tr>
+                    <td><code>name</code></td>
+                    <td>CharField(200)</td>
+                    <td>Endpoint name</td>
+                </tr>
+                <tr>
+                    <td><code>target</code></td>
+                    <td>CharField(20)</td>
+                    <td>Target: sms, lms, other</td>
+                </tr>
+                <tr>
+                    <td><code>url</code></td>
+                    <td>URLField</td>
+                    <td>Webhook URL</td>
+                </tr>
+                <tr>
+                    <td><code>secret</code></td>
+                    <td>CharField(255)</td>
+                    <td>HMAC secret for signing</td>
+                </tr>
+                <tr>
+                    <td><code>events</code></td>
+                    <td>JSONField</td>
+                    <td>Subscribed events (decision.finalized, override.approved)</td>
+                </tr>
+                <tr>
+                    <td><code>active</code></td>
+                    <td>BooleanField</td>
+                    <td>Whether endpoint is active</td>
+                </tr>
+                <tr>
+                    <td><code>created_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>11. WebhookDelivery</h2>
+        <p>Webhook delivery tracking with retry logic.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>endpoint</code></td>
+                    <td>FK(WebhookEndpoint)</td>
+                    <td>Target endpoint</td>
+                </tr>
+                <tr>
+                    <td><code>request</code></td>
+                    <td>FK(EligibilityRequest)</td>
+                    <td>Associated request</td>
+                </tr>
+                <tr>
+                    <td><code>event_type</code></td>
+                    <td>CharField(50)</td>
+                    <td>Event type delivered</td>
+                </tr>
+                <tr>
+                    <td><code>payload</code></td>
+                    <td>JSONField</td>
+                    <td>Webhook payload sent</td>
+                </tr>
+                <tr>
+                    <td><code>response_status</code></td>
+                    <td>IntegerField</td>
+                    <td>HTTP response status code</td>
+                </tr>
+                <tr>
+                    <td><code>response_body</code></td>
+                    <td>TextField</td>
+                    <td>Response body (truncated)</td>
+                </tr>
+                <tr>
+                    <td><code>success</code></td>
+                    <td>BooleanField</td>
+                    <td>Delivery success status</td>
+                </tr>
+                <tr>
+                    <td><code>attempt</code></td>
+                    <td>IntegerField</td>
+                    <td>Delivery attempt number (1-5)</td>
+                </tr>
+                <tr>
+                    <td><code>delivered_at</code></td>
+                    <td>DateTimeField</td>
+                    <td>Delivery timestamp</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="cta-section">
+            <h2>Next Steps</h2>
+            <p>Explore the complete REST API reference for interacting with these models.</p>
+            <a href="api-reference.html" class="btn btn-primary">View API Reference →</a>
+        </div>
+    </div>
+</body>
+</html>

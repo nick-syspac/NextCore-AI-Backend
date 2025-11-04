@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIR Workflows - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Continuous Improvement Register</a> /
+            <strong>Workflows</strong>
+        </div>
+
+        <h1>🔄 Common Workflows</h1>
+
+        <div class="intro-section">
+            <p>
+                Step-by-step guides for common CIR workflows from initial identification through verification and closure.
+            </p>
+        </div>
+
+        <h2>1. 📝 Audit Finding Response</h2>
+        <p>Complete workflow for addressing audit findings.</p>
+
+        <div class="workflow-step">
+            <h3>Step 1: Create Action from Finding</h3>
+            <div class="code-block">
+                <pre><code>POST /api/v1/continuous_improvement/actions/
+{
+  "title": "Address Standard 1.8 evidence gap",
+  "description": "Auditor identified insufficient evidence of systematic monitoring. Implement quarterly review process with documented outcomes.",
+  "source": "audit",
+  "priority": "critical",
+  "assigned_to_id": 12
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 2: AI Classification</h3>
+            <div class="code-block">
+                <pre><code>POST /api/v1/continuous_improvement/actions/123/classify/</code></pre>
+            </div>
+            <p><strong>Result:</strong> Category set to "compliance_governance", risk level "critical", linked to clause 1.8</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 3: Create Corrective Steps</h3>
+            <div class="code-block">
+                <pre><code>POST /api/v1/continuous_improvement/steps/
+{
+  "improvement_action_id": 123,
+  "sequence_order": 10,
+  "title": "Design quarterly review template",
+  "owner_id": 12,
+  "due_date": "2025-11-15"
+}
+
+POST /api/v1/continuous_improvement/steps/
+{
+  "improvement_action_id": 123,
+  "sequence_order": 20,
+  "title": "Conduct pilot review for Q4 2025",
+  "owner_id": 12,
+  "due_date": "2025-11-30"
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 4: Track Progress</h3>
+            <p>Update step status as work progresses, add comments for communication.</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 5: Complete & Verify</h3>
+            <div class="code-block">
+                <pre><code>PATCH /api/v1/continuous_improvement/actions/123/
+{
+  "status": "completed",
+  "completed_at": "2025-12-01T10:00:00Z"
+}
+
+POST /api/v1/continuous_improvement/verifications/
+{
+  "improvement_action_id": 123,
+  "outcome": "verified",
+  "effectiveness_score": 5
+}</code></pre>
+            </div>
+        </div>
+
+        <h2>2. 😟 Complaint Resolution</h2>
+        <p>Handle student/stakeholder complaints systematically.</p>
+
+        <div class="workflow-step">
+            <h3>Step 1: Log Complaint</h3>
+            <div class="code-block">
+                <pre><code>POST /api/v1/continuous_improvement/actions/
+{
+  "title": "Trainer communication issue - Student complaint",
+  "description": "Student reports lack of timely feedback from trainer.",
+  "source": "complaint",
+  "priority": "high"
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 2: Investigation Steps</h3>
+            <p>Create steps for investigation, root cause analysis, and resolution.</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 3: Implement Resolution</h3>
+            <p>Execute corrective actions and document outcomes.</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 4: Follow-up</h3>
+            <p>Verify student satisfaction and prevent recurrence.</p>
+        </div>
+
+        <h2>3. 🔍 Process Improvement Initiative</h2>
+        <p>Proactive improvement of training/assessment processes.</p>
+
+        <div class="workflow-step">
+            <h3>Step 1: Identify Opportunity</h3>
+            <div class="code-block">
+                <pre><code>POST /api/v1/continuous_improvement/actions/
+{
+  "title": "Streamline assessment submission process",
+  "description": "Current 5-step process can be reduced to 3 steps with online portal.",
+  "source": "self_assessment",
+  "priority": "medium"
+}</code></pre>
+            </div>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 2: Design Solution</h3>
+            <p>Create workflow steps for design, development, testing, and rollout.</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 3: Pilot Implementation</h3>
+            <p>Test with small cohort before full deployment.</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 4: Full Rollout</h3>
+            <p>Deploy to all students with training for staff.</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 5: Monitor Effectiveness</h3>
+            <p>Track metrics and verify improvement achieved.</p>
+        </div>
+
+        <h2>4. ⏰ SLA Breach Response</h2>
+        <p>Handle overdue actions systematically.</p>
+
+        <div class="workflow-step">
+            <h3>Step 1: Receive Alert</h3>
+            <p>System sends notification when action approaches/breaches SLA.</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 2: Assess Status</h3>
+            <div class="code-block">
+                <pre><code>GET /api/v1/continuous_improvement/actions/456/</code></pre>
+            </div>
+            <p>Review progress, identify blockers.</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 3: Re-prioritize or Extend</h3>
+            <div class="code-block">
+                <pre><code>PATCH /api/v1/continuous_improvement/actions/456/
+{
+  "priority": "critical",
+  "assigned_to_id": 5  // Escalate to senior staff
+}
+
+POST /api/v1/continuous_improvement/comments/
+{
+  "improvement_action_id": 456,
+  "body": "Escalated due to SLA breach. @senior.manager please review urgently."
+}</code></pre>
+            </div>
+        </div>
+
+        <h2>5. 📊 Compliance Monitoring</h2>
+        <p>Regular review of CIR for compliance status.</p>
+
+        <div class="workflow-step">
+            <h3>Step 1: Dashboard Review</h3>
+            <div class="code-block">
+                <pre><code>GET /api/v1/continuous_improvement/actions/compliance_overview/</code></pre>
+            </div>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 2: Identify Gaps</h3>
+            <p>Check critical clauses without linked actions.</p>
+            <div class="code-block">
+                <pre><code>GET /api/v1/continuous_improvement/clause-links/by_clause/?clause_number=1.8</code></pre>
+            </div>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 3: Create Preventive Actions</h3>
+            <p>Address gaps proactively before audit.</p>
+        </div>
+
+        <h2>6. 🔄 Periodic Register Review</h2>
+        <p>Quarterly/annual CIR review process.</p>
+
+        <div class="workflow-step">
+            <h3>Step 1: Generate Review Report</h3>
+            <div class="code-block">
+                <pre><code>GET /api/v1/continuous_improvement/kpi-snapshots/?snapshot_date_after=2025-01-01</code></pre>
+            </div>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 2: Analyze Trends</h3>
+            <p>Review completion rates, overdue patterns, category distribution.</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 3: Identify System Improvements</h3>
+            <p>Create actions for CIR process improvements.</p>
+        </div>
+
+        <div class="workflow-step">
+            <h3>Step 4: Document Review</h3>
+            <p>Create ImprovementReview record with findings and recommendations.</p>
+        </div>
+
+        <div class="cta-section">
+            <h2>Next Steps</h2>
+            <p>See real-world code examples for implementing these workflows in your application.</p>
+            <a href="examples.html" class="btn btn-primary">View Examples →</a>
+        </div>
+    </div>
+</body>
+</html>

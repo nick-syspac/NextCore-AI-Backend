@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Start - Audit Assistant Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Audit Assistant</a> /
+            <strong>Quick Start</strong>
+        </div>
+
+        <h1>🚀 Quick Start Guide</h1>
+        <p class="lead">
+            Get started with Audit Assistant in minutes - upload evidence, enable auto-tagging, and generate 
+            your first audit report.
+        </p>
+
+        <div class="toc-box">
+            <h3>Quick Start Steps</h3>
+            <ul>
+                <li><a href="#prerequisites">Prerequisites</a></li>
+                <li><a href="#step1">Step 1: Upload Evidence Document</a></li>
+                <li><a href="#step2">Step 2: Review Auto-Tagged Clauses</a></li>
+                <li><a href="#step3">Step 3: Verify Mappings</a></li>
+                <li><a href="#step4">Step 4: Create Audit Report</a></li>
+                <li><a href="#step5">Step 5: Analyze Gaps</a></li>
+                <li><a href="#next-steps">Next Steps</a></li>
+            </ul>
+        </div>
+
+        <h2 id="prerequisites">📋 Prerequisites</h2>
+        <div class="checklist">
+            <ul>
+                <li>✅ Audit Assistant module installed</li>
+                <li>✅ ASQA standards seeded in database (from Policy Comparator)</li>
+                <li>✅ API authentication token</li>
+                <li>✅ Evidence documents ready (PDF, DOCX, or TXT)</li>
+                <li>✅ Python 3.10+ or REST API client</li>
+            </ul>
+        </div>
+
+        <h2 id="step1">Step 1: Upload Evidence Document</h2>
+        <p>
+            Upload your first evidence document with auto-tagging enabled. The system will extract text 
+            and automatically identify relevant ASQA clauses.
+        </p>
+
+        <h3>Using Python</h3>
+        <div class="code-block">
+            <code>
+import requests
+from datetime import date
+
+# Configuration
+BASE_URL = "https://api.nextcore.ai/v1/{tenant_slug}/audit-assistant"
+HEADERS = {"Authorization": "Bearer YOUR_TOKEN"}
+
+# Prepare evidence file
+evidence_file = open("Assessment_Validation_Policy.pdf", "rb")
+
+# Upload with auto-tagging
+upload_data = {
+    "evidence_number": "EV-001",
+    "title": "Assessment Validation Policy",
+    "description": "RTO policy for assessment validation and moderation",
+    "evidence_type": "policy",
+    "evidence_date": date.today().isoformat(),
+    "tags": ["assessment", "validation", "standard-1"],
+    "auto_tag": "true"  # Enable NER auto-tagging
+}
+
+files = {"file": evidence_file}
+
+response = requests.post(
+    f"{BASE_URL}/evidence/upload/",
+    data=upload_data,
+    files=files,
+    headers=HEADERS
+)
+
+evidence = response.json()
+print(f"✅ Evidence uploaded: {evidence['id']}")
+print(f"   Status: {evidence['status']}")
+print(f"   Processing: {evidence.get('processing', False)}")
+
+# Close file
+evidence_file.close()
+            </code>
+        </div>
+
+        <h3>Using cURL</h3>
+        <div class="code-block">
+            <code>
+curl -X POST "https://api.nextcore.ai/v1/{tenant_slug}/audit-assistant/evidence/upload/" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -F "file=@Assessment_Validation_Policy.pdf" \
+  -F "evidence_number=EV-001" \
+  -F "title=Assessment Validation Policy" \
+  -F "description=RTO policy for assessment validation and moderation" \
+  -F "evidence_type=policy" \
+  -F "evidence_date=2025-11-04" \
+  -F "tags=[\"assessment\",\"validation\"]" \
+  -F "auto_tag=true"
+            </code>
+        </div>
+
+        <h3>Expected Response</h3>
+        <div class="code-block">
+            <code>
+{
+  "id": 42,
+  "evidence_number": "EV-001",
+  "title": "Assessment Validation Policy",
+  "description": "RTO policy for assessment validation and moderation",
+  "evidence_type": "policy",
+  "file_url": "https://storage.example.com/evidence/tenant_1/abc123.pdf",
+  "file_name": "abc123.pdf",
+  "file_size": 245760,
+  "status": "processing",
+  "tags": ["assessment", "validation", "standard-1"],
+  "evidence_date": "2025-11-04",
+  "uploaded_at": "2025-11-04T10:30:00Z",
+  "uploaded_by": 5,
+  "uploaded_by_name": "John Smith",
+  "ner_entities": null,
+  "ner_processed_at": null,
+  "processing": true
+}
+            </code>
+        </div>
+
+        <div class="info-box">
+            <h4>💡 What Happens During Processing?</h4>
+            <ol>
+                <li><strong>Text Extraction:</strong> Extract text from PDF/DOCX/TXT file</li>
+                <li><strong>NER Detection:</strong> Identify standards, clauses, qualifications, dates, orgs, policies</li>
+                <li><strong>Clause Matching:</strong> Match document to ASQA clauses using 4 strategies</li>
+                <li><strong>Confidence Scoring:</strong> Calculate confidence scores (0.4-1.0) for each mapping</li>
+                <li><strong>Status Update:</strong> Change status from "processing" → "tagged"</li>
+            </ol>
+            <p>Processing typically completes in 2-5 seconds.</p>
+        </div>
+
+        <h2 id="step2">Step 2: Review Auto-Tagged Clauses</h2>
+        <p>
+            After processing completes, review the clauses that were automatically tagged to your evidence.
+        </p>
+
+        <div class="code-block">
+            <code>
+# Get tagged clauses for evidence
+evidence_id = 42
+
+response = requests.get(
+    f"{BASE_URL}/evidence/{evidence_id}/tagged_clauses/",
+    headers=HEADERS
+)
+
+tagged_clauses = response.json()
+
+print(f"\n📋 Auto-Tagged Clauses: {len(tagged_clauses)}\n")
+
+for mapping in tagged_clauses:
+    clause = mapping['clause_number']
+    title = mapping['clause_title']
+    confidence = mapping['confidence_score']
+    mapping_type = mapping['mapping_type_display']
+    verified = mapping['is_verified']
+    
+    print(f"Clause {clause}: {title}")
+    print(f"  Confidence: {confidence:.2f} ({mapping_type})")
+    print(f"  Verified: {'✅' if verified else '⏳'}")
+    
+    if mapping['matched_keywords']:
+        print(f"  Keywords: {', '.join(mapping['matched_keywords'][:5])}")
+    
+    if mapping['matched_entities']:
+        entities = [e['entity'] for e in mapping['matched_entities'][:3]]
+        print(f"  Entities: {', '.join(entities)}")
+    
+    print()
+            </code>
+        </div>
+
+        <h3>Sample Output</h3>
+        <div class="code-block">
+            <code>
+📋 Auto-Tagged Clauses: 4
+
+Clause 1.8: Assessment
+  Confidence: 0.85 (Auto-tagged (NER))
+  Verified: ⏳
+  Keywords: assessment, validation, moderation
+  Entities: Standard 1.8
+
+Clause 1.8.1: Assessment Validation
+  Confidence: 0.95 (Auto-tagged (Rule-based))
+  Verified: ⏳
+  Keywords: validation, moderation, quality assurance
+  Entities: Clause 1.8.1, Standard 1.8
+
+Clause 1.13: Trainer Qualifications
+  Confidence: 0.72 (Auto-tagged (NER))
+  Verified: ⏳
+  Keywords: TAE40116, trainers, qualifications
+
+Clause 2.1: Recruitment
+  Confidence: 0.58 (Suggested Match)
+  Verified: ⏳
+  Keywords: recruitment, staff, qualifications
+            </code>
+        </div>
+
+        <h2 id="step3">Step 3: Verify Mappings</h2>
+        <p>
+            Verify auto-tagged mappings that are accurate. High-confidence mappings (>0.8) are typically 
+            reliable, but always review suggested matches (<0.6).
+        </p>
+
+        <div class="code-block">
+            <code>
+# Verify specific clause mappings
+clause_evidence_ids = [101, 102, 103]  # IDs from tagged_clauses response
+
+verify_response = requests.post(
+    f"{BASE_URL}/evidence/{evidence_id}/verify_tagging/",
+    json={"clause_evidence_ids": clause_evidence_ids},
+    headers=HEADERS
+)
+
+result = verify_response.json()
+print(result['message'])
+# Output: "3 clause mappings verified."
+
+# Evidence status automatically updates to "reviewed"
+updated_evidence = result['evidence']
+print(f"Evidence status: {updated_evidence['status']}")
+# Output: "Evidence status: reviewed"
+            </code>
+        </div>
+
+        <div class="warning-box">
+            <h4>⚠️ Review Guidelines</h4>
+            <ul>
+                <li><strong>Confidence ≥0.8:</strong> Usually accurate - quick verification OK</li>
+                <li><strong>Confidence 0.6-0.8:</strong> Review document context before verifying</li>
+                <li><strong>Confidence <0.6:</strong> Suggested only - careful review required</li>
+                <li><strong>Missing Clauses:</strong> Manually add mappings for clauses not auto-detected</li>
+            </ul>
+        </div>
+
+        <h2 id="step4">Step 4: Create Audit Report</h2>
+        <p>
+            Generate a comprehensive audit report covering selected ASQA standards.
+        </p>
+
+        <div class="code-block">
+            <code>
+from datetime import date, timedelta
+
+# Get standard IDs (typically Standards 1-8)
+standards_response = requests.get(
+    f"https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator/standards/",
+    headers=HEADERS
+)
+standards = standards_response.json()['results']
+standard_ids = [s['id'] for s in standards[:3]]  # Standards 1-3 for this example
+
+# Create audit report
+audit_data = {
+    "report_number": "AUDIT-2025-Q4",
+    "title": "Q4 2025 Compliance Audit",
+    "description": "Quarterly compliance review covering Standards 1-3",
+    "asqa_standards": standard_ids,
+    "audit_period_start": (date.today() - timedelta(days=90)).isoformat(),
+    "audit_period_end": date.today().isoformat(),
+    "status": "in_progress"
+}
+
+response = requests.post(
+    f"{BASE_URL}/audit-reports/",
+    json=audit_data,
+    headers=HEADERS
+)
+
+audit_report = response.json()
+print(f"\n✅ Audit Report Created: {audit_report['report_number']}")
+print(f"   Total Clauses: {audit_report['total_clauses']}")
+print(f"   Clauses with Evidence: {audit_report['clauses_with_evidence']}")
+print(f"   Compliance: {audit_report['compliance_percentage']:.1f}%")
+print(f"   Critical Compliance: {audit_report['critical_compliance_percentage']:.1f}%")
+            </code>
+        </div>
+
+        <h3>Report Output</h3>
+        <div class="code-block">
+            <code>
+✅ Audit Report Created: AUDIT-2025-Q4
+   Total Clauses: 24
+   Clauses with Evidence: 20
+   Compliance: 83.3%
+   Critical Compliance: 92.3%
+            </code>
+        </div>
+
+        <h3>Get Detailed Report</h3>
+        <div class="code-block">
+            <code>
+# Retrieve full report with clause entries
+report_id = audit_report['id']
+
+detail_response = requests.get(
+    f"{BASE_URL}/audit-reports/{report_id}/",
+    headers=HEADERS
+)
+
+detailed_report = detail_response.json()
+
+# View clause entries
+print(f"\n📊 Clause-by-Clause Breakdown:\n")
+
+for entry in detailed_report['clause_entries'][:5]:  # First 5 clauses
+    clause_num = entry['clause_number']
+    clause_title = entry['clause_title']
+    status = entry['compliance_status_display']
+    evidence_count = entry['evidence_count']
+    verified_count = entry['verified_evidence_count']
+    
+    print(f"{clause_num}: {clause_title}")
+    print(f"  Status: {status}")
+    print(f"  Evidence: {evidence_count} total, {verified_count} verified")
+    
+    if entry['finding']:
+        print(f"  Finding: {entry['finding']}")
+    
+    print()
+            </code>
+        </div>
+
+        <h2 id="step5">Step 5: Analyze Gaps</h2>
+        <p>
+            Identify clauses with insufficient evidence and get recommendations for remediation.
+        </p>
+
+        <div class="code-block">
+            <code>
+# Run gap analysis for specific standards
+gap_params = {"standard_ids": standard_ids}
+
+gap_response = requests.get(
+    f"{BASE_URL}/clause-evidence/gaps/",
+    params=gap_params,
+    headers=HEADERS
+)
+
+gap_analysis = gap_response.json()
+
+print(f"\n🔍 Gap Analysis Results\n")
+print(f"Total Clauses: {gap_analysis['total_clauses']}")
+print(f"Clauses with Gaps: {gap_analysis['clauses_with_gaps']}")
+print(f"  🔴 Critical: {gap_analysis['critical_gaps']}")
+print(f"  🟡 Major: {gap_analysis['major_gaps']}")
+print(f"  🟢 Minor: {gap_analysis['minor_gaps']}")
+
+# Show critical gaps
+if gap_analysis['critical_gaps'] > 0:
+    print(f"\n🔴 Critical Gaps Requiring Immediate Action:\n")
+    
+    critical = [g for g in gap_analysis['gaps'] if g['gap_severity'] == 'critical']
+    
+    for gap in critical:
+        print(f"Clause {gap['clause_number']}: {gap['clause_title']}")
+        print(f"  Compliance Level: {gap['compliance_level']}")
+        print(f"  Current Evidence: {gap['evidence_count']}")
+        print(f"  Verified: {gap['verified_evidence_count']}")
+        print(f"\n  Recommendations:")
+        for rec in gap['recommendations']:
+            print(f"    • {rec}")
+        print()
+            </code>
+        </div>
+
+        <h3>Gap Analysis Output</h3>
+        <div class="code-block">
+            <code>
+🔍 Gap Analysis Results
+
+Total Clauses: 24
+Clauses with Gaps: 4
+  🔴 Critical: 1
+  🟡 Major: 2
+  🟢 Minor: 1
+
+🔴 Critical Gaps Requiring Immediate Action:
+
+Clause 1.8.1: Assessment Validation
+  Compliance Level: critical
+  Current Evidence: 0
+  Verified: 0
+
+  Recommendations:
+    • Upload evidence for 1.8.1
+    • Review policies related to: validation, moderation, quality assurance
+            </code>
+        </div>
+
+        <h2 id="next-steps">🎯 Next Steps</h2>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>1. Upload More Evidence</h3>
+                <ul>
+                    <li>Upload remaining compliance documents</li>
+                    <li>Focus on critical gap clauses first</li>
+                    <li>Use bulk upload for multiple files</li>
+                    <li>Organize by evidence type</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>2. Address Gaps</h3>
+                <ul>
+                    <li>Review gap analysis recommendations</li>
+                    <li>Create missing evidence documents</li>
+                    <li>Verify auto-tagged mappings</li>
+                    <li>Add manual mappings where needed</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>3. Complete Audit Report</h3>
+                <ul>
+                    <li>Add findings and recommendations</li>
+                    <li>Review all clause entries</li>
+                    <li>Update report status to "completed"</li>
+                    <li>Export for ASQA submission</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>4. Maintain Compliance</h3>
+                <ul>
+                    <li>Upload evidence continuously</li>
+                    <li>Run quarterly gap analyses</li>
+                    <li>Track compliance trends</li>
+                    <li>Stay audit-ready year-round</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="success-box" style="margin-top: 3rem;">
+            <h3>✨ Quick Start Checklist</h3>
+            <ul>
+                <li>✅ Uploaded first evidence document with auto-tagging</li>
+                <li>✅ Reviewed and verified auto-tagged clauses</li>
+                <li>✅ Created audit report for selected standards</li>
+                <li>✅ Ran gap analysis to identify missing evidence</li>
+                <li>⏳ Continue uploading evidence to close gaps</li>
+                <li>⏳ Maintain 80%+ compliance percentage</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h3>📚 Learn More</h3>
+            <ul>
+                <li><a href="workflows.html">Common Workflows</a> - Detailed audit preparation processes</li>
+                <li><a href="api-reference.html">API Reference</a> - Complete endpoint documentation</li>
+                <li><a href="examples.html">Code Examples</a> - Real-world integration examples</li>
+                <li><a href="architecture.html">Architecture</a> - Understanding the NER pipeline</li>
+            </ul>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="overview.html" class="btn btn-secondary">← Overview</a>
+            <a href="architecture.html" class="btn btn-primary">Architecture →</a>
+        </div>
+    </div>
+</body>
+</html>

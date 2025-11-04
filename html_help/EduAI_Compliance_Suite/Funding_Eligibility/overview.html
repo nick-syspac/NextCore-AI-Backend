@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funding Eligibility Overview - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Funding Eligibility</a> /
+            <strong>Overview</strong>
+        </div>
+
+        <h1>📖 Funding Eligibility Overview</h1>
+
+        <div class="intro-section">
+            <p>
+                The Funding Eligibility System provides deterministic, auditable, and enforceable verification of student 
+                funding eligibility for Australian VET sector programs. Every decision is reproducible with complete audit trails.
+            </p>
+        </div>
+
+        <h2>What is Funding Eligibility?</h2>
+        <p>
+            The system evaluates whether a student qualifies for government-funded training based on jurisdiction-specific 
+            rules covering citizenship, residency, age, concession status, and course requirements.
+        </p>
+
+        <div class="success-box">
+            <h3>Core Capabilities</h3>
+            <ul>
+                <li><strong>Deterministic Evaluation:</strong> Same inputs + same rules = same outcome (always)</li>
+                <li><strong>Hard-Block Enforcement:</strong> Ineligible students cannot enrol via API checks</li>
+                <li><strong>External Verification:</strong> Real-time USI, postcode, concession, visa lookups</li>
+                <li><strong>Immutable Decisions:</strong> All evaluations stored permanently for 30+ years</li>
+                <li><strong>Version Control:</strong> Rulesets versioned with SHA256 checksums</li>
+                <li><strong>Override Management:</strong> Manual overrides with approver workflow</li>
+            </ul>
+        </div>
+
+        <h2>🎯 Deterministic Decisions</h2>
+        <p>Every eligibility decision is fully reproducible:</p>
+        
+        <div class="code-block">
+            <pre><code>Decision = f(Input Data, External Lookups, Ruleset Version, Reference Tables)
+
+Input Data:
+  - Student demographics (age, citizenship, residency)
+  - Course details (code, level, jurisdiction)
+  - Evidence references (USI, concession card)
+
+External Lookups (cached):
+  - USI validation status
+  - Postcode → LGA, RAI, SEIFA
+  - Concession card verification
+  - Visa status and work rights
+
+Ruleset Version:
+  - Jurisdiction code (NSW, VIC, QLD, etc.)
+  - Version number (2024.1, 2024.2)
+  - SHA256 checksum for integrity
+
+Reference Tables:
+  - Income thresholds
+  - Eligible course lists
+  - Concession types
+  - Age limits
+
+→ EligibilityDecision (immutable)</code></pre>
+        </div>
+
+        <h2>⚙️ Rules Engine</h2>
+        <p>Flexible JSONLogic-based evaluation with extensibility:</p>
+
+        <h3>JSONLogic Operators</h3>
+        <div class="features-grid">
+            <div class="feature-card">
+                <h4>Comparison</h4>
+                <ul>
+                    <li><code>==</code>, <code>!=</code> - Equality</li>
+                    <li><code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code> - Numeric</li>
+                    <li><code>in</code> - Array membership</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h4>Logic</h4>
+                <ul>
+                    <li><code>and</code>, <code>or</code> - Boolean logic</li>
+                    <li><code>not</code> - Negation</li>
+                    <li><code>if</code> - Conditional branching</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h4>Functions</h4>
+                <ul>
+                    <li><code>var</code> - Access input variables</li>
+                    <li><code>lookup</code> - External API data</li>
+                    <li><code>reference</code> - Reference tables</li>
+                    <li><code>date_diff</code> - Date calculations</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Example Rule: VIC Skills First</h3>
+        <div class="code-block">
+            <pre><code>{
+  "and": [
+    {
+      ">=": [{"var": "student.age"}, 18]
+    },
+    {
+      "in": [
+        {"var": "student.citizenship"},
+        ["Australian", "NZ", "Permanent Resident"]
+      ]
+    },
+    {
+      "or": [
+        {"lookup": ["concession", "has_card"]},
+        {">=": [{"lookup": ["postcode", "rai"]}, 2.0]}
+      ]
+    },
+    {
+      "in": [
+        {"var": "course.level"},
+        ["Certificate III", "Certificate IV", "Diploma"]
+      ]
+    }
+  ]
+}</code></pre>
+        </div>
+
+        <h2>🔒 Hard-Block Enforcement</h2>
+        <p>The system prevents non-eligible enrolments through API enforcement:</p>
+
+        <div class="info-box">
+            <h3>Enforcement Flow</h3>
+            <ol>
+                <li><strong>Student selects course</strong> in SMS/LMS</li>
+                <li><strong>System calls:</strong> <code>GET /requests/{id}/check_eligibility/</code></li>
+                <li><strong>API returns:</strong>
+                    <ul>
+                        <li><code>200 OK</code> with <code>can_enrol: true</code> → Allow enrolment</li>
+                        <li><code>403 Forbidden</code> with <code>can_enrol: false</code> → Block enrolment</li>
+                    </ul>
+                </li>
+                <li><strong>Enrolment permitted</strong> only if <code>can_enrol: true</code></li>
+            </ol>
+        </div>
+
+        <div class="warning-box">
+            <h3>⚠️ Mandatory Integration</h3>
+            <p>
+                SMS/LMS systems <strong>MUST</strong> integrate the hard-block check endpoint. Allowing enrolments 
+                without eligibility verification creates compliance risk and funding liability.
+            </p>
+        </div>
+
+        <h2>🔍 External Verification</h2>
+        <p>Automated lookups with intelligent caching:</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Provider</th>
+                    <th>Data Retrieved</th>
+                    <th>Cache Duration</th>
+                    <th>Use Cases</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>USI Registry</strong></td>
+                    <td>USI validity, student details match</td>
+                    <td>7 days</td>
+                    <td>Identity verification, enrolment validation</td>
+                </tr>
+                <tr>
+                    <td><strong>Postcode API</strong></td>
+                    <td>LGA, RAI (remoteness), SEIFA (socio-economic)</td>
+                    <td>90 days</td>
+                    <td>Regional eligibility, concession determination</td>
+                </tr>
+                <tr>
+                    <td><strong>Concession Connector</strong></td>
+                    <td>Card validity, type, expiry date</td>
+                    <td>1 day</td>
+                    <td>Fee exemption, priority access</td>
+                </tr>
+                <tr>
+                    <td><strong>VEVO (Visa)</strong></td>
+                    <td>Visa status, work rights, expiry</td>
+                    <td>1 day</td>
+                    <td>International student eligibility</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>📋 Immutable Audit Trail</h2>
+        <p>Every decision includes complete reproducibility data:</p>
+
+        <div class="code-block">
+            <pre><code>EligibilityDecision {
+  // Decision outcome
+  outcome: "eligible" | "ineligible" | "review"
+  reasons: ["Concession card verified", "Age requirement met"]
+  clause_refs: ["VIC-SF-2024 Section 2.1"]
+  
+  // Input snapshot
+  request_snapshot: {
+    student: {...},
+    course: {...},
+    evidence: [...]
+  }
+  
+  // External lookups (cached)
+  lookups_used: [
+    {provider: "USI", result: {...}, cached_at: "2025-11-04T10:00:00Z"},
+    {provider: "Postcode", result: {...}, cached_at: "2025-11-04T10:00:01Z"}
+  ]
+  
+  // Ruleset version
+  ruleset_version: "VIC 2024.2"
+  ruleset_checksum: "a3f2b1..."
+  
+  // Evaluation metadata
+  evaluated_at: "2025-11-04T10:00:05Z"
+  evaluation_duration_ms: 150
+  decision_data: {...}  // Raw rules engine output
+}</code></pre>
+        </div>
+
+        <h2>🌏 Jurisdiction-Specific Rules</h2>
+        <p>Each Australian jurisdiction has unique funding rules:</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Jurisdiction</th>
+                    <th>Program</th>
+                    <th>Key Requirements</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>VIC</strong></td>
+                    <td>Skills First</td>
+                    <td>Age 18+, concession card OR regional, Cert III-Diploma</td>
+                </tr>
+                <tr>
+                    <td><strong>NSW</strong></td>
+                    <td>Smart & Skilled</td>
+                    <td>Age 15+, residency 6+ months, priority areas</td>
+                </tr>
+                <tr>
+                    <td><strong>QLD</strong></td>
+                    <td>Certificate 3 Guarantee</td>
+                    <td>Age 15-64, no previous Cert III, QLD resident</td>
+                </tr>
+                <tr>
+                    <td><strong>SA</strong></td>
+                    <td>Skills for All</td>
+                    <td>Age 15+, SA resident, eligible qualification</td>
+                </tr>
+                <tr>
+                    <td><strong>WA</strong></td>
+                    <td>Jobs and Skills WA</td>
+                    <td>Age 15+, WA resident, priority occupations</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>🔄 Override Workflow</h2>
+        <p>Manual overrides for exceptional circumstances:</p>
+
+        <div class="info-box">
+            <h3>Override Process</h3>
+            <ol>
+                <li><strong>Decision created:</strong> System evaluates as "ineligible" or "review"</li>
+                <li><strong>Manager reviews:</strong> Case assessed for special circumstances</li>
+                <li><strong>Override created:</strong> Justification + evidence attached</li>
+                <li><strong>Approval logged:</strong> Approver ID + timestamp recorded</li>
+                <li><strong>Decision updated:</strong> <code>can_enrol: true</code> with override reference</li>
+            </ol>
+        </div>
+
+        <div class="warning-box">
+            <h3>⚠️ Override Restrictions</h3>
+            <ul>
+                <li>Only authorized staff can create overrides (permission-based)</li>
+                <li>Justification and policy reference required</li>
+                <li>Evidence attachments mandatory for audit</li>
+                <li>All overrides reported to jurisdiction funding body</li>
+            </ul>
+        </div>
+
+        <h2>🔗 Webhook Integration</h2>
+        <p>Real-time notifications to SMS/LMS systems:</p>
+
+        <h3>Supported Events</h3>
+        <ul>
+            <li><code>decision.finalized</code> - Evaluation completed</li>
+            <li><code>override.approved</code> - Manual override created</li>
+        </ul>
+
+        <h3>Webhook Security</h3>
+        <div class="code-block">
+            <pre><code>// HMAC signature verification
+signature = HMAC-SHA256(webhook_secret, payload)
+
+headers = {
+  "X-Webhook-Signature": signature,
+  "X-Webhook-Event": "decision.finalized",
+  "X-Webhook-Delivery": delivery_id
+}
+
+// Recipient must verify signature before processing</code></pre>
+        </div>
+
+        <h2>📊 Key Benefits</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>✅ Compliance Assurance</h3>
+                <p>Automated enforcement eliminates manual errors and ensures 100% compliance with funding rules.</p>
+            </div>
+
+            <div class="feature-card">
+                <h3>🔍 Audit Readiness</h3>
+                <p>Complete audit trail with immutable records supports 30-year retention requirements.</p>
+            </div>
+
+            <div class="feature-card">
+                <h3>⚡ Operational Efficiency</h3>
+                <p>Automated verification reduces manual checking time from hours to seconds.</p>
+            </div>
+
+            <div class="feature-card">
+                <h3>🎯 Accuracy</h3>
+                <p>Deterministic rules eliminate subjective interpretation and inconsistent decisions.</p>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <h2>Next Steps</h2>
+            <p>Ready to implement funding eligibility checks? Start with the quick start guide.</p>
+            <a href="quickstart.html" class="btn btn-primary">Quick Start Guide →</a>
+        </div>
+    </div>
+</body>
+</html>

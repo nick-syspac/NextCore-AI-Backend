@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examples - Policy Comparator Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Policy Comparator</a> /
+            <strong>Examples</strong>
+        </div>
+
+        <h1>💡 Real-World Examples</h1>
+        <p class="lead">
+            Complete code examples demonstrating Policy Comparator in real-world compliance scenarios.
+        </p>
+
+        <div class="toc-box">
+            <h3>Examples</h3>
+            <ul>
+                <li><a href="#example-1">Example 1: Assessment Policy Compliance Check</a></li>
+                <li><a href="#example-2">Example 2: Student Support Policy Analysis</a></li>
+                <li><a href="#example-3">Example 3: Pre-Audit Compliance Scan</a></li>
+                <li><a href="#example-4">Example 4: Gap Remediation Workflow</a></li>
+                <li><a href="#example-5">Example 5: Custom Threshold Configuration</a></li>
+                <li><a href="#example-6">Example 6: Audit Assistant Integration</a></li>
+            </ul>
+        </div>
+
+        <h2 id="example-1">📋 Example 1: Assessment Policy Compliance Check</h2>
+        <p>
+            <strong>Scenario:</strong> An RTO needs to verify their Assessment Policy complies with 
+            ASQA Standard 1 (Training and Assessment) requirements before an upcoming audit.
+        </p>
+
+        <h3>Complete Code Example</h3>
+        <div class="code-block">
+            <code>
+"""
+Assessment Policy Compliance Check
+Compares assessment policy against ASQA Standard 1 requirements
+"""
+import requests
+import json
+from datetime import datetime
+
+# Configuration
+BASE_URL = "https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator"
+HEADERS = {"Authorization": "Bearer YOUR_TOKEN"}
+
+def create_assessment_policy():
+    """Create assessment policy in the system"""
+    url = f"{BASE_URL}/policies/"
+    
+    policy_data = {
+        "policy_number": "ASMT-001",
+        "title": "Assessment Policy and Procedures",
+        "description": "Comprehensive policy governing all assessment practices",
+        "policy_type": "assessment",
+        "content": """
+        Assessment Policy and Procedures
+        
+        1. Purpose
+        This policy ensures all assessment practices meet ASQA requirements and
+        maintain the integrity and quality of our RTO's qualifications.
+        
+        2. Training and Assessment Strategy (TAS)
+        Each training product has a documented Training and Assessment Strategy that:
+        - Identifies target student cohort and entry requirements
+        - Defines delivery modes and resources required
+        - Outlines assessment methods aligned to units of competency
+        - Specifies trainer/assessor requirements
+        - Details quality assurance processes
+        
+        3. Assessment System
+        Our assessment system ensures:
+        - Validity: Assessments measure what they claim to measure
+        - Reliability: Consistent assessment judgments across assessors
+        - Fairness: Equitable treatment of all students
+        - Flexibility: Reasonable adjustments for individual needs
+        
+        4. Assessment Methods
+        We use diverse assessment methods including:
+        - Written knowledge tests
+        - Practical demonstrations
+        - Workplace observation
+        - Portfolio of evidence
+        - Third-party reports
+        - Recognition of Prior Learning (RPL)
+        
+        5. Trainer and Assessor Requirements
+        All trainers and assessors must:
+        - Hold vocational competencies at least to level being assessed
+        - Hold current TAE40116 Certificate IV in Training and Assessment
+        - Maintain current industry skills through professional development
+        - Participate in validation and moderation activities
+        
+        6. Assessment Validation
+        We conduct systematic validation of assessment practices:
+        - Pre-validation of new assessment tools
+        - Post-validation of assessment judgments
+        - Annual validation across all training products
+        - External validation every 5 years or as required
+        
+        7. Moderation Activities
+        Regular moderation ensures consistency:
+        - Monthly moderation meetings with assessment team
+        - Review of assessment decisions across different assessors
+        - Discussion of borderline cases
+        - Calibration of assessment judgments
+        
+        8. Assessment Records
+        We maintain comprehensive records including:
+        - Assessment tasks and marking guides
+        - Student responses and evidence
+        - Assessor judgments and feedback
+        - Validation and moderation outcomes
+        - RPL evidence and decisions
+        
+        9. Student Information
+        Students receive information about:
+        - Assessment requirements before enrollment
+        - Assessment methods and timing
+        - Re-assessment opportunities
+        - Appeals process for assessment decisions
+        - Recognition and credit transfer processes
+        
+        10. Continuous Improvement
+        Assessment practices are reviewed through:
+        - Student feedback on assessment processes
+        - Trainer/assessor feedback
+        - Validation outcomes
+        - Industry advisory committee input
+        - Audit findings and recommendations
+        """,
+        "version": "2.0",
+        "status": "approved",
+        "effective_date": "2025-01-01",
+        "review_date": "2026-01-01"
+    }
+    
+    response = requests.post(url, json=policy_data, headers=HEADERS)
+    policy = response.json()
+    
+    print(f"✅ Created policy: {policy['policy_number']}")
+    print(f"   ID: {policy['id']}")
+    print(f"   Title: {policy['title']}")
+    
+    return policy
+
+def compare_against_standard_1(policy_id):
+    """Compare policy against ASQA Standard 1"""
+    # Get Standard 1 ID
+    standards_url = f"{BASE_URL}/standards/"
+    params = {"standard_number": "1"}
+    response = requests.get(standards_url, params=params, headers=HEADERS)
+    standard_1 = response.json()['results'][0]
+    
+    print(f"\n🔍 Comparing against: Standard {standard_1['standard_number']}")
+    print(f"   {standard_1['title']}")
+    
+    # Run comparison
+    compare_url = f"{BASE_URL}/policies/{policy_id}/compare/"
+    comparison_request = {
+        "policy_id": policy_id,
+        "standard_ids": [standard_1['id']],
+        "session_name": "Pre-Audit Assessment Policy Check",
+        "use_nlp": True
+    }
+    
+    response = requests.post(compare_url, json=comparison_request, headers=HEADERS)
+    result = response.json()
+    
+    return result, standard_1
+
+def analyze_results(result):
+    """Analyze and display comparison results"""
+    summary = result['results_summary']
+    
+    print(f"\n📊 Comparison Results:")
+    print(f"   Processing time: {result['processing_time']:.2f}s")
+    print(f"   Total clauses checked: {summary['total_checked']}")
+    print(f"   ✅ Full matches: {summary['compliant']}")
+    print(f"   ⚠️  Partial matches: {summary['partial_match']}")
+    print(f"   ❌ Gaps: {summary['gaps']}")
+    print(f"   📈 Compliance score: {summary['compliance_score']:.1f}%")
+    
+    # Detailed breakdown
+    print(f"\n📋 Detailed Breakdown:")
+    
+    results_url = f"{BASE_URL}/policies/{result['policy_id']}/results/"
+    response = requests.get(results_url, headers=HEADERS)
+    detailed = response.json()
+    
+    # Full matches
+    full_matches = [r for r in detailed if r['match_type'] == 'full']
+    print(f"\n✅ Full Matches ({len(full_matches)}):")
+    for r in full_matches:
+        clause = r['asqa_clause_details']
+        print(f"   • Clause {clause['clause_number']}: {clause['title']}")
+        print(f"     Score: {r['similarity_score']:.3f}")
+        if r['matched_text']:
+            print(f"     Match: \"{r['matched_text'][:80]}...\"")
+    
+    # Partial matches
+    partial = [r for r in detailed if r['match_type'] == 'partial']
+    if partial:
+        print(f"\n⚠️  Partial Matches ({len(partial)}) - Review Recommended:")
+        for r in partial:
+            clause = r['asqa_clause_details']
+            print(f"   • Clause {clause['clause_number']}: {clause['title']}")
+            print(f"     Score: {r['similarity_score']:.3f}")
+            if r['recommendations']:
+                print(f"     💡 Recommendation: {r['recommendations'][0]}")
+    
+    # Gaps
+    gaps = [r for r in detailed if r['match_type'] in ['weak', 'no_match']]
+    if gaps:
+        print(f"\n❌ Gaps ({len(gaps)}) - Action Required:")
+        for r in gaps:
+            clause = r['asqa_clause_details']
+            print(f"   • Clause {clause['clause_number']}: {clause['title']}")
+            print(f"     Score: {r['similarity_score']:.3f}")
+            print(f"     Compliance Level: {clause['compliance_level']}")
+            if r['gap_description']:
+                print(f"     Gap: {r['gap_description']}")
+            if r['recommendations']:
+                print(f"     💡 Action: {r['recommendations'][0]}")
+    
+    return summary['compliance_score'], gaps
+
+def generate_report(policy, standard, compliance_score, gaps):
+    """Generate compliance report"""
+    report = {
+        "report_title": "Assessment Policy Compliance Report",
+        "generated_at": datetime.now().isoformat(),
+        "policy": {
+            "number": policy['policy_number'],
+            "title": policy['title'],
+            "version": policy['version']
+        },
+        "standard": {
+            "number": standard['standard_number'],
+            "title": standard['title']
+        },
+        "compliance": {
+            "score": compliance_score,
+            "status": "compliant" if compliance_score >= 80 else "needs_improvement",
+            "threshold": 80
+        },
+        "gaps": [
+            {
+                "clause": gap['asqa_clause_details']['clause_number'],
+                "title": gap['asqa_clause_details']['title'],
+                "severity": "critical" if gap['asqa_clause_details']['compliance_level'] == 'critical' else "moderate",
+                "recommendations": gap['recommendations']
+            }
+            for gap in gaps
+        ],
+        "recommendations": []
+    }
+    
+    if compliance_score < 80:
+        report['recommendations'].append(
+            "Policy requires updates to achieve 80% compliance threshold"
+        )
+    
+    if gaps:
+        report['recommendations'].append(
+            f"Address {len(gaps)} identified gaps before audit"
+        )
+    
+    # Save report
+    filename = f"assessment_policy_compliance_{datetime.now().strftime('%Y%m%d')}.json"
+    with open(filename, 'w') as f:
+        json.dump(report, f, indent=2)
+    
+    print(f"\n📄 Report saved: {filename}")
+    
+    return report
+
+def main():
+    """Run complete assessment policy compliance check"""
+    print("=" * 60)
+    print("Assessment Policy Compliance Check")
+    print("=" * 60)
+    
+    # Step 1: Create policy
+    policy = create_assessment_policy()
+    
+    # Step 2: Run comparison
+    result, standard = compare_against_standard_1(policy['id'])
+    
+    # Step 3: Analyze results
+    compliance_score, gaps = analyze_results(result)
+    
+    # Step 4: Generate report
+    report = generate_report(policy, standard, compliance_score, gaps)
+    
+    # Step 5: Provide recommendation
+    print(f"\n{'='*60}")
+    if compliance_score >= 80:
+        print("✅ RESULT: Policy is compliant with ASQA Standard 1")
+        print("   Ready for audit")
+    else:
+        print("⚠️  RESULT: Policy needs improvement")
+        print(f"   Current: {compliance_score:.1f}% (Target: 80%)")
+        print(f"   Action: Address {len(gaps)} gaps identified")
+    print(f"{'='*60}")
+
+if __name__ == "__main__":
+    main()
+            </code>
+        </div>
+
+        <h3>Expected Output</h3>
+        <div class="code-block">
+            <code>
+============================================================
+Assessment Policy Compliance Check
+============================================================
+✅ Created policy: ASMT-001
+   ID: 42
+   Title: Assessment Policy and Procedures
+
+🔍 Comparing against: Standard 1
+   Training and Assessment
+
+📊 Comparison Results:
+   Processing time: 2.34s
+   Total clauses checked: 8
+   ✅ Full matches: 6
+   ⚠️  Partial matches: 2
+   ❌ Gaps: 0
+   📈 Compliance score: 87.5%
+
+📋 Detailed Breakdown:
+
+✅ Full Matches (6):
+   • Clause 1.1: Training and Assessment Strategy
+     Score: 0.853
+     Match: "Each training product has a documented Training and Assessment..."
+   • Clause 1.2: Trainer Qualifications
+     Score: 0.912
+     Match: "Hold current TAE40116 Certificate IV in Training and Assessment..."
+   • Clause 1.5: Assessment System
+     Score: 0.887
+     Match: "Validity: Assessments measure what they claim to measure..."
+   • Clause 1.8: Assessment Validation
+     Score: 0.845
+     Match: "Pre-validation of new assessment tools..."
+   • Clause 1.9: Student Information
+     Score: 0.891
+     Match: "Assessment requirements before enrollment..."
+   • Clause 1.10: Records Management
+     Score: 0.823
+     Match: "Assessment tasks and marking guides..."
+
+⚠️  Partial Matches (2) - Review Recommended:
+   • Clause 1.3: Current Industry Skills
+     Score: 0.723
+     💡 Recommendation: Include specific PD requirements and hours
+   • Clause 1.7: Recognition Processes
+     Score: 0.678
+     💡 Recommendation: Expand RPL procedures and credit transfer details
+
+📄 Report saved: assessment_policy_compliance_20251104.json
+
+============================================================
+✅ RESULT: Policy is compliant with ASQA Standard 1
+   Ready for audit
+============================================================
+            </code>
+        </div>
+
+        <h2 id="example-2">🎓 Example 2: Student Support Policy Analysis</h2>
+        <p>
+            <strong>Scenario:</strong> An RTO wants to ensure their Student Support Policy adequately 
+            addresses ASQA Standard 5 (Student Services) requirements, particularly for vulnerable students.
+        </p>
+
+        <h3>Code Example</h3>
+        <div class="code-block">
+            <code>
+"""
+Student Support Policy Gap Analysis
+Identifies gaps in student support provisions
+"""
+import requests
+
+BASE_URL = "https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator"
+HEADERS = {"Authorization": "Bearer YOUR_TOKEN"}
+
+def analyze_student_support_policy():
+    # Create student support policy
+    policy_data = {
+        "policy_number": "SS-001",
+        "title": "Student Support Services Policy",
+        "policy_type": "student_support",
+        "content": """
+        Student Support Services
+        
+        1. Academic Support
+        - Learning support officers available
+        - Study skills workshops
+        - Literacy and numeracy assistance
+        - One-on-one tutoring available
+        
+        2. Wellbeing Support
+        - Student counseling services
+        - Referrals to external support agencies
+        - Mental health awareness programs
+        
+        3. Special Needs
+        - Reasonable adjustments for students with disability
+        - Equipment and assistive technology
+        - Modified assessment arrangements
+        
+        4. Career Guidance
+        - Career counseling services
+        - Job search assistance
+        - Resume and interview preparation
+        
+        5. Financial Support
+        - Information on government funding
+        - Payment plans available
+        - Financial hardship provisions
+        """,
+        "status": "approved",
+        "version": "1.0"
+    }
+    
+    # Create policy
+    response = requests.post(f"{BASE_URL}/policies/", json=policy_data, headers=HEADERS)
+    policy = response.json()
+    
+    print(f"✅ Analyzing: {policy['title']}")
+    
+    # Get Standard 5 (Student Services)
+    response = requests.get(f"{BASE_URL}/standards/", 
+                           params={"standard_number": "5"}, 
+                           headers=HEADERS)
+    standard_5 = response.json()['results'][0]
+    
+    # Run gap analysis
+    gap_url = f"{BASE_URL}/policies/{policy['id']}/gap_analysis/"
+    response = requests.get(gap_url, headers=HEADERS)
+    gap_analysis = response.json()
+    
+    print(f"\n📊 Gap Analysis Results:")
+    print(f"   Total gaps: {gap_analysis['summary']['total_gaps']}")
+    print(f"   🔴 Critical: {gap_analysis['summary']['critical_gaps']}")
+    print(f"   🟡 Moderate: {gap_analysis['summary']['moderate_gaps']}")
+    print(f"   🟢 Minor: {gap_analysis['summary']['minor_gaps']}")
+    print(f"   Compliance: {gap_analysis['summary']['compliance_score']}%")
+    
+    # Show critical gaps
+    if gap_analysis['critical_gaps']:
+        print(f"\n🔴 Critical Gaps Identified:")
+        for gap in gap_analysis['critical_gaps']:
+            clause = gap['clause']
+            print(f"\n   Clause {clause['clause_number']}: {clause['title']}")
+            print(f"   Missing elements:")
+            for keyword in gap['missing_keywords'][:3]:
+                print(f"      - {keyword}")
+            print(f"   Recommended action:")
+            for rec in gap['recommendations'][:2]:
+                print(f"      • {rec}")
+    
+    return policy, gap_analysis
+
+# Run analysis
+policy, gaps = analyze_student_support_policy()
+            </code>
+        </div>
+
+        <h3>Output</h3>
+        <div class="code-block">
+            <code>
+✅ Analyzing: Student Support Services Policy
+
+📊 Gap Analysis Results:
+   Total gaps: 3
+   🔴 Critical: 1
+   🟡 Moderate: 2
+   🟢 Minor: 0
+   Compliance: 72.5%
+
+🔴 Critical Gaps Identified:
+
+   Clause 5.1: Pre-Enrolment Information
+   Missing elements:
+      - course information disclosure
+      - costs and refund policy
+      - student rights and responsibilities
+   Recommended action:
+      • Add comprehensive pre-enrolment information requirements
+      • Include disclosure of course outcomes and assessment requirements
+            </code>
+        </div>
+
+        <h2 id="example-3">🔍 Example 3: Pre-Audit Compliance Scan</h2>
+        <p>
+            <strong>Scenario:</strong> An RTO has an upcoming ASQA audit and needs to quickly assess 
+            compliance across all policies.
+        </p>
+
+        <h3>Code Example</h3>
+        <div class="code-block">
+            <code>
+"""
+Pre-Audit Compliance Scan
+Batch check all policies and generate audit readiness report
+"""
+import requests
+from datetime import datetime
+import time
+
+BASE_URL = "https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator"
+HEADERS = {"Authorization": "Bearer YOUR_TOKEN"}
+
+def pre_audit_compliance_scan():
+    # Get all approved policies
+    response = requests.get(f"{BASE_URL}/policies/", 
+                           params={"status": "approved", "page_size": 100},
+                           headers=HEADERS)
+    policies = response.json()['results']
+    
+    print(f"🔍 Pre-Audit Compliance Scan")
+    print(f"   Analyzing {len(policies)} policies\n")
+    
+    scan_results = []
+    
+    for i, policy in enumerate(policies, 1):
+        print(f"[{i}/{len(policies)}] {policy['policy_number']}: {policy['title']}")
+        
+        # Run comparison
+        compare_url = f"{BASE_URL}/policies/{policy['id']}/compare/"
+        response = requests.post(compare_url, 
+                                json={
+                                    "policy_id": policy['id'],
+                                    "session_name": "Pre-Audit Scan",
+                                    "use_nlp": True
+                                },
+                                headers=HEADERS)
+        result = response.json()
+        
+        compliance = result['results_summary']['compliance_score']
+        gaps = result['results_summary']['gaps']
+        
+        scan_results.append({
+            "policy_number": policy['policy_number'],
+            "policy_title": policy['title'],
+            "policy_type": policy['policy_type'],
+            "compliance_score": compliance,
+            "gaps": gaps,
+            "status": "ready" if compliance >= 80 else "needs_work"
+        })
+        
+        print(f"   Score: {compliance:.1f}% | Gaps: {gaps} | Status: {scan_results[-1]['status']}")
+        time.sleep(1)  # Rate limiting
+    
+    # Generate audit readiness report
+    print(f"\n{'='*70}")
+    print(f"AUDIT READINESS REPORT - {datetime.now().strftime('%Y-%m-%d')}")
+    print(f"{'='*70}\n")
+    
+    ready_policies = [p for p in scan_results if p['status'] == 'ready']
+    needs_work = [p for p in scan_results if p['status'] == 'needs_work']
+    
+    avg_compliance = sum(p['compliance_score'] for p in scan_results) / len(scan_results)
+    
+    print(f"📊 Overall Metrics:")
+    print(f"   Total Policies: {len(policies)}")
+    print(f"   ✅ Audit Ready: {len(ready_policies)} ({len(ready_policies)/len(policies)*100:.0f}%)")
+    print(f"   ⚠️  Needs Work: {len(needs_work)} ({len(needs_work)/len(policies)*100:.0f}%)")
+    print(f"   📈 Average Compliance: {avg_compliance:.1f}%")
+    
+    if needs_work:
+        print(f"\n⚠️  Policies Requiring Attention:")
+        for policy in sorted(needs_work, key=lambda x: x['compliance_score']):
+            print(f"   • {policy['policy_number']}: {policy['policy_title']}")
+            print(f"     Score: {policy['compliance_score']:.1f}% | Gaps: {policy['gaps']}")
+    
+    # Overall audit readiness assessment
+    print(f"\n{'='*70}")
+    if avg_compliance >= 80 and len(needs_work) <= 2:
+        print("✅ AUDIT READINESS: EXCELLENT")
+        print("   Organization is well-prepared for ASQA audit")
+    elif avg_compliance >= 70:
+        print("⚠️  AUDIT READINESS: GOOD")
+        print(f"   Address {len(needs_work)} policies before audit")
+    else:
+        print("❌ AUDIT READINESS: NEEDS IMPROVEMENT")
+        print(f"   Significant policy updates required before audit")
+    print(f"{'='*70}")
+    
+    return scan_results
+
+# Run scan
+results = pre_audit_compliance_scan()
+            </code>
+        </div>
+
+        <h2 id="example-4">🛠️ Example 4: Gap Remediation Workflow</h2>
+        <p>
+            <strong>Scenario:</strong> After identifying gaps, systematically update policy and verify improvements.
+        </p>
+
+        <h3>Code Example</h3>
+        <div class="code-block">
+            <code>
+"""
+Gap Remediation Workflow
+Update policy to address gaps and verify improvements
+"""
+import requests
+
+BASE_URL = "https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator"
+HEADERS = {"Authorization": "Bearer YOUR_TOKEN"}
+
+def remediate_policy_gaps(policy_id):
+    # Step 1: Get current gap analysis
+    print("Step 1: Analyzing current gaps...")
+    gap_url = f"{BASE_URL}/policies/{policy_id}/gap_analysis/"
+    response = requests.get(gap_url, headers=HEADERS)
+    initial_gaps = response.json()
+    
+    print(f"   Initial compliance: {initial_gaps['summary']['compliance_score']}%")
+    print(f"   Gaps to address: {initial_gaps['summary']['total_gaps']}")
+    
+    # Step 2: Get policy details
+    response = requests.get(f"{BASE_URL}/policies/{policy_id}/", headers=HEADERS)
+    policy = response.json()
+    
+    # Step 3: Update policy content based on gap recommendations
+    print(f"\nStep 2: Updating policy content...")
+    
+    updates_to_add = []
+    for gap in initial_gaps['critical_gaps'] + initial_gaps['moderate_gaps']:
+        clause = gap['clause']
+        print(f"   Addressing Clause {clause['clause_number']}: {clause['title']}")
+        
+        # Collect recommended additions
+        for rec in gap['recommendations']:
+            updates_to_add.append(f"- {rec}")
+    
+    # Append updates to policy content
+    updated_content = policy['content'] + "\n\n## Compliance Updates\n" + "\n".join(updates_to_add)
+    
+    # Update policy
+    update_url = f"{BASE_URL}/policies/{policy_id}/"
+    response = requests.patch(update_url, 
+                             json={
+                                 "content": updated_content,
+                                 "version": f"{float(policy['version']) + 0.1:.1f}"
+                             },
+                             headers=HEADERS)
+    
+    print(f"   ✅ Policy updated to version {response.json()['version']}")
+    
+    # Step 4: Re-run comparison
+    print(f"\nStep 3: Re-running compliance check...")
+    compare_url = f"{BASE_URL}/policies/{policy_id}/compare/"
+    response = requests.post(compare_url,
+                            json={
+                                "policy_id": policy_id,
+                                "session_name": "Post-Remediation Check",
+                                "use_nlp": True
+                            },
+                            headers=HEADERS)
+    new_result = response.json()
+    
+    # Step 5: Compare improvements
+    print(f"\n{'='*60}")
+    print(f"REMEDIATION RESULTS")
+    print(f"{'='*60}")
+    
+    old_score = initial_gaps['summary']['compliance_score']
+    new_score = new_result['results_summary']['compliance_score']
+    improvement = new_score - old_score
+    
+    print(f"\n📈 Compliance Improvement:")
+    print(f"   Before: {old_score:.1f}%")
+    print(f"   After:  {new_score:.1f}%")
+    print(f"   Improvement: +{improvement:.1f}%")
+    
+    print(f"\n📊 Gap Reduction:")
+    print(f"   Before: {initial_gaps['summary']['total_gaps']} gaps")
+    print(f"   After:  {new_result['results_summary']['gaps']} gaps")
+    print(f"   Resolved: {initial_gaps['summary']['total_gaps'] - new_result['results_summary']['gaps']}")
+    
+    if new_score >= 80:
+        print(f"\n✅ SUCCESS: Policy now compliant!")
+    else:
+        print(f"\n⚠️  Additional work needed to reach 80% threshold")
+    
+    return new_result
+
+# Example usage
+policy_id = 15  # Policy needing remediation
+result = remediate_policy_gaps(policy_id)
+            </code>
+        </div>
+
+        <h2 id="example-5">⚙️ Example 5: Custom Threshold Configuration</h2>
+        <p>
+            <strong>Scenario:</strong> An RTO wants to use stricter thresholds for critical compliance areas 
+            and more lenient thresholds for operational policies.
+        </p>
+
+        <h3>Code Example</h3>
+        <div class="code-block">
+            <code>
+"""
+Custom Threshold Configuration
+Apply different thresholds based on policy criticality
+"""
+import requests
+
+BASE_URL = "https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator"
+HEADERS = {"Authorization": "Bearer YOUR_TOKEN"}
+
+# Define threshold profiles
+THRESHOLD_PROFILES = {
+    "strict": {
+        "full_match": 0.90,      # 90%+ = compliant
+        "partial_match": 0.80,   # 80-90% = review
+        "weak_match": 0.70,      # 70-80% = action needed
+        "description": "For critical compliance areas (assessment, student services)"
+    },
+    "standard": {
+        "full_match": 0.80,      # 80%+ = compliant
+        "partial_match": 0.60,   # 60-80% = review
+        "weak_match": 0.40,      # 40-60% = action needed
+        "description": "Default profile for most policies"
+    },
+    "lenient": {
+        "full_match": 0.70,      # 70%+ = compliant
+        "partial_match": 0.50,   # 50-70% = review
+        "weak_match": 0.30,      # 30-50% = action needed
+        "description": "For operational/internal policies"
+    }
+}
+
+def apply_custom_thresholds(results, profile="standard"):
+    """
+    Re-classify comparison results using custom thresholds
+    """
+    thresholds = THRESHOLD_PROFILES[profile]
+    
+    print(f"Applying {profile.upper()} threshold profile:")
+    print(f"   Full match: ≥{thresholds['full_match']:.0%}")
+    print(f"   Partial: {thresholds['weak_match']:.0%}-{thresholds['full_match']:.0%}")
+    print(f"   Gap: <{thresholds['weak_match']:.0%}")
+    
+    reclassified = {
+        "full_matches": [],
+        "partial_matches": [],
+        "gaps": []
+    }
+    
+    for result in results:
+        score = result['similarity_score']
+        
+        if score >= thresholds['full_match']:
+            result['match_type'] = 'full'
+            reclassified['full_matches'].append(result)
+        elif score >= thresholds['weak_match']:
+            result['match_type'] = 'partial'
+            reclassified['partial_matches'].append(result)
+        else:
+            result['match_type'] = 'gap'
+            reclassified['gaps'].append(result)
+    
+    # Calculate new compliance score
+    total = len(results)
+    full_count = len(reclassified['full_matches'])
+    partial_count = len(reclassified['partial_matches'])
+    
+    compliance_score = ((full_count * 100) + (partial_count * 60)) / total
+    
+    print(f"\n📊 Results with {profile.upper()} thresholds:")
+    print(f"   Compliant: {full_count}")
+    print(f"   Partial: {partial_count}")
+    print(f"   Gaps: {len(reclassified['gaps'])}")
+    print(f"   Compliance Score: {compliance_score:.1f}%")
+    
+    return reclassified, compliance_score
+
+def compare_threshold_profiles(policy_id):
+    """
+    Compare results across different threshold profiles
+    """
+    # Get comparison results
+    results_url = f"{BASE_URL}/policies/{policy_id}/results/"
+    response = requests.get(results_url, headers=HEADERS)
+    results = response.json()
+    
+    print(f"Analyzing Policy {policy_id} with multiple threshold profiles\n")
+    print(f"{'='*70}")
+    
+    # Apply each profile
+    profile_results = {}
+    for profile_name in ['strict', 'standard', 'lenient']:
+        print(f"\n{profile_name.upper()} PROFILE:")
+        print(f"-" * 70)
+        reclassified, score = apply_custom_thresholds(results, profile_name)
+        profile_results[profile_name] = {
+            "results": reclassified,
+            "score": score
+        }
+    
+    # Compare profiles
+    print(f"\n{'='*70}")
+    print(f"THRESHOLD PROFILE COMPARISON")
+    print(f"{'='*70}\n")
+    
+    print(f"{'Profile':<15} {'Compliant':<12} {'Partial':<10} {'Gaps':<8} {'Score':<8}")
+    print(f"{'-'*70}")
+    
+    for profile_name, data in profile_results.items():
+        results = data['results']
+        score = data['score']
+        print(f"{profile_name.capitalize():<15} "
+              f"{len(results['full_matches']):<12} "
+              f"{len(results['partial_matches']):<10} "
+              f"{len(results['gaps']):<8} "
+              f"{score:.1f}%")
+    
+    # Recommendation
+    standard_score = profile_results['standard']['score']
+    
+    print(f"\n💡 Recommendation:")
+    if standard_score >= 80:
+        print(f"   Use STANDARD profile - policy meets compliance threshold")
+    elif standard_score >= 70:
+        print(f"   Use LENIENT profile initially, work toward STANDARD")
+    else:
+        print(f"   Policy needs significant improvement across all profiles")
+    
+    return profile_results
+
+# Example: Compare assessment policy with different thresholds
+policy_id = 42  # Assessment policy
+results = compare_threshold_profiles(policy_id)
+            </code>
+        </div>
+
+        <h2 id="example-6">🔗 Example 6: Audit Assistant Integration</h2>
+        <p>
+            <strong>Scenario:</strong> Integrate Policy Comparator with Audit Assistant to prepare 
+            evidence for an upcoming ASQA audit.
+        </p>
+
+        <h3>Code Example</h3>
+        <div class="code-block">
+            <code>
+"""
+Audit Assistant Integration
+Prepare policy compliance evidence for ASQA audit
+"""
+import requests
+from datetime import datetime, timedelta
+
+BASE_URL = "https://api.nextcore.ai/v1/{tenant_slug}"
+HEADERS = {"Authorization": "Bearer YOUR_TOKEN"}
+
+def prepare_audit_evidence(audit_date):
+    """
+    Generate comprehensive policy compliance evidence for audit
+    """
+    print(f"🔍 Preparing Audit Evidence")
+    print(f"   Audit Date: {audit_date}")
+    print(f"   Preparation Date: {datetime.now().strftime('%Y-%m-%d')}\n")
+    
+    # Step 1: Run compliance check on all policies
+    print("Step 1: Running comprehensive compliance check...")
+    
+    policies_url = f"{BASE_URL}/policy-comparator/policies/"
+    response = requests.get(policies_url, 
+                           params={"status": "approved", "page_size": 100},
+                           headers=HEADERS)
+    policies = response.json()['results']
+    
+    audit_evidence = {
+        "audit_date": audit_date,
+        "preparation_date": datetime.now().isoformat(),
+        "policies_reviewed": len(policies),
+        "compliance_summary": {},
+        "policy_evidence": [],
+        "action_items": []
+    }
+    
+    compliance_scores = []
+    
+    for policy in policies:
+        print(f"   Checking: {policy['policy_number']} - {policy['title']}")
+        
+        # Run comparison
+        compare_url = f"{BASE_URL}/policy-comparator/policies/{policy['id']}/compare/"
+        response = requests.post(compare_url,
+                                json={
+                                    "policy_id": policy['id'],
+                                    "session_name": f"Audit Preparation - {audit_date}",
+                                    "use_nlp": True
+                                },
+                                headers=HEADERS)
+        result = response.json()
+        
+        compliance_score = result['results_summary']['compliance_score']
+        compliance_scores.append(compliance_score)
+        
+        # Collect evidence
+        policy_evidence = {
+            "policy_number": policy['policy_number'],
+            "policy_title": policy['title'],
+            "policy_type": policy['policy_type'],
+            "version": policy['version'],
+            "effective_date": policy['effective_date'],
+            "compliance_score": compliance_score,
+            "standards_covered": [],
+            "compliant_clauses": result['results_summary']['compliant'],
+            "gaps": result['results_summary']['gaps'],
+            "evidence_documents": []
+        }
+        
+        # Get detailed results
+        results_url = f"{BASE_URL}/policy-comparator/policies/{policy['id']}/results/"
+        response = requests.get(results_url, headers=HEADERS)
+        detailed = response.json()
+        
+        # Document compliant clauses as evidence
+        for r in detailed:
+            if r['match_type'] == 'full':
+                clause = r['asqa_clause_details']
+                standard = clause['standard_details']
+                
+                if standard['standard_number'] not in policy_evidence['standards_covered']:
+                    policy_evidence['standards_covered'].append(standard['standard_number'])
+                
+                policy_evidence['evidence_documents'].append({
+                    "standard": standard['standard_number'],
+                    "clause": clause['clause_number'],
+                    "clause_title": clause['title'],
+                    "evidence": r['matched_text'][:200] if r['matched_text'] else None,
+                    "similarity_score": r['similarity_score']
+                })
+        
+        # Track gaps as action items
+        for r in detailed:
+            if r['match_type'] in ['weak', 'no_match']:
+                clause = r['asqa_clause_details']
+                audit_evidence['action_items'].append({
+                    "priority": "high" if clause['compliance_level'] == 'critical' else "medium",
+                    "policy": policy['policy_number'],
+                    "clause": clause['clause_number'],
+                    "title": clause['title'],
+                    "gap_description": r['gap_description'],
+                    "recommendations": r['recommendations']
+                })
+        
+        audit_evidence['policy_evidence'].append(policy_evidence)
+    
+    # Step 2: Calculate overall compliance
+    avg_compliance = sum(compliance_scores) / len(compliance_scores)
+    
+    audit_evidence['compliance_summary'] = {
+        "average_compliance": round(avg_compliance, 1),
+        "policies_compliant": len([s for s in compliance_scores if s >= 80]),
+        "policies_need_work": len([s for s in compliance_scores if s < 80]),
+        "total_action_items": len(audit_evidence['action_items']),
+        "high_priority_actions": len([a for a in audit_evidence['action_items'] if a['priority'] == 'high'])
+    }
+    
+    # Step 3: Create audit package in Audit Assistant
+    print(f"\nStep 2: Creating audit package in Audit Assistant...")
+    
+    audit_package = {
+        "audit_type": "ASQA Continuing Registration",
+        "audit_date": audit_date,
+        "scope": "Full RTO audit",
+        "standards_covered": list(range(1, 9)),  # Standards 1-8
+        "evidence_items": []
+    }
+    
+    # Add policy evidence items
+    for policy_ev in audit_evidence['policy_evidence']:
+        for evidence in policy_ev['evidence_documents']:
+            audit_package['evidence_items'].append({
+                "standard": evidence['standard'],
+                "clause": evidence['clause'],
+                "evidence_type": "Policy",
+                "evidence_reference": f"{policy_ev['policy_number']} v{policy_ev['version']}",
+                "evidence_description": evidence['clause_title'],
+                "evidence_location": f"Policy Repository - {policy_ev['policy_number']}",
+                "compliance_status": "compliant"
+            })
+    
+    # Create audit package via API
+    audit_url = f"{BASE_URL}/audit-assistant/audits/"
+    response = requests.post(audit_url, json=audit_package, headers=HEADERS)
+    audit = response.json()
+    
+    print(f"   ✅ Audit package created: {audit['id']}")
+    
+    # Step 4: Generate audit readiness report
+    print(f"\n{'='*70}")
+    print(f"AUDIT READINESS REPORT")
+    print(f"{'='*70}\n")
+    
+    print(f"📊 Compliance Summary:")
+    summary = audit_evidence['compliance_summary']
+    print(f"   Average Compliance: {summary['average_compliance']}%")
+    print(f"   ✅ Policies Ready: {summary['policies_compliant']}")
+    print(f"   ⚠️  Need Work: {summary['policies_need_work']}")
+    print(f"   Total Evidence Items: {len(audit_package['evidence_items'])}")
+    
+    if audit_evidence['action_items']:
+        print(f"\n⚠️  Action Items Before Audit ({summary['total_action_items']}):")
+        high_priority = [a for a in audit_evidence['action_items'] if a['priority'] == 'high']
+        
+        if high_priority:
+            print(f"\n   🔴 HIGH PRIORITY ({len(high_priority)}):")
+            for item in high_priority[:5]:  # Show first 5
+                print(f"      • {item['policy']} - Clause {item['clause']}: {item['title']}")
+    
+    print(f"\n{'='*70}")
+    if summary['average_compliance'] >= 85 and summary['high_priority_actions'] == 0:
+        print("✅ AUDIT READINESS: EXCELLENT - Ready for audit")
+    elif summary['average_compliance'] >= 75:
+        print("⚠️  AUDIT READINESS: GOOD - Address action items before audit")
+    else:
+        print("❌ AUDIT READINESS: NEEDS WORK - Significant preparation required")
+    print(f"{'='*70}")
+    
+    return audit_evidence, audit
+
+# Example: Prepare for audit in 30 days
+audit_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+evidence, audit_package = prepare_audit_evidence(audit_date)
+            </code>
+        </div>
+
+        <div class="success-box" style="margin-top: 3rem;">
+            <h4>💡 Tips for Real-World Usage</h4>
+            <ul>
+                <li><strong>Comprehensive Content:</strong> More detailed policy content yields better NLP matching</li>
+                <li><strong>Regular Updates:</strong> Re-run comparisons after policy updates to track improvements</li>
+                <li><strong>Custom Thresholds:</strong> Adjust thresholds based on policy criticality</li>
+                <li><strong>Batch Processing:</strong> Use batch workflows for efficiency during audit preparation</li>
+                <li><strong>Integration:</strong> Combine with Audit Assistant and other compliance tools</li>
+                <li><strong>Documentation:</strong> Save comparison sessions for audit trail</li>
+            </ul>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="workflows.html" class="btn btn-secondary">← Workflows</a>
+            <a href="roadmap.html" class="btn btn-primary">Roadmap →</a>
+        </div>
+    </div>
+</body>
+</html>

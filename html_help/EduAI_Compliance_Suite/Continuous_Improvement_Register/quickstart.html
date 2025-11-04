@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIR Quick Start - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Continuous Improvement Register</a> /
+            <strong>Quick Start</strong>
+        </div>
+
+        <h1>⚡ Quick Start Guide</h1>
+
+        <div class="intro-section">
+            <p>
+                This guide will walk you through creating your first improvement action, using AI classification, 
+                adding workflow steps, and completing the verification process. You'll be tracking improvements 
+                in minutes!
+            </p>
+        </div>
+
+        <h2>📋 Step 1: Create an Improvement Action</h2>
+        <p>
+            Start by creating a new improvement action record. This represents any corrective action, preventive 
+            action, or improvement initiative.
+        </p>
+
+        <div class="code-block">
+            <h3>API Request</h3>
+            <pre><code>POST /api/v1/continuous_improvement/actions/
+Authorization: Bearer &lt;your_token&gt;
+Content-Type: application/json
+
+{
+  "title": "Improve assessment feedback turnaround time",
+  "description": "Students report receiving assessment feedback after 20+ business days. ASQA requires timely feedback. Implement process to ensure 10-day turnaround.",
+  "source": "student_feedback",
+  "priority": "high",
+  "identified_by_user_id": 42,
+  "assigned_to_user_id": 15
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+            <h3>Response</h3>
+            <pre><code>{
+  "id": 123,
+  "action_number": "CIR-2025-0123",
+  "title": "Improve assessment feedback turnaround time",
+  "description": "Students report receiving assessment feedback...",
+  "source": "student_feedback",
+  "source_display": "Student Feedback",
+  "priority": "high",
+  "priority_display": "High",
+  "status": "open",
+  "status_display": "Open",
+  "category": null,
+  "risk_level": null,
+  "is_critical_compliance": false,
+  "created_at": "2025-11-04T10:30:00Z",
+  "due_date": null,
+  "identified_by": {
+    "id": 42,
+    "username": "j.smith",
+    "full_name": "John Smith"
+  },
+  "assigned_to": {
+    "id": 15,
+    "username": "m.johnson",
+    "full_name": "Mary Johnson"
+  }
+}</code></pre>
+        </div>
+
+        <div class="info-box">
+            <h3>✨ What Just Happened?</h3>
+            <ul>
+                <li>A new improvement action was created with a unique action number (CIR-2025-0123)</li>
+                <li>Status automatically set to "open" for new actions</li>
+                <li>Category and risk level are null - we'll classify these next with AI</li>
+                <li>Assignment notifications were sent to Mary Johnson</li>
+            </ul>
+        </div>
+
+        <h2>🤖 Step 2: AI Classification</h2>
+        <p>
+            Use the AI classification endpoint to automatically categorize the action, assess risk, and link 
+            to relevant ASQA clauses.
+        </p>
+
+        <div class="code-block">
+            <h3>API Request</h3>
+            <pre><code>POST /api/v1/continuous_improvement/actions/123/classify/
+Authorization: Bearer &lt;your_token&gt;</code></pre>
+        </div>
+
+        <div class="code-block">
+            <h3>Response</h3>
+            <pre><code>{
+  "success": true,
+  "classification": {
+    "category": "training_assessment",
+    "category_display": "Training & Assessment",
+    "confidence": 0.89,
+    "risk_level": "high",
+    "risk_level_display": "High",
+    "risk_confidence": 0.82,
+    "is_critical_compliance": true,
+    "reasoning": "Action addresses assessment feedback timing which directly impacts ASQA Standard 1.8 (systematic monitoring) and Standard 1.13 (assessment requirements). High risk due to compliance obligations.",
+    "keywords": [
+      "assessment feedback",
+      "turnaround time",
+      "ASQA",
+      "timely feedback",
+      "business days"
+    ],
+    "related_standards": [
+      "1.8",
+      "1.13",
+      "1.12"
+    ]
+  },
+  "clause_links": [
+    {
+      "id": 456,
+      "clause": {
+        "id": 18,
+        "standard_type": "asqa_rto_2015",
+        "clause_number": "1.8",
+        "title": "Systematic monitoring and evaluation",
+        "description": "The RTO monitors and evaluates..."
+      },
+      "source": "ai",
+      "confidence": 0.89,
+      "matched_keywords": [
+        "assessment feedback",
+        "systematic monitoring",
+        "timely"
+      ],
+      "created_at": "2025-11-04T10:31:15Z"
+    },
+    {
+      "id": 457,
+      "clause": {
+        "id": 23,
+        "standard_type": "asqa_rto_2015",
+        "clause_number": "1.13",
+        "title": "Assessment conditions and timing",
+        "description": "The RTO ensures assessment..."
+      },
+      "source": "ai",
+      "confidence": 0.78,
+      "matched_keywords": [
+        "assessment",
+        "timing",
+        "feedback"
+      ],
+      "created_at": "2025-11-04T10:31:15Z"
+    }
+  ],
+  "ai_run_id": 789
+}</code></pre>
+        </div>
+
+        <div class="success-box">
+            <h3>✨ Classification Complete!</h3>
+            <ul>
+                <li><strong>Category:</strong> Training & Assessment (89% confidence)</li>
+                <li><strong>Risk Level:</strong> High (82% confidence)</li>
+                <li><strong>Critical Compliance:</strong> Yes - affects RTO registration</li>
+                <li><strong>Clause Links:</strong> 2 ASQA clauses automatically linked (1.8, 1.13)</li>
+                <li><strong>Keywords:</strong> 5 key terms identified for traceability</li>
+                <li><strong>AI Audit:</strong> Complete classification logged in AIRun #789</li>
+            </ul>
+        </div>
+
+        <h2>📊 Step 3: Add Workflow Steps</h2>
+        <p>
+            Break down the improvement action into specific, trackable steps with owners and due dates.
+        </p>
+
+        <div class="code-block">
+            <h3>Create First Step</h3>
+            <pre><code>POST /api/v1/continuous_improvement/steps/
+Authorization: Bearer &lt;your_token&gt;
+Content-Type: application/json
+
+{
+  "improvement_action_id": 123,
+  "sequence_order": 1,
+  "title": "Analyze current assessment feedback process",
+  "description": "Document current workflow, identify bottlenecks, measure average turnaround time",
+  "status": "in_progress",
+  "owner_id": 15,
+  "due_date": "2025-11-11"
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+            <h3>Create Second Step</h3>
+            <pre><code>POST /api/v1/continuous_improvement/steps/
+Authorization: Bearer &lt;your_token&gt;
+Content-Type: application/json
+
+{
+  "improvement_action_id": 123,
+  "sequence_order": 2,
+  "title": "Design improved feedback workflow",
+  "description": "Create new process with clear SLA, automated reminders, escalation path",
+  "status": "not_started",
+  "owner_id": 15,
+  "due_date": "2025-11-18"
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+            <h3>Create Third Step</h3>
+            <pre><code>POST /api/v1/continuous_improvement/steps/
+Authorization: Bearer &lt;your_token&gt;
+Content-Type: application/json
+
+{
+  "improvement_action_id": 123,
+  "sequence_order": 3,
+  "title": "Implement and train staff on new process",
+  "description": "Roll out new workflow, conduct training sessions, update documentation",
+  "status": "not_started",
+  "owner_id": 28,
+  "due_date": "2025-11-25"
+}</code></pre>
+        </div>
+
+        <div class="info-box">
+            <h3>Step Management Tips</h3>
+            <ul>
+                <li><strong>Sequence Order:</strong> Use increments of 10 (10, 20, 30) to allow inserting steps later</li>
+                <li><strong>Due Dates:</strong> Set realistic deadlines considering dependencies and workload</li>
+                <li><strong>Owners:</strong> Assign to individuals who have authority and capacity to complete</li>
+                <li><strong>Status Tracking:</strong> Update status as work progresses (not_started → in_progress → completed)</li>
+                <li><strong>Blockers:</strong> Use is_blocked flag and blocker_description to track impediments</li>
+            </ul>
+        </div>
+
+        <h2>💬 Step 4: Add Comments and Attachments</h2>
+        <p>
+            Document progress, share updates, and attach supporting evidence.
+        </p>
+
+        <div class="code-block">
+            <h3>Add a Comment</h3>
+            <pre><code>POST /api/v1/continuous_improvement/comments/
+Authorization: Bearer &lt;your_token&gt;
+Content-Type: application/json
+
+{
+  "improvement_action_id": 123,
+  "body": "Completed analysis of current process. Average turnaround is 22 days. Main bottleneck is assessor workload during peak periods. @m.johnson please review attached analysis.",
+  "is_internal": false
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+            <h3>Upload Attachment</h3>
+            <pre><code>POST /api/v1/continuous_improvement/attachments/
+Authorization: Bearer &lt;your_token&gt;
+Content-Type: multipart/form-data
+
+improvement_action_id: 123
+file: [assessment_analysis.pdf]
+kind: analysis
+description: Current state analysis with turnaround time data</code></pre>
+        </div>
+
+        <h2>🔄 Step 5: Update Action Status</h2>
+        <p>
+            As work progresses, update the action status to reflect current state.
+        </p>
+
+        <div class="code-block">
+            <h3>Move to In Progress</h3>
+            <pre><code>PATCH /api/v1/continuous_improvement/actions/123/
+Authorization: Bearer &lt;your_token&gt;
+Content-Type: application/json
+
+{
+  "status": "in_progress",
+  "started_at": "2025-11-04T14:00:00Z"
+}</code></pre>
+        </div>
+
+        <div class="code-block">
+            <h3>Complete the Action</h3>
+            <pre><code>PATCH /api/v1/continuous_improvement/actions/123/
+Authorization: Bearer &lt;your_token&gt;
+Content-Type: application/json
+
+{
+  "status": "completed",
+  "completed_at": "2025-11-25T16:30:00Z",
+  "actual_impact": "New process implemented. Average feedback turnaround reduced to 8 days. Student satisfaction scores increased from 3.2 to 4.5. Zero late feedback complaints in first month."
+}</code></pre>
+        </div>
+
+        <h2>✅ Step 6: Verification</h2>
+        <p>
+            After implementation, verify that the improvement was effective and achieved desired outcomes.
+        </p>
+
+        <div class="code-block">
+            <h3>Create Verification Record</h3>
+            <pre><code>POST /api/v1/continuous_improvement/verifications/
+Authorization: Bearer &lt;your_token&gt;
+Content-Type: application/json
+
+{
+  "improvement_action_id": 123,
+  "outcome": "verified",
+  "notes": "Verified effectiveness through 30-day monitoring period. Turnaround time consistently under 10 days. Student satisfaction scores improved significantly. Process is documented and sustainable.",
+  "evidence_reviewed": [
+    "Assessment turnaround reports (Nov-Dec 2025)",
+    "Student satisfaction survey results",
+    "Staff training attendance records",
+    "Updated assessment feedback procedure documentation"
+  ],
+  "effectiveness_score": 5,
+  "verifier_id": 7,
+  "verified_at": "2025-12-15T10:00:00Z"
+}</code></pre>
+        </div>
+
+        <div class="success-box">
+            <h3>✨ Verification Complete!</h3>
+            <ul>
+                <li><strong>Outcome:</strong> Verified - Effective</li>
+                <li><strong>Effectiveness Score:</strong> 5/5 (Highly Effective)</li>
+                <li><strong>Evidence:</strong> 4 pieces of evidence reviewed</li>
+                <li><strong>Result:</strong> Action closed with documented success</li>
+            </ul>
+        </div>
+
+        <h2>📈 Step 7: View Dashboard Stats</h2>
+        <p>
+            Check your improvement register metrics and compliance status.
+        </p>
+
+        <div class="code-block">
+            <h3>API Request</h3>
+            <pre><code>GET /api/v1/continuous_improvement/actions/dashboard_stats/
+Authorization: Bearer &lt;your_token&gt;</code></pre>
+        </div>
+
+        <div class="code-block">
+            <h3>Response</h3>
+            <pre><code>{
+  "total_actions": 47,
+  "by_status": {
+    "open": 12,
+    "in_progress": 18,
+    "completed": 15,
+    "cancelled": 2
+  },
+  "by_priority": {
+    "critical": 3,
+    "high": 8,
+    "medium": 22,
+    "low": 14
+  },
+  "by_category": {
+    "training_assessment": 15,
+    "student_services": 8,
+    "compliance": 12,
+    "quality": 7,
+    "resources": 3,
+    "staff": 2
+  },
+  "overdue_count": 4,
+  "at_risk_count": 7,
+  "completion_rate": 31.91,
+  "avg_completion_days": 42.5,
+  "critical_compliance_count": 8,
+  "verification_stats": {
+    "verified": 12,
+    "verified_partial": 2,
+    "not_verified": 1,
+    "avg_effectiveness_score": 4.2
+  }
+}</code></pre>
+        </div>
+
+        <h2>🎯 Common Workflows</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>📝 Audit Finding</h3>
+                <ol>
+                    <li>Create action with source="audit"</li>
+                    <li>Set priority="critical" if needed</li>
+                    <li>Run AI classification</li>
+                    <li>Add corrective steps</li>
+                    <li>Track to completion</li>
+                    <li>Verify effectiveness</li>
+                </ol>
+            </div>
+
+            <div class="feature-card">
+                <h3>😟 Complaint Response</h3>
+                <ol>
+                    <li>Create action with source="complaint"</li>
+                    <li>Set SLA-based due date</li>
+                    <li>Classify and link clauses</li>
+                    <li>Add investigation steps</li>
+                    <li>Document resolution</li>
+                    <li>Follow up with complainant</li>
+                </ol>
+            </div>
+
+            <div class="feature-card">
+                <h3>🔍 Process Improvement</h3>
+                <ol>
+                    <li>Create action with source="internal_review"</li>
+                    <li>Set priority based on impact</li>
+                    <li>Run AI classification</li>
+                    <li>Add design and implementation steps</li>
+                    <li>Train staff on changes</li>
+                    <li>Monitor and verify effectiveness</li>
+                </ol>
+            </div>
+
+            <div class="feature-card">
+                <h3>⚠️ Risk Mitigation</h3>
+                <ol>
+                    <li>Create action with source="risk_assessment"</li>
+                    <li>Set priority based on risk severity</li>
+                    <li>Classify and assess criticality</li>
+                    <li>Add preventive steps</li>
+                    <li>Implement controls</li>
+                    <li>Monitor effectiveness</li>
+                </ol>
+            </div>
+        </div>
+
+        <h2>💡 Best Practices</h2>
+        
+        <div class="success-box">
+            <h3>Action Creation</h3>
+            <ul>
+                <li><strong>Clear Titles:</strong> Use descriptive, actionable titles (e.g., "Improve X" not just "X")</li>
+                <li><strong>Detailed Descriptions:</strong> Include context, current state, desired state, and why it matters</li>
+                <li><strong>Source Tracking:</strong> Always specify the source (audit, complaint, feedback, review, etc.)</li>
+                <li><strong>Priority Setting:</strong> Use priority consistently: Critical = registration risk, High = compliance impact</li>
+                <li><strong>Assignment:</strong> Assign to owners who have authority and capacity to act</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h3>Step Management</h3>
+            <ul>
+                <li><strong>Granularity:</strong> Steps should be 1-2 weeks of work, not months</li>
+                <li><strong>Dependencies:</strong> Order steps logically, considering what must happen first</li>
+                <li><strong>Due Dates:</strong> Set realistic deadlines with some buffer for unexpected issues</li>
+                <li><strong>Progress Updates:</strong> Use progress_notes field to document work done</li>
+                <li><strong>Blocker Tracking:</strong> Flag blockers immediately and document resolution plans</li>
+            </ul>
+        </div>
+
+        <div class="warning-box">
+            <h3>Verification Guidelines</h3>
+            <ul>
+                <li><strong>Wait Period:</strong> Allow 30-90 days after implementation before verifying</li>
+                <li><strong>Evidence Collection:</strong> Gather objective data (reports, metrics, surveys)</li>
+                <li><strong>Independence:</strong> Verifier should not be the same as implementer when possible</li>
+                <li><strong>Honesty:</strong> If not effective, mark as "requires_rework" and create follow-up actions</li>
+                <li><strong>Documentation:</strong> Thorough notes help future improvements and audits</li>
+            </ul>
+        </div>
+
+        <h2>🔗 Integration Examples</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>From Audit Assistant</h3>
+                <p>Automatically create improvement actions from audit gaps:</p>
+                <pre><code># Gap identified
+gap = {
+  "clause": "1.8",
+  "severity": "major",
+  "finding": "No evidence of systematic monitoring"
+}
+
+# Create CIR action
+action = {
+  "title": f"Address {gap['clause']} gap: {gap['finding']}",
+  "source": "audit",
+  "priority": "high" if gap['severity'] == "major" else "medium"
+}</code></pre>
+            </div>
+
+            <div class="feature-card">
+                <h3>From Policy Comparator</h3>
+                <p>Create actions for policy gaps:</p>
+                <pre><code># Policy gap detected
+gap = {
+  "policy": "Assessment Policy",
+  "clause": "1.13",
+  "gap_score": 0.65
+}
+
+# Create improvement action
+action = {
+  "title": f"Update {gap['policy']} for {gap['clause']} compliance",
+  "source": "policy_review",
+  "priority": "medium"
+}</code></pre>
+            </div>
+        </div>
+
+        <h2>❓ Troubleshooting</h2>
+        
+        <div class="warning-box">
+            <h3>Common Issues</h3>
+            <ul>
+                <li>
+                    <strong>AI Classification Not Working:</strong> Ensure description has enough detail (at least 50 words recommended). 
+                    Include keywords related to ASQA standards for better clause linking.
+                </li>
+                <li>
+                    <strong>SLA Breach Warnings:</strong> Check that SLA policies are configured for your action's priority/category. 
+                    Use <code>GET /api/v1/continuous_improvement/sla-policies/</code> to review policies.
+                </li>
+                <li>
+                    <strong>Steps Not Showing:</strong> Verify improvement_action_id matches the parent action. 
+                    Check that sequence_order is set correctly.
+                </li>
+                <li>
+                    <strong>Verification Fails:</strong> Ensure action status is "completed" before creating verification. 
+                    Verifier must have appropriate permissions.
+                </li>
+            </ul>
+        </div>
+
+        <div class="cta-section">
+            <h2>Next Steps</h2>
+            <p>Now that you understand the basics, explore the Architecture guide to learn how the system works internally, 
+            or check the API Reference for complete endpoint documentation.</p>
+            <a href="architecture.html" class="btn btn-primary">View Architecture →</a>
+            <a href="api-reference.html" class="btn btn-secondary">API Reference →</a>
+        </div>
+    </div>
+</body>
+</html>

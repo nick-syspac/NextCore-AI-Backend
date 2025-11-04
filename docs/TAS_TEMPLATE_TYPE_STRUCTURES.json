@@ -1,0 +1,730 @@
+{
+  "template_types": {
+    "general": {
+      "description": "Generic template suitable for any qualification type",
+      "structure": {
+        "version": "1.0",
+        "template_type": "general",
+        "metadata": {
+          "author_guidelines": "Follow ASQA Standards. Adapt to specific industry context.",
+          "industry_focus": "Multi-sector",
+          "typical_qualifications": ["Any qualification code"]
+        },
+        "template_specific_settings": {
+          "emphasis_areas": [
+            "core_competencies",
+            "transferable_skills",
+            "industry_standards",
+            "regulatory_compliance"
+          ],
+          "assessment_methods": [
+            "written_assessments",
+            "practical_demonstrations",
+            "projects",
+            "portfolios",
+            "observations"
+          ],
+          "delivery_preferences": [
+            "flexible_delivery",
+            "multi_mode"
+          ],
+          "typical_resources": [
+            "learning_materials",
+            "assessment_tools",
+            "reference_materials"
+          ],
+          "industry_engagement": {
+            "frequency": "biannually",
+            "methods": ["industry_consultation", "feedback_surveys"],
+            "focus": "broad_industry_relevance"
+          }
+        }
+      }
+    },
+    "trade": {
+      "description": "For trade and technical qualifications - hands-on, practical focus",
+      "structure": {
+        "version": "1.0",
+        "template_type": "trade",
+        "metadata": {
+          "author_guidelines": "Emphasize practical skills, workplace safety, tool proficiency, and industry-standard practices. Strong focus on WHS compliance.",
+          "industry_focus": "Construction, Manufacturing, Engineering, Automotive",
+          "typical_qualifications": ["CPC30220", "AUR30620", "MEM30219", "UEE30820"]
+        },
+        "formatting": {
+          "include_tables": true,
+          "include_charts": false,
+          "include_diagrams": true,
+          "photo_documentation": true
+        },
+        "template_specific_settings": {
+          "emphasis_areas": [
+            "hands_on_practical_skills",
+            "workplace_safety_WHS",
+            "tool_and_equipment_operation",
+            "industry_standard_procedures",
+            "troubleshooting_techniques",
+            "quality_standards",
+            "licensing_requirements"
+          ],
+          "assessment_methods": [
+            "practical_demonstrations",
+            "workplace_observations",
+            "simulated_tasks",
+            "logbooks",
+            "third_party_reports",
+            "competency_conversations",
+            "safety_assessments"
+          ],
+          "delivery_preferences": [
+            "workshop",
+            "on_site_training",
+            "apprenticeship",
+            "block_release"
+          ],
+          "typical_resources": [
+            "workshop_facilities",
+            "specialized_tools_and_equipment",
+            "PPE_personal_protective_equipment",
+            "materials_and_consumables",
+            "safety_equipment",
+            "industry_standard_machinery",
+            "technical_manuals",
+            "job_cards",
+            "manufacturers_specifications"
+          ],
+          "safety_requirements": {
+            "mandatory_inductions": true,
+            "PPE_requirements": ["specify_by_activity"],
+            "risk_assessments": "required_for_all_practical_activities",
+            "emergency_procedures": "documented_and_practiced",
+            "first_aid_availability": "required"
+          },
+          "industry_engagement": {
+            "frequency": "quarterly",
+            "methods": [
+              "employer_site_visits",
+              "industry_advisory_committees",
+              "apprenticeship_networks",
+              "trade_associations",
+              "workplace_assessor_training"
+            ],
+            "focus": "current_industry_practices_and_technology"
+          },
+          "licensing_compliance": {
+            "check_required_licenses": true,
+            "regulatory_bodies": ["SafeWork", "relevant_industry_regulators"],
+            "documentation_requirements": "high_rigour"
+          }
+        },
+        "validation_rules": {
+          "required_sections": [
+            "cohort_profile",
+            "delivery_model",
+            "assessment_overview",
+            "unit_clustering",
+            "resources_and_equipment",
+            "workplace_safety",
+            "trainer_requirements"
+          ],
+          "min_practical_hours_percentage": 60
+        }
+      }
+    },
+    "business": {
+      "description": "Business, commerce, and management qualifications",
+      "structure": {
+        "version": "1.0",
+        "template_type": "business",
+        "metadata": {
+          "author_guidelines": "Focus on theoretical frameworks, case studies, business simulations, and workplace scenarios. Emphasize report writing and analytical skills.",
+          "industry_focus": "Business Services, Administration, Management, Human Resources, Marketing",
+          "typical_qualifications": ["BSB50120", "BSB50420", "BSB60120", "BSB80120"]
+        },
+        "formatting": {
+          "include_tables": true,
+          "include_charts": true,
+          "include_diagrams": false,
+          "business_templates": true
+        },
+        "template_specific_settings": {
+          "emphasis_areas": [
+            "theoretical_frameworks",
+            "case_study_analysis",
+            "workplace_scenarios",
+            "business_simulations",
+            "report_writing",
+            "presentation_skills",
+            "data_analysis",
+            "strategic_thinking",
+            "leadership_development"
+          ],
+          "assessment_methods": [
+            "written_reports",
+            "case_study_analysis",
+            "business_plans",
+            "presentations",
+            "role_plays",
+            "portfolios",
+            "projects",
+            "workplace_projects",
+            "policy_development"
+          ],
+          "delivery_preferences": [
+            "classroom",
+            "online",
+            "blended",
+            "workshop",
+            "executive_format"
+          ],
+          "typical_resources": [
+            "textbooks_and_journals",
+            "LMS_online_platform",
+            "business_case_studies",
+            "industry_publications",
+            "simulation_software",
+            "presentation_equipment",
+            "collaboration_tools",
+            "business_software_MS_Office",
+            "data_analysis_tools"
+          ],
+          "industry_engagement": {
+            "frequency": "quarterly",
+            "methods": [
+              "advisory_committees",
+              "employer_feedback",
+              "guest_speakers_industry_leaders",
+              "industry_visits",
+              "workplace_projects",
+              "internships"
+            ],
+            "focus": "current_business_trends_and_practices"
+          },
+          "technology_integration": {
+            "required_software": ["MS_Office", "collaboration_platforms"],
+            "optional_software": ["data_analytics", "CRM_systems", "project_management_tools"],
+            "digital_literacy": "high_emphasis"
+          }
+        },
+        "validation_rules": {
+          "required_sections": [
+            "cohort_profile",
+            "delivery_model",
+            "assessment_overview",
+            "unit_clustering",
+            "resources_and_equipment",
+            "quality_assurance"
+          ],
+          "min_theoretical_content_percentage": 40
+        }
+      }
+    },
+    "health": {
+      "description": "Health and community services qualifications",
+      "structure": {
+        "version": "1.0",
+        "template_type": "health",
+        "metadata": {
+          "author_guidelines": "Emphasize duty of care, ethical practice, client-centered care, and regulatory compliance. Strong focus on practical skills and professional boundaries.",
+          "industry_focus": "Aged Care, Disability Support, Mental Health, Community Services, Nursing",
+          "typical_qualifications": ["CHC33015", "CHC43015", "CHC52015", "HLT54121"]
+        },
+        "formatting": {
+          "include_tables": true,
+          "include_charts": false,
+          "include_diagrams": true,
+          "case_study_format": true
+        },
+        "template_specific_settings": {
+          "emphasis_areas": [
+            "person_centered_care",
+            "duty_of_care",
+            "ethical_practice",
+            "infection_control",
+            "manual_handling",
+            "communication_skills",
+            "professional_boundaries",
+            "documentation_procedures",
+            "emergency_response",
+            "cultural_sensitivity"
+          ],
+          "assessment_methods": [
+            "practical_demonstrations",
+            "simulated_scenarios",
+            "workplace_observations",
+            "case_studies",
+            "reflective_journals",
+            "third_party_reports",
+            "competency_conversations",
+            "role_plays",
+            "portfolios"
+          ],
+          "delivery_preferences": [
+            "classroom_with_simulation",
+            "blended",
+            "workplace_training",
+            "practicum"
+          ],
+          "typical_resources": [
+            "simulation_equipment",
+            "clinical_supplies",
+            "PPE",
+            "care_plan_templates",
+            "medical_equipment_replicas",
+            "first_aid_equipment",
+            "documentation_systems",
+            "client_management_software"
+          ],
+          "compliance_requirements": {
+            "working_with_children_check": "required_where_applicable",
+            "police_check": "required",
+            "immunization_records": "required",
+            "first_aid_certification": "required",
+            "mandatory_reporting": "training_required",
+            "privacy_and_confidentiality": "high_emphasis"
+          },
+          "practical_placement": {
+            "required": true,
+            "minimum_hours": 120,
+            "supervision_ratio": "1:4_maximum",
+            "site_requirements": "registered_provider",
+            "placement_coordination": "dedicated_coordinator_required"
+          },
+          "industry_engagement": {
+            "frequency": "quarterly",
+            "methods": [
+              "health_service_partnerships",
+              "guest_speakers_clinicians",
+              "facility_tours",
+              "advisory_committees",
+              "placement_provider_feedback"
+            ],
+            "focus": "best_practice_and_regulatory_updates"
+          }
+        },
+        "validation_rules": {
+          "required_sections": [
+            "cohort_profile",
+            "delivery_model",
+            "assessment_overview",
+            "unit_clustering",
+            "resources_and_equipment",
+            "practical_placement",
+            "compliance_and_safety",
+            "trainer_requirements"
+          ],
+          "min_practical_hours_percentage": 50
+        }
+      }
+    },
+    "creative": {
+      "description": "Creative industries - arts, design, media, entertainment",
+      "structure": {
+        "version": "1.0",
+        "template_type": "creative",
+        "metadata": {
+          "author_guidelines": "Emphasize creative process, portfolio development, industry software proficiency, and project-based learning. Foster innovation and artistic expression.",
+          "industry_focus": "Design, Media, Performing Arts, Visual Arts, Screen and Media",
+          "typical_qualifications": ["CUA50720", "CUA51020", "ICT50220"]
+        },
+        "formatting": {
+          "include_tables": false,
+          "include_charts": false,
+          "include_diagrams": true,
+          "portfolio_format": true,
+          "visual_emphasis": true
+        },
+        "template_specific_settings": {
+          "emphasis_areas": [
+            "creative_process",
+            "portfolio_development",
+            "technical_skills",
+            "industry_software_proficiency",
+            "project_management",
+            "collaboration",
+            "critique_and_feedback",
+            "intellectual_property",
+            "industry_standards",
+            "innovation_and_experimentation"
+          ],
+          "assessment_methods": [
+            "portfolio_assessment",
+            "project_submissions",
+            "creative_briefs",
+            "presentations",
+            "exhibitions",
+            "performances",
+            "digital_submissions",
+            "peer_review",
+            "industry_feedback"
+          ],
+          "delivery_preferences": [
+            "studio_based",
+            "workshop",
+            "online_hybrid",
+            "project_based",
+            "masterclass"
+          ],
+          "typical_resources": [
+            "specialized_software_Adobe_Creative_Cloud",
+            "computer_labs",
+            "recording_studios",
+            "performance_spaces",
+            "camera_and_lighting_equipment",
+            "art_supplies",
+            "3D_printers",
+            "editing_suites",
+            "exhibition_spaces"
+          ],
+          "portfolio_requirements": {
+            "mandatory": true,
+            "format": ["digital", "physical_where_applicable"],
+            "minimum_pieces": "varies_by_qualification",
+            "industry_feedback": "encouraged",
+            "exhibition_component": "recommended"
+          },
+          "industry_engagement": {
+            "frequency": "ongoing",
+            "methods": [
+              "guest_lectures_industry_practitioners",
+              "studio_visits",
+              "industry_projects",
+              "exhibitions",
+              "competitions",
+              "internships",
+              "freelance_opportunities"
+            ],
+            "focus": "current_trends_and_technologies"
+          },
+          "technology_integration": {
+            "required_software": ["industry_standard_creative_software"],
+            "cloud_services": "portfolio_hosting",
+            "digital_collaboration": "high_emphasis",
+            "emerging_technologies": "encouraged"
+          }
+        },
+        "validation_rules": {
+          "required_sections": [
+            "cohort_profile",
+            "delivery_model",
+            "assessment_overview",
+            "unit_clustering",
+            "resources_and_equipment",
+            "portfolio_requirements",
+            "industry_engagement"
+          ],
+          "min_practical_creative_work_percentage": 70
+        }
+      }
+    },
+    "hospitality": {
+      "description": "Hospitality, tourism, and events management",
+      "structure": {
+        "version": "1.0",
+        "template_type": "hospitality",
+        "metadata": {
+          "author_guidelines": "Focus on customer service, food safety, practical skills, and workplace readiness. Emphasize hygiene standards and operational procedures.",
+          "industry_focus": "Hospitality, Cookery, Tourism, Events, Gaming",
+          "typical_qualifications": ["SIT30821", "SIT40521", "SIT50422", "SIT60322"]
+        },
+        "formatting": {
+          "include_tables": true,
+          "include_charts": false,
+          "include_diagrams": true,
+          "recipe_format": true
+        },
+        "template_specific_settings": {
+          "emphasis_areas": [
+            "customer_service_excellence",
+            "food_safety_and_hygiene",
+            "practical_cookery_skills",
+            "beverage_service",
+            "workplace_operations",
+            "responsible_service_alcohol_RSA",
+            "food_handling",
+            "menu_planning",
+            "cost_control",
+            "team_coordination"
+          ],
+          "assessment_methods": [
+            "practical_demonstrations",
+            "service_periods",
+            "workplace_observations",
+            "logbooks",
+            "menu_development_projects",
+            "cost_calculations",
+            "customer_service_scenarios",
+            "third_party_workplace_reports"
+          ],
+          "delivery_preferences": [
+            "training_kitchen",
+            "training_restaurant",
+            "workplace_based",
+            "block_release"
+          ],
+          "typical_resources": [
+            "commercial_kitchen",
+            "restaurant_or_cafe_simulation",
+            "bar_equipment",
+            "cookery_equipment",
+            "ingredients_and_supplies",
+            "food_safety_resources",
+            "POS_systems",
+            "service_equipment",
+            "uniform_requirements"
+          ],
+          "compliance_requirements": {
+            "food_safety_certification": "SITXFSA005_or_equivalent",
+            "RSA_responsible_service_alcohol": "required_for_bar_service",
+            "RCG_responsible_conduct_gaming": "where_applicable",
+            "first_aid": "recommended",
+            "allergy_awareness": "mandatory",
+            "workplace_hygiene": "high_priority"
+          },
+          "workplace_training": {
+            "required": true,
+            "minimum_service_periods": "varies_by_qual",
+            "real_customer_exposure": "required",
+            "menu_cycles": "multiple_experiences",
+            "peak_service_experience": "required"
+          },
+          "industry_engagement": {
+            "frequency": "ongoing",
+            "methods": [
+              "employer_partnerships",
+              "workplace_training",
+              "guest_chefs",
+              "competitions",
+              "industry_events",
+              "supplier_demonstrations"
+            ],
+            "focus": "current_trends_and_customer_expectations"
+          }
+        },
+        "validation_rules": {
+          "required_sections": [
+            "cohort_profile",
+            "delivery_model",
+            "assessment_overview",
+            "unit_clustering",
+            "resources_and_equipment",
+            "workplace_training",
+            "food_safety_compliance",
+            "trainer_requirements"
+          ],
+          "min_practical_hours_percentage": 65
+        }
+      }
+    },
+    "technology": {
+      "description": "Information technology and digital sectors",
+      "structure": {
+        "version": "1.0",
+        "template_type": "technology",
+        "metadata": {
+          "author_guidelines": "Emphasize technical skills, problem-solving, industry-standard tools, and emerging technologies. Focus on practical application and project-based learning.",
+          "industry_focus": "IT, Cybersecurity, Software Development, Networking, Data Analytics",
+          "typical_qualifications": ["ICT40120", "ICT50220", "ICT60220"]
+        },
+        "formatting": {
+          "include_tables": true,
+          "include_charts": true,
+          "include_diagrams": true,
+          "code_samples": true,
+          "technical_documentation": true
+        },
+        "template_specific_settings": {
+          "emphasis_areas": [
+            "programming_languages",
+            "system_administration",
+            "network_configuration",
+            "cybersecurity_practices",
+            "database_management",
+            "cloud_technologies",
+            "project_management",
+            "troubleshooting",
+            "documentation",
+            "version_control"
+          ],
+          "assessment_methods": [
+            "practical_projects",
+            "coding_assessments",
+            "system_configurations",
+            "troubleshooting_scenarios",
+            "portfolio_of_work",
+            "capstone_projects",
+            "technical_documentation",
+            "presentations",
+            "peer_code_review"
+          ],
+          "delivery_preferences": [
+            "computer_lab",
+            "online",
+            "blended",
+            "project_based",
+            "bootcamp_intensive"
+          ],
+          "typical_resources": [
+            "computer_labs_high_spec",
+            "server_infrastructure",
+            "virtualization_software",
+            "cloud_subscriptions_AWS_Azure",
+            "development_tools_IDEs",
+            "version_control_systems",
+            "testing_environments",
+            "cybersecurity_tools",
+            "industry_software_licenses",
+            "online_learning_platforms"
+          ],
+          "technology_stack": {
+            "programming_languages": ["varies_by_stream"],
+            "platforms": ["Windows", "Linux", "cloud_platforms"],
+            "tools": ["IDEs", "version_control", "collaboration_tools"],
+            "certifications": "vendor_certifications_encouraged"
+          },
+          "project_based_learning": {
+            "required": true,
+            "real_world_scenarios": "emphasized",
+            "team_projects": "included",
+            "individual_projects": "required",
+            "github_portfolio": "encouraged"
+          },
+          "industry_engagement": {
+            "frequency": "ongoing",
+            "methods": [
+              "guest_speakers_developers",
+              "hackathons",
+              "industry_projects",
+              "internships",
+              "vendor_partnerships",
+              "meetups_and_conferences"
+            ],
+            "focus": "emerging_technologies_and_best_practices"
+          },
+          "continuous_learning": {
+            "emphasis": "high",
+            "self_directed_learning": "encouraged",
+            "online_resources": "integrated",
+            "staying_current": "built_into_curriculum"
+          }
+        },
+        "validation_rules": {
+          "required_sections": [
+            "cohort_profile",
+            "delivery_model",
+            "assessment_overview",
+            "unit_clustering",
+            "resources_and_equipment",
+            "project_requirements",
+            "technology_stack",
+            "trainer_requirements"
+          ],
+          "min_practical_coding_percentage": 60
+        }
+      }
+    },
+    "education": {
+      "description": "Training, assessment, and education sector qualifications",
+      "structure": {
+        "version": "1.0",
+        "template_type": "education",
+        "metadata": {
+          "author_guidelines": "Focus on pedagogical principles, assessment design, facilitation skills, and regulatory compliance. Emphasize practical teaching experience and reflective practice.",
+          "industry_focus": "VET Training, Workplace Training, Educational Design",
+          "typical_qualifications": ["TAE40122", "TAE50122"]
+        },
+        "formatting": {
+          "include_tables": true,
+          "include_charts": false,
+          "include_diagrams": true,
+          "lesson_plan_templates": true
+        },
+        "template_specific_settings": {
+          "emphasis_areas": [
+            "training_design",
+            "assessment_design",
+            "facilitation_techniques",
+            "learner_engagement",
+            "regulatory_compliance",
+            "validation_and_moderation",
+            "continuous_improvement",
+            "vocational_competency",
+            "adult_learning_principles",
+            "inclusive_practice"
+          ],
+          "assessment_methods": [
+            "training_delivery_observations",
+            "session_plans",
+            "assessment_tool_development",
+            "validation_projects",
+            "reflective_practice_journal",
+            "microteaching",
+            "peer_feedback",
+            "trainer_portfolio"
+          ],
+          "delivery_preferences": [
+            "classroom",
+            "online",
+            "blended",
+            "microteaching_sessions",
+            "peer_practice"
+          ],
+          "typical_resources": [
+            "training_and_assessment_resources",
+            "LMS_platform",
+            "session_plan_templates",
+            "assessment_tool_templates",
+            "training_rooms",
+            "presentation_equipment",
+            "recording_equipment_for_feedback",
+            "compliance_documentation"
+          ],
+          "practical_teaching": {
+            "required": true,
+            "minimum_delivery_hours": 10,
+            "observed_sessions": "minimum_3",
+            "peer_teaching": "included",
+            "real_learners": "required",
+            "feedback_integration": "ongoing"
+          },
+          "vocational_competency": {
+            "requirement": "current_industry_skills",
+            "documentation": "required",
+            "industry_currency": "demonstrated",
+            "technical_expertise": "in_teaching_area"
+          },
+          "industry_engagement": {
+            "frequency": "quarterly",
+            "methods": [
+              "RTO_partnerships",
+              "industry_trainer_networks",
+              "professional_development_workshops",
+              "ASQA_updates",
+              "training_package_updates"
+            ],
+            "focus": "compliance_and_quality_training"
+          }
+        },
+        "validation_rules": {
+          "required_sections": [
+            "cohort_profile",
+            "delivery_model",
+            "assessment_overview",
+            "unit_clustering",
+            "resources_and_equipment",
+            "practical_teaching_requirements",
+            "vocational_competency",
+            "compliance_framework"
+          ],
+          "min_practical_teaching_percentage": 30
+        }
+      }
+    }
+  },
+  "usage_notes": {
+    "field_location": "TASTemplate.structure (JSONField)",
+    "how_to_use": "When creating a TASTemplate, copy the relevant structure from above and paste into the 'structure' field",
+    "customization": "Each template type can be further customized for specific qualifications",
+    "generation": "The AI uses these settings to generate contextually appropriate TAS content"
+  }
+}

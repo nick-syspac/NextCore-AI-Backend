@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training and Assessment Strategy (TAS) - Documentation</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 2rem;
+            border-radius: 1rem;
+            margin-bottom: 3rem;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+        
+        .hero p {
+            font-size: 1.25rem;
+            opacity: 0.9;
+        }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .doc-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .doc-card:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+        }
+        
+        .doc-card h3 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .doc-card p {
+            color: #64748b;
+            line-height: 1.6;
+        }
+        
+        .icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .quick-links {
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .quick-links h2 {
+            margin-bottom: 1.5rem;
+            color: #1e293b;
+        }
+        
+        .quick-links ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .quick-links li {
+            margin-bottom: 0.75rem;
+        }
+        
+        .quick-links a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .quick-links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="hero">
+            <h1>🎓 Training and Assessment Strategy</h1>
+            <p>AI-Powered TAS Generation for Australian RTOs</p>
+        </div>
+
+        <section>
+            <h2>📚 Documentation Sections</h2>
+            <div class="card-grid">
+                <a href="overview.html" class="doc-card">
+                    <div class="icon">📖</div>
+                    <h3>Overview & Introduction</h3>
+                    <p>Learn about TAS, ASQA compliance, system benefits, and core concepts.</p>
+                </a>
+
+                <a href="architecture.html" class="doc-card">
+                    <div class="icon">🏗️</div>
+                    <h3>System Architecture</h3>
+                    <p>Understand the three-tier architecture, data models, and workflows.</p>
+                </a>
+
+                <a href="templates.html" class="doc-card">
+                    <div class="icon">📋</div>
+                    <h3>TAS Templates</h3>
+                    <p>Template types, structure configuration, AQF levels, and customization.</p>
+                </a>
+
+                <a href="sections.html" class="doc-card">
+                    <div class="icon">📝</div>
+                    <h3>Template Sections</h3>
+                    <p>Reusable section library, content types, and section management.</p>
+                </a>
+
+                <a href="assignments.html" class="doc-card">
+                    <div class="icon">🔗</div>
+                    <h3>Section Assignments</h3>
+                    <p>Linking sections to templates with customization options.</p>
+                </a>
+
+                <a href="gpt-prompts.html" class="doc-card">
+                    <div class="icon">🤖</div>
+                    <h3>GPT Prompts</h3>
+                    <p>AI content generation, prompt structure, and configuration.</p>
+                </a>
+
+                <a href="api-reference.html" class="doc-card">
+                    <div class="icon">⚡</div>
+                    <h3>API Reference</h3>
+                    <p>Complete API documentation with endpoints and examples.</p>
+                </a>
+
+                <a href="quickstart.html" class="doc-card">
+                    <div class="icon">🚀</div>
+                    <h3>Quick Start Guide</h3>
+                    <p>Get started quickly with step-by-step instructions.</p>
+                </a>
+
+                <a href="examples.html" class="doc-card">
+                    <div class="icon">💡</div>
+                    <h3>Examples & Use Cases</h3>
+                    <p>Real-world examples for Certificate I, III, and Diploma levels.</p>
+                </a>
+            </div>
+        </section>
+
+        <section class="quick-links">
+            <h2>⚡ Quick Links</h2>
+            <ul>
+                <li><a href="quickstart.html">→ Get Started in 5 Minutes</a></li>
+                <li><a href="templates.html#template-types">→ View All Template Types</a></li>
+                <li><a href="sections.html#section-library">→ Browse Section Library</a></li>
+                <li><a href="api-reference.html#generation">→ Generate TAS Content</a></li>
+                <li><a href="examples.html#cert1">→ Certificate I Example</a></li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🎯 Key Features</h2>
+            <div class="card-grid">
+                <div class="doc-card" style="cursor: default;">
+                    <h3>🚀 90% Time Savings</h3>
+                    <p>Reduce TAS creation from days to hours with AI-powered generation.</p>
+                </div>
+                <div class="doc-card" style="cursor: default;">
+                    <h3>✅ ASQA Compliant</h3>
+                    <p>Built-in compliance with ASQA Standards for RTOs 2015.</p>
+                </div>
+                <div class="doc-card" style="cursor: default;">
+                    <h3>🔄 Reusable Sections</h3>
+                    <p>Create once, use across multiple qualifications with customization.</p>
+                </div>
+                <div class="doc-card" style="cursor: default;">
+                    <h3>🤖 GPT-4 Powered</h3>
+                    <p>Intelligent content generation tailored to each qualification.</p>
+                </div>
+                <div class="doc-card" style="cursor: default;">
+                    <h3>📊 8 Template Types</h3>
+                    <p>General, Trade, Business, Health, Creative, Hospitality, Technology, Education.</p>
+                </div>
+                <div class="doc-card" style="cursor: default;">
+                    <h3>🎓 All AQF Levels</h3>
+                    <p>From Certificate I to Graduate Diploma, fully supported.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>📋 What is a TAS?</h2>
+            <p>A Training and Assessment Strategy (TAS) is a mandatory document for Australian RTOs that outlines how training and assessment will be delivered for a specific qualification. It must demonstrate compliance with the ASQA Standards for RTOs 2015.</p>
+            
+            <h3>Key ASQA Requirements:</h3>
+            <ul>
+                <li><strong>Clause 1.1:</strong> Training and assessment strategies meet training package requirements</li>
+                <li><strong>Clause 1.3:</strong> Identification of learner characteristics and support needs</li>
+                <li><strong>Clause 1.8:</strong> Valid, reliable, fair, and flexible assessment</li>
+                <li><strong>Clauses 1.13-1.16:</strong> Trainer and assessor competency requirements</li>
+                <li><strong>Clause 2.2:</strong> Continuous improvement processes</li>
+            </ul>
+        </section>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid #e2e8f0; text-align: center; color: #64748b;">
+            <p>&copy; 2025 NextCore AI - Training and Assessment Strategy System</p>
+            <p>Version 1.0.0</p>
+        </footer>
+    </div>
+</body>
+</html>

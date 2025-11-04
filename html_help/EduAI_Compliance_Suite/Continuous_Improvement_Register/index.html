@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Continuous Improvement Register - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            border-radius: 1rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .hero h1 {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 2rem;
+            margin-top: 1rem;
+            font-weight: 600;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .nav-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-top: 4px solid var(--primary-color);
+        }
+
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.2);
+        }
+
+        .nav-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .nav-card p {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .nav-card a {
+            display: inline-block;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1.5rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .nav-card a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .features-section {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 3rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: start;
+            gap: 1rem;
+        }
+
+        .feature-icon {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .feature-content h4 {
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .feature-content p {
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .compliance-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 3rem 0;
+            border-left: 4px solid #0284c7;
+        }
+
+        .compliance-section h2 {
+            color: #0c4a6e;
+            border-bottom: none;
+        }
+
+        .compliance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .compliance-stat {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .compliance-stat .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #0284c7;
+            display: block;
+        }
+
+        .compliance-stat .label {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .breadcrumb {
+            color: #64748b;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <strong>Continuous Improvement Register</strong>
+        </div>
+
+        <div class="hero">
+            <h1>📋 Continuous Improvement Register</h1>
+            <p>AI-powered improvement tracking system with automated classification, SLA management, and compliance monitoring. 
+               Track corrective actions, preventive actions, and improvement initiatives with intelligent workflow automation.</p>
+            <div class="status-badge">v1.0.0 Production Ready</div>
+        </div>
+
+        <section class="features-section">
+            <h2>🎯 Key Features</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">🤖</div>
+                    <div class="feature-content">
+                        <h4>AI Classification</h4>
+                        <p>Automatic categorization, risk assessment, and ASQA clause linking using AI-powered analysis with confidence scoring</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-content">
+                        <h4>Workflow Steps</h4>
+                        <p>Break down actions into detailed steps with owners, due dates, progress tracking, and blocker management</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">⏰</div>
+                    <div class="feature-content">
+                        <h4>SLA Management</h4>
+                        <p>Configurable service level agreements with automatic escalation, warning notifications, and compliance tracking</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">✅</div>
+                    <div class="feature-content">
+                        <h4>Verification System</h4>
+                        <p>Post-implementation effectiveness verification with scoring, evidence review, and follow-up action tracking</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🔗</div>
+                    <div class="feature-content">
+                        <h4>Clause Linking</h4>
+                        <p>Automatic and manual linking to ASQA/ISO standards with confidence scores, keywords, and compliance context</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">💬</div>
+                    <div class="feature-content">
+                        <h4>Collaboration</h4>
+                        <p>Threaded comments with @mentions, file attachments with integrity hashing, and real-time team updates</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">📈</div>
+                    <div class="feature-content">
+                        <h4>Analytics Dashboard</h4>
+                        <p>Real-time KPIs with historical trends, compliance metrics, overdue alerts, and completion rate tracking</p>
+                    </div>
+                </div>
+
+                <div class="feature-item">
+                    <div class="feature-icon">🏢</div>
+                    <div class="feature-content">
+                        <h4>Multi-Tenancy</h4>
+                        <p>Complete tenant isolation with custom taxonomy labels, SLA policies, and configurable workflows per organization</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="compliance-section">
+            <h2>📊 System Capabilities</h2>
+            <p>Comprehensive improvement tracking and compliance management for RTO continuous improvement</p>
+            <div class="compliance-grid">
+                <div class="compliance-stat">
+                    <span class="number">14</span>
+                    <span class="label">Data Models</span>
+                </div>
+                <div class="compliance-stat">
+                    <span class="number">30+</span>
+                    <span class="label">API Endpoints</span>
+                </div>
+                <div class="compliance-stat">
+                    <span class="number">6</span>
+                    <span class="label">AI Task Types</span>
+                </div>
+                <div class="compliance-stat">
+                    <span class="number">100%</span>
+                    <span class="label">Compliance Focus</span>
+                </div>
+            </div>
+        </section>
+
+        <h2>📚 Documentation Navigation</h2>
+        <div class="nav-grid">
+            <div class="nav-card">
+                <h3>📖 Overview</h3>
+                <p>Learn about CIR capabilities, AI classification pipeline, SLA management, workflow automation, and compliance benefits.</p>
+                <a href="overview.html">Read Overview →</a>
+            </div>
+
+            <div class="nav-card">
+                <h3>⚡ Quick Start</h3>
+                <p>Get started quickly with creating improvement actions, AI classification, step tracking, and verification workflows.</p>
+                <a href="quickstart.html">Get Started →</a>
+            </div>
+
+            <div class="nav-card">
+                <h3>🏗️ Architecture</h3>
+                <p>Understand the system design, AI classification engine, SLA policy engine, real-time updates, and multi-tenancy.</p>
+                <a href="architecture.html">View Architecture →</a>
+            </div>
+
+            <div class="nav-card">
+                <h3>🗃️ Data Models</h3>
+                <p>Complete reference for all 14 models: ImprovementAction, ActionStep, Comment, Attachment, Verification, and more.</p>
+                <a href="models.html">Browse Models →</a>
+            </div>
+
+            <div class="nav-card">
+                <h3>🔌 API Reference</h3>
+                <p>Complete REST API documentation with 10 viewsets, 30+ endpoints, AI actions, request/response examples.</p>
+                <a href="api-reference.html">API Docs →</a>
+            </div>
+
+            <div class="nav-card">
+                <h3>🔄 Workflows</h3>
+                <p>Common workflows: action creation, AI classification, step execution, verification, compliance monitoring, reviews.</p>
+                <a href="workflows.html">View Workflows →</a>
+            </div>
+
+            <div class="nav-card">
+                <h3>💡 Examples</h3>
+                <p>Real-world code examples for audit findings, complaints, policy reviews, batch processing, compliance dashboards.</p>
+                <a href="examples.html">See Examples →</a>
+            </div>
+
+            <div class="nav-card">
+                <h3>🚀 Roadmap</h3>
+                <p>Future enhancements: GPT-4 integration, WebSocket real-time, advanced ML analytics, predictive compliance models.</p>
+                <a href="roadmap.html">View Roadmap →</a>
+            </div>
+        </div>
+
+        <section class="features-section" style="margin-top: 3rem;">
+            <h2>🔗 Related Components</h2>
+            <p>Continuous Improvement Register integrates with other NextCore AI modules:</p>
+            <ul style="margin-top: 1rem; padding-left: 2rem;">
+                <li><strong>Audit Assistant:</strong> Generate improvement actions from audit gap findings and evidence deficiencies</li>
+                <li><strong>Policy Comparator:</strong> Create improvement actions for policy gaps identified during compliance analysis</li>
+                <li><strong>Training and Assessment Strategy:</strong> Link improvement actions to TAS quality improvements</li>
+            </ul>
+        </section>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-color); text-align: center; color: #64748b;">
+            <p>&copy; 2025 NextCore AI. Continuous Improvement Register Documentation.</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">v1.0.0 Production Ready | Last Updated: November 4, 2025</p>
+        </footer>
+    </div>
+</body>
+</html>

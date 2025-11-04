@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAS Templates - Documentation</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="index.html">TAS Home</a>
+            <span>›</span>
+            <span>Templates</span>
+        </div>
+
+        <a href="index.html" class="back-button">← Back to TAS Home</a>
+
+        <h1>📋 TAS Templates</h1>
+        <p class="subtitle" style="font-size: 1.25rem; color: #64748b; margin-bottom: 2rem;">Master configurations for generating Training and Assessment Strategy documents</p>
+
+        <section>
+            <h2>What is a TAS Template?</h2>
+            <p>A TAS Template is a master configuration that defines how Training and Assessment Strategy documents should be structured, formatted, and generated. Templates are reusable blueprints that can generate multiple TAS documents for different qualifications.</p>
+
+            <div class="alert alert-info">
+                <h4>🎯 Key Purpose</h4>
+                <p>Templates separate <strong>structure and rules</strong> (template configuration) from <strong>content</strong> (generated TAS documents). This means you can:</p>
+                <ul>
+                    <li>Create a template once, use it for hundreds of qualifications</li>
+                    <li>Update the template and have changes reflect in new TAS documents</li>
+                    <li>Maintain consistency across your RTO's documentation</li>
+                    <li>Comply with ASQA requirements systematically</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Template Fields</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>template_name</code></td>
+                        <td>String</td>
+                        <td>Display name (e.g., "Business Services Certificate III")</td>
+                    </tr>
+                    <tr>
+                        <td><code>template_code</code></td>
+                        <td>String</td>
+                        <td>Unique identifier (e.g., "BUS_CERT_III_2024")</td>
+                    </tr>
+                    <tr>
+                        <td><code>template_type</code></td>
+                        <td>Choice</td>
+                        <td>general, trade, business, health, creative, hospitality, technology, education</td>
+                    </tr>
+                    <tr>
+                        <td><code>aqf_level</code></td>
+                        <td>Choice</td>
+                        <td>certificate_i, certificate_ii, certificate_iii, certificate_iv, diploma, advanced_diploma, vocational_graduate_certificate, vocational_graduate_diploma, graduate_diploma</td>
+                    </tr>
+                    <tr>
+                        <td><code>description</code></td>
+                        <td>Text</td>
+                        <td>What this template is for and when to use it</td>
+                    </tr>
+                    <tr>
+                        <td><code>structure</code></td>
+                        <td>JSONField</td>
+                        <td>Complete structural configuration (formatting, validation, settings)</td>
+                    </tr>
+                    <tr>
+                        <td><code>gpt_prompts</code></td>
+                        <td>JSONField</td>
+                        <td>Template-level AI generation prompts (optional overrides)</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_active</code></td>
+                        <td>Boolean</td>
+                        <td>Whether this template is available for use</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Template Types</h2>
+            <p>Each template type is optimized for different industry sectors and learning contexts:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Focus</th>
+                        <th>Best For</th>
+                        <th>Key Characteristics</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-primary">general</span></td>
+                        <td>Broad application</td>
+                        <td>Multi-sector programs</td>
+                        <td>Balanced theory/practical, flexible assessment</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-warning">trade</span></td>
+                        <td>Hands-on skills</td>
+                        <td>Trades & technical</td>
+                        <td>Practical emphasis, workplace-based, tools/equipment</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-info">business</span></td>
+                        <td>Professional skills</td>
+                        <td>Business & management</td>
+                        <td>Case studies, projects, professional scenarios</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-success">health</span></td>
+                        <td>Clinical & care</td>
+                        <td>Healthcare & community</td>
+                        <td>Clinical supervision, infection control, WHS</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-danger">creative</span></td>
+                        <td>Innovation & design</td>
+                        <td>Arts & design</td>
+                        <td>Portfolio assessment, creative projects</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-primary">hospitality</span></td>
+                        <td>Service excellence</td>
+                        <td>Hospitality & tourism</td>
+                        <td>Customer service, on-the-job training</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-info">technology</span></td>
+                        <td>Technical skills</td>
+                        <td>IT & digital</td>
+                        <td>Project-based, labs, version control</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-warning">education</span></td>
+                        <td>Teaching & training</td>
+                        <td>Education sector</td>
+                        <td>Supervised practice, reflective journals</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>AQF Levels</h2>
+            <p>Templates must specify the Australian Qualifications Framework (AQF) level:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>AQF Level</th>
+                        <th>Code</th>
+                        <th>Typical Duration</th>
+                        <th>Characteristics</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Certificate I</td>
+                        <td><code>certificate_i</code></td>
+                        <td>12-24 weeks</td>
+                        <td>Foundation skills, high support, basic tasks</td>
+                    </tr>
+                    <tr>
+                        <td>Certificate II</td>
+                        <td><code>certificate_ii</code></td>
+                        <td>24-52 weeks</td>
+                        <td>Basic operational knowledge, routine tasks</td>
+                    </tr>
+                    <tr>
+                        <td>Certificate III</td>
+                        <td><code>certificate_iii</code></td>
+                        <td>1-2 years</td>
+                        <td>Trade qualification, skilled work, some autonomy</td>
+                    </tr>
+                    <tr>
+                        <td>Certificate IV</td>
+                        <td><code>certificate_iv</code></td>
+                        <td>1-2 years</td>
+                        <td>Supervisory roles, specialized skills, higher autonomy</td>
+                    </tr>
+                    <tr>
+                        <td>Diploma</td>
+                        <td><code>diploma</code></td>
+                        <td>1.5-2 years</td>
+                        <td>Management roles, complex tasks, leadership</td>
+                    </tr>
+                    <tr>
+                        <td>Advanced Diploma</td>
+                        <td><code>advanced_diploma</code></td>
+                        <td>2-3 years</td>
+                        <td>Senior management, strategic thinking, innovation</td>
+                    </tr>
+                    <tr>
+                        <td>Vocational Graduate Certificate</td>
+                        <td><code>vocational_graduate_certificate</code></td>
+                        <td>24-52 weeks</td>
+                        <td>Specialist skills for graduates</td>
+                    </tr>
+                    <tr>
+                        <td>Vocational Graduate Diploma</td>
+                        <td><code>vocational_graduate_diploma</code></td>
+                        <td>1-2 years</td>
+                        <td>Advanced specialist skills for graduates</td>
+                    </tr>
+                    <tr>
+                        <td>Graduate Diploma</td>
+                        <td><code>graduate_diploma</code></td>
+                        <td>1-2 years</td>
+                        <td>Professional development for degree holders</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Structure Field</h2>
+            <p>The <code>structure</code> JSON field contains the complete configuration for the template. Here's a breakdown of all possible fields:</p>
+
+            <h3>Top-Level Structure Fields</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>metadata</code></td>
+                        <td>Object</td>
+                        <td>Template version, author, purpose, target_audience, compliance_version</td>
+                    </tr>
+                    <tr>
+                        <td><code>formatting</code></td>
+                        <td>Object</td>
+                        <td>Document style, fonts, colors, page layout</td>
+                    </tr>
+                    <tr>
+                        <td><code>template_specific_settings</code></td>
+                        <td>Object</td>
+                        <td>Customization based on template type and AQF level</td>
+                    </tr>
+                    <tr>
+                        <td><code>validation_rules</code></td>
+                        <td>Object</td>
+                        <td>Required sections, content length, compliance checks</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Metadata Structure</h3>
+            <pre><code>{
+  "metadata": {
+    "version": "1.0",
+    "author": "Compliance Team",
+    "last_updated": "2024-01-15",
+    "purpose": "Generate TAS for Certificate III Business qualifications",
+    "target_audience": ["trainers", "assessors", "compliance_officers"],
+    "compliance_version": "ASQA Standards 2015 v2.0"
+  }
+}</code></pre>
+
+            <h3>Formatting Structure</h3>
+            <pre><code>{
+  "formatting": {
+    "document_style": "professional",
+    "font_family": "Arial, sans-serif",
+    "heading_colors": {
+      "h1": "#2c3e50",
+      "h2": "#34495e",
+      "h3": "#7f8c8d"
+    },
+    "page_layout": {
+      "margins": "2.5cm all sides",
+      "page_size": "A4",
+      "orientation": "portrait"
+    },
+    "table_style": {
+      "border": "1px solid #ddd",
+      "header_background": "#f8f9fa",
+      "alternating_rows": true
+    }
+  }
+}</code></pre>
+
+            <h3>Template-Specific Settings</h3>
+            <p>These vary by template type but typically include:</p>
+            
+            <pre><code>{
+  "template_specific_settings": {
+    "emphasis_areas": {
+      "practical_skills": 70,
+      "theoretical_knowledge": 30
+    },
+    "assessment_methods": {
+      "preferred": ["observation", "practical_demonstration", "workplace_project"],
+      "supplementary": ["written_questions", "case_studies"]
+    },
+    "delivery_preferences": {
+      "mode": ["face_to_face", "workplace", "blended"],
+      "typical_class_size": "12-15 students",
+      "recommended_duration": "52 weeks"
+    },
+    "resources": {
+      "physical": ["workshop", "tools", "equipment", "materials"],
+      "digital": ["LMS", "online_resources", "simulation_software"],
+      "human": ["qualified_trainers", "industry_supervisors"]
+    },
+    "industry_engagement": {
+      "work_placement_required": true,
+      "minimum_hours": 120,
+      "industry_consultation": ["advisory_committee", "employer_feedback"]
+    }
+  }
+}</code></pre>
+
+            <h3>Validation Rules</h3>
+            <pre><code>{
+  "validation_rules": {
+    "required_sections": [
+      "qualification_overview",
+      "entry_requirements",
+      "assessment_strategy",
+      "delivery_strategy",
+      "resources"
+    ],
+    "content_requirements": {
+      "min_word_count": 2000,
+      "max_word_count": 8000,
+      "include_tables": true,
+      "include_asqa_references": true
+    },
+    "compliance_checks": {
+      "asqa_clauses": ["1.1", "1.3", "1.8", "1.13", "1.14", "1.15", "1.16", "2.2"],
+      "requires_approval": true,
+      "version_control": true
+    }
+  }
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Complete Template Examples</h2>
+
+            <h3>Example 1: Certificate I General Template</h3>
+            <div class="alert alert-info">
+                <p><strong>Use Case:</strong> Foundation skills programs with high learner support</p>
+            </div>
+
+            <pre><code>{
+  "template_name": "Certificate I Foundation Skills",
+  "template_code": "CERT_I_GENERAL_2024",
+  "template_type": "general",
+  "aqf_level": "certificate_i",
+  "description": "Template for Certificate I qualifications focusing on foundation skills with high learner support",
+  "structure": {
+    "metadata": {
+      "version": "1.0",
+      "author": "Foundation Skills Team",
+      "purpose": "Support learners with basic skills development",
+      "target_audience": ["foundation_trainers", "support_staff"],
+      "compliance_version": "ASQA Standards 2015 v2.0"
+    },
+    "formatting": {
+      "document_style": "simple_clear",
+      "font_family": "Arial, sans-serif",
+      "font_size": "12pt",
+      "line_spacing": "1.5"
+    },
+    "template_specific_settings": {
+      "emphasis_areas": {
+        "practical_skills": 80,
+        "theoretical_knowledge": 20
+      },
+      "support_level": "high",
+      "assessment_methods": {
+        "preferred": ["observation", "oral_questioning", "simple_tasks"],
+        "avoid": ["lengthy_written_assessments", "complex_projects"]
+      },
+      "delivery_preferences": {
+        "mode": ["face_to_face", "small_groups"],
+        "typical_class_size": "8-12 students",
+        "recommended_duration": "12-24 weeks"
+      },
+      "learner_support": {
+        "lln_assessment": "required",
+        "individual_learning_plans": true,
+        "additional_support": ["literacy_support", "numeracy_support", "mentoring"]
+      }
+    },
+    "validation_rules": {
+      "required_sections": [
+        "qualification_overview",
+        "learner_entry_requirements",
+        "support_services",
+        "assessment_approach",
+        "delivery_approach"
+      ],
+      "content_requirements": {
+        "min_word_count": 1500,
+        "max_word_count": 4000,
+        "plain_language": true
+      }
+    }
+  }
+}</code></pre>
+
+            <h3>Example 2: Certificate III Trade Template</h3>
+            <div class="alert alert-warning">
+                <p><strong>Use Case:</strong> Trade qualifications with practical workplace focus</p>
+            </div>
+
+            <pre><code>{
+  "template_name": "Certificate III Trade & Technical",
+  "template_code": "CERT_III_TRADE_2024",
+  "template_type": "trade",
+  "aqf_level": "certificate_iii",
+  "description": "Template for Certificate III trade qualifications with strong practical and workplace components",
+  "structure": {
+    "metadata": {
+      "version": "1.2",
+      "author": "Trade Training Team",
+      "purpose": "Deliver trade qualifications meeting industry standards",
+      "target_audience": ["trade_trainers", "workplace_supervisors"],
+      "compliance_version": "ASQA Standards 2015 v2.0"
+    },
+    "formatting": {
+      "document_style": "professional",
+      "include_diagrams": true,
+      "include_equipment_lists": true
+    },
+    "template_specific_settings": {
+      "emphasis_areas": {
+        "practical_skills": 75,
+        "theoretical_knowledge": 15,
+        "safety_procedures": 10
+      },
+      "assessment_methods": {
+        "preferred": ["workplace_observation", "practical_demonstration", "logbook"],
+        "supplementary": ["written_tests", "safety_checklists"]
+      },
+      "delivery_preferences": {
+        "mode": ["workplace_based", "simulated_workshop", "block_release"],
+        "typical_class_size": "12-15 students",
+        "recommended_duration": "1-2 years"
+      },
+      "resources": {
+        "physical": ["workshop_facilities", "tools_equipment", "materials", "ppe"],
+        "digital": ["online_theory_modules", "video_demonstrations"],
+        "human": ["qualified_trade_trainers", "workplace_supervisors"]
+      },
+      "industry_engagement": {
+        "work_placement_required": true,
+        "minimum_hours": 240,
+        "industry_consultation": ["trade_advisory_committee", "employer_partnerships"],
+        "currency_requirements": "Trainers must maintain industry currency"
+      },
+      "safety_requirements": {
+        "whs_induction": "required",
+        "ppe_requirements": "specified per unit",
+        "risk_assessments": "documented for all practical activities"
+      }
+    },
+    "validation_rules": {
+      "required_sections": [
+        "qualification_overview",
+        "entry_requirements",
+        "assessment_strategy",
+        "delivery_strategy",
+        "resources_equipment",
+        "workplace_requirements",
+        "whs_procedures"
+      ],
+      "content_requirements": {
+        "min_word_count": 3000,
+        "max_word_count": 7000,
+        "include_equipment_lists": true,
+        "include_workplace_requirements": true
+      }
+    }
+  }
+}</code></pre>
+
+            <h3>Example 3: Diploma Business Template</h3>
+            <div class="alert alert-success">
+                <p><strong>Use Case:</strong> Diploma-level business qualifications with management focus</p>
+            </div>
+
+            <pre><code>{
+  "template_name": "Diploma of Business",
+  "template_code": "DIP_BUSINESS_2024",
+  "template_type": "business",
+  "aqf_level": "diploma",
+  "description": "Template for Diploma-level business qualifications with management and leadership focus",
+  "structure": {
+    "metadata": {
+      "version": "2.0",
+      "author": "Business Programs Team",
+      "purpose": "Develop management and leadership capabilities",
+      "target_audience": ["business_trainers", "industry_practitioners"],
+      "compliance_version": "ASQA Standards 2015 v2.0"
+    },
+    "formatting": {
+      "document_style": "corporate_professional",
+      "font_family": "Calibri, Arial, sans-serif",
+      "include_case_studies": true,
+      "include_business_scenarios": true
+    },
+    "template_specific_settings": {
+      "emphasis_areas": {
+        "practical_application": 40,
+        "theoretical_knowledge": 35,
+        "critical_thinking": 15,
+        "leadership_skills": 10
+      },
+      "assessment_methods": {
+        "preferred": ["workplace_projects", "case_studies", "business_reports", "presentations"],
+        "supplementary": ["written_questions", "role_plays", "simulations"]
+      },
+      "delivery_preferences": {
+        "mode": ["blended", "online", "evening_classes", "intensive_workshops"],
+        "typical_class_size": "15-25 students",
+        "recommended_duration": "18-24 months"
+      },
+      "resources": {
+        "physical": ["training_room", "computers", "presentation_equipment"],
+        "digital": ["LMS", "business_simulation_software", "online_library", "industry_databases"],
+        "human": ["qualified_trainers", "guest_speakers", "industry_mentors"]
+      },
+      "industry_engagement": {
+        "work_placement_required": false,
+        "workplace_projects_required": true,
+        "industry_consultation": ["industry_advisory_board", "employer_surveys", "graduate_feedback"]
+      },
+      "assessment_complexity": {
+        "level": "high",
+        "requires": ["analysis", "evaluation", "synthesis", "problem_solving"],
+        "scenarios": "complex, multi-faceted business situations"
+      }
+    },
+    "validation_rules": {
+      "required_sections": [
+        "qualification_overview",
+        "entry_requirements",
+        "assessment_strategy",
+        "delivery_strategy",
+        "resources",
+        "recognition_pathways",
+        "career_outcomes"
+      ],
+      "content_requirements": {
+        "min_word_count": 4000,
+        "max_word_count": 10000,
+        "include_assessment_mapping": true,
+        "include_graduate_outcomes": true
+      }
+    }
+  }
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Creating a Template</h2>
+
+            <h3>API Endpoint</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/api/tenants/{tenant}/tas/templates/</code>
+            </div>
+
+            <h3>Request Example</h3>
+            <pre><code>{
+  "template_name": "Certificate IV Business",
+  "template_code": "CERT_IV_BUS_2024",
+  "template_type": "business",
+  "aqf_level": "certificate_iv",
+  "description": "For Certificate IV business qualifications with supervisory focus",
+  "structure": {
+    "metadata": {
+      "version": "1.0",
+      "author": "Business Team"
+    },
+    "formatting": {
+      "document_style": "professional"
+    },
+    "template_specific_settings": {
+      "emphasis_areas": {
+        "practical_skills": 50,
+        "theoretical_knowledge": 30,
+        "supervisory_skills": 20
+      }
+    }
+  },
+  "is_active": true
+}</code></pre>
+
+            <h3>Response Example</h3>
+            <pre><code>{
+  "id": 5,
+  "template_name": "Certificate IV Business",
+  "template_code": "CERT_IV_BUS_2024",
+  "template_type": "business",
+  "aqf_level": "certificate_iv",
+  "description": "For Certificate IV business qualifications with supervisory focus",
+  "structure": { ... },
+  "gpt_prompts": {},
+  "is_active": true,
+  "created_at": "2024-01-20T10:30:00Z",
+  "updated_at": "2024-01-20T10:30:00Z",
+  "section_assignments": []
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Updating a Template</h2>
+
+            <h3>API Endpoint</h3>
+            <div class="endpoint">
+                <span class="method method-patch">PATCH</span>
+                <code>/api/tenants/{tenant}/tas/templates/{id}/</code>
+            </div>
+
+            <h3>Partial Update Example</h3>
+            <pre><code>{
+  "structure": {
+    "template_specific_settings": {
+      "assessment_methods": {
+        "preferred": ["observation", "projects", "case_studies"]
+      }
+    }
+  }
+}</code></pre>
+
+            <div class="alert alert-warning">
+                <h4>⚠️ Important: Updates Don't Affect Existing TAS Documents</h4>
+                <p>When you update a template, the changes only apply to <strong>new TAS documents</strong> generated after the update. Existing TAS documents retain the template configuration that was active when they were created.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Duplicating a Template</h2>
+            <p>Use the duplicate action to create a copy of an existing template as a starting point:</p>
+
+            <h3>API Endpoint</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/api/tenants/{tenant}/tas/templates/{id}/duplicate/</code>
+            </div>
+
+            <h3>Request Example</h3>
+            <pre><code>{
+  "new_name": "Certificate IV Business - Regional Campus",
+  "new_code": "CERT_IV_BUS_REGIONAL_2024"
+}</code></pre>
+
+            <p>This creates an exact copy with a new name and code, including all section assignments.</p>
+        </section>
+
+        <section>
+            <h2>Best Practices</h2>
+
+            <div class="card">
+                <h3>1. Use Descriptive Names and Codes</h3>
+                <ul>
+                    <li>Include AQF level, industry sector, and year in the name</li>
+                    <li>Use consistent naming conventions across your organization</li>
+                    <li>Example: "Certificate III Hospitality - 2024"</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>2. Set Appropriate Emphasis Areas</h3>
+                <ul>
+                    <li>Lower AQF levels: Higher practical emphasis (70-80%)</li>
+                    <li>Higher AQF levels: More balanced or theory-heavy (40-60% each)</li>
+                    <li>Trade qualifications: Always include safety as a category</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>3. Specify Realistic Delivery Preferences</h3>
+                <ul>
+                    <li>Consider your RTO's actual delivery capacity</li>
+                    <li>Match duration to AQF requirements</li>
+                    <li>Include all delivery modes you actually offer</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>4. Document Resources Accurately</h3>
+                <ul>
+                    <li>List all physical resources required for delivery</li>
+                    <li>Include digital resources and their accessibility</li>
+                    <li>Specify trainer qualifications needed</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>5. Keep Validation Rules Current</h3>
+                <ul>
+                    <li>Review required sections annually</li>
+                    <li>Update ASQA clause references when standards change</li>
+                    <li>Adjust word counts based on actual document needs</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Common Issues & Solutions</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Issue</th>
+                        <th>Cause</th>
+                        <th>Solution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Template code already exists</td>
+                        <td>Duplicate template_code</td>
+                        <td>Use a unique code, include year/version</td>
+                    </tr>
+                    <tr>
+                        <td>Generated content too generic</td>
+                        <td>Insufficient template_specific_settings</td>
+                        <td>Add detailed emphasis areas and assessment methods</td>
+                    </tr>
+                    <tr>
+                        <td>Validation failing</td>
+                        <td>Missing required sections</td>
+                        <td>Check validation_rules.required_sections and assign all sections</td>
+                    </tr>
+                    <tr>
+                        <td>Structure JSON too complex</td>
+                        <td>Over-configuration</td>
+                        <td>Start simple, add complexity as needed</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Next Steps</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                <a href="sections.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>📝 Section Library</h3>
+                    <p>Learn about creating and managing sections</p>
+                </a>
+                <a href="assignments.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>🔗 Section Assignments</h3>
+                    <p>Link sections to your templates</p>
+                </a>
+                <a href="gpt-prompts.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>🤖 GPT Prompts</h3>
+                    <p>Configure AI content generation</p>
+                </a>
+            </div>
+        </section>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid #e2e8f0; text-align: center; color: #64748b;">
+            <p><a href="index.html" style="color: var(--primary-color);">Back to TAS Home</a></p>
+        </footer>
+    </div>
+</body>
+</html>
