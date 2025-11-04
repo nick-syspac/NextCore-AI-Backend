@@ -1,3 +1,48 @@
+# [2.0.0](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.1.0...v2.0.0) (2025-11-04)
+
+
+* Feature/build tas functionality ([#1](https://github.com/nick-syspac/NextCore-AI-Backend/issues/1)) ([c036096](https://github.com/nick-syspac/NextCore-AI-Backend/commit/c0360963f991b09930168116c2bf0d051dcf26d2))
+
+
+### BREAKING CHANGES
+
+* TASTemplateSection model refactored to be independent
+of templates. Sections are now assigned to templates via a many-to-many
+relationship through TASTemplateSectionAssignment.
+
+Changes:
+- Remove template FK from TASTemplateSection
+- Make section_code globally unique
+- Add is_active field for soft deletion
+- Remove section_order and is_required from section (moved to assignment)
+- Create TASTemplateSectionAssignment junction model with:
+  * template and section FKs
+  * section_order for template-specific ordering
+  * is_required for template-specific requirement
+  * custom_label and custom_description for overrides
+  * effective_label and effective_description properties
+
+- Add TASTemplateSectionAssignmentViewSet with endpoints:
+  * by_template: Get hierarchical assignments for a template
+  * reorder: Batch reorder assignments
+  * bulk_assign: Assign multiple sections to a template
+
+- Update TASTemplateSerializer to use section_assignments
+- Update admin with inline assignments and improved displays
+- Add migration 0005_tastemplatesectionassignment_and_more.py
+- Add comprehensive documentation
+
+Benefits:
+- Sections can be reused across multiple templates
+- Template-specific customization (labels, order, requirements)
+- Easier section management and sharing
+- Better separation of concerns
+
+* Add EduAI Compliance Suite documentation and shared styles
+
+- Created index.html for the EduAI Compliance Suite with a comprehensive overview, suite components, compliance metrics, integration capabilities, and key benefits.
+- Added shared styles.css for consistent styling across documentation, including variables for colors, typography, and layout.
+
 # [1.1.0](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.0.10...v1.1.0) (2025-11-02)
 
 
