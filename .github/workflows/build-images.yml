@@ -9,8 +9,11 @@ on:
       - '.github/workflows/build-images.yml'
   workflow_dispatch:
 jobs:
+  
+
   build:
-    runs-on: ubuntu-latest
+    runs-on: 
+      [self-hosted, nextcore]
     permissions:
       contents: read
       packages: write

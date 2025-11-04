@@ -10,7 +10,7 @@ on:
         type: string
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, nextcore]
     environment: ${{ inputs.environment }}
     permissions:
       id-token: write
