@@ -48,12 +48,12 @@ jobs:
       
       - name: Stop existing containers
         run: |
-          docker-compose down || true
+          docker compose down || true
         continue-on-error: true
       
       - name: Deploy with docker-compose
         run: |
-          docker-compose up -d
+          docker compose up -d
       
       - name: Wait for services to be healthy
         run: |
@@ -61,10 +61,10 @@ jobs:
           sleep 10
           
           # Check database
-          docker-compose exec -T db pg_isready -U postgres || echo "Database not ready"
+          docker compose exec -T db pg_isready -U postgres || echo "Database not ready"
           
           # Check Redis
-          docker-compose exec -T redis redis-cli ping || echo "Redis not ready"
+          docker compose exec -T redis redis-cli ping || echo "Redis not ready"
           
           # Wait for control-plane to be responsive
           for i in {1..30}; do
@@ -89,7 +89,7 @@ jobs:
       - name: Show running containers
         run: |
           echo "=== Running Containers ==="
-          docker-compose ps
+          docker compose ps
           
           echo ""
           echo "=== Service URLs ==="
@@ -104,15 +104,15 @@ jobs:
         if: always()
         run: |
           echo "=== Control Plane Logs ==="
-          docker-compose logs --tail=50 control-plane
+          docker compose logs --tail=50 control-plane
           
           echo ""
           echo "=== AI Gateway Logs ==="
-          docker-compose logs --tail=50 ai-gateway
+          docker compose logs --tail=50 ai-gateway
           
           echo ""
           echo "=== Worker Logs ==="
-          docker-compose logs --tail=50 worker
+          docker compose logs --tail=50 worker
       
       - name: Deployment summary
         if: success()
