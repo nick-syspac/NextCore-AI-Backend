@@ -3,6 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       environment:
+        description: 'Environment to run migrations'
         required: true
         type: choice
         options: [dev, staging, prod]
