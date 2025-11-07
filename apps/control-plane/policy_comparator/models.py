@@ -575,3 +575,162 @@ class ComparisonSession(models.Model):
 
         self.overall_compliance_score = round(score, 2)
         return self.overall_compliance_score
+
+
+class PolicyConversionSession(models.Model):
+    """
+    Track policy conversion sessions from 2015 to 2025 ASQA Standards
+    Similar to TASConversionSession but for policy documents
+    """
+
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("analyzing", "Analyzing Source Policy"),
+        ("mapping", "Mapping Standards"),
+        ("converting", "Converting Content"),
+        ("validating", "Validating Compliance"),
+        ("completed", "Completed"),
+        ("failed", "Failed"),
+    ]
+
+    tenant = models.ForeignKey(
+        Tenant, on_delete=models.CASCADE, related_name="policy_conversion_sessions"
+    )
+
+    # Source and target policies
+    source_policy = models.ForeignKey(
+        Policy,
+        on_delete=models.CASCADE,
+        related_name="conversion_sessions_as_source",
+        help_text="Original policy based on 2015 Standards",
+    )
+    target_policy = models.ForeignKey(
+        Policy,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="conversion_sessions_as_target",
+        help_text="New policy based on 2025 Standards",
+    )
+
+    # Session metadata
+    session_name = models.CharField(max_length=300)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    progress_percentage = models.IntegerField(
+        default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+
+    # AI model used
+    ai_model = models.CharField(
+        max_length=50,
+        default="gpt-4o",
+        help_text="AI model used for conversion (gpt-4o, claude-3-opus, etc.)",
+    )
+
+    # Conversion mapping data
+    standards_mapping = models.JSONField(
+        default=dict,
+        help_text="Detailed mapping from 2015 to 2025 standards for this policy",
+    )
+
+    # Conversion results
+    conversion_changes = models.JSONField(
+        default=list, help_text="List of all changes made during conversion"
+    )
+
+    compliance_report = models.JSONField(
+        default=dict,
+        help_text="Compliance validation report against 2025 Standards",
+    )
+
+    # Source analysis
+    source_analysis = models.JSONField(
+        default=dict,
+        help_text="Analysis of source policy structure and standards references",
+    )
+
+    # Quality metrics
+    quality_score = models.FloatField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0.0), MaxValueValidator(100.0)],
+        help_text="AI-assessed quality of conversion (0-100)",
+    )
+
+    requires_human_review = models.BooleanField(
+        default=False,
+        help_text="Flags if conversion requires human review before approval",
+    )
+
+    # Performance metrics
+    processing_time_seconds = models.FloatField(default=0.0)
+    ai_tokens_used = models.IntegerField(default=0, help_text="Total AI tokens consumed")
+
+    # Error handling
+    error_message = models.TextField(blank=True)
+
+    # Audit
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="policy_conversions_created",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "policy_conversion_sessions"
+        ordering = ["-created_at"]
+        verbose_name = "Policy Conversion Session"
+        verbose_name_plural = "Policy Conversion Sessions"
+        indexes = [
+            models.Index(fields=["tenant", "status"]),
+            models.Index(fields=["source_policy"]),
+            models.Index(fields=["status", "created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.session_name} - {self.status}"
+
+    def calculate_progress(self):
+        """Calculate progress percentage based on current status"""
+        progress_map = {
+            "pending": 0,
+            "analyzing": 15,
+            "mapping": 30,
+            "converting": 60,
+            "validating": 85,
+            "completed": 100,
+            "failed": 0,
+        }
+        self.progress_percentage = progress_map.get(self.status, 0)
+        return self.progress_percentage
+
+    def mark_as_started(self):
+        """Mark conversion as started"""
+        if not self.started_at:
+            self.started_at = timezone.now()
+        self.status = "analyzing"
+        self.calculate_progress()
+        self.save()
+
+    def mark_as_completed(self):
+        """Mark conversion as completed"""
+        self.status = "completed"
+        self.completed_at = timezone.now()
+        self.calculate_progress()
+        if self.started_at:
+            self.processing_time_seconds = (
+                self.completed_at - self.started_at
+            ).total_seconds()
+        self.save()
+
+    def mark_as_failed(self, error_message):
+        """Mark conversion as failed"""
+        self.status = "failed"
+        self.error_message = error_message
+        self.completed_at = timezone.now()
+        self.calculate_progress()
+        self.save()

@@ -444,6 +444,157 @@ class PolicyViewSet(viewsets.ModelViewSet):
         serializer = ComparisonResultSerializer(results, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=["post"])
+    def convert_to_2025_standards(self, request, tenant_slug=None, pk=None):
+        """
+        Convert policy from 2015 to 2025 ASQA Standards using AI
+        
+        Request Body:
+        {
+            "session_name": "optional session name",
+            "ai_model": "gpt-4o" | "claude-3-opus",
+            "options": {
+                "preserve_formatting": true,
+                "update_terminology": true,
+                "add_conversion_notes": true,
+                "use_ai": true
+            }
+        }
+        
+        Returns conversion session details and summary
+        """
+        from .conversion_service import PolicyConversionService
+        from .models import PolicyConversionSession
+        
+        policy = self.get_object()
+        
+        # Get request data
+        session_name = request.data.get("session_name")
+        ai_model = request.data.get("ai_model", "gpt-4o")
+        options = request.data.get("options", {})
+        
+        # Get tenant
+        from tenants.models import Tenant
+        tenant = Tenant.objects.get(slug=tenant_slug)
+        
+        try:
+            # Create conversion service
+            conversion_service = PolicyConversionService()
+            
+            # Create conversion session
+            session = conversion_service.create_conversion_session(
+                tenant=tenant,
+                source_policy=policy,
+                user=request.user,
+                session_name=session_name,
+                ai_model=ai_model,
+                options=options
+            )
+            
+            # Execute conversion
+            session = conversion_service.execute_conversion(session, options)
+            
+            # Get summary
+            summary = conversion_service.get_conversion_summary(session)
+            
+            return Response({
+                "session_id": session.id,
+                "status": session.status,
+                "message": "Policy conversion completed successfully",
+                "target_policy_id": session.target_policy.id if session.target_policy else None,
+                "summary": summary
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Policy conversion failed: {str(e)}")
+            return Response({
+                "error": "Conversion failed",
+                "detail": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=False, methods=["get"])
+    def list_conversion_sessions(self, request, tenant_slug=None):
+        """
+        List all policy conversion sessions for this tenant
+        
+        Query params:
+        - status: filter by status (pending, analyzing, converting, completed, failed)
+        - limit: max results (default 20)
+        """
+        from .models import PolicyConversionSession
+        from tenants.models import Tenant
+        
+        tenant = Tenant.objects.get(slug=tenant_slug)
+        
+        sessions = PolicyConversionSession.objects.filter(tenant=tenant)
+        
+        # Filter by status if provided
+        status_filter = request.query_params.get("status")
+        if status_filter:
+            sessions = sessions.filter(status=status_filter)
+        
+        # Limit results
+        limit = int(request.query_params.get("limit", 20))
+        sessions = sessions.order_by("-created_at")[:limit]
+        
+        # Serialize
+        results = []
+        for session in sessions:
+            results.append({
+                "id": session.id,
+                "session_name": session.session_name,
+                "status": session.status,
+                "progress_percentage": session.progress_percentage,
+                "source_policy": {
+                    "id": session.source_policy.id,
+                    "policy_number": session.source_policy.policy_number,
+                    "title": session.source_policy.title,
+                },
+                "target_policy": {
+                    "id": session.target_policy.id,
+                    "policy_number": session.target_policy.policy_number,
+                    "title": session.target_policy.title,
+                } if session.target_policy else None,
+                "quality_score": session.quality_score,
+                "created_at": session.created_at.isoformat() if session.created_at else None,
+                "completed_at": session.completed_at.isoformat() if session.completed_at else None,
+            })
+        
+        return Response({
+            "count": len(results),
+            "results": results
+        })
+
+    @action(detail=False, methods=["get"], url_path="conversion-sessions/(?P<session_id>[^/.]+)")
+    def get_conversion_session(self, request, tenant_slug=None, session_id=None):
+        """
+        Get detailed information about a specific conversion session
+        """
+        from .models import PolicyConversionSession
+        from .conversion_service import PolicyConversionService
+        from tenants.models import Tenant
+        
+        tenant = Tenant.objects.get(slug=tenant_slug)
+        
+        try:
+            session = PolicyConversionSession.objects.get(
+                id=session_id,
+                tenant=tenant
+            )
+            
+            conversion_service = PolicyConversionService()
+            summary = conversion_service.get_conversion_summary(session)
+            
+            # Add detailed changes list
+            summary["conversion_changes"] = session.conversion_changes
+            
+            return Response(summary)
+            
+        except PolicyConversionSession.DoesNotExist:
+            return Response({
+                "error": "Conversion session not found"
+            }, status=status.HTTP_404_NOT_FOUND)
+
 
 class ComparisonSessionViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet for comparison sessions (read-only)"""
