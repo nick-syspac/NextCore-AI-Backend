@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Policy Comparator - Complete Documentation | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">🔍 Policy Comparator</a>
+            <ul class="navbar-nav">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="getting-started.html" class="nav-link">Getting Started</a></li>
+                <li><a href="api-reference.html" class="nav-link">API Reference</a></li>
+                <li><a href="examples.html" class="nav-link">Examples</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Policy Comparator</h1>
+            <p>NLP-powered compliance verification system that automatically compares RTO policies against ASQA Standards to identify gaps and ensure continuous regulatory compliance.</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#overview" class="active">Overview</a></li>
+                <li><a href="#key-features">Key Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#scoring-system">Scoring System</a></li>
+                <li><a href="#policy-types">Policy Types</a></li>
+                <li><a href="#compliance">ASQA Compliance</a></li>
+                <li><a href="#roadmap">Roadmap</a></li>
+                <li><a href="#getting-started">Getting Started</a></li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content">
+            <!-- Overview Section -->
+            <section id="overview">
+                <h2>Overview</h2>
+                <p>The Policy Comparator is an intelligent compliance verification tool designed specifically for Australian Registered Training Organisations (RTOs). It leverages Natural Language Processing (NLP) to automatically compare your organisation's policies against ASQA Standards 2015, identifying compliance gaps and providing actionable recommendations.</p>
+
+                <div class="alert alert-info">
+                    <strong>💡 What Problem Does It Solve?</strong><br>
+                    Manual policy compliance checking is time-consuming, error-prone, and requires deep expertise. Policy Comparator automates this process, providing instant compliance analysis with detailed gap reports and recommendations - saving hundreds of hours during audits and continuous compliance management.
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Core Capabilities</div>
+                    <ul>
+                        <li><strong>Automated Compliance Checking:</strong> Compare policies against all ASQA Standards or specific clauses</li>
+                        <li><strong>NLP-Powered Analysis:</strong> Multi-layered text similarity using keywords, sequences, and phrase matching</li>
+                        <li><strong>Gap Detection:</strong> Identify missing requirements and weak coverage areas</li>
+                        <li><strong>Similarity Scoring:</strong> Precise 0-1 scoring with threshold-based categorization</li>
+                        <li><strong>Actionable Recommendations:</strong> Specific suggestions to improve compliance</li>
+                        <li><strong>Version Tracking:</strong> Monitor policy changes and compliance over time</li>
+                        <li><strong>Batch Processing:</strong> Compare multiple policies simultaneously</li>
+                        <li><strong>Evidence Extraction:</strong> Automatically identify relevant policy sections</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>Current Status: Foundation Phase</h3>
+                    <p><span class="badge badge-success">Version 0.1.0</span> - Core functionality implemented and ready for use</p>
+                    
+                    <h4>✅ What's Implemented</h4>
+                    <ul>
+                        <li>Core data models (ASQAStandard, ASQAClause, Policy, ComparisonResult, ComparisonSession)</li>
+                        <li>Manual policy text entry and storage</li>
+                        <li>Multi-layered NLP similarity comparison</li>
+                        <li>Gap detection with threshold-based categorization</li>
+                        <li>Keyword matching and tracking</li>
+                        <li>Compliance scoring (0-100)</li>
+                        <li>REST API endpoints for all operations</li>
+                        <li>Tenant-based policy management</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Key Features Section -->
+            <section id="key-features">
+                <h2>Key Features</h2>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🔍</div>
+                        <h3 class="feature-title">Intelligent Analysis</h3>
+                        <p class="feature-description">
+                            Multi-layered NLP comparison combines keyword matching, sequence similarity, and phrase analysis to accurately assess policy compliance against ASQA requirements.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3 class="feature-title">Precision Scoring</h3>
+                        <p class="feature-description">
+                            Similarity scores from 0-1 with clear thresholds: Full Match (0.8-1.0), Partial Match (0.6-0.8), Weak Match (0.4-0.6), or Gap (&lt;0.4) for every clause.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">⚠️</div>
+                        <h3 class="feature-title">Gap Detection</h3>
+                        <p class="feature-description">
+                            Automatically identifies compliance gaps, missing keywords, and weak coverage areas with detailed descriptions of what's missing and why it matters.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">💡</div>
+                        <h3 class="feature-title">Smart Recommendations</h3>
+                        <p class="feature-description">
+                            Get specific, actionable recommendations to improve each policy section, including suggested keywords and concepts to address identified gaps.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📝</div>
+                        <h3 class="feature-title">Evidence Extraction</h3>
+                        <p class="feature-description">
+                            Automatically extracts and highlights policy text that matches ASQA clauses, providing clear evidence of compliance for audit purposes.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3 class="feature-title">Version Tracking</h3>
+                        <p class="feature-description">
+                            Track policy versions, compare changes over time, and monitor compliance score trends as policies are updated and refined.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">⚡</div>
+                        <h3 class="feature-title">Batch Processing</h3>
+                        <p class="feature-description">
+                            Compare multiple policies in a single session, track batch progress, and generate comprehensive compliance reports across your policy suite.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3 class="feature-title">Targeted Analysis</h3>
+                        <p class="feature-description">
+                            Select specific ASQA Standards or clauses to compare against, or run comprehensive analysis across all compliance requirements.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📈</div>
+                        <h3 class="feature-title">Compliance Metrics</h3>
+                        <p class="feature-description">
+                            Overall compliance scores, clause-by-clause breakdowns, gap counts, and trend analysis to track improvements over time.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- How It Works Section -->
+            <section id="how-it-works">
+                <h2>How It Works</h2>
+                
+                <div class="card">
+                    <h3>Comparison Workflow</h3>
+                    <pre><code>1. Policy Upload
+   └─> Enter policy text or upload document
+   
+2. Standard Selection
+   └─> Choose specific ASQA clauses or compare against all
+   
+3. NLP Analysis
+   ├─> Keyword matching (40% weight)
+   ├─> Sequence similarity (30% weight)
+   └─> Phrase analysis (30% weight)
+   
+4. Scoring & Categorization
+   ├─> Full Match: 0.8-1.0 (Compliant)
+   ├─> Partial Match: 0.6-0.8 (Review needed)
+   ├─> Weak Match: 0.4-0.6 (Action required)
+   └─> No Match: <0.4 (Critical gap)
+   
+5. Gap Analysis
+   ├─> Identify missing keywords
+   ├─> Extract matching evidence
+   └─> Generate recommendations
+   
+6. Results & Reports
+   └─> Detailed compliance report with actionable insights</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Multi-Layered NLP Analysis</h3>
+                    <p>The Policy Comparator uses three complementary NLP techniques to ensure accurate compliance assessment:</p>
+                    
+                    <h4>1. Keyword Matching (40% weight)</h4>
+                    <p>Checks for presence of critical compliance keywords defined for each ASQA clause. Tracks both matched and missing keywords for detailed gap analysis.</p>
+                    
+                    <h4>2. Sequence Similarity (30% weight)</h4>
+                    <p>Uses Python's SequenceMatcher to calculate text sequence similarity, identifying structural and contextual alignment between policy and standard.</p>
+                    
+                    <h4>3. Phrase Analysis (30% weight)</h4>
+                    <p>Analyzes sentence-level similarity by extracting key phrases from ASQA clauses and checking for semantically similar content in policies.</p>
+                    
+                    <div class="alert alert-success">
+                        <strong>✨ Result:</strong> A weighted similarity score that balances keyword presence, structural alignment, and semantic meaning for accurate compliance assessment.
+                    </div>
+                </div>
+            </section>
+
+            <!-- Architecture Section -->
+            <section id="architecture">
+                <h2>System Architecture</h2>
+                
+                <div class="card">
+                    <h3>High-Level Architecture</h3>
+                    <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    API Layer (Django REST)                   │
+│           Policy & ComparisonSession ViewSets                │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│                   NLP Comparison Engine                      │
+│     Keyword + Sequence + Phrase Multi-layer Analysis         │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+        ┌──────────────────┴──────────────────┐
+        │                                     │
+┌───────▼────────┐                  ┌─────────▼────────┐
+│  Policy Store  │                  │   ASQA Library   │
+│   - Content    │                  │   - Standards    │
+│   - Versions   │                  │   - Clauses      │
+│   - Metadata   │                  │   - Keywords     │
+└────────────────┘                  └──────────────────┘
+        │                                     │
+        └────────────────┬────────────────────┘
+                         │
+                ┌────────▼─────────┐
+                │  Results Store   │
+                │  - Scores        │
+                │  - Gaps          │
+                │  - Evidence      │
+                │  - Sessions      │
+                └──────────────────┘</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Data Models</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Purpose</th>
+                                <th>Key Fields</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>ASQAStandard</code></td>
+                                <td>ASQA Standards repository</td>
+                                <td>standard_number, title, full_text, requirements</td>
+                            </tr>
+                            <tr>
+                                <td><code>ASQAClause</code></td>
+                                <td>Individual compliance clauses</td>
+                                <td>clause_number, clause_text, keywords, compliance_level</td>
+                            </tr>
+                            <tr>
+                                <td><code>Policy</code></td>
+                                <td>RTO policy documents</td>
+                                <td>title, content, version, status, compliance_score</td>
+                            </tr>
+                            <tr>
+                                <td><code>ComparisonResult</code></td>
+                                <td>Clause-by-clause comparison results</td>
+                                <td>similarity_score, match_type, matched_text, gap_description</td>
+                            </tr>
+                            <tr>
+                                <td><code>ComparisonSession</code></td>
+                                <td>Batch comparison tracking</td>
+                                <td>session_name, status, results_summary, overall_score</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Scoring System Section -->
+            <section id="scoring-system">
+                <h2>Scoring System</h2>
+                
+                <div class="card">
+                    <h3>Similarity Score Thresholds</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Score Range</th>
+                                <th>Category</th>
+                                <th>Description</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-success">0.8 - 1.0</span></td>
+                                <td><strong>Full Match</strong></td>
+                                <td>Policy fully addresses ASQA clause requirements</td>
+                                <td class="text-success">✓ Compliant</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-warning">0.6 - 0.8</span></td>
+                                <td><strong>Partial Match</strong></td>
+                                <td>Policy partially covers requirements, may need additional detail</td>
+                                <td class="text-warning">⚠ Review Recommended</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-danger">0.4 - 0.6</span></td>
+                                <td><strong>Weak Match</strong></td>
+                                <td>Weak coverage, missing key concepts and keywords</td>
+                                <td class="text-danger">⚡ Action Required</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-secondary">&lt; 0.4</span></td>
+                                <td><strong>No Match</strong></td>
+                                <td>Policy does not adequately address ASQA clause</td>
+                                <td class="text-danger">🚨 Critical Gap</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>Overall Compliance Score</h3>
+                    <p>The overall compliance score (0-100) is calculated by:</p>
+                    <ol>
+                        <li>Computing weighted average of all clause similarity scores</li>
+                        <li>Converting to percentage (score × 100)</li>
+                        <li>Weighting critical clauses more heavily</li>
+                    </ol>
+                    
+                    <pre><code>Overall Score = (Σ(clause_score × clause_weight) / Σ(clause_weight)) × 100
+
+Where:
+- clause_score: Individual similarity score (0-1)
+- clause_weight: Based on compliance_level (critical=3, important=2, standard=1)</code></pre>
+                </div>
+            </section>
+
+            <!-- Policy Types Section -->
+            <section id="policy-types">
+                <h2>Supported Policy Types</h2>
+                
+                <div class="card">
+                    <p>The Policy Comparator supports comprehensive analysis across all RTO policy categories:</p>
+                    
+                    <div class="feature-grid">
+                        <div class="card">
+                            <h4>📚 Training and Delivery</h4>
+                            <p>Training delivery methods, schedules, learning resources, trainer qualifications</p>
+                        </div>
+                        <div class="card">
+                            <h4>📝 Assessment</h4>
+                            <p>Assessment validation, moderation, appeals, reasonable adjustment</p>
+                        </div>
+                        <div class="card">
+                            <h4>👥 Student Support</h4>
+                            <p>LLN support, disability services, counseling, welfare</p>
+                        </div>
+                        <div class="card">
+                            <h4>⚖️ Complaints & Appeals</h4>
+                            <p>Complaint handling, appeals process, dispute resolution</p>
+                        </div>
+                        <div class="card">
+                            <h4>💰 Financial</h4>
+                            <p>Fees and refunds, financial management, student loans</p>
+                        </div>
+                        <div class="card">
+                            <h4>🏛️ Governance</h4>
+                            <p>Organizational structure, board responsibilities, decision-making</p>
+                        </div>
+                        <div class="card">
+                            <h4>✅ Quality Assurance</h4>
+                            <p>Continuous improvement, validation, audits, compliance</p>
+                        </div>
+                        <div class="card">
+                            <h4>🛡️ Workplace Health & Safety</h4>
+                            <p>WHS policies, risk management, incident reporting</p>
+                        </div>
+                        <div class="card">
+                            <h4>👨‍💼 Staff Management</h4>
+                            <p>Recruitment, professional development, performance management</p>
+                        </div>
+                        <div class="card">
+                            <h4>🏢 Facilities & Resources</h4>
+                            <p>Training facilities, equipment, library, IT infrastructure</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Compliance Section -->
+            <section id="compliance">
+                <h2>ASQA Standards Coverage</h2>
+                
+                <div class="card">
+                    <h3>Standards for Registered Training Organisations 2015</h3>
+                    <p>Policy Comparator includes comprehensive coverage of all ASQA Standards:</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Standard</th>
+                                <th>Title</th>
+                                <th>Key Focus</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>1.1-1.8</strong></td>
+                                <td>Training and Assessment</td>
+                                <td>Quality delivery, qualified trainers, valid assessment</td>
+                            </tr>
+                            <tr>
+                                <td><strong>1.13-1.14</strong></td>
+                                <td>Resources</td>
+                                <td>Training resources, industry engagement</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2.1-2.2</strong></td>
+                                <td>Learner Engagement</td>
+                                <td>Information provision, protection of learners</td>
+                            </tr>
+                            <tr>
+                                <td><strong>3.1-3.5</strong></td>
+                                <td>Provider Registration</td>
+                                <td>Fit and proper requirements, compliance</td>
+                            </tr>
+                            <tr>
+                                <td><strong>4.1-4.3</strong></td>
+                                <td>Compliance and Accountability</td>
+                                <td>Accurate records, reporting, cooperation</td>
+                            </tr>
+                            <tr>
+                                <td><strong>5.1-5.3</strong></td>
+                                <td>Certification</td>
+                                <td>AQF certification, issuance requirements</td>
+                            </tr>
+                            <tr>
+                                <td><strong>6.1-6.6</strong></td>
+                                <td>Issuance of Qualifications</td>
+                                <td>VET Student Loans, correct issuance</td>
+                            </tr>
+                            <tr>
+                                <td><strong>7.1-7.5</strong></td>
+                                <td>Governance and Administration</td>
+                                <td>Management systems, financial viability</td>
+                            </tr>
+                            <tr>
+                                <td><strong>8.1-8.6</strong></td>
+                                <td>Legal and Ethical Practices</td>
+                                <td>Compliance, marketing, quality assurance</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Roadmap Section -->
+            <section id="roadmap">
+                <h2>Product Roadmap</h2>
+                
+                <div class="card">
+                    <h3>Phase 1: Enhanced Models (Next)</h3>
+                    <ul>
+                        <li>Document model with file upload support (PDF, DOCX, HTML)</li>
+                        <li>DocumentVersion for comprehensive version tracking</li>
+                        <li>DocumentChunk for intelligent text segmentation</li>
+                        <li>Embedding storage with pgvector for semantic search</li>
+                        <li>ComparisonJob for async background processing</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>Phase 2: File Processing & Extraction</h3>
+                    <ul>
+                        <li>PDF text extraction (PyPDF2/pdfminer)</li>
+                        <li>DOCX parsing (python-docx)</li>
+                        <li>HTML content processing</li>
+                        <li>Intelligent chunking strategies</li>
+                        <li>S3 file storage integration</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>Phase 3: NLP Enhancement</h3>
+                    <ul>
+                        <li>Sentence transformers for semantic embeddings</li>
+                        <li>Vector similarity search with pgvector</li>
+                        <li>Cross-encoder re-ranking for accuracy</li>
+                        <li>Automated keyword extraction</li>
+                        <li>Evidence linking and highlighting</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>Phase 4: Async Processing & UI</h3>
+                    <ul>
+                        <li>Celery task queues for background jobs</li>
+                        <li>Real-time progress tracking</li>
+                        <li>Email notifications for completed analyses</li>
+                        <li>Coverage heatmap visualizations</li>
+                        <li>Interactive gap cards and evidence viewer</li>
+                        <li>PDF report generation</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Getting Started Section -->
+            <section id="getting-started">
+                <h2>Getting Started</h2>
+                
+                <div class="card">
+                    <h3>Quick Start Guide</h3>
+                    <p>Get up and running with Policy Comparator in minutes:</p>
+                    
+                    <ol>
+                        <li>
+                            <strong>Access the API:</strong>
+                            <pre><code>Base URL: https://api.yourorg.com/api/tenants/{tenant_slug}/policy-comparator/</code></pre>
+                        </li>
+                        <li>
+                            <strong>Create a Policy:</strong>
+                            <pre><code>POST /api/tenants/{tenant_slug}/policy-comparator/policies/
+{
+  "policy_number": "POL-001",
+  "title": "Assessment Policy",
+  "policy_type": "assessment",
+  "content": "Full policy text here...",
+  "status": "approved"
+}</code></pre>
+                        </li>
+                        <li>
+                            <strong>Run Comparison:</strong>
+                            <pre><code>POST /api/tenants/{tenant_slug}/policy-comparator/policies/{id}/compare/
+{
+  "standards": ["1.1", "1.2", "1.8"],
+  "session_name": "Assessment Policy Review"
+}</code></pre>
+                        </li>
+                        <li>
+                            <strong>View Results:</strong>
+                            <pre><code>GET /api/tenants/{tenant_slug}/policy-comparator/policies/{id}/results/</code></pre>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="card">
+                    <h3>Next Steps</h3>
+                    <ul>
+                        <li>📖 <a href="getting-started.html">Read the full Getting Started Guide</a></li>
+                        <li>🔧 <a href="api-reference.html">Explore the API Reference</a></li>
+                        <li>💼 <a href="examples.html">View Examples & Use Cases</a></li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>⚡ Time Savings:</strong> Policy compliance checks that typically take hours or days can now be completed in seconds with automated analysis and detailed reports.
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - Policy Comparator Documentation</p>
+            <p>Version 0.1.0 | Last Updated: November 2025</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

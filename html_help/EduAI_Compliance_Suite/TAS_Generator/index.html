@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAS Generator - Complete Documentation | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">📚 TAS Generator</a>
+            <ul class="navbar-nav">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="getting-started.html" class="nav-link">Getting Started</a></li>
+                <li><a href="api-reference.html" class="nav-link">API Reference</a></li>
+                <li><a href="ai-features.html" class="nav-link">AI Features</a></li>
+                <li><a href="examples.html" class="nav-link">Examples</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Training & Assessment Strategy Generator</h1>
+            <p>AI-powered tool for creating compliant, high-quality Training and Assessment Strategies with comprehensive automation and intelligent assistance.</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#overview" class="active">Overview</a></li>
+                <li><a href="#key-features">Key Features</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#ai-capabilities">AI Capabilities</a></li>
+                <li><a href="#workflow">Workflow</a></li>
+                <li><a href="#benefits">Benefits</a></li>
+                <li><a href="#compliance">Compliance</a></li>
+                <li><a href="#getting-started">Getting Started</a></li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content">
+            <!-- Overview Section -->
+            <section id="overview">
+                <h2>Overview</h2>
+                <p>The TAS Generator is a comprehensive AI-powered system designed to automate and streamline the creation of Training and Assessment Strategies (TAS) for Australian RTOs. It combines advanced AI capabilities with deep domain knowledge to produce compliant, contextually relevant documentation.</p>
+
+                <div class="alert alert-info">
+                    <strong>💡 What is a TAS?</strong><br>
+                    A Training and Assessment Strategy is a comprehensive plan that outlines how training will be delivered and assessment conducted for a particular qualification or unit of competency. It's a key compliance requirement for Australian RTOs under the Standards for Registered Training Organisations (RTOs) 2015.
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Core Capabilities</div>
+                    <ul>
+                        <li><strong>Automated TAS Generation:</strong> Create complete TAS documents from qualification codes and minimal input</li>
+                        <li><strong>AI-Powered Content:</strong> Leverage GPT-4 and specialized AI services for intelligent content generation</li>
+                        <li><strong>Compliance Checking:</strong> Built-in RAG engine validates against ASQA Standards 2015</li>
+                        <li><strong>Template Management:</strong> Flexible template system for different AQF levels and qualification types</li>
+                        <li><strong>Version Control:</strong> Track changes and maintain document history</li>
+                        <li><strong>Multi-format Export:</strong> PDF, Word, HTML export capabilities</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Key Features Section -->
+            <section id="key-features">
+                <h2>Key Features</h2>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3 class="feature-title">AI-Powered Generation</h3>
+                        <p class="feature-description">
+                            Utilize GPT-4 and specialized AI models to generate contextually relevant, compliant content across all TAS sections including qualification overviews, delivery strategies, and assessment approaches.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">✅</div>
+                        <h3 class="feature-title">Compliance Validation</h3>
+                        <p class="feature-description">
+                            RAG-powered compliance engine automatically checks your TAS against ASQA Standards, identifies gaps, and suggests improvements to ensure regulatory compliance.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📋</div>
+                        <h3 class="feature-title">Template System</h3>
+                        <p class="feature-description">
+                            Pre-configured templates for different AQF levels (Certificate I-IV, Diploma, Advanced Diploma) with customizable sections and GPT prompts.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3 class="feature-title">Intelligent Prefill</h3>
+                        <p class="feature-description">
+                            Auto-populate TAS fields from Training.gov.au data, extract trainer information from CVs, and suggest cohort archetypes based on historical data.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📊</div>
+                        <h3 class="feature-title">Assessment Blueprinting</h3>
+                        <p class="feature-description">
+                            AI generates comprehensive assessment blueprints mapping tasks to performance criteria, knowledge evidence, and assessment instruments.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3 class="feature-title">Version Control</h3>
+                        <p class="feature-description">
+                            Track all changes, maintain version history, compare versions, and manage approvals with comprehensive audit trails.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🎓</div>
+                        <h3 class="feature-title">Qualification Integration</h3>
+                        <p class="feature-description">
+                            Direct integration with Training.gov.au for real-time qualification and unit data, including packaging rules and elective recommendations.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📝</div>
+                        <h3 class="feature-title">Evidence Pack Generation</h3>
+                        <p class="feature-description">
+                            Automatically generate validation schedules, summarize validation minutes, and create evidence packs for audit readiness.
+                        </p>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">💬</div>
+                        <h3 class="feature-title">Conversational Copilot</h3>
+                        <p class="feature-description">
+                            Interactive AI assistant provides inline guidance, answers questions, and helps draft specific sections with context-aware suggestions.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Architecture Section -->
+            <section id="architecture">
+                <h2>System Architecture</h2>
+                
+                <div class="card">
+                    <h3>High-Level Architecture</h3>
+                    <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    API Layer (Django REST)                   │
+│              TAS ViewSet - 20+ AI Endpoints                  │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│                   AI Service Factory                         │
+│          Service Instantiation & Routing Layer               │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+        ┌──────────────────┴──────────────────┐
+        │                                     │
+┌───────▼────────┐                  ┌─────────▼────────┐
+│  Small LLM     │                  │   Large LLM      │
+│ Classification │                  │  Content Draft   │
+│  Extraction    │                  │   Generation     │
+└────────────────┘                  └──────────────────┘
+        │                                     │
+┌───────▼────────┐                  ┌─────────▼────────┐
+│  Embeddings    │                  │   RAG Engine     │
+│ Vector Search  │                  │  Compliance DB   │
+│   Similarity   │                  │  Policy Store    │
+└────────────────┘                  └──────────────────┘
+        │                                     │
+        └────────────────┬────────────────────┘
+                         │
+                ┌────────▼─────────┐
+                │   Data Models    │
+                │  - TAS           │
+                │  - Templates     │
+                │  - Versions      │
+                │  - Logs          │
+                └──────────────────┘</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>AI Service Classes</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Purpose</th>
+                                <th>Key Methods</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>IntakePrefillService</code></td>
+                                <td>Data extraction & auto-population</td>
+                                <td>extract_trainer_details(), enrich_tga_snapshot(), suggest_cohort_archetype()</td>
+                            </tr>
+                            <tr>
+                                <td><code>PackagingClusteringService</code></td>
+                                <td>Unit organization & recommendations</td>
+                                <td>recommend_electives(), suggest_unit_clusters(), generate_timetable()</td>
+                            </tr>
+                            <tr>
+                                <td><code>TASContentDrafter</code></td>
+                                <td>Content generation</td>
+                                <td>draft_cohort_section(), generate_assessment_blueprint(), map_resources()</td>
+                            </tr>
+                            <tr>
+                                <td><code>ComplianceRAGService</code></td>
+                                <td>Compliance validation</td>
+                                <td>evaluate_clause_coverage(), score_trainer_suitability(), assess_facility()</td>
+                            </tr>
+                            <tr>
+                                <td><code>EvidenceService</code></td>
+                                <td>Evidence & audit support</td>
+                                <td>summarize_meeting_minutes(), generate_validation_plan(), diff_versions()</td>
+                            </tr>
+                            <tr>
+                                <td><code>QualityAnalyticsService</code></td>
+                                <td>Quality analysis</td>
+                                <td>predict_lln_needs(), analyze_risk(), check_consistency()</td>
+                            </tr>
+                            <tr>
+                                <td><code>ConversationalCopilot</code></td>
+                                <td>Interactive assistance</td>
+                                <td>answer_inline_question(), provide_guided_prompts()</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- AI Capabilities Section -->
+            <section id="ai-capabilities">
+                <h2>AI Capabilities</h2>
+
+                <h3>9 Feature Areas</h3>
+                
+                <div class="card">
+                    <h4>1. Intake & Prefill</h4>
+                    <p>Automate data extraction and field population:</p>
+                    <ul>
+                        <li>Extract trainer qualifications, currency, and scope from CVs and PD logs</li>
+                        <li>Enrich Training.gov.au snapshots with learning outcomes and assessment hints</li>
+                        <li>Suggest cohort archetypes based on historical enrollment data</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>2. Packaging & Clustering</h4>
+                    <p>Intelligent unit organization:</p>
+                    <ul>
+                        <li>Recommend electives based on job roles, industry alignment, and RTO capacity</li>
+                        <li>Cluster units into logical delivery terms or themed modules</li>
+                        <li>Generate delivery timetables with sequencing and prerequisites</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>3. Content Drafting</h4>
+                    <p>AI-powered content generation:</p>
+                    <ul>
+                        <li>Draft cohort needs analysis sections with contextual awareness</li>
+                        <li>Generate comprehensive assessment blueprints mapping PC/KE to tasks</li>
+                        <li>Create resource mapping with gap analysis and recommendations</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>4. Compliance Guardrails (RAG)</h4>
+                    <p>Automated compliance validation:</p>
+                    <ul>
+                        <li>Evaluate ASQA clause coverage across TAS sections</li>
+                        <li>Score trainer suitability with PD recommendations</li>
+                        <li>Assess facility adequacy against unit requirements</li>
+                        <li>Detect policy drift between TAS and approved versions</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>5. Evidence Pack & Audit Readiness</h4>
+                    <p>Streamline validation and audit preparation:</p>
+                    <ul>
+                        <li>Summarize validation meeting minutes with action items</li>
+                        <li>Generate validation schedules and sampling plans</li>
+                        <li>Compare TAS versions and highlight changes</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>6. Quality & Risk Analytics</h4>
+                    <p>Proactive quality management:</p>
+                    <ul>
+                        <li>Predict LLN needs from cohort demographics</li>
+                        <li>Analyze risk factors (trainer loads, cohort readiness, resource gaps)</li>
+                        <li>Check consistency across sections for conflicting information</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>7. Export & Formatting</h4>
+                    <p>Professional document generation:</p>
+                    <ul>
+                        <li>Generate PDF exports with branded templates</li>
+                        <li>Create Word documents with editable content</li>
+                        <li>Produce HTML versions for web viewing</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>8. Conversational Copilot</h4>
+                    <p>Interactive AI assistance:</p>
+                    <ul>
+                        <li>Answer inline questions about compliance or best practices</li>
+                        <li>Provide guided prompts for section completion</li>
+                        <li>Offer context-aware suggestions while editing</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h4>9. Integration & Sync</h4>
+                    <p>Connect with external systems:</p>
+                    <ul>
+                        <li>Sync with Training.gov.au for latest qualification data</li>
+                        <li>Import/export to LMS systems</li>
+                        <li>Connect with SMS for trainer and student data</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Workflow Section -->
+            <section id="workflow">
+                <h2>Typical Workflow</h2>
+                
+                <div class="card">
+                    <h3>Complete TAS Generation Flow</h3>
+                    <ol>
+                        <li><strong>Select Qualification:</strong> Choose from Training.gov.au integrated qualification list</li>
+                        <li><strong>Choose Template:</strong> Select appropriate AQF level template or create custom</li>
+                        <li><strong>AI Enrichment:</strong> Let AI extract and enrich qualification data</li>
+                        <li><strong>Configure Context:</strong> Provide delivery mode, duration, target audience details</li>
+                        <li><strong>Generate Content:</strong> AI generates all sections based on templates and prompts</li>
+                        <li><strong>Review & Edit:</strong> Review generated content, make manual adjustments</li>
+                        <li><strong>Compliance Check:</strong> Run automated compliance validation</li>
+                        <li><strong>Finalize & Approve:</strong> Complete approval workflow</li>
+                        <li><strong>Export:</strong> Generate final documents in desired format</li>
+                        <li><strong>Version Control:</strong> Save as approved version with audit trail</li>
+                    </ol>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>⚡ Time Savings:</strong> Complete TAS generation that traditionally takes 8-12 hours can now be completed in 15-30 minutes with AI assistance.
+                </div>
+            </section>
+
+            <!-- Benefits Section -->
+            <section id="benefits">
+                <h2>Benefits</h2>
+                
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3 class="feature-title">Time Efficiency</h3>
+                        <p class="feature-description">Reduce TAS creation time from days to minutes with AI-powered automation.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3 class="feature-title">Compliance Assurance</h3>
+                        <p class="feature-description">Built-in validation against ASQA Standards ensures regulatory compliance.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3 class="feature-title">Consistency</h3>
+                        <p class="feature-description">Standardized templates and AI generation ensure consistent quality across all TAS documents.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3 class="feature-title">Quality Improvement</h3>
+                        <p class="feature-description">AI-generated content includes best practices and comprehensive coverage of requirements.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3 class="feature-title">Audit Readiness</h3>
+                        <p class="feature-description">Automatic evidence pack generation and version tracking simplify audit preparation.</p>
+                    </div>
+
+                    <div class="feature-card">
+                        <h3 class="feature-title">Scalability</h3>
+                        <p class="feature-description">Handle multiple qualifications and frequent updates with ease.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Compliance Section -->
+            <section id="compliance">
+                <h2>Compliance Features</h2>
+                
+                <div class="card">
+                    <h3>ASQA Standards Coverage</h3>
+                    <p>The TAS Generator includes built-in compliance checking for key ASQA Standards:</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Standard</th>
+                                <th>Description</th>
+                                <th>TAS Coverage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>1.1</strong></td>
+                                <td>Training & assessment strategies</td>
+                                <td>Complete TAS document structure</td>
+                            </tr>
+                            <tr>
+                                <td><strong>1.2</strong></td>
+                                <td>Provide training and assessment</td>
+                                <td>Delivery strategy, assessment methods</td>
+                            </tr>
+                            <tr>
+                                <td><strong>1.3</strong></td>
+                                <td>Issued AQF certification</td>
+                                <td>AQF level alignment section</td>
+                            </tr>
+                            <tr>
+                                <td><strong>1.4</strong></td>
+                                <td>Language, literacy & numeracy</td>
+                                <td>LLN support strategies</td>
+                            </tr>
+                            <tr>
+                                <td><strong>1.8</strong></td>
+                                <td>Relevant qualifications and experience</td>
+                                <td>Trainer requirements section</td>
+                            </tr>
+                            <tr>
+                                <td><strong>1.13</strong></td>
+                                <td>Training and assessment resources</td>
+                                <td>Resources and facilities sections</td>
+                            </tr>
+                            <tr>
+                                <td><strong>1.14</strong></td>
+                                <td>Industry engagement</td>
+                                <td>Industry consultation references</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>💡 Automated Compliance Checking:</strong><br>
+                    The RAG-powered compliance engine automatically evaluates your TAS against these standards and provides detailed gap analysis with recommendations for improvement.
+                </div>
+            </section>
+
+            <!-- Getting Started Section -->
+            <section id="getting-started">
+                <h2>Getting Started</h2>
+                
+                <div class="card">
+                    <h3>Quick Start Guide</h3>
+                    <p>Get up and running with TAS Generator in minutes:</p>
+                    
+                    <ol>
+                        <li>
+                            <strong>Access the API:</strong>
+                            <pre><code>Base URL: https://api.yourorg.com/api/tenants/{tenant_slug}/tas/</code></pre>
+                        </li>
+                        <li>
+                            <strong>List Available Qualifications:</strong>
+                            <pre><code>GET /api/tenants/{tenant_slug}/tas/qualifications/</code></pre>
+                        </li>
+                        <li>
+                            <strong>Generate Your First TAS:</strong>
+                            <pre><code>POST /api/tenants/{tenant_slug}/tas/generate/
+{
+  "qualification_code": "BSB50120",
+  "qualification_title": "Diploma of Business",
+  "delivery_mode": "blended",
+  "duration_weeks": 52
+}</code></pre>
+                        </li>
+                        <li>
+                            <strong>Review Generated Content:</strong>
+                            <pre><code>GET /api/tenants/{tenant_slug}/tas/{id}/</code></pre>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="card">
+                    <h3>Next Steps</h3>
+                    <ul>
+                        <li>📖 <a href="getting-started.html">Read the full Getting Started Guide</a></li>
+                        <li>🔧 <a href="api-reference.html">Explore the API Reference</a></li>
+                        <li>🤖 <a href="ai-features.html">Learn about AI Features</a></li>
+                        <li>💼 <a href="examples.html">View Examples & Use Cases</a></li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - TAS Generator Documentation</p>
+            <p>Version 1.0.0 | Last Updated: November 2025</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

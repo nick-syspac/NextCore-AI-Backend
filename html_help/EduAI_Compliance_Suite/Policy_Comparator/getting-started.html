@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started - Policy Comparator | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">🔍 Policy Comparator</a>
+            <ul class="navbar-nav">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="getting-started.html" class="nav-link">Getting Started</a></li>
+                <li><a href="api-reference.html" class="nav-link">API Reference</a></li>
+                <li><a href="examples.html" class="nav-link">Examples</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Getting Started with Policy Comparator</h1>
+            <p>Step-by-step guide to running your first policy compliance check</p>
+        </div>
+    </section>
+
+    <div class="main-content">
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#prerequisites">Prerequisites</a></li>
+                <li><a href="#authentication">Authentication</a></li>
+                <li><a href="#setup-asqa">Setup ASQA Standards</a></li>
+                <li><a href="#create-policy">Create a Policy</a></li>
+                <li><a href="#run-comparison">Run Comparison</a></li>
+                <li><a href="#interpret-results">Interpret Results</a></li>
+                <li><a href="#gap-analysis">Gap Analysis</a></li>
+                <li><a href="#batch-comparison">Batch Comparison</a></li>
+            </ul>
+        </aside>
+
+        <main class="content">
+            <section id="prerequisites">
+                <h2>Prerequisites</h2>
+                
+                <div class="card">
+                    <h3>What You'll Need</h3>
+                    <ul>
+                        <li><strong>API Access:</strong> Valid tenant credentials and API endpoint</li>
+                        <li><strong>Authentication:</strong> API key or OAuth token</li>
+                        <li><strong>Policy Documents:</strong> Your organization's policies (text or documents)</li>
+                        <li><strong>ASQA Standards:</strong> Pre-loaded or custom clause packs</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>System Requirements</h3>
+                    <ul>
+                        <li>HTTP client (cURL, Postman, or programming language with HTTP library)</li>
+                        <li>JSON parsing capability</li>
+                        <li>Text editor for policy content preparation</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="authentication">
+                <h2>Authentication</h2>
+                
+                <div class="card">
+                    <h3>API Authentication</h3>
+                    <p>All API requests require authentication via bearer token:</p>
+                    
+                    <pre><code>Authorization: Bearer YOUR_API_TOKEN</code></pre>
+                    
+                    <h4>Getting Your Token</h4>
+                    <pre><code>POST /api/auth/token/
+Content-Type: application/json
+
+{
+  "username": "your_username",
+  "password": "your_password"
+}
+
+Response:
+{
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+}</code></pre>
+
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Security Note:</strong> Store your API tokens securely. Never commit them to version control or expose them in client-side code.
+                    </div>
+                </div>
+            </section>
+
+            <section id="setup-asqa">
+                <h2>Setup ASQA Standards</h2>
+                
+                <div class="card">
+                    <h3>Step 1: List Available Standards</h3>
+                    <p>Check which ASQA Standards are available in the system:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/policy-comparator/standards/</code>
+                    </div>
+                    
+                    <pre><code>curl -X GET \
+  'https://api.yourorg.com/api/tenants/your-tenant/policy-comparator/standards/' \
+  -H 'Authorization: Bearer YOUR_TOKEN'
+
+Response:
+[
+  {
+    "id": 1,
+    "standard_number": "1.1",
+    "title": "Training and assessment",
+    "standard_type": "training_assessment",
+    "clause_count": 8
+  },
+  {
+    "id": 2,
+    "standard_number": "1.2",
+    "title": "Training and assessment delivered by industry experts",
+    "standard_type": "training_assessment",
+    "clause_count": 5
+  }
+]</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Step 2: View Clauses for a Standard</h3>
+                    <p>Get detailed clause information for compliance checking:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/policy-comparator/clauses/?standard={id}</code>
+                    </div>
+                    
+                    <pre><code>curl -X GET \
+  'https://api.yourorg.com/api/tenants/your-tenant/policy-comparator/clauses/?standard=1' \
+  -H 'Authorization: Bearer YOUR_TOKEN'
+
+Response:
+[
+  {
+    "id": 1,
+    "standard": 1,
+    "clause_number": "1",
+    "title": "Training and assessment",
+    "clause_text": "Training and assessment is delivered by trainers and assessors who...",
+    "keywords": ["trainers", "assessors", "qualifications", "competency"],
+    "compliance_level": "critical"
+  }
+]</code></pre>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>💡 Tip:</strong> If you need to add custom ASQA clauses or update existing ones, contact your system administrator or use the admin interface.
+                </div>
+            </section>
+
+            <section id="create-policy">
+                <h2>Create a Policy</h2>
+                
+                <div class="card">
+                    <h3>Step 1: Prepare Policy Content</h3>
+                    <p>Ensure your policy content is ready in plain text format. Key points:</p>
+                    <ul>
+                        <li>Include complete policy text (not just excerpts)</li>
+                        <li>Remove excessive formatting that might interfere with NLP analysis</li>
+                        <li>Ensure critical compliance keywords are present</li>
+                        <li>Use clear, professional language</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>Step 2: Create Policy via API</h3>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/policy-comparator/policies/</code>
+                    </div>
+                    
+                    <pre><code>curl -X POST \
+  'https://api.yourorg.com/api/tenants/your-tenant/policy-comparator/policies/' \
+  -H 'Authorization: Bearer YOUR_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "policy_number": "POL-001",
+  "title": "Trainer and Assessor Policy",
+  "description": "Policy outlining requirements for trainer and assessor qualifications",
+  "policy_type": "training_delivery",
+  "content": "Purpose: This policy outlines the requirements for trainer and assessor qualifications...\n\nScope: This policy applies to all trainers and assessors delivering training and assessment...\n\nRequirements:\n1. All trainers must hold relevant qualifications\n2. Trainers must demonstrate current industry skills\n3. Regular professional development is required...",
+  "version": "1.0",
+  "status": "approved",
+  "effective_date": "2025-01-01",
+  "review_date": "2026-01-01"
+}'
+
+Response:
+{
+  "id": 42,
+  "policy_number": "POL-001",
+  "title": "Trainer and Assessor Policy",
+  "policy_type": "training_delivery",
+  "status": "approved",
+  "version": "1.0",
+  "compliance_score": null,
+  "created_at": "2025-11-06T10:30:00Z"
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Policy Types</h3>
+                    <p>Select the appropriate policy type for accurate categorization:</p>
+                    <ul>
+                        <li><code>training_delivery</code> - Training and Delivery</li>
+                        <li><code>assessment</code> - Assessment</li>
+                        <li><code>student_support</code> - Student Support</li>
+                        <li><code>complaints_appeals</code> - Complaints and Appeals</li>
+                        <li><code>financial</code> - Financial</li>
+                        <li><code>governance</code> - Governance</li>
+                        <li><code>quality_assurance</code> - Quality Assurance</li>
+                        <li><code>workplace_health_safety</code> - Workplace Health and Safety</li>
+                        <li><code>staff_management</code> - Staff Management</li>
+                        <li><code>facilities_resources</code> - Facilities and Resources</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="run-comparison">
+                <h2>Run Comparison</h2>
+                
+                <div class="card">
+                    <h3>Compare Policy Against ASQA Standards</h3>
+                    <p>Once your policy is created, run a compliance comparison:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/policy-comparator/policies/{id}/compare/</code>
+                    </div>
+                    
+                    <h4>Option 1: Compare Against All Standards</h4>
+                    <pre><code>curl -X POST \
+  'https://api.yourorg.com/api/tenants/your-tenant/policy-comparator/policies/42/compare/' \
+  -H 'Authorization: Bearer YOUR_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "session_name": "Comprehensive Policy Review"
+}'
+
+Response:
+{
+  "session_id": 15,
+  "policy": 42,
+  "status": "completed",
+  "clauses_compared": 45,
+  "results_summary": {
+    "full_match": 32,
+    "partial_match": 8,
+    "weak_match": 3,
+    "no_match": 2
+  },
+  "overall_score": 85.4,
+  "execution_time_seconds": 2.3
+}</code></pre>
+
+                    <h4>Option 2: Compare Against Specific Standards</h4>
+                    <pre><code>curl -X POST \
+  'https://api.yourorg.com/api/tenants/your-tenant/policy-comparator/policies/42/compare/' \
+  -H 'Authorization: Bearer YOUR_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "standards": ["1.1", "1.2", "1.8"],
+  "session_name": "Targeted Trainer Policy Review"
+}'
+
+Response:
+{
+  "session_id": 16,
+  "policy": 42,
+  "status": "completed",
+  "clauses_compared": 18,
+  "results_summary": {
+    "full_match": 14,
+    "partial_match": 3,
+    "weak_match": 1,
+    "no_match": 0
+  },
+  "overall_score": 91.2,
+  "execution_time_seconds": 0.8
+}</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>⚡ Fast Processing:</strong> Comparisons complete in seconds, even for comprehensive policy reviews against all ASQA standards.
+                </div>
+            </section>
+
+            <section id="interpret-results">
+                <h2>Interpret Results</h2>
+                
+                <div class="card">
+                    <h3>View Detailed Comparison Results</h3>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/policy-comparator/policies/{id}/results/</code>
+                    </div>
+                    
+                    <pre><code>curl -X GET \
+  'https://api.yourorg.com/api/tenants/your-tenant/policy-comparator/policies/42/results/' \
+  -H 'Authorization: Bearer YOUR_TOKEN'
+
+Response:
+[
+  {
+    "id": 101,
+    "asqa_clause": {
+      "clause_number": "1",
+      "title": "Training and assessment",
+      "compliance_level": "critical"
+    },
+    "similarity_score": 0.92,
+    "match_type": "full_match",
+    "matched_text": "All trainers must hold relevant qualifications at least to the level being delivered and demonstrate current industry skills...",
+    "gap_description": "Policy fully addresses this ASQA clause.",
+    "recommendations": null,
+    "keywords_matched": ["trainers", "qualifications", "competency", "industry skills"],
+    "keywords_missing": [],
+    "nlp_metadata": {
+      "keyword_score": 0.95,
+      "sequence_score": 0.88,
+      "phrase_score": 0.93
+    }
+  },
+  {
+    "id": 102,
+    "asqa_clause": {
+      "clause_number": "2",
+      "title": "Industry currency",
+      "compliance_level": "important"
+    },
+    "similarity_score": 0.68,
+    "match_type": "partial_match",
+    "matched_text": "Trainers must demonstrate current industry skills through recent work experience or professional development...",
+    "gap_description": "Policy partially addresses this clause but may need additional detail or evidence.",
+    "recommendations": "Consider adding specific requirements for industry currency maintenance and documentation.",
+    "keywords_matched": ["industry", "skills", "professional development"],
+    "keywords_missing": ["currency", "workplace experience"],
+    "nlp_metadata": {
+      "keyword_score": 0.60,
+      "sequence_score": 0.72,
+      "phrase_score": 0.71
+    }
+  }
+]</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Understanding the Results</h3>
+                    
+                    <h4>Similarity Score (0-1)</h4>
+                    <p>Indicates how well your policy matches each ASQA clause:</p>
+                    <ul>
+                        <li><strong>0.8-1.0:</strong> Excellent coverage (Full Match)</li>
+                        <li><strong>0.6-0.8:</strong> Good coverage with minor gaps (Partial Match)</li>
+                        <li><strong>0.4-0.6:</strong> Weak coverage with significant gaps (Weak Match)</li>
+                        <li><strong>&lt;0.4:</strong> Inadequate coverage (No Match)</li>
+                    </ul>
+
+                    <h4>Match Type Categories</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Match Type</th>
+                                <th>Meaning</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge badge-success">full_match</span></td>
+                                <td>Compliant - no action needed</td>
+                                <td>✓ Continue monitoring</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-warning">partial_match</span></td>
+                                <td>Review recommended</td>
+                                <td>⚠ Consider enhancements</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-danger">weak_match</span></td>
+                                <td>Action required</td>
+                                <td>⚡ Update policy</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge badge-secondary">no_match</span></td>
+                                <td>Critical gap</td>
+                                <td>🚨 Immediate attention</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>NLP Metadata</h4>
+                    <p>Three scores combine to produce the final similarity score:</p>
+                    <ul>
+                        <li><strong>keyword_score:</strong> Presence of compliance keywords (40% weight)</li>
+                        <li><strong>sequence_score:</strong> Text structure similarity (30% weight)</li>
+                        <li><strong>phrase_score:</strong> Semantic meaning alignment (30% weight)</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="gap-analysis">
+                <h2>Gap Analysis</h2>
+                
+                <div class="card">
+                    <h3>Get Comprehensive Gap Report</h3>
+                    <p>View detailed analysis of all compliance gaps:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/policy-comparator/policies/{id}/gap_analysis/</code>
+                    </div>
+                    
+                    <pre><code>curl -X GET \
+  'https://api.yourorg.com/api/tenants/your-tenant/policy-comparator/policies/42/gap_analysis/' \
+  -H 'Authorization: Bearer YOUR_TOKEN'
+
+Response:
+{
+  "policy_id": 42,
+  "policy_title": "Trainer and Assessor Policy",
+  "overall_compliance": 85.4,
+  "total_clauses_checked": 45,
+  "gap_summary": {
+    "critical_gaps": 2,
+    "moderate_gaps": 3,
+    "minor_gaps": 8
+  },
+  "critical_gaps": [
+    {
+      "clause": {
+        "standard_number": "1.8",
+        "clause_number": "3",
+        "title": "Assessment validation",
+        "compliance_level": "critical"
+      },
+      "similarity_score": 0.35,
+      "gap_severity": "no_match",
+      "missing_keywords": ["validation", "moderation", "industry expert"],
+      "recommendations": "Add explicit requirements for assessment validation and industry expert involvement in validation process."
+    }
+  ],
+  "moderate_gaps": [...],
+  "minor_gaps": [...]
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Prioritizing Gap Resolution</h3>
+                    <p>Focus on gaps in this order:</p>
+                    <ol>
+                        <li><strong>Critical Gaps:</strong> ASQA clauses marked as "critical" with no_match or weak_match</li>
+                        <li><strong>Moderate Gaps:</strong> Important clauses with partial or weak matches</li>
+                        <li><strong>Minor Gaps:</strong> Standard clauses needing minor improvements</li>
+                    </ol>
+
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Audit Risk:</strong> Critical gaps in compliance-level clauses pose the highest audit risk and should be addressed immediately.
+                    </div>
+                </div>
+            </section>
+
+            <section id="batch-comparison">
+                <h2>Batch Comparison</h2>
+                
+                <div class="card">
+                    <h3>Compare Multiple Policies</h3>
+                    <p>For comprehensive compliance reviews, compare multiple policies in a single session:</p>
+                    
+                    <pre><code># Compare all training-related policies
+for policy_id in [42, 43, 44, 45]; do
+  curl -X POST \
+    "https://api.yourorg.com/api/tenants/your-tenant/policy-comparator/policies/${policy_id}/compare/" \
+    -H 'Authorization: Bearer YOUR_TOKEN' \
+    -H 'Content-Type: application/json' \
+    -d '{
+      "standards": ["1.1", "1.2", "1.3", "1.8"],
+      "session_name": "Training Policy Suite Review"
+    }'
+done</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>View Comparison History</h3>
+                    <p>Track all comparisons run for a policy:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/policy-comparator/policies/{id}/comparison_history/</code>
+                    </div>
+                    
+                    <pre><code>Response:
+[
+  {
+    "session_id": 15,
+    "session_name": "Comprehensive Policy Review",
+    "created_at": "2025-11-06T10:30:00Z",
+    "clauses_compared": 45,
+    "overall_score": 85.4,
+    "status": "completed"
+  },
+  {
+    "session_id": 12,
+    "session_name": "Initial Assessment",
+    "created_at": "2025-10-15T14:20:00Z",
+    "clauses_compared": 45,
+    "overall_score": 78.2,
+    "status": "completed"
+  }
+]</code></pre>
+
+                    <p>This allows you to track compliance improvements over time as policies are updated.</p>
+                </div>
+            </section>
+
+            <div class="alert alert-info">
+                <strong>🎉 Congratulations!</strong> You've completed the getting started guide. Next steps:
+                <ul>
+                    <li>📖 <a href="api-reference.html">Explore the complete API Reference</a></li>
+                    <li>💼 <a href="examples.html">View real-world Examples</a></li>
+                    <li>🔄 Schedule regular policy compliance checks</li>
+                    <li>📊 Monitor compliance trends over time</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - Policy Comparator Documentation</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
