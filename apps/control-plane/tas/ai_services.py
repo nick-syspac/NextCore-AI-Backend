@@ -623,14 +623,31 @@ class ComplianceRAGService(AIServiceBase):
         self.policies_index = self._build_policies_index()
 
     def _load_asqa_standards(self) -> Dict:
-        """Load ASQA Standards for RTOs 2015"""
-        # TODO: Load from database or file
+        """
+        Load ASQA Standards for RTOs 2025
+        
+        Note: The 2025 Standards introduced an outcome-focused framework with:
+        - 4 Quality Areas (Outcome Standards)
+        - Compliance Requirements
+        - Credential Policy
+        
+        This method should be updated to load from the database ASQAStandard model
+        which now supports both 2015 (legacy) and 2025 standards structures.
+        """
+        # TODO: Load from database ASQAStandard model (version='2025')
+        # For now, return basic structure matching 2025 standards
         return {
-            "1.1": "Training and assessment is delivered by VET trainers and assessors...",
-            "1.2": "For each AQF qualification or VET accredited course, the RTO has training and assessment strategies...",
-            "1.3": "The RTO monitors training and/or assessment...",
-            "1.8": "The RTO implements a plan for ongoing systematic validation...",
-            # ... more standards
+            "QA1.1": "Training is delivered in accordance with the requirements of training products...",
+            "QA1.2": "Assessment is conducted in accordance with the principles of assessment and rules of evidence...",
+            "QA1.3": "RTOs acknowledge and give credit for skills and knowledge learners already have...",
+            "QA1.4": "Training and assessment is delivered with appropriate facilities, resources and equipment...",
+            "QA2.1": "Learners are provided with accurate and accessible information...",
+            "QA2.2": "Learners receive appropriate training support to achieve their learning outcomes...",
+            "QA3.1": "The VET workforce is appropriately qualified, inducted, supported and developed...",
+            "QA3.2": "Trainers and assessors hold required credentials and maintain vocational competence...",
+            "QA4.1": "Effective governance and leadership drive quality training outcomes...",
+            "QA4.2": "Risks to quality training outcomes are identified and effectively managed...",
+            "QA4.3": "Systematic monitoring and evaluation drive continuous improvement...",
         }
 
     def _build_policies_index(self) -> Dict:
@@ -647,21 +664,22 @@ class ComplianceRAGService(AIServiceBase):
         Args:
             tas_content: TAS document sections
             target_clauses: Specific clauses to check (or all if None)
+                           Updated for 2025 Standards (QA1.1, QA1.2, etc.)
 
         Returns:
             Clause coverage report with gaps and suggested fixes
         """
         if target_clauses is None:
+            # Default to key 2025 Outcome Standards relevant to TAS
             target_clauses = [
-                "1.1",
-                "1.2",
-                "1.3",
-                "1.8",
-                "1.13",
-                "1.14",
-                "1.15",
-                "1.16",
-                "2.2",
+                "QA1.1",  # Training
+                "QA1.2",  # Assessment
+                "QA1.3",  # RPL & Credit Transfer
+                "QA1.4",  # Facilities & Resources
+                "QA2.1",  # Information
+                "QA2.2",  # Training Support
+                "QA3.2",  # Trainer & Assessor Credentials
+                "QA4.3",  # Continuous Improvement
             ]
 
         results = {}

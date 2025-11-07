@@ -1041,17 +1041,18 @@ Content-Type: application/json
 **Response**:
 ```json
 {
-  "answer": "This cluster may have compliance concerns because it combines units from very different contexts (WHS, Finance, Operations) without clear pedagogical justification. ASQA Standard 1.2 requires that training and assessment strategies demonstrate how units will be delivered in a coherent, integrated manner. These units have limited shared knowledge or skills, making integrated assessment challenging.",
-  "asqa_clauses": ["1.2"],
+  "answer": "This cluster may have compliance concerns because it combines units from very different contexts (WHS, Finance, Operations) without clear pedagogical justification. The 2025 Standards (QA1.1 Training) require that training is systematically developed and delivered in a way that develops the skills and knowledge specified in training products. Units with limited shared knowledge or skills make integrated assessment and coherent training delivery challenging.",
+  "asqa_standards": ["QA1.1", "QA1.2"],
   "best_practices": [
     "Cluster units with shared industry contexts",
     "Identify common knowledge/skills for integrated assessment",
-    "Justify clustering with clear pedagogical rationale"
+    "Justify clustering with clear pedagogical rationale",
+    "Ensure training design supports coherent skill development"
   ],
-  "example_text": "These units are clustered because they share common workplace contexts in business operations management. The cluster enables integrated assessment through a workplace project where learners demonstrate WHS compliance while managing operational plans.",
+  "example_text": "These units are clustered because they share common workplace contexts in business operations management. The cluster enables integrated assessment through a workplace project where learners demonstrate WHS compliance while managing operational plans, meeting QA1.1 and QA1.2 requirements for coherent training delivery.",
   "resources": [
     "TAS_CLUSTERING_GUIDE.md",
-    "ASQA_Standard_1.2_Guidance.pdf"
+    "ASQA_2025_Standards_QA1_Practice_Guide.pdf"
   ],
   "generated_at": "2024-01-15T10:30:00Z"
 }
@@ -1080,7 +1081,11 @@ Content-Type: application/json
 
 ### Data to Index
 
-1. **ASQA Standards**: All Standards for RTOs 2015 clauses
+1. **ASQA Standards**: All Standards for RTOs 2025 (Outcome Standards, Compliance Requirements, Credential Policy)
+   - Quality Area 1-4 requirements and practice guides
+   - Compliance requirements (C1-C4)
+   - Credential Policy requirements
+   - Legacy 2015 standards for historical reference
 2. **RTO Policies**: Current policy documents and procedures
 3. **Industry Minutes**: Meeting notes and engagement records
 4. **Unit Snapshots**: TGA unit descriptors, elements, PC, KS, FS

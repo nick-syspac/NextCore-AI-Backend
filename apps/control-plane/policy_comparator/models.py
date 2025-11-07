@@ -157,10 +157,13 @@ class AsqaClausePack(models.Model):
 class ASQAStandard(models.Model):
     """
     ASQA Standards for RTOs (Registered Training Organisations)
-    Based on Standards for Registered Training Organisations (RTOs) 2015
+    Supports both:
+    - Standards for Registered Training Organisations (RTOs) 2015
+    - Standards for Registered Training Organisations (RTOs) 2025 (effective 1 July 2025)
     """
 
-    STANDARD_TYPES = [
+    # 2015 Standard Types (Legacy)
+    STANDARD_TYPES_2015 = [
         ("training_assessment", "Training and Assessment"),
         ("trainer_assessor", "Trainer and Assessor"),
         ("educational_support", "Educational and Support Services"),
@@ -170,13 +173,58 @@ class ASQAStandard(models.Model):
         ("governance", "Governance and Administration"),
         ("financial", "Financial Management"),
     ]
+    
+    # 2025 Standard Types (Current)
+    STANDARD_TYPES_2025 = [
+        # Outcome Standards
+        ("qa1_training_assessment", "Quality Area 1 - Training and Assessment"),
+        ("qa2_student_support", "Quality Area 2 - VET Student Support"),
+        ("qa3_workforce", "Quality Area 3 - VET Workforce"),
+        ("qa4_governance", "Quality Area 4 - Governance"),
+        # Compliance Requirements
+        ("compliance_information", "Compliance - Information and Transparency"),
+        ("compliance_integrity", "Compliance - Integrity of NRT Products"),
+        ("compliance_accountability", "Compliance - Accountability"),
+        ("compliance_fit_proper", "Compliance - Fit and Proper Person"),
+        # Credential Policy
+        ("credential_policy", "Credential Policy"),
+    ]
+    
+    STANDARD_TYPES = STANDARD_TYPES_2015 + STANDARD_TYPES_2025
+    
+    STANDARD_CATEGORIES = [
+        ("outcome", "Outcome Standard"),
+        ("compliance", "Compliance Requirement"),
+        ("credential", "Credential Policy"),
+        ("legacy_2015", "2015 Standard"),
+    ]
+    
+    VERSIONS = [
+        ("2015", "Standards for RTOs 2015"),
+        ("2025", "Standards for RTOs 2025"),
+    ]
 
     standard_number = models.CharField(
-        max_length=20, unique=True, help_text="e.g., Standard 1.1"
+        max_length=20, db_index=True, help_text="e.g., Standard 1.1 (2015) or QA1.1 (2025)"
     )
     title = models.CharField(max_length=300)
     description = models.TextField()
     standard_type = models.CharField(max_length=50, choices=STANDARD_TYPES)
+    
+    # New field for 2025 standards structure
+    standard_category = models.CharField(
+        max_length=20, 
+        choices=STANDARD_CATEGORIES,
+        default="legacy_2015",
+        help_text="Classification within 2025 standards framework"
+    )
+    
+    # Quality Area (for 2025 Outcome Standards)
+    quality_area = models.IntegerField(
+        null=True, 
+        blank=True,
+        help_text="Quality Area number (1-4) for 2025 Outcome Standards"
+    )
 
     # Full text of the standard
     full_text = models.TextField(help_text="Complete text of the ASQA standard")
@@ -189,19 +237,35 @@ class ASQAStandard(models.Model):
     # Metadata
     is_active = models.BooleanField(default=True)
     effective_date = models.DateField(null=True, blank=True)
-    version = models.CharField(max_length=20, default="2015")
+    version = models.CharField(max_length=20, choices=VERSIONS, default="2025")
+    
+    # Official ASQA links
+    asqa_url = models.URLField(
+        max_length=500,
+        blank=True,
+        help_text="Link to official ASQA documentation"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "asqa_standards"
-        ordering = ["standard_number"]
+        ordering = ["version", "quality_area", "standard_number"]
         verbose_name = "ASQA Standard"
         verbose_name_plural = "ASQA Standards"
+        indexes = [
+            models.Index(fields=["version", "is_active"]),
+            models.Index(fields=["standard_category"]),
+            models.Index(fields=["quality_area"]),
+        ]
+        # Allow same standard_number for different versions
+        unique_together = [["standard_number", "version"]]
 
     def __str__(self):
-        return f"{self.standard_number} - {self.title}"
+        if self.version == "2025" and self.quality_area:
+            return f"QA{self.quality_area} {self.standard_number} - {self.title} (2025)"
+        return f"{self.standard_number} - {self.title} ({self.version})"
 
 
 class ASQAClause(models.Model):

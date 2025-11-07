@@ -355,13 +355,21 @@ OPENAI_API_KEY=sk-...  # Required for GPT-4 generation
 
 The TAS module helps RTOs comply with:
 
-- **ASQA Standards for RTOs 2015**
-  - Clause 1.1: Training and assessment
-  - Clause 1.2: Training and assessment strategies
-  - Clause 1.3: Trainer and assessor requirements
-  - Clause 1.8: Validation
-  - Clause 1.13-1.16: Assessment practices
-  - Clause 2.2: Resources and facilities
+- **ASQA Standards for RTOs 2025** (effective 1 July 2025)
+  - **Quality Area 1 - Training and Assessment**
+    - QA1.1: Training delivery aligned with training products
+    - QA1.2: Assessment meets principles and rules of evidence
+    - QA1.3: Recognition of Prior Learning and Credit Transfer
+    - QA1.4: Facilities, resources and equipment
+  - **Quality Area 2 - VET Student Support**
+    - QA2.1: Accurate and accessible information
+    - QA2.2: Training support for learner success
+  - **Quality Area 3 - VET Workforce**
+    - QA3.2: Trainer and assessor credentials and competence
+  - **Quality Area 4 - Governance**
+    - QA4.3: Continuous improvement systems
+
+> **Note:** The 2025 Standards introduced an outcome-focused framework replacing the 2015 clause-based structure.
 
 ## Troubleshooting
 
@@ -434,7 +442,8 @@ Interactive API documentation available at:
 ### External Resources
 - [training.gov.au](https://training.gov.au) - Official TGA website
 - [ASQA](https://www.asqa.gov.au) - Australian Skills Quality Authority
-- [Standards for RTOs 2015](https://www.asqa.gov.au/standards) - Compliance standards
+- [Standards for RTOs 2025](https://www.asqa.gov.au/rtos/2025-standards-rtos) - Current compliance standards (effective 1 July 2025)
+- [Practice Guides](https://www.asqa.gov.au/rtos/2025-standards-rtos/practice-guides) - ASQA guidance on 2025 Standards
 
 ### Contact
 For questions or support:

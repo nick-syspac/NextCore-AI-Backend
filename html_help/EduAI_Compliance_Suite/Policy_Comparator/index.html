@@ -76,6 +76,10 @@
                     <h3>Current Status: Foundation Phase</h3>
                     <p><span class="badge badge-success">Version 0.1.0</span> - Core functionality implemented and ready for use</p>
                     
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Standards Transition:</strong> The 2025 Standards for RTOs came into effect on 1 July 2025. Organizations must ensure their policy library and clause database are updated to reflect the new outcome-focused standards structure. Legacy 2015 standards data should be migrated or archived.
+                    </div>
+                    
                     <h4>✅ What's Implemented</h4>
                     <ul>
                         <li>Core data models (ASQAStandard, ASQAClause, Policy, ComparisonResult, ComparisonSession)</li>
@@ -414,63 +418,118 @@ Where:
             <section id="compliance">
                 <h2>ASQA Standards Coverage</h2>
                 
+                <div class="alert alert-info">
+                    <strong>📅 Standards Update:</strong> The 2025 Standards for RTOs came into effect on <strong>1 July 2025</strong>. The system is being updated to reflect the new standards structure.
+                </div>
+                
                 <div class="card">
-                    <h3>Standards for Registered Training Organisations 2015</h3>
-                    <p>Policy Comparator includes comprehensive coverage of all ASQA Standards:</p>
+                    <h3>2025 Standards for Registered Training Organisations</h3>
+                    <p>The 2025 Standards have a new outcome-focused structure with three components:</p>
+                    
+                    <h4>1. Outcome Standards (4 Quality Areas)</h4>
+                    <ul>
+                        <li><strong>Quality Area 1 - Training and Assessment</strong>
+                            <ul>
+                                <li>Training</li>
+                                <li>Assessment</li>
+                                <li>Recognition of Prior Learning and Credit Transfer</li>
+                                <li>Facilities, resources and equipment</li>
+                            </ul>
+                        </li>
+                        <li><strong>Quality Area 2 - VET Student Support</strong>
+                            <ul>
+                                <li>Information</li>
+                                <li>Training support</li>
+                                <li>Diversity and inclusion</li>
+                                <li>Wellbeing</li>
+                                <li>Feedback, complaints and appeals</li>
+                            </ul>
+                        </li>
+                        <li><strong>Quality Area 3 - VET Workforce</strong>
+                            <ul>
+                                <li>VET Workforce Management</li>
+                                <li>Trainer and Assessor Competencies</li>
+                            </ul>
+                        </li>
+                        <li><strong>Quality Area 4 - Governance</strong>
+                            <ul>
+                                <li>Leadership and Accountability</li>
+                                <li>Risk Management</li>
+                                <li>Continuous Improvement</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    
+                    <h4>2. Compliance Requirements</h4>
+                    <ul>
+                        <li>Information and Transparency</li>
+                        <li>Integrity of Nationally Recognised Training Products</li>
+                        <li>Accountability</li>
+                        <li>Fit and Proper Person Requirements</li>
+                    </ul>
+                    
+                    <h4>3. Credential Policy</h4>
+                    <p>Outlines credentials required for delivering training and assessments and undertaking validation.</p>
+                    
+                    <p>Policy Comparator supports compliance checking against all components of the 2025 Standards:</p>
+                    
+                    <p>Policy Comparator supports compliance checking across all components:</p>
+                    <ul>
+                        <li><strong>Outcome Standards:</strong> Quality-focused requirements across all four Quality Areas</li>
+                        <li><strong>Compliance Requirements:</strong> Administrative and integrity requirements</li>
+                        <li><strong>Credential Policy:</strong> Trainer and assessor qualification requirements</li>
+                        <li><strong>Multi-layered Analysis:</strong> NLP-powered text similarity scoring</li>
+                        <li><strong>Gap Identification:</strong> Automated detection of missing compliance elements</li>
+                        <li><strong>Continuous Updates:</strong> Standards library updated as ASQA releases guidance</li>
+                    </ul>
+                    
+                    <h4>Official ASQA Resources</h4>
+                    <ul>
+                        <li><a href="https://www.asqa.gov.au/rtos/2025-standards-rtos" target="_blank">2025 Standards for RTOs</a></li>
+                        <li><a href="https://www.legislation.gov.au/F2025L00354/asmade/text" target="_blank">Outcome Standards (Legislation)</a></li>
+                        <li><a href="https://www.legislation.gov.au/F2025L00355/asmade/text" target="_blank">Compliance Requirements (Legislation)</a></li>
+                        <li><a href="https://www.asqa.gov.au/rtos/2025-standards-rtos/practice-guides" target="_blank">Practice Guides</a></li>
+                    </ul>
+                </div>
+                
+                <div class="card">
+                    <h3>Detailed Standards Structure</h3>
                     
                     <table>
                         <thead>
                             <tr>
-                                <th>Standard</th>
-                                <th>Title</th>
+                                <th>Component</th>
+                                <th>Area</th>
                                 <th>Key Focus</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td><strong>1.1-1.8</strong></td>
-                                <td>Training and Assessment</td>
-                                <td>Quality delivery, qualified trainers, valid assessment</td>
+                                <td rowspan="4"><strong>Outcome Standards</strong></td>
+                                <td><strong>Quality Area 1</strong><br>Training & Assessment</td>
+                                <td>Training quality, assessment validity, RPL/credit transfer, facilities & resources</td>
                             </tr>
                             <tr>
-                                <td><strong>1.13-1.14</strong></td>
-                                <td>Resources</td>
-                                <td>Training resources, industry engagement</td>
+                                <td><strong>Quality Area 2</strong><br>VET Student Support</td>
+                                <td>Information provision, training support, diversity & inclusion, wellbeing, complaints</td>
                             </tr>
                             <tr>
-                                <td><strong>2.1-2.2</strong></td>
-                                <td>Learner Engagement</td>
-                                <td>Information provision, protection of learners</td>
+                                <td><strong>Quality Area 3</strong><br>VET Workforce</td>
+                                <td>Workforce management, trainer/assessor competencies and credentials</td>
                             </tr>
                             <tr>
-                                <td><strong>3.1-3.5</strong></td>
-                                <td>Provider Registration</td>
-                                <td>Fit and proper requirements, compliance</td>
+                                <td><strong>Quality Area 4</strong><br>Governance</td>
+                                <td>Leadership & accountability, risk management, continuous improvement</td>
                             </tr>
                             <tr>
-                                <td><strong>4.1-4.3</strong></td>
-                                <td>Compliance and Accountability</td>
-                                <td>Accurate records, reporting, cooperation</td>
+                                <td><strong>Compliance Requirements</strong></td>
+                                <td>Administrative Integrity</td>
+                                <td>Information transparency, integrity of NRT products, accountability, fit & proper persons</td>
                             </tr>
                             <tr>
-                                <td><strong>5.1-5.3</strong></td>
-                                <td>Certification</td>
-                                <td>AQF certification, issuance requirements</td>
-                            </tr>
-                            <tr>
-                                <td><strong>6.1-6.6</strong></td>
-                                <td>Issuance of Qualifications</td>
-                                <td>VET Student Loans, correct issuance</td>
-                            </tr>
-                            <tr>
-                                <td><strong>7.1-7.5</strong></td>
-                                <td>Governance and Administration</td>
-                                <td>Management systems, financial viability</td>
-                            </tr>
-                            <tr>
-                                <td><strong>8.1-8.6</strong></td>
-                                <td>Legal and Ethical Practices</td>
-                                <td>Compliance, marketing, quality assurance</td>
+                                <td><strong>Credential Policy</strong></td>
+                                <td>Qualifications</td>
+                                <td>Required credentials for trainers, assessors, and validation activities</td>
                             </tr>
                         </tbody>
                     </table>
