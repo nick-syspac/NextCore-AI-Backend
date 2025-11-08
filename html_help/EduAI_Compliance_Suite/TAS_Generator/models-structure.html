@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Models & Database Structure - TAS Generator | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">📚 TAS Generator</a>
+            <ul class="navbar-nav">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="getting-started.html" class="nav-link">Getting Started</a></li>
+                <li><a href="installation-setup.html" class="nav-link">Installation</a></li>
+                <li><a href="models-structure.html" class="nav-link active">Data Models</a></li>
+                <li><a href="api-reference.html" class="nav-link">API Reference</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Data Models & Database Structure</h1>
+            <p>Understanding the core data models powering the TAS Generator</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#tas-model">TAS Model</a></li>
+                <li><a href="#template-models">Template Models</a></li>
+                <li><a href="#version-control">Version Control</a></li>
+                <li><a href="#generation-logs">Generation Logs</a></li>
+                <li><a href="#conversion-sessions">Conversion Sessions</a></li>
+                <li><a href="#relationships">Relationships</a></li>
+                <li><a href="#django-admin">Django Admin</a></li>
+                <li><a href="#custom-managers">Custom Managers</a></li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content">
+            <!-- Overview Section -->
+            <section id="overview">
+                <h2>Database Architecture Overview</h2>
+                
+                <div class="card">
+                    <h3>Entity Relationship Diagram</h3>
+                    <pre><code>┌──────────────────┐
+│     Tenant       │
+└────────┬─────────┘
+         │ 1
+         │
+         │ *
+┌────────▼─────────┐         ┌──────────────────┐
+│   TAS Document   │────────>│   TAS Template   │
+│   (Core Model)   │ many:1  │                  │
+└────────┬─────────┘         └────────┬─────────┘
+         │ 1                          │ 1
+         │                            │
+         │ *                          │ *
+┌────────▼─────────┐         ┌────────▼─────────┐
+│   TAS Version    │         │  Template        │
+│   (History)      │         │  Section         │
+└──────────────────┘         └────────┬─────────┘
+         │ 1                          │ 1
+         │                            │
+         │ *                          │ *
+┌────────▼─────────┐         ┌────────▼─────────┐
+│  Generation Log  │         │  Section         │
+│  (AI Tracking)   │         │  Assignment      │
+└──────────────────┘         └──────────────────┘
+         │ 1
+         │
+         │ 1
+┌────────▼──────────┐
+│  TAS Conversion   │
+│  Session (2015->  │
+│  2025 Standards)  │
+└───────────────────┘</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Key Tables</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Table Name</th>
+                                <th>Purpose</th>
+                                <th>Records</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>tas_documents</code></td>
+                                <td>Main TAS documents</td>
+                                <td>Thousands</td>
+                            </tr>
+                            <tr>
+                                <td><code>tas_templates</code></td>
+                                <td>Reusable TAS templates</td>
+                                <td>10-20</td>
+                            </tr>
+                            <tr>
+                                <td><code>tas_template_sections</code></td>
+                                <td>Template section definitions</td>
+                                <td>50-100</td>
+                            </tr>
+                            <tr>
+                                <td><code>tas_template_section_assignments</code></td>
+                                <td>Links sections to templates</td>
+                                <td>200-500</td>
+                            </tr>
+                            <tr>
+                                <td><code>tas_versions</code></td>
+                                <td>Version history</td>
+                                <td>Thousands</td>
+                            </tr>
+                            <tr>
+                                <td><code>tas_generation_logs</code></td>
+                                <td>AI generation tracking</td>
+                                <td>Thousands</td>
+                            </tr>
+                            <tr>
+                                <td><code>tas_conversion_sessions</code></td>
+                                <td>2015→2025 conversions</td>
+                                <td>Hundreds</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TAS Model Section -->
+            <section id="tas-model">
+                <h2>TAS Document Model</h2>
+                
+                <div class="card">
+                    <h3>Model Definition</h3>
+                    <pre><code>class TAS(models.Model):
+    """
+    Training and Assessment Strategy documents with version control
+    """
+    
+    # Basic Information
+    tenant = ForeignKey(Tenant)              # Multi-tenancy
+    title = CharField(max_length=300)        # Document title
+    code = CharField(max_length=50)          # Qualification code (e.g., BSB50120)
+    description = TextField()                # Overview description
+    
+    # Qualification Details
+    qualification_name = CharField(max_length=300)
+    aqf_level = CharField(choices=AQF_LEVELS)  # Cert I-IV, Diploma, etc.
+    training_package = CharField(max_length=100)
+    template = ForeignKey(TASTemplate)       # Associated template
+    
+    # Content (JSON fields for flexibility)
+    sections = JSONField()    # All TAS sections as structured data
+    content = TextField()     # Full content as HTML/Markdown
+    metadata = JSONField()    # Additional contextual data
+    
+    # Status & Workflow
+    status = CharField(choices=STATUS_CHOICES, default='draft')
+    # Choices: draft, in_review, approved, published, archived
+    version = IntegerField(default=1)
+    is_current_version = BooleanField(default=True)
+    
+    # AI Generation Tracking
+    gpt_generated = BooleanField(default=False)
+    gpt_generation_date = DateTimeField(null=True)
+    gpt_model_used = CharField(max_length=50, default='gpt-4o')
+    gpt_tokens_used = IntegerField(default=0)
+    generation_time_seconds = FloatField(default=0.0)
+    
+    # Approval Workflow
+    submitted_for_review_at = DateTimeField(null=True)
+    submitted_by = ForeignKey(User, null=True)
+    reviewed_at = DateTimeField(null=True)
+    reviewed_by = ForeignKey(User, null=True)
+    approved_at = DateTimeField(null=True)
+    approved_by = ForeignKey(User, null=True)
+    published_at = DateTimeField(null=True)
+    
+    # Audit Trail
+    created_by = ForeignKey(User)
+    created_at = DateTimeField(auto_now_add=True)
+    updated_at = DateTimeField(auto_now=True)</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Status Choices</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Description</th>
+                                <th>Transitions To</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>draft</code></td>
+                                <td>Initial creation, being edited</td>
+                                <td>in_review</td>
+                            </tr>
+                            <tr>
+                                <td><code>in_review</code></td>
+                                <td>Submitted for review</td>
+                                <td>draft, approved</td>
+                            </tr>
+                            <tr>
+                                <td><code>approved</code></td>
+                                <td>Reviewed and approved</td>
+                                <td>published, draft</td>
+                            </tr>
+                            <tr>
+                                <td><code>published</code></td>
+                                <td>Active, in use</td>
+                                <td>archived</td>
+                            </tr>
+                            <tr>
+                                <td><code>archived</code></td>
+                                <td>Historical, superseded</td>
+                                <td>None (terminal)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>JSON Field Structures</h3>
+                    
+                    <h4>sections Field Example</h4>
+                    <pre><code>{
+  "qualification_overview": {
+    "content": "This qualification provides...",
+    "generated_at": "2025-11-08T10:30:00Z",
+    "model": "gpt-4o",
+    "tokens": 450
+  },
+  "target_cohort": {
+    "content": "Learners seeking to...",
+    "generated_at": "2025-11-08T10:31:00Z",
+    "model": "gpt-4o",
+    "tokens": 380
+  },
+  "delivery_strategy": {
+    "mode": "blended",
+    "duration_weeks": 52,
+    "contact_hours": 480,
+    "content": "Delivery will occur through...",
+    "generated_at": "2025-11-08T10:32:00Z"
+  },
+  "assessment_strategy": {
+    "methods": ["project", "portfolio", "observation"],
+    "blueprint": {...},
+    "content": "Assessment will be conducted...",
+    "generated_at": "2025-11-08T10:33:00Z"
+  },
+  "units_of_competency": [
+    {
+      "code": "BSBCRT401",
+      "title": "Articulate, present and debate ideas",
+      "core": true,
+      "term": 1
+    },
+    // ... more units
+  ]
+}</code></pre>
+
+                    <h4>metadata Field Example</h4>
+                    <pre><code>{
+  "created_from_template": "diploma_business",
+  "generation_prompts": {
+    "qualification_overview": "Generate an overview for...",
+    "delivery_strategy": "Create delivery strategy for..."
+  },
+  "training_gov_au_data": {
+    "qualification_code": "BSB50120",
+    "release": "2.0",
+    "last_updated": "2024-10-15"
+  },
+  "compliance_checks": {
+    "last_checked": "2025-11-08T14:00:00Z",
+    "asqa_standards": ["QA1.1", "QA1.2", "QA1.4"],
+    "compliance_score": 95.5
+  },
+  "tags": ["business", "diploma", "approved-2025"],
+  "custom_fields": {
+    "campus": "Brisbane",
+    "intake_date": "2025-02-01"
+  }
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Database Indexes</h3>
+                    <pre><code>class Meta:
+    db_table = 'tas_documents'
+    ordering = ['-created_at']
+    indexes = [
+        Index(fields=['tenant', 'status']),
+        Index(fields=['tenant', 'code', 'version']),
+        Index(fields=['created_at']),
+        Index(fields=['is_current_version', 'status']),
+    ]
+    unique_together = [['tenant', 'code', 'version']]</code></pre>
+                </div>
+            </section>
+
+            <!-- Template Models Section -->
+            <section id="template-models">
+                <h2>Template System Models</h2>
+                
+                <div class="card">
+                    <h3>TASTemplate Model</h3>
+                    <pre><code>class TASTemplate(models.Model):
+    """
+    Predefined TAS templates for different qualification types
+    """
+    
+    name = CharField(max_length=200)  # "Diploma of Business Template"
+    description = TextField()
+    template_type = CharField(choices=TEMPLATE_TYPES)
+    # Choices: general, trade, business, health, creative, etc.
+    
+    aqf_level = CharField(choices=AQF_LEVELS)
+    # Choices: certificate_i to masters
+    
+    # Template structure (JSON)
+    structure = JSONField()  # Overall document structure
+    default_sections = JSONField()  # List of section names
+    gpt_prompts = JSONField()  # AI prompts for each section
+    
+    # Status
+    is_active = BooleanField(default=True)
+    is_system_template = BooleanField(default=False)
+    
+    # Audit
+    created_by = ForeignKey(User)
+    created_at = DateTimeField()
+    updated_at = DateTimeField()</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Template Structure Example</h3>
+                    <pre><code>{
+  "document_layout": {
+    "title_page": true,
+    "table_of_contents": true,
+    "page_numbering": "roman_then_arabic",
+    "header_footer": true
+  },
+  "section_order": [
+    "qualification_overview",
+    "target_cohort",
+    "entry_requirements",
+    "delivery_strategy",
+    "assessment_strategy",
+    "units_of_competency",
+    "trainer_assessor_requirements",
+    "resources_facilities",
+    "quality_assurance",
+    "policies_procedures"
+  ],
+  "required_sections": [
+    "qualification_overview",
+    "delivery_strategy",
+    "assessment_strategy",
+    "units_of_competency"
+  ],
+  "optional_sections": [
+    "risk_management",
+    "industry_engagement"
+  ]
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>GPT Prompts Structure</h3>
+                    <pre><code>{
+  "qualification_overview": {
+    "system_prompt": "You are an expert RTO documentation specialist...",
+    "user_prompt_template": "Generate a comprehensive qualification overview for {qualification_name} ({code}) at AQF Level {aqf_level}. Include: purpose, career outcomes, pathways.",
+    "parameters": {
+      "max_tokens": 500,
+      "temperature": 0.7,
+      "model": "gpt-4o"
+    }
+  },
+  "delivery_strategy": {
+    "system_prompt": "You are an expert in vocational training delivery...",
+    "user_prompt_template": "Create a delivery strategy for {qualification_name} with {delivery_mode} delivery over {duration_weeks} weeks. Consider: sequencing, resources, student support.",
+    "parameters": {
+      "max_tokens": 800,
+      "temperature": 0.7
+    }
+  },
+  // ... more section prompts
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>TASTemplateSection Model</h3>
+                    <pre><code>class TASTemplateSection(models.Model):
+    """
+    Individual sections that can be included in templates
+    """
+    
+    name = CharField(max_length=100)  # "qualification_overview"
+    display_name = CharField(max_length=200)  # "Qualification Overview"
+    description = TextField()
+    section_type = CharField(choices=SECTION_TYPES)
+    # Choices: text, table, list, structured
+    
+    # Default content & prompts
+    default_content = TextField()
+    gpt_prompt = TextField()
+    
+    # Ordering & display
+    order = IntegerField(default=0)
+    is_required = BooleanField(default=False)
+    
+    # ASQA mapping
+    asqa_standards_coverage = JSONField()  # Which standards this addresses
+    
+    created_at = DateTimeField()
+    updated_at = DateTimeField()</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>TASTemplateSectionAssignment Model</h3>
+                    <pre><code>class TASTemplateSectionAssignment(models.Model):
+    """
+    Links sections to templates with customization
+    """
+    
+    template = ForeignKey(TASTemplate)
+    section = ForeignKey(TASTemplateSection)
+    
+    # Customization per template
+    order = IntegerField(default=0)
+    is_required = BooleanField(default=True)
+    custom_prompt = TextField(blank=True)  # Override default prompt
+    custom_settings = JSONField(default=dict)
+    
+    created_at = DateTimeField()
+    updated_at = DateTimeField()
+    
+    class Meta:
+        unique_together = [['template', 'section']]
+        ordering = ['order']</code></pre>
+                </div>
+            </section>
+
+            <!-- Version Control Section -->
+            <section id="version-control">
+                <h2>Version Control Model</h2>
+                
+                <div class="card">
+                    <h3>TASVersion Model</h3>
+                    <pre><code>class TASVersion(models.Model):
+    """
+    Track all changes to TAS documents
+    """
+    
+    tas = ForeignKey(TAS, related_name='versions')
+    version_number = IntegerField()
+    
+    # Change tracking
+    change_summary = TextField()
+    changed_sections = JSONField()  # List of modified sections
+    
+    # Content snapshot
+    content_diff = JSONField()  # Diff between versions
+    previous_content = JSONField()  # Full snapshot of previous version
+    new_content = JSONField()  # Full snapshot of new version
+    
+    # Regeneration tracking
+    was_regenerated = BooleanField(default=False)
+    regeneration_reason = TextField(blank=True)
+    
+    # Audit
+    created_by = ForeignKey(User)
+    created_at = DateTimeField()
+    
+    class Meta:
+        ordering = ['-version_number']
+        unique_together = [['tas', 'version_number']]</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Version Diff Structure</h3>
+                    <pre><code>{
+  "changes": [
+    {
+      "section": "delivery_strategy",
+      "change_type": "modified",
+      "old_value": "Delivery will occur in-person...",
+      "new_value": "Delivery will occur through blended mode...",
+      "change_reason": "Updated to reflect new delivery model",
+      "changed_at": "2025-11-08T15:30:00Z",
+      "changed_by": "john.smith@rto.edu.au"
+    },
+    {
+      "section": "assessment_methods",
+      "change_type": "added",
+      "new_value": "Added portfolio assessment",
+      "change_reason": "Include new assessment method",
+      "changed_at": "2025-11-08T15:32:00Z"
+    }
+  ],
+  "summary": {
+    "total_changes": 2,
+    "sections_modified": ["delivery_strategy", "assessment_methods"],
+    "major_change": false
+  }
+}</code></pre>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>💡 Tip:</strong> Versions are automatically created when moving between workflow states (draft → review → approved).
+                </div>
+            </section>
+
+            <!-- Generation Logs Section -->
+            <section id="generation-logs">
+                <h2>AI Generation Logs</h2>
+                
+                <div class="card">
+                    <h3>TASGenerationLog Model</h3>
+                    <pre><code>class TASGenerationLog(models.Model):
+    """
+    Track all AI generation requests and performance
+    """
+    
+    tas = ForeignKey(TAS, related_name='generation_logs')
+    
+    # Request details
+    status = CharField(choices=STATUS_CHOICES)
+    # Choices: pending, processing, completed, failed
+    requested_sections = JSONField()  # Which sections to generate
+    input_data = JSONField()  # Input provided by user
+    gpt_prompts = JSONField()  # Prompts used
+    
+    # Generated content
+    generated_content = JSONField()  # Output from AI
+    
+    # Performance metrics
+    model_version = CharField(max_length=50, default='gpt-4o')
+    tokens_prompt = IntegerField(default=0)
+    tokens_completion = IntegerField(default=0)
+    tokens_total = IntegerField(default=0)
+    generation_time_seconds = FloatField(default=0.0)
+    
+    # Error handling
+    error_message = TextField(blank=True)
+    retry_count = IntegerField(default=0)
+    
+    # Audit
+    created_by = ForeignKey(User, null=True)
+    created_at = DateTimeField()
+    completed_at = DateTimeField(null=True)
+    
+    class Meta:
+        ordering = ['-created_at']</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Usage Example</h3>
+                    <pre><code># Create generation log
+log = TASGenerationLog.objects.create(
+    tas=tas_instance,
+    status='processing',
+    requested_sections=['qualification_overview', 'delivery_strategy'],
+    input_data={
+        'qualification_code': 'BSB50120',
+        'delivery_mode': 'blended',
+        'duration_weeks': 52
+    },
+    model_version='gpt-4o',
+    created_by=request.user
+)
+
+# Update after generation
+log.status = 'completed'
+log.generated_content = {
+    'qualification_overview': '...',
+    'delivery_strategy': '...'
+}
+log.tokens_total = 1250
+log.generation_time_seconds = 8.5
+log.completed_at = timezone.now()
+log.save()</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Analytics Queries</h3>
+                    <pre><code># Average generation time
+from django.db.models import Avg
+TASGenerationLog.objects.filter(
+    status='completed'
+).aggregate(
+    avg_time=Avg('generation_time_seconds'),
+    avg_tokens=Avg('tokens_total')
+)
+
+# Success rate
+total = TASGenerationLog.objects.count()
+successful = TASGenerationLog.objects.filter(status='completed').count()
+success_rate = (successful / total) * 100
+
+# Cost calculation (OpenAI pricing)
+logs = TASGenerationLog.objects.filter(status='completed')
+total_tokens = sum(log.tokens_total for log in logs)
+cost = (total_tokens / 1000) * 0.03  # $0.03 per 1K tokens (example)</code></pre>
+                </div>
+            </section>
+
+            <!-- Conversion Sessions Section -->
+            <section id="conversion-sessions">
+                <h2>TAS Conversion Sessions (2015 → 2025)</h2>
+                
+                <div class="card">
+                    <h3>TASConversionSession Model</h3>
+                    <pre><code>class TASConversionSession(models.Model):
+    """
+    Track conversions from 2015 Standards to 2025 Standards
+    """
+    
+    tenant = ForeignKey(Tenant)
+    
+    # Source and target TAS
+    source_tas = ForeignKey(TAS, related_name='conversions_as_source')
+    target_tas = ForeignKey(TAS, null=True, related_name='conversions_as_target')
+    
+    # Session metadata
+    session_name = CharField(max_length=200)
+    status = CharField(choices=STATUS_CHOICES, default='pending')
+    # Choices: pending, analyzing, mapping, converting, validating, completed, failed
+    
+    progress_percentage = IntegerField(default=0)
+    current_step = CharField(max_length=200)
+    
+    # AI configuration
+    ai_model = CharField(max_length=50, default='gpt-4o')
+    
+    # Conversion results
+    standards_mapping = JSONField()  # 2015 → 2025 mapping
+    source_analysis = JSONField()  # Analysis of source TAS
+    conversion_changes = JSONField()  # List of changes made
+    compliance_report = JSONField()  # 2025 compliance check
+    
+    # Quality metrics
+    sections_converted = IntegerField(default=0)
+    standards_updated = IntegerField(default=0)
+    quality_score = FloatField(null=True)  # 0-100
+    
+    # User options
+    conversion_options = JSONField()
+    
+    # Performance
+    processing_time_seconds = FloatField(default=0.0)
+    ai_tokens_used = IntegerField(default=0)
+    ai_cost_estimate = DecimalField(max_digits=10, decimal_places=4)
+    
+    # Error handling
+    error_message = TextField(blank=True)
+    error_details = JSONField(default=dict)
+    
+    # Review
+    requires_human_review = BooleanField(default=True)
+    review_notes = TextField(blank=True)
+    reviewed_by = ForeignKey(User, null=True)
+    reviewed_at = DateTimeField(null=True)
+    
+    # Audit
+    created_by = ForeignKey(User)
+    created_at = DateTimeField()
+    started_at = DateTimeField(null=True)
+    completed_at = DateTimeField(null=True)
+    
+    class Meta:
+        ordering = ['-created_at']</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Standards Mapping Structure</h3>
+                    <pre><code>{
+  "mappings": {
+    "Standard 1.1": {
+      "2015_text": "The RTO's training and assessment strategies...",
+      "2025_equivalent": ["QA1.1", "QA1.2"],
+      "mapping_confidence": 0.95,
+      "changes_required": [
+        "Update to outcome-focused language",
+        "Include industry currency requirements"
+      ]
+    },
+    "Standard 1.8": {
+      "2015_text": "Resources and facilities...",
+      "2025_equivalent": ["QA1.4"],
+      "mapping_confidence": 0.98,
+      "changes_required": [
+        "Emphasize adequacy for outcomes",
+        "Include digital resources"
+      ]
+    }
+  },
+  "summary": {
+    "total_2015_standards": 8,
+    "total_2025_standards": 25,
+    "direct_mappings": 6,
+    "complex_mappings": 2,
+    "new_requirements": 4
+  }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Relationships Section -->
+            <section id="relationships">
+                <h2>Model Relationships</h2>
+                
+                <div class="card">
+                    <h3>Foreign Key Relationships</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>From Model</th>
+                                <th>To Model</th>
+                                <th>Relationship</th>
+                                <th>Cascade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>TAS</td>
+                                <td>Tenant</td>
+                                <td>Many-to-One</td>
+                                <td>CASCADE</td>
+                            </tr>
+                            <tr>
+                                <td>TAS</td>
+                                <td>TASTemplate</td>
+                                <td>Many-to-One</td>
+                                <td>PROTECT</td>
+                            </tr>
+                            <tr>
+                                <td>TASVersion</td>
+                                <td>TAS</td>
+                                <td>Many-to-One</td>
+                                <td>CASCADE</td>
+                            </tr>
+                            <tr>
+                                <td>TASGenerationLog</td>
+                                <td>TAS</td>
+                                <td>Many-to-One</td>
+                                <td>CASCADE</td>
+                            </tr>
+                            <tr>
+                                <td>TASConversionSession</td>
+                                <td>TAS (source)</td>
+                                <td>Many-to-One</td>
+                                <td>CASCADE</td>
+                            </tr>
+                            <tr>
+                                <td>TASConversionSession</td>
+                                <td>TAS (target)</td>
+                                <td>One-to-One</td>
+                                <td>SET_NULL</td>
+                            </tr>
+                            <tr>
+                                <td>TASTemplateSectionAssignment</td>
+                                <td>TASTemplate</td>
+                                <td>Many-to-One</td>
+                                <td>CASCADE</td>
+                            </tr>
+                            <tr>
+                                <td>TASTemplateSectionAssignment</td>
+                                <td>TASTemplateSection</td>
+                                <td>Many-to-One</td>
+                                <td>CASCADE</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>Reverse Relationships (Related Names)</h3>
+                    <pre><code># Access from Tenant
+tenant.tas_documents.all()  # All TAS for tenant
+tenant.tas_conversion_sessions.all()  # Conversion sessions
+
+# Access from TAS
+tas.versions.all()  # Version history
+tas.generation_logs.all()  # AI generation logs
+tas.conversions_as_source.all()  # Conversions FROM this TAS
+tas.conversion_as_target  # Conversion TO this TAS (1:1)
+
+# Access from Template
+template.tas_documents.all()  # TAS using this template
+template.section_assignments.all()  # Sections in template
+
+# Access from User
+user.tas_documents.all()  # TAS created by user
+user.tas_conversions_created.all()  # Conversions initiated</code></pre>
+                </div>
+            </section>
+
+            <!-- Django Admin Section -->
+            <section id="django-admin">
+                <h2>Django Admin Configuration</h2>
+                
+                <div class="card">
+                    <h3>TAS Admin Setup</h3>
+                    <pre><code>@admin.register(TAS)
+class TASAdmin(admin.ModelAdmin):
+    list_display = [
+        'code', 'title', 'tenant', 'aqf_level', 
+        'status', 'version', 'gpt_generated', 'created_at'
+    ]
+    
+    list_filter = [
+        'status', 'aqf_level', 'gpt_generated', 
+        'is_current_version', 'tenant'
+    ]
+    
+    search_fields = [
+        'code', 'title', 'qualification_name', 'description'
+    ]
+    
+    readonly_fields = [
+        'version', 'gpt_generation_date', 'created_by',
+        'created_at', 'updated_at'
+    ]
+    
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('tenant', 'title', 'code', 'description')
+        }),
+        ('Qualification Details', {
+            'fields': ('qualification_name', 'aqf_level', 
+                      'training_package', 'template')
+        }),
+        ('Status & Version', {
+            'fields': ('status', 'version', 'is_current_version')
+        }),
+        ('AI Generation', {
+            'fields': ('gpt_generated', 'gpt_generation_date', 
+                      'gpt_model_used', 'gpt_tokens_used'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    actions = ['export_to_pdf', 'duplicate_tas', 'archive_selected']
+    
+    def export_to_pdf(self, request, queryset):
+        # Custom action implementation
+        pass</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Access Django Admin</h3>
+                    <ol>
+                        <li>Navigate to: <code>http://localhost:8000/admin/</code></li>
+                        <li>Login with superuser credentials</li>
+                        <li>Browse to: <strong>TAS → TAS Documents</strong></li>
+                        <li>View, edit, or create TAS documents</li>
+                        <li>Use filters and search to find specific records</li>
+                    </ol>
+                </div>
+            </section>
+
+            <!-- Custom Managers Section -->
+            <section id="custom-managers">
+                <h2>Custom Model Managers & QuerySets</h2>
+                
+                <div class="card">
+                    <h3>TAS Manager</h3>
+                    <pre><code>class TASManager(models.Manager):
+    """Custom manager for TAS queryset operations"""
+    
+    def current_versions(self):
+        """Get only current versions"""
+        return self.filter(is_current_version=True)
+    
+    def published(self):
+        """Get published TAS documents"""
+        return self.filter(status='published', is_current_version=True)
+    
+    def for_tenant(self, tenant):
+        """Get TAS for specific tenant"""
+        return self.filter(tenant=tenant)
+    
+    def generated_by_ai(self):
+        """Get AI-generated TAS"""
+        return self.filter(gpt_generated=True)
+    
+    def by_aqf_level(self, level):
+        """Filter by AQF level"""
+        return self.filter(aqf_level=level)
+
+# Usage in model
+class TAS(models.Model):
+    objects = TASManager()
+    
+# Usage in code
+current_tas = TAS.objects.current_versions()
+published_diplomas = TAS.objects.published().by_aqf_level('diploma')
+tenant_tas = TAS.objects.for_tenant(tenant).order_by('-created_at')</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Common Queries</h3>
+                    <pre><code># Get latest TAS for a qualification
+latest_tas = TAS.objects.filter(
+    tenant=tenant,
+    code='BSB50120',
+    is_current_version=True
+).first()
+
+# Get all versions of a TAS
+versions = TAS.objects.filter(
+    tenant=tenant,
+    code='BSB50120'
+).order_by('-version')
+
+# Count AI-generated TAS by model
+from django.db.models import Count
+stats = TAS.objects.filter(
+    gpt_generated=True
+).values('gpt_model_used').annotate(
+    count=Count('id')
+)
+
+# Get TAS requiring review
+review_needed = TAS.objects.filter(
+    status='in_review',
+    reviewed_at__isnull=True
+).order_by('submitted_for_review_at')
+
+# Find TAS with specific section
+tas_with_section = TAS.objects.filter(
+    sections__has_key='assessment_blueprint'
+)</code></pre>
+                </div>
+            </section>
+
+            <!-- Next Steps -->
+            <section id="next-steps">
+                <h2>Next Steps</h2>
+                
+                <div class="card">
+                    <h3>Learn More</h3>
+                    <ul>
+                        <li>📖 <a href="api-reference.html">Explore API Endpoints</a></li>
+                        <li>🔧 <a href="ai-services-setup.html">Configure AI Services</a></li>
+                        <li>📋 <a href="template-configuration.html">Set up Templates</a></li>
+                        <li>💼 <a href="examples.html">View Usage Examples</a></li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - TAS Generator Documentation</p>
+            <p>Version 1.0.0 | Last Updated: November 2025</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
