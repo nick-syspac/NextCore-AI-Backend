@@ -5,6 +5,8 @@ URL configuration for control plane application.
 from django.contrib import admin
 from django.urls import path, include
 from django.http import JsonResponse
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework.authtoken.views import obtain_auth_token
 
 
@@ -61,3 +63,5 @@ urlpatterns = [
         include("micro_credential.urls"),
     ),
 ]
+
+# WhiteNoise handles static files automatically, no need for manual serving
