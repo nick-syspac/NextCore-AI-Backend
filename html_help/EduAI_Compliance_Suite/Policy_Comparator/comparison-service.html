@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Comparison Service - Policy Comparator | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="../TAS_Generator/css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">🔍 Policy Comparator</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Comparison Service Architecture</h1>
+            <p>NLP-powered policy compliance verification engine</p>
+        </div>
+    </section>
+
+    <div class="main-content">
+        <main class="content">
+            <section id="overview">
+                <h2>Service Overview</h2>
+                <div class="card">
+                    <pre><code>ComparisonService
+├── NLPService
+│   ├── extract_keywords()
+│   ├── calculate_similarity()
+│   └── generate_embeddings()
+├── GapDetectionService
+│   ├── identify_gaps()
+│   ├── assess_severity()
+│   └── generate_recommendations()
+└── ScoringService
+    ├── calculate_similarity_score()
+    ├── categorize_match_type()
+    └── calculate_compliance_score()</code></pre>
+                </div>
+            </section>
+
+            <section id="nlp">
+                <h2>NLP Analysis</h2>
+                <div class="card">
+                    <h3>Multi-Layered Similarity</h3>
+                    <pre><code>def calculate_similarity(policy_text, clause_text):
+    """
+    Three-layer similarity calculation:
+    1. Keyword Matching (40% weight)
+    2. Sequence Similarity (30% weight)
+    3. Phrase Analysis (30% weight)
+    """
+    
+    # Layer 1: Keyword Matching
+    policy_keywords = extract_keywords(policy_text)
+    clause_keywords = clause.keywords
+    keyword_score = len(set(policy_keywords) & set(clause_keywords)) / len(clause_keywords)
+    
+    # Layer 2: Sequence Similarity (Levenshtein distance)
+    sequence_score = SequenceMatcher(None, policy_text, clause_text).ratio()
+    
+    # Layer 3: Phrase Matching (n-grams)
+    policy_phrases = extract_ngrams(policy_text, n=3)
+    clause_phrases = extract_ngrams(clause_text, n=3)
+    phrase_score = len(set(policy_phrases) & set(clause_phrases)) / len(clause_phrases)
+    
+    # Weighted average
+    final_score = (
+        keyword_score * 0.4 +
+        sequence_score * 0.3 +
+        phrase_score * 0.3
+    )
+    
+    return final_score</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Match Type Classification</h3>
+                    <table>
+                        <thead><tr><th>Score Range</th><th>Match Type</th><th>Action</th></tr></thead>
+                        <tbody>
+                            <tr><td>0.8 - 1.0</td><td>Full Match</td><td>Compliant - no action</td></tr>
+                            <tr><td>0.6 - 0.8</td><td>Partial Match</td><td>Review - minor improvements</td></tr>
+                            <tr><td>0.4 - 0.6</td><td>Weak Match</td><td>Action required</td></tr>
+                            <tr><td>0.0 - 0.4</td><td>No Match</td><td>Critical gap</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="gap-detection">
+                <h2>Gap Detection</h2>
+                <div class="card">
+                    <h3>GapDetectionService</h3>
+                    <pre><code>class GapDetectionService:
+    def identify_gaps(self, comparison_result):
+        """Identify compliance gaps"""
+        
+        if comparison_result.similarity_score >= 0.8:
+            return None  # No gap
+        
+        gap = {
+            'severity': self._assess_severity(comparison_result),
+            'missing_keywords': comparison_result.keywords_missing,
+            'description': self._generate_gap_description(comparison_result),
+            'recommendations': self._generate_recommendations(comparison_result)
+        }
+        
+        return gap
+    
+    def _assess_severity(self, result):
+        """Assess gap severity"""
+        if result.similarity_score < 0.4:
+            return 'critical'
+        elif result.similarity_score < 0.6:
+            return 'high'
+        elif result.similarity_score < 0.8:
+            return 'medium'
+        else:
+            return 'low'</code></pre>
+                </div>
+            </section>
+
+            <section id="api">
+                <h2>API Usage</h2>
+                <div class="card">
+                    <h3>Python API</h3>
+                    <pre><code>from policy_comparator.services.comparison_service import ComparisonService
+
+service = ComparisonService()
+
+# Compare single policy against clause
+result = service.compare_policy_to_clause(
+    policy=policy,
+    clause=asqa_clause
+)
+
+# Compare policy against all clauses
+results = service.compare_policy_to_all_clauses(
+    policy=policy,
+    standards_version='2025'
+)
+
+# Batch comparison
+session = service.create_comparison_session(
+    tenant=tenant,
+    policies=[policy1, policy2],
+    standards=standards_2025,
+    created_by=user
+)
+
+service.execute_comparison_session(session)</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>REST API</h3>
+                    <pre><code># Create comparison
+POST /api/tenants/demo-rto/policies/1/compare/
+{
+  "asqa_clause_id": 5,
+  "standards_version": "2025"
+}
+
+# Get results
+GET /api/tenants/demo-rto/comparison-results/?policy_id=1
+
+# Get gaps
+GET /api/tenants/demo-rto/comparison-results/?is_gap=true&policy_id=1</code></pre>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - Policy Comparator</p>
+        </div>
+    </footer>
+</body>
+</html>

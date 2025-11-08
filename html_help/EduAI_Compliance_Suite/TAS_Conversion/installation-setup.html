@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Installation & Setup - TAS Conversion | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="../TAS_Generator/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">📋 TAS Conversion</a>
+            <ul class="navbar-nav">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="installation-setup.html" class="nav-link active">Installation</a></li>
+                <li><a href="models-structure.html" class="nav-link">Data Models</a></li>
+                <li><a href="conversion-service.html" class="nav-link">Conversion Service</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Installation & Setup Guide</h1>
+            <p>Complete guide to installing and configuring the TAS Conversion service for migrating from 2015 to 2025 Standards</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#prerequisites">Prerequisites</a></li>
+                <li><a href="#standards-data">Standards Data</a></li>
+                <li><a href="#database-setup">Database Setup</a></li>
+                <li><a href="#conversion-service">Conversion Service</a></li>
+                <li><a href="#ai-configuration">AI Configuration</a></li>
+                <li><a href="#migrations">Run Migrations</a></li>
+                <li><a href="#seed-mappings">Seed Mappings</a></li>
+                <li><a href="#testing">Testing</a></li>
+                <li><a href="#admin-config">Admin Configuration</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content">
+            <!-- Prerequisites Section -->
+            <section id="prerequisites">
+                <h2>Prerequisites</h2>
+                
+                <div class="card">
+                    <h3>Required Components</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Version</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>TAS Generator Module</td>
+                                <td>1.0+</td>
+                                <td>Base TAS models and services</td>
+                            </tr>
+                            <tr>
+                                <td>Policy Comparator Module</td>
+                                <td>1.0+</td>
+                                <td>ASQA Standards data (2015 & 2025)</td>
+                            </tr>
+                            <tr>
+                                <td>Python</td>
+                                <td>3.12+</td>
+                                <td>Runtime environment</td>
+                            </tr>
+                            <tr>
+                                <td>PostgreSQL</td>
+                                <td>16+</td>
+                                <td>Database with JSON support</td>
+                            </tr>
+                            <tr>
+                                <td>AI Provider</td>
+                                <td>GPT-4+</td>
+                                <td>Intelligent mapping & conversion</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>💡 Important:</strong> TAS Conversion service depends on both TAS Generator and Policy Comparator modules. Ensure these are installed and configured first.
+                </div>
+
+                <div class="card">
+                    <h3>Check Existing Installation</h3>
+                    <pre><code># Verify TAS module exists
+cd apps/control-plane
+python manage.py shell
+
+>>> from tas.models import TAS, TASConversionSession
+>>> TASConversionSession.objects.count()
+# Should return a number (0 or more)
+
+>>> from policy_comparator.models import ASQAStandard
+>>> ASQAStandard.objects.filter(version='2025').count()
+# Should return 25+ standards for 2025</code></pre>
+                </div>
+            </section>
+
+            <!-- Standards Data Section -->
+            <section id="standards-data">
+                <h2>Standards Data Preparation</h2>
+                
+                <div class="card">
+                    <h3>Understanding Standards Versions</h3>
+                    <p>The conversion service requires both 2015 and 2025 standards data to perform intelligent mapping.</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Version</th>
+                                <th>Structure</th>
+                                <th>Total Standards</th>
+                                <th>Effective Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>2015</strong></td>
+                                <td>8 Standards (1.1-8.6)</td>
+                                <td>~40 clauses</td>
+                                <td>1 April 2015</td>
+                            </tr>
+                            <tr>
+                                <td><strong>2025</strong></td>
+                                <td>4 Quality Areas + Compliance + Credential Policy</td>
+                                <td>25+ standards</td>
+                                <td>1 July 2025</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>Load 2025 Standards Data</h3>
+                    <pre><code># Load ASQA 2025 Standards
+python manage.py loaddata db/seeds/asqa_standards_2025.json
+
+# Verify loading
+python manage.py shell
+>>> from policy_comparator.models import ASQAStandard, ASQAClause
+>>> 
+>>> # Check 2025 standards
+>>> standards_2025 = ASQAStandard.objects.filter(version='2025')
+>>> print(f"2025 Standards: {standards_2025.count()}")
+>>> 
+>>> # View Quality Areas
+>>> qa_standards = ASQAStandard.objects.filter(
+...     version='2025',
+...     standard_category='outcome'
+... )
+>>> for std in qa_standards:
+...     print(f"{std.standard_number} - {std.title}")
+# Should show:
+# QA1.1 - Training
+# QA1.2 - Assessment
+# QA1.3 - RPL and Credit Transfer
+# QA1.4 - Facilities and Resources
+# QA2.1 - Information to VET Students
+# QA2.2 - Training and Support
+# QA3.1 - Workforce Capability
+# QA3.2 - Trainer and Assessor Credentials
+# QA4.1 - Governance Framework
+# QA4.2 - Compliance Management
+# QA4.3 - Continuous Improvement</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Verify 2015 Standards (Legacy)</h3>
+                    <pre><code># Check 2015 standards exist
+python manage.py shell
+>>> from policy_comparator.models import ASQAStandard
+>>> standards_2015 = ASQAStandard.objects.filter(version='2015')
+>>> print(f"2015 Standards: {standards_2015.count()}")
+>>> 
+>>> # If missing, load legacy data
+>>> # (Should already exist from Policy Comparator setup)
+>>> if standards_2015.count() == 0:
+...     print("Warning: 2015 standards missing!")
+...     print("Load using: python manage.py loaddata db/seeds/asqa_standards_2015.json")</code></pre>
+                </div>
+            </section>
+
+            <!-- Database Setup Section -->
+            <section id="database-setup">
+                <h2>Database Configuration</h2>
+                
+                <div class="card">
+                    <h3>TASConversionSession Table</h3>
+                    <p>The conversion service uses a dedicated model to track conversion sessions:</p>
+                    
+                    <pre><code># Table: tas_conversion_sessions
+# 
+# Key fields:
+# - source_tas: ForeignKey to TAS (2015-based document)
+# - target_tas: ForeignKey to TAS (2025-based document)
+# - status: pending, analyzing, mapping, converting, validating, completed, failed
+# - standards_mapping: JSONField with 2015→2025 mappings
+# - conversion_changes: JSONField tracking all changes
+# - compliance_report: JSONField with validation results
+# - quality_score: Float (0-100) AI-assessed quality</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Verify Database Schema</h3>
+                    <pre><code># Connect to database
+psql -U rto_user -d rto_tas_db
+
+# Check table exists
+\d tas_conversion_sessions
+
+# Expected columns:
+# - id (bigint)
+# - tenant_id (bigint)
+# - source_tas_id (bigint)
+# - target_tas_id (bigint, nullable)
+# - session_name (varchar)
+# - status (varchar)
+# - progress_percentage (integer)
+# - standards_mapping (jsonb)
+# - source_analysis (jsonb)
+# - conversion_changes (jsonb)
+# - compliance_report (jsonb)
+# - quality_score (double precision)
+# - ai_model (varchar)
+# - processing_time_seconds (double precision)
+# - ai_tokens_used (integer)
+# - created_at (timestamp with time zone)
+# - completed_at (timestamp with time zone)
+
+\q</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Create Indexes for Performance</h3>
+                    <pre><code># These should be created automatically by migrations
+# Verify they exist:
+
+psql -U rto_user -d rto_tas_db
+
+-- Check indexes
+SELECT indexname, indexdef 
+FROM pg_indexes 
+WHERE tablename = 'tas_conversion_sessions';
+
+-- Expected indexes:
+-- 1. tas_conversion_sessions_pkey (PRIMARY KEY)
+-- 2. tas_convers_tenant__123abc_idx (tenant, status)
+-- 3. tas_convers_source__456def_idx (source_tas)
+-- 4. tas_convers_created_789ghi_idx (created_at)
+
+\q</code></pre>
+                </div>
+            </section>
+
+            <!-- Conversion Service Section -->
+            <section id="conversion-service">
+                <h2>Conversion Service Setup</h2>
+                
+                <div class="card">
+                    <h3>Service Location & Structure</h3>
+                    <pre><code>apps/control-plane/tas/
+├── conversion_service.py          # Main conversion service
+├── models.py                      # TASConversionSession model
+├── views.py                       # API endpoints
+└── services/
+    ├── standards_mapper.py        # 2015→2025 mapping logic
+    ├── content_transformer.py     # Content conversion
+    └── compliance_validator.py    # 2025 compliance checking</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Conversion Service Class</h3>
+                    <pre><code># tas/conversion_service.py
+
+class TASConversionService:
+    """
+    Service for converting TAS from 2015 to 2025 Standards
+    
+    Workflow:
+    1. Analyze source TAS (2015)
+    2. Map standards (2015 → 2025)
+    3. Convert content with AI
+    4. Validate compliance
+    5. Create target TAS (2025)
+    """
+    
+    def __init__(self, ai_model='gpt-4o'):
+        self.ai_model = ai_model
+        self.llm = self._initialize_llm()
+        self.standards_mapper = StandardsMapper()
+        self.content_transformer = ContentTransformer(self.llm)
+        self.compliance_validator = ComplianceValidator()
+    
+    def create_conversion_session(
+        self,
+        source_tas: TAS,
+        session_name: str,
+        user,
+        options: dict = None
+    ) -> TASConversionSession:
+        """Create new conversion session"""
+        
+    def execute_conversion(
+        self,
+        session: TASConversionSession
+    ) -> TASConversionSession:
+        """Execute full conversion workflow"""</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Install Service Dependencies</h3>
+                    <pre><code># Additional packages for conversion
+pip install langchain
+pip install tiktoken  # Token counting
+pip install difflib  # Text comparison
+
+# Verify installation
+python -c "import langchain; print('LangChain OK')"
+python -c "import tiktoken; print('Tiktoken OK')"</code></pre>
+                </div>
+            </section>
+
+            <!-- AI Configuration Section -->
+            <section id="ai-configuration">
+                <h2>AI Configuration for Conversion</h2>
+                
+                <div class="card">
+                    <h3>Model Requirements</h3>
+                    <p>TAS Conversion requires advanced AI models due to complexity of standards mapping:</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Recommended Model</th>
+                                <th>Min Context</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Standards Mapping</td>
+                                <td>GPT-4o / Claude-3-Opus</td>
+                                <td>32K tokens</td>
+                            </tr>
+                            <tr>
+                                <td>Content Transformation</td>
+                                <td>GPT-4o / Claude-3-Sonnet</td>
+                                <td>16K tokens</td>
+                            </tr>
+                            <tr>
+                                <td>Compliance Validation</td>
+                                <td>GPT-4o-mini / Claude-3-Haiku</td>
+                                <td>8K tokens</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>Environment Configuration</h3>
+                    <pre><code># Add to .env file
+
+# AI Model for Conversion
+CONVERSION_AI_MODEL=gpt-4o
+CONVERSION_TEMPERATURE=0.3  # Lower for consistency
+CONVERSION_MAX_TOKENS=4000
+
+# Conversion-specific settings
+CONVERSION_ENABLE_CACHING=true
+CONVERSION_CACHE_TTL=7200  # 2 hours
+CONVERSION_BATCH_SIZE=5  # Sections to process in parallel
+
+# Quality thresholds
+MIN_CONVERSION_QUALITY_SCORE=75.0
+REQUIRE_HUMAN_REVIEW_THRESHOLD=85.0
+
+# Cost controls
+MAX_TOKENS_PER_CONVERSION=50000
+ENABLE_CONVERSION_COST_TRACKING=true
+
+# Logging
+CONVERSION_LOG_LEVEL=INFO
+CONVERSION_LOG_DIR=logs/conversions/</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Test AI Connection</h3>
+                    <pre><code># Test conversion AI setup
+python manage.py shell
+
+>>> from tas.conversion_service import TASConversionService
+>>> service = TASConversionService()
+>>> 
+>>> # Test basic AI call
+>>> test_prompt = """
+... Map this 2015 standard to 2025:
+... Standard 1.1: Training and assessment provided by the RTO is 
+... delivered in accordance with the training package.
+... """
+>>> response = service.llm.generate(test_prompt)
+>>> print(response)
+# Should return mapping to QA1.1 and related standards</code></pre>
+                </div>
+            </section>
+
+            <!-- Migrations Section -->
+            <section id="migrations">
+                <h2>Run Database Migrations</h2>
+                
+                <div class="card">
+                    <h3>Check Migration Status</h3>
+                    <pre><code># List TAS migrations
+python manage.py showmigrations tas
+
+# Should show:
+# tas
+#  [X] 0001_initial
+#  [X] 0002_tastemplate
+#  [X] 0003_tasversion
+#  [X] 0004_tasconversionsession  ← Conversion model
+
+# If 0004 is not checked, run:
+python manage.py migrate tas</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Create Custom Migration (if needed)</h3>
+                    <pre><code># If TASConversionSession migration doesn't exist
+python manage.py makemigrations tas --name add_conversion_session
+
+# Review the migration
+cat tas/migrations/0004_tasconversionsession.py
+
+# Apply migration
+python manage.py migrate tas 0004</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Verify Migration Success</h3>
+                    <pre><code># Test model access
+python manage.py shell
+
+>>> from tas.models import TASConversionSession
+>>> from django.contrib.auth.models import User
+>>> from tenants.models import Tenant
+>>> 
+>>> # Try creating a test session (then delete it)
+>>> tenant = Tenant.objects.first()
+>>> user = User.objects.first()
+>>> 
+>>> if tenant and user:
+...     from tas.models import TAS
+...     source_tas = TAS.objects.first()
+...     if source_tas:
+...         session = TASConversionSession.objects.create(
+...             tenant=tenant,
+...             source_tas=source_tas,
+...             session_name="Test Conversion",
+...             status="pending",
+...             created_by=user
+...         )
+...         print(f"✓ Created test session: {session.id}")
+...         session.delete()
+...         print("✓ Deleted test session")
+...     else:
+...         print("No TAS documents available for testing")
+... else:
+...     print("No tenant or user available")</code></pre>
+                </div>
+            </section>
+
+            <!-- Seed Mappings Section -->
+            <section id="seed-mappings">
+                <h2>Seed Standards Mappings</h2>
+                
+                <div class="card">
+                    <h3>Create Mapping Seed Data</h3>
+                    <pre><code># Create mapping configuration file
+# File: db/seeds/standards_mapping_2015_to_2025.json
+
+{
+  "mappings": [
+    {
+      "standard_2015": "1.1",
+      "title_2015": "Training and assessment",
+      "standards_2025": ["QA1.1", "QA1.2"],
+      "mapping_type": "split",
+      "confidence": 0.95,
+      "notes": "2015 Standard 1.1 maps to both Training (QA1.1) and Assessment (QA1.2)",
+      "transformation_rules": [
+        "Update references from 'training package' to 'industry requirements'",
+        "Add outcome-focused language",
+        "Include industry currency explicitly"
+      ]
+    },
+    {
+      "standard_2015": "1.2",
+      "title_2015": "Trainer and assessor competency",
+      "standards_2025": ["QA3.2"],
+      "mapping_type": "direct",
+      "confidence": 0.98,
+      "notes": "Direct mapping to Trainer and Assessor Credentials",
+      "transformation_rules": [
+        "Emphasize demonstrated competency",
+        "Add professional development requirements"
+      ]
+    },
+    {
+      "standard_2015": "1.8",
+      "title_2015": "Resources and facilities",
+      "standards_2025": ["QA1.4"],
+      "mapping_type": "direct",
+      "confidence": 0.97,
+      "notes": "Maps to Facilities and Resources",
+      "transformation_rules": [
+        "Emphasize adequacy for outcomes",
+        "Include accessibility requirements"
+      ]
+    }
+    // ... more mappings
+  ]
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Load Mapping Data</h3>
+                    <pre><code># Create management command to load mappings
+# File: tas/management/commands/load_standards_mappings.py
+
+from django.core.management.base import BaseCommand
+import json
+
+class Command(BaseCommand):
+    help = 'Load 2015→2025 standards mappings'
+    
+    def handle(self, *args, **options):
+        with open('db/seeds/standards_mapping_2015_to_2025.json') as f:
+            data = json.load(f)
+        
+        # Store in cache or database table
+        from django.core.cache import cache
+        cache.set('standards_mappings_2015_to_2025', data, timeout=None)
+        
+        self.stdout.write(
+            self.style.SUCCESS(
+                f'Loaded {len(data["mappings"])} mappings'
+            )
+        )
+
+# Run the command
+python manage.py load_standards_mappings</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Verify Mappings Loaded</h3>
+                    <pre><code># Check mappings are available
+python manage.py shell
+
+>>> from django.core.cache import cache
+>>> mappings = cache.get('standards_mappings_2015_to_2025')
+>>> if mappings:
+...     print(f"✓ Loaded {len(mappings['mappings'])} mappings")
+...     # Show first mapping
+...     first = mappings['mappings'][0]
+...     print(f"\nExample: {first['standard_2015']} → {first['standards_2025']}")
+... else:
+...     print("✗ Mappings not loaded")</code></pre>
+                </div>
+            </section>
+
+            <!-- Testing Section -->
+            <section id="testing">
+                <h2>Testing the Conversion Service</h2>
+                
+                <div class="card">
+                    <h3>Unit Tests</h3>
+                    <pre><code># Run conversion-specific tests
+python manage.py test tas.tests.test_conversion_service
+
+# Run with coverage
+coverage run --source='tas' manage.py test tas.tests.test_conversion_service
+coverage report</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Integration Test - Full Conversion</h3>
+                    <pre><code># Create test TAS and convert it
+python manage.py shell
+
+>>> from tas.models import TAS, TASConversionSession
+>>> from tas.conversion_service import TASConversionService
+>>> from tenants.models import Tenant
+>>> from django.contrib.auth.models import User
+>>> 
+>>> # Get test data
+>>> tenant = Tenant.objects.first()
+>>> user = User.objects.first()
+>>> source_tas = TAS.objects.filter(
+...     tenant=tenant,
+...     status='published'
+... ).first()
+>>> 
+>>> if source_tas:
+...     # Create conversion service
+...     service = TASConversionService()
+...     
+...     # Create session
+...     session = service.create_conversion_session(
+...         source_tas=source_tas,
+...         session_name=f"Test Conversion - {source_tas.code}",
+...         user=user,
+...         options={'preserve_formatting': True}
+...     )
+...     print(f"✓ Created session: {session.id}")
+...     
+...     # Execute conversion (this will take time)
+...     print("Starting conversion...")
+...     result = service.execute_conversion(session)
+...     
+...     print(f"✓ Conversion completed")
+...     print(f"Status: {result.status}")
+...     print(f"Quality Score: {result.quality_score}")
+...     print(f"Sections Converted: {result.sections_converted}")
+...     print(f"Processing Time: {result.processing_time_seconds}s")
+... else:
+...     print("No published TAS available for testing")</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Test API Endpoints</h3>
+                    <pre><code># Start development server
+python manage.py runserver
+
+# In another terminal, test endpoints:
+
+# 1. Create conversion session
+curl -X POST http://localhost:8000/api/tenants/demo-rto/tas/conversion-sessions/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "source_tas_id": 1,
+    "session_name": "API Test Conversion",
+    "conversion_options": {
+      "preserve_formatting": true,
+      "update_terminology": true
+    }
+  }'
+
+# 2. Check session status
+curl http://localhost:8000/api/tenants/demo-rto/tas/conversion-sessions/1/ \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# 3. List all sessions
+curl http://localhost:8000/api/tenants/demo-rto/tas/conversion-sessions/ \
+  -H "Authorization: Bearer YOUR_TOKEN"</code></pre>
+                </div>
+            </section>
+
+            <!-- Admin Configuration Section -->
+            <section id="admin-config">
+                <h2>Django Admin Configuration</h2>
+                
+                <div class="card">
+                    <h3>Access Conversion Sessions in Admin</h3>
+                    <ol>
+                        <li>Navigate to: <code>http://localhost:8000/admin/</code></li>
+                        <li>Login with superuser credentials</li>
+                        <li>Go to: <strong>TAS → TAS Conversion Sessions</strong></li>
+                        <li>View all conversion sessions with filters for:
+                            <ul>
+                                <li>Status (pending, completed, failed)</li>
+                                <li>Tenant</li>
+                                <li>AI Model used</li>
+                                <li>Created date</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="card">
+                    <h3>Admin Display Configuration</h3>
+                    <pre><code># tas/admin.py - already configured
+
+@admin.register(TASConversionSession)
+class TASConversionSessionAdmin(admin.ModelAdmin):
+    list_display = [
+        'session_name',
+        'source_tas',
+        'status',
+        'progress_percentage',
+        'quality_score',
+        'created_at',
+        'completed_at'
+    ]
+    
+    list_filter = [
+        'status',
+        'tenant',
+        'ai_model',
+        'requires_human_review',
+        'created_at'
+    ]
+    
+    search_fields = [
+        'session_name',
+        'source_tas__code',
+        'source_tas__title'
+    ]
+    
+    readonly_fields = [
+        'created_by',
+        'created_at',
+        'started_at',
+        'completed_at',
+        'processing_time_seconds'
+    ]</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Useful Admin Actions</h3>
+                    <ul>
+                        <li><strong>Export Conversion Report:</strong> Download detailed conversion results</li>
+                        <li><strong>Retry Failed Conversions:</strong> Re-run conversions that failed</li>
+                        <li><strong>Compare Versions:</strong> View side-by-side comparison of source and target</li>
+                        <li><strong>Approve Conversion:</strong> Mark conversion as reviewed and approved</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Troubleshooting Section -->
+            <section id="troubleshooting">
+                <h2>Troubleshooting</h2>
+                
+                <div class="card">
+                    <h3>Common Issues</h3>
+                    
+                    <h4>Conversion Fails with "Standards Not Found"</h4>
+                    <pre><code># Check both 2015 and 2025 standards exist
+python manage.py shell
+>>> from policy_comparator.models import ASQAStandard
+>>> print(f"2015: {ASQAStandard.objects.filter(version='2015').count()}")
+>>> print(f"2025: {ASQAStandard.objects.filter(version='2025').count()}")
+
+# If missing, load standards data
+python manage.py loaddata db/seeds/asqa_standards_2015.json
+python manage.py loaddata db/seeds/asqa_standards_2025.json</code></pre>
+
+                    <h4>AI Token Limit Exceeded</h4>
+                    <pre><code># Increase token limits or use a model with larger context
+# In .env:
+CONVERSION_MAX_TOKENS=8000
+CONVERSION_AI_MODEL=gpt-4o  # Has 128K context</code></pre>
+
+                    <h4>Conversion Takes Too Long</h4>
+                    <pre><code># Enable parallel processing for sections
+# In .env:
+CONVERSION_BATCH_SIZE=10
+ENABLE_ASYNC_CONVERSION=true
+
+# Use Celery for background processing
+celery -A control_plane worker --loglevel=info</code></pre>
+
+                    <h4>Low Quality Score</h4>
+                    <pre><code># Review conversion options
+# Try with different settings:
+{
+  "preserve_formatting": true,
+  "update_terminology": true,
+  "add_explanatory_notes": true,
+  "verbose_mode": true
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Debug Logging</h3>
+                    <pre><code># Enable detailed logging
+# In settings.py or .env:
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'logs/conversion_debug.log',
+        },
+    },
+    'loggers': {
+        'tas.conversion_service': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+        },
+    },
+}
+
+# View logs
+tail -f logs/conversion_debug.log</code></pre>
+                </div>
+            </section>
+
+            <!-- Next Steps -->
+            <section id="next-steps">
+                <h2>Next Steps</h2>
+                
+                <div class="alert alert-success">
+                    <strong>🎉 Setup Complete!</strong> Your TAS Conversion service is ready to use.
+                </div>
+
+                <div class="card">
+                    <h3>Recommended Actions</h3>
+                    <ol>
+                        <li>📖 <a href="models-structure.html">Learn about the Data Models</a></li>
+                        <li>🔧 <a href="conversion-service.html">Understand the Conversion Process</a></li>
+                        <li>🗺️ <a href="standards-mapping.html">Review Standards Mapping</a></li>
+                        <li>💼 <a href="conversion-examples.html">Try Example Conversions</a></li>
+                        <li>📊 <a href="quality-assurance.html">Quality Assurance Guide</a></li>
+                    </ol>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - TAS Conversion Documentation</p>
+            <p>Version 1.0.0 | Last Updated: November 2025</p>
+        </div>
+    </footer>
+
+    <script src="../TAS_Generator/js/app.js"></script>
+</body>
+</html>

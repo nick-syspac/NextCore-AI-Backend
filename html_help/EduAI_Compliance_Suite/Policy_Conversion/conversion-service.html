@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Conversion Service - Policy Conversion | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="../TAS_Generator/css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">📄 Policy Conversion</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Conversion Service Architecture</h1>
+            <p>AI-powered policy transformation from 2015 to 2025 Standards</p>
+        </div>
+    </section>
+
+    <div class="main-content">
+        <main class="content">
+            <section id="overview">
+                <h2>Service Overview</h2>
+                
+                <div class="card">
+                    <h3>PolicyConversionService Architecture</h3>
+                    <pre><code>PolicyConversionService
+├── StandardsMapper (shared with TAS Conversion)
+│   ├── load_mapping_rules()
+│   └── map_2015_to_2025()
+├── PolicyTransformer
+│   ├── analyze_policy()
+│   ├── transform_content()
+│   └── update_references()
+└── PolicyValidator
+    ├── check_compliance()
+    ├── identify_gaps()
+    └── calculate_quality_score()</code></pre>
+                </div>
+            </section>
+
+            <section id="workflow">
+                <h2>Conversion Workflow</h2>
+                
+                <div class="card">
+                    <h3>5-Step Process</h3>
+                    <pre><code>Step 1: ANALYZE (15% progress)
+- Parse policy structure
+- Identify 2015 standard references
+- Extract key concepts
+- Assess complexity
+
+Step 2: MAP (30% progress)
+- Apply 2015→2025 mappings
+- Identify affected sections
+- Generate transformation plan
+
+Step 3: CONVERT (60% progress)
+- Update standard references
+- Revise terminology
+- Transform content with AI
+- Preserve policy intent
+
+Step 4: VALIDATE (85% progress)
+- Check 2025 compliance
+- Identify gaps
+- Calculate quality score
+- Flag for review if needed
+
+Step 5: COMPLETE (100% progress)
+- Create target policy
+- Generate report
+- Store results</code></pre>
+                </div>
+            </section>
+
+            <section id="policy-transformer">
+                <h2>Policy Transformer Service</h2>
+                
+                <div class="card">
+                    <h3>PolicyTransformer Class</h3>
+                    <pre><code>class PolicyTransformer:
+    """Transform policy content using AI"""
+    
+    def __init__(self, ai_model='gpt-4o'):
+        self.ai_model = ai_model
+        self.llm = self._initialize_llm()
+        self.standards_mapper = StandardsMapper()
+    
+    def transform_policy(
+        self,
+        source_policy: Policy,
+        mappings: dict,
+        options: dict = None
+    ) -> dict:
+        """
+        Transform entire policy to 2025 standards
+        
+        Returns:
+            {
+                'transformed_content': str,
+                'changes': [...],
+                'quality_score': float
+            }
+        """
+        
+        # Build transformation prompt
+        prompt = self._build_prompt(
+            source_policy.content,
+            mappings,
+            options or {}
+        )
+        
+        # Get AI transformation
+        response = self.llm.generate(prompt)
+        
+        # Parse and validate
+        result = self._parse_response(response)
+        
+        return result
+    
+    def _build_prompt(self, content, mappings, options):
+        """Build AI prompt for transformation"""
+        return f"""
+Transform this RTO policy from 2015 to 2025 ASQA Standards.
+
+SOURCE POLICY:
+{content}
+
+STANDARDS MAPPINGS:
+{json.dumps(mappings, indent=2)}
+
+REQUIREMENTS:
+1. Update all 2015 standard references to 2025 equivalents
+2. Revise terminology to match 2025 Standards language
+3. Preserve the original policy intent and meaning
+4. Add outcome-focused language where appropriate
+5. Track all changes made
+
+OPTIONS:
+{json.dumps(options, indent=2)}
+
+OUTPUT FORMAT:
+{{
+  "transformed_content": "...",
+  "changes": [
+    {{
+      "old": "...",
+      "new": "...",
+      "rationale": "...",
+      "confidence": 0.95
+    }}
+  ],
+  "quality_assessment": {{
+    "score": 0-100,
+    "requires_review": true/false,
+    "issues": [...]
+  }}
+}}
+"""</code></pre>
+                </div>
+            </section>
+
+            <section id="policy-validator">
+                <h2>Policy Validator Service</h2>
+                
+                <div class="card">
+                    <h3>PolicyValidator Class</h3>
+                    <pre><code>class PolicyValidator:
+    """Validate converted policies against 2025 Standards"""
+    
+    def validate_policy(
+        self,
+        policy: Policy,
+        conversion_session: PolicyConversionSession
+    ) -> dict:
+        """
+        Check policy against 2025 Standards
+        
+        Returns compliance report
+        """
+        
+        # Get applicable 2025 standards for this policy type
+        applicable_standards = self._get_applicable_standards(
+            policy.policy_type
+        )
+        
+        gaps = []
+        covered = []
+        
+        # Check each standard
+        for standard in applicable_standards:
+            coverage = self._check_standard_coverage(
+                policy.content,
+                standard
+            )
+            
+            if coverage['score'] >= 0.8:
+                covered.append(standard)
+            else:
+                gaps.append({
+                    'standard': standard.standard_number,
+                    'title': standard.title,
+                    'score': coverage['score'],
+                    'missing_elements': coverage['missing'],
+                    'severity': self._assess_severity(coverage['score'])
+                })
+        
+        # Calculate overall compliance score
+        total_applicable = len(applicable_standards)
+        compliance_score = (len(covered) / total_applicable) * 100
+        
+        return {
+            'compliance_score': compliance_score,
+            'standards_covered': len(covered),
+            'gaps': gaps,
+            'overall_assessment': self._assess_overall(compliance_score)
+        }</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Policy Type → Standards Mapping</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Policy Type</th>
+                                <th>Applicable 2025 Standards</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>assessment</td>
+                                <td>QA1.2, QA1.3, QA3.2</td>
+                            </tr>
+                            <tr>
+                                <td>training_delivery</td>
+                                <td>QA1.1, QA1.4, QA3.1</td>
+                            </tr>
+                            <tr>
+                                <td>student_support</td>
+                                <td>QA2.1, QA2.2</td>
+                            </tr>
+                            <tr>
+                                <td>complaints_appeals</td>
+                                <td>Compliance requirements</td>
+                            </tr>
+                            <tr>
+                                <td>governance</td>
+                                <td>QA4.1, QA4.2, QA4.3</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="api-usage">
+                <h2>API Usage</h2>
+                
+                <div class="card">
+                    <h3>Python API</h3>
+                    <pre><code>from policy_comparator.services.policy_conversion_service import PolicyConversionService
+
+# Initialize service
+service = PolicyConversionService(ai_model='gpt-4o')
+
+# Get source policy (2015-based)
+source_policy = Policy.objects.get(
+    policy_number='POL-001',
+    status='approved'
+)
+
+# Create conversion session
+session = service.create_conversion_session(
+    source_policy=source_policy,
+    session_name=f"Convert {source_policy.title}",
+    user=request.user,
+    options={
+        'preserve_structure': True,
+        'add_notes': False
+    }
+)
+
+# Execute conversion
+result = service.execute_conversion(session)
+
+print(f"Status: {result.status}")
+print(f"Quality Score: {result.quality_score}")
+print(f"Review Required: {result.requires_human_review}")
+
+# Access target policy
+if result.target_policy:
+    print(f"Target Policy: {result.target_policy.policy_number}")
+    print(f"Content: {result.target_policy.content}")</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>REST API</h3>
+                    <pre><code># Create conversion
+POST /api/tenants/demo-rto/policies/1/convert/
+{
+  "session_name": "Convert Assessment Policy to 2025",
+  "options": {
+    "preserve_structure": true,
+    "add_notes": false
+  }
+}
+
+Response:
+{
+  "id": 5,
+  "session_name": "Convert Assessment Policy to 2025",
+  "status": "pending",
+  "progress_percentage": 0,
+  "created_at": "2025-11-15T10:30:00Z"
+}
+
+# Check status
+GET /api/tenants/demo-rto/policy-conversion-sessions/5/
+
+# Get results
+GET /api/tenants/demo-rto/policy-conversion-sessions/5/
+{
+  "id": 5,
+  "status": "completed",
+  "progress_percentage": 100,
+  "quality_score": 88.5,
+  "target_policy": {
+    "id": 42,
+    "policy_number": "POL-001-2025",
+    "title": "Assessment Policy (2025 Standards)",
+    "content": "..."
+  },
+  "conversion_changes": [...],
+  "compliance_report": {...}
+}</code></pre>
+                </div>
+            </section>
+
+            <section id="batch-conversion">
+                <h2>Batch Policy Conversion</h2>
+                
+                <div class="card">
+                    <h3>Convert Multiple Policies</h3>
+                    <pre><code># Get all policies needing conversion
+policies_2015 = Policy.objects.filter(
+    tenant=tenant,
+    status='approved',
+    # Add filter for policies based on 2015 standards
+)
+
+service = PolicyConversionService()
+
+# Create batch of conversion sessions
+sessions = []
+for policy in policies_2015:
+    session = service.create_conversion_session(
+        source_policy=policy,
+        session_name=f"Batch Convert - {policy.title}",
+        user=user
+    )
+    sessions.append(session)
+
+# Execute conversions (can be async with Celery)
+for session in sessions:
+    try:
+        result = service.execute_conversion(session)
+        print(f"✓ {session.source_policy.title}: Score {result.quality_score}")
+    except Exception as e:
+        print(f"✗ {session.source_policy.title}: {str(e)}")</code></pre>
+                </div>
+            </section>
+
+            <section id="quality-assurance">
+                <h2>Quality Assurance</h2>
+                
+                <div class="card">
+                    <h3>Review Workflow</h3>
+                    <ol>
+                        <li><strong>Auto-Approved:</strong> Quality score ≥ 90, no review needed</li>
+                        <li><strong>Requires Review:</strong> Quality score 75-90, human review recommended</li>
+                        <li><strong>Needs Rework:</strong> Quality score < 75, significant changes needed</li>
+                    </ol>
+                </div>
+
+                <div class="card">
+                    <h3>Review Checklist</h3>
+                    <ul>
+                        <li>All 2015 references updated to 2025</li>
+                        <li>Terminology consistent with 2025 Standards</li>
+                        <li>Policy intent preserved</li>
+                        <li>No factual errors introduced</li>
+                        <li>Formatting and structure appropriate</li>
+                        <li>Compliance gaps addressed</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - Policy Conversion</p>
+        </div>
+    </footer>
+</body>
+</html>

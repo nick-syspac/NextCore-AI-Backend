@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversion Service - TAS Conversion | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="../TAS_Generator/css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">📋 TAS Conversion</a>
+            <ul class="navbar-nav">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="installation-setup.html" class="nav-link">Installation</a></li>
+                <li><a href="models-structure.html" class="nav-link">Data Models</a></li>
+                <li><a href="conversion-service.html" class="nav-link active">Conversion Service</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Conversion Service Architecture</h1>
+            <p>AI-powered service for converting TAS documents from 2015 to 2025 Standards</p>
+        </div>
+    </section>
+
+    <div class="main-content">
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#overview">Service Overview</a></li>
+                <li><a href="#workflow">Conversion Workflow</a></li>
+                <li><a href="#standards-mapper">Standards Mapper</a></li>
+                <li><a href="#content-transformer">Content Transformer</a></li>
+                <li><a href="#compliance-validator">Compliance Validator</a></li>
+                <li><a href="#api-endpoints">API Endpoints</a></li>
+                <li><a href="#usage-examples">Usage Examples</a></li>
+            </ul>
+        </aside>
+
+        <main class="content">
+            <section id="overview">
+                <h2>Service Overview</h2>
+                
+                <div class="card">
+                    <h3>TASConversionService Architecture</h3>
+                    <pre><code>TASConversionService
+├── StandardsMapper
+│   ├── load_mapping_rules()
+│   ├── map_2015_to_2025()
+│   └── validate_mappings()
+├── ContentTransformer
+│   ├── analyze_source_tas()
+│   ├── transform_section()
+│   └── update_references()
+└── ComplianceValidator
+    ├── check_2025_compliance()
+    ├── identify_gaps()
+    └── calculate_quality_score()</code></pre>
+                </div>
+            </section>
+
+            <section id="workflow">
+                <h2>Conversion Workflow</h2>
+                
+                <div class="card">
+                    <h3>5-Step Process</h3>
+                    <pre><code>Step 1: ANALYZE (15% progress)
+- Parse source TAS structure
+- Identify sections and content
+- Extract 2015 standard references
+- Assess conversion complexity
+
+Step 2: MAP (30% progress)
+- Load 2015→2025 mapping rules
+- Map each referenced standard
+- Identify split/merge scenarios
+- Generate transformation rules
+
+Step 3: CONVERT (60% progress)
+- Transform each section
+- Update standard references
+- Revise terminology
+- Add explanatory notes
+- Preserve formatting
+
+Step 4: VALIDATE (85% progress)
+- Check 2025 compliance
+- Identify gaps
+- Calculate quality score
+- Flag sections for review
+
+Step 5: COMPLETE (100% progress)
+- Create target TAS document
+- Generate conversion report
+- Store results
+- Notify user</code></pre>
+                </div>
+            </section>
+
+            <section id="standards-mapper">
+                <h2>Standards Mapper Service</h2>
+                
+                <div class="card">
+                    <h3>StandardsMapper Class</h3>
+                    <pre><code>class StandardsMapper:
+    """Map 2015 Standards to 2025 Quality Areas"""
+    
+    def __init__(self):
+        self.mapping_rules = self.load_mapping_rules()
+        self.standards_2015 = self.load_standards('2015')
+        self.standards_2025 = self.load_standards('2025')
+    
+    def map_2015_to_2025(self, standard_2015: str) -> dict:
+        """
+        Map a 2015 standard to 2025 equivalents
+        
+        Args:
+            standard_2015: e.g., "1.1"
+        
+        Returns:
+            {
+                'target_standards': ['QA1.1', 'QA1.2'],
+                'mapping_type': 'split',
+                'confidence': 0.95,
+                'transformation_rules': [...]
+            }
+        """
+        mapping = self.mapping_rules.get(standard_2015)
+        if not mapping:
+            return self._ai_generate_mapping(standard_2015)
+        return mapping</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Mapping Types</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Direct</strong></td>
+                                <td>1:1 mapping</td>
+                                <td>1.2 → QA3.2</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Split</strong></td>
+                                <td>1:Many mapping</td>
+                                <td>1.1 → QA1.1 + QA1.2</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Merge</strong></td>
+                                <td>Many:1 mapping</td>
+                                <td>1.5 + 1.6 → QA2.1</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Distributed</strong></td>
+                                <td>Many:Many mapping</td>
+                                <td>Multiple sources → Multiple targets</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="content-transformer">
+                <h2>Content Transformer Service</h2>
+                
+                <div class="card">
+                    <h3>ContentTransformer Class</h3>
+                    <pre><code>class ContentTransformer:
+    """Transform TAS content using AI"""
+    
+    def transform_section(
+        self,
+        section_content: str,
+        mappings: dict,
+        options: dict
+    ) -> dict:
+        """
+        Transform a TAS section to 2025 standards
+        
+        Returns:
+            {
+                'transformed_content': str,
+                'changes': [{
+                    'type': 'standard_reference',
+                    'old': 'Standard 1.1',
+                    'new': 'QA1.1 and QA1.2',
+                    'rationale': '...'
+                }],
+                'confidence': 0.90
+            }
+        """
+        
+        prompt = self._build_transformation_prompt(
+            section_content,
+            mappings,
+            options
+        )
+        
+        response = self.llm.generate(prompt)
+        
+        return self._parse_transformation_response(response)</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Transformation Rules</h3>
+                    <ol>
+                        <li><strong>Update Standard References:</strong> Replace 2015 numbers with 2025 codes (1.1 → QA1.1)</li>
+                        <li><strong>Revise Terminology:</strong> Update language to match 2025 standards
+                            <ul>
+                                <li>"training package" → "industry requirements"</li>
+                                <li>"maintain currency" → "demonstrate ongoing professional development"</li>
+                            </ul>
+                        </li>
+                        <li><strong>Add Outcome Focus:</strong> Emphasize outcomes over processes</li>
+                        <li><strong>Preserve Intent:</strong> Maintain original policy meaning</li>
+                        <li><strong>Track Changes:</strong> Document all modifications</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section id="compliance-validator">
+                <h2>Compliance Validator Service</h2>
+                
+                <div class="card">
+                    <h3>ComplianceValidator Class</h3>
+                    <pre><code>class ComplianceValidator:
+    """Validate 2025 Standards compliance"""
+    
+    def check_2025_compliance(
+        self,
+        target_tas: TAS
+    ) -> dict:
+        """
+        Check converted TAS against 2025 Standards
+        
+        Returns:
+            {
+                'overall_compliance': 'high',
+                'compliance_score': 92.5,
+                'standards_covered': 10,
+                'standards_missing': ['QA4.3'],
+                'gaps': [...]
+            }
+        """
+        
+        standards_2025 = ASQAStandard.objects.filter(version='2025')
+        
+        gaps = []
+        covered = []
+        
+        for standard in standards_2025:
+            coverage = self._check_standard_coverage(
+                target_tas,
+                standard
+            )
+            
+            if coverage['score'] >= 0.8:
+                covered.append(standard)
+            else:
+                gaps.append({
+                    'standard': standard.standard_number,
+                    'score': coverage['score'],
+                    'missing_elements': coverage['missing']
+                })
+        
+        return self._generate_compliance_report(
+            covered,
+            gaps
+        )</code></pre>
+                </div>
+            </section>
+
+            <section id="api-endpoints">
+                <h2>API Endpoints</h2>
+                
+                <div class="card">
+                    <h3>REST API</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Endpoint</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>POST</td>
+                                <td>/api/tenants/{tenant}/tas/conversion-sessions/</td>
+                                <td>Create conversion session</td>
+                            </tr>
+                            <tr>
+                                <td>GET</td>
+                                <td>/api/tenants/{tenant}/tas/conversion-sessions/{id}/</td>
+                                <td>Get session details</td>
+                            </tr>
+                            <tr>
+                                <td>GET</td>
+                                <td>/api/tenants/{tenant}/tas/conversion-sessions/</td>
+                                <td>List all sessions</td>
+                            </tr>
+                            <tr>
+                                <td>POST</td>
+                                <td>/api/tenants/{tenant}/tas/conversion-sessions/{id}/execute/</td>
+                                <td>Execute conversion</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="usage-examples">
+                <h2>Usage Examples</h2>
+                
+                <div class="card">
+                    <h3>Python API</h3>
+                    <pre><code>from tas.conversion_service import TASConversionService
+from tas.models import TAS
+
+# Initialize service
+service = TASConversionService(ai_model='gpt-4o')
+
+# Get source TAS
+source_tas = TAS.objects.get(code='BSB50120')
+
+# Create conversion session
+session = service.create_conversion_session(
+    source_tas=source_tas,
+    session_name=f"Convert {source_tas.code} to 2025",
+    user=request.user,
+    options={
+        'preserve_formatting': True,
+        'update_terminology': True
+    }
+)
+
+# Execute conversion
+result = service.execute_conversion(session)
+
+print(f"Status: {result.status}")
+print(f"Quality Score: {result.quality_score}")
+print(f"Target TAS: {result.target_tas.code}")</code></pre>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite</p>
+        </div>
+    </footer>
+</body>
+</html>
