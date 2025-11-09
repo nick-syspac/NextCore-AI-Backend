@@ -30,6 +30,13 @@ from email_assistant.models import (
     ToneProfile,
     ReplyHistory,
 )
+from engagement_heatmap.models import (
+    EngagementHeatmap,
+    AttendanceRecord,
+    LMSActivity,
+    DiscussionSentiment,
+    EngagementAlert,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -216,6 +223,22 @@ class Command(BaseCommand):
         reply_history = self.create_reply_history(student_messages, draft_replies, users)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(reply_history)} reply history records'))
         
+        # Create engagement heatmap data
+        engagement_heatmaps = self.create_engagement_heatmaps(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(engagement_heatmaps)} engagement heatmaps'))
+        
+        attendance_records = self.create_attendance_records(engagement_heatmaps)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(attendance_records)} attendance records'))
+        
+        lms_activities = self.create_lms_activities(engagement_heatmaps)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(lms_activities)} LMS activities'))
+        
+        discussion_sentiments = self.create_discussion_sentiments(engagement_heatmaps)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(discussion_sentiments)} discussion sentiments'))
+        
+        engagement_alerts = self.create_engagement_alerts(engagement_heatmaps)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(engagement_alerts)} engagement alerts'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -228,6 +251,32 @@ class Command(BaseCommand):
         from django.db.utils import ProgrammingError
         
         # Delete in order to avoid foreign key constraints
+        # Engagement Heatmap
+        try:
+            EngagementAlert.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            DiscussionSentiment.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            LMSActivity.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            AttendanceRecord.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            EngagementHeatmap.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
         # Email Assistant
         try:
             ReplyHistory.objects.all().delete()
@@ -2651,3 +2700,497 @@ Student Support Team'''
                 history.append(history_record)
         
         return history
+
+    def create_engagement_heatmaps(self, tenants, users):
+        """Create engagement heatmaps"""
+        heatmaps = []
+        
+        # Create heatmaps for 5 students per tenant over last 4 weeks
+        for tenant in tenants:
+            for student_idx in range(5):
+                student_id = f"STU{random.randint(1000, 9999)}"
+                student_name = random.choice([
+                    'Emma Wilson', 'James Chen', 'Sarah Johnson', 
+                    'Michael Brown', 'Jessica Lee', 'Daniel Kim',
+                    'Olivia Martinez', 'Ryan Taylor', 'Sophia Anderson'
+                ])
+                
+                # Create weekly heatmaps for last 4 weeks
+                for week in range(4):
+                    start_date = timezone.now().date() - timedelta(days=(week+1)*7)
+                    end_date = start_date + timedelta(days=6)
+                    
+                    # Generate realistic scores (some students struggle more)
+                    if student_idx in [0, 1]:  # Engaged students
+                        attendance_score = random.uniform(85, 100)
+                        lms_score = random.uniform(80, 95)
+                        sentiment_score = random.uniform(70, 90)
+                    elif student_idx in [2, 3]:  # Medium engagement
+                        attendance_score = random.uniform(60, 80)
+                        lms_score = random.uniform(55, 75)
+                        sentiment_score = random.uniform(50, 70)
+                    else:  # At-risk student
+                        attendance_score = random.uniform(30, 60)
+                        lms_score = random.uniform(25, 55)
+                        sentiment_score = random.uniform(30, 60)
+                    
+                    # Generate daily heatmap data
+                    heatmap_data = {}
+                    for day in range(7):
+                        date = start_date + timedelta(days=day)
+                        heatmap_data[str(date)] = {
+                            'attendance': random.random() < (attendance_score / 100),
+                            'lms_minutes': random.randint(0, 180) if random.random() < (lms_score / 100) else 0,
+                            'sentiment': (sentiment_score / 100) * 2 - 1,  # Convert to -1 to 1
+                        }
+                    
+                    # Determine risk flags
+                    risk_flags = []
+                    if attendance_score < 70:
+                        risk_flags.append('low_attendance')
+                    if lms_score < 60:
+                        risk_flags.append('inactive_lms')
+                    if sentiment_score < 50:
+                        risk_flags.append('negative_sentiment')
+                    if attendance_score < 50 and lms_score < 50:
+                        risk_flags.append('disengaged')
+                    
+                    # Determine trend
+                    if week == 0:  # Most recent week
+                        if student_idx == 4:  # At-risk student
+                            trend = random.choice(['declining', 'critical_decline'])
+                            change_pct = random.uniform(-25, -10)
+                        elif student_idx in [2, 3]:
+                            trend = random.choice(['stable', 'declining'])
+                            change_pct = random.uniform(-10, 5)
+                        else:
+                            trend = random.choice(['stable', 'improving'])
+                            change_pct = random.uniform(-5, 15)
+                    else:
+                        trend = 'stable'
+                        change_pct = random.uniform(-5, 5)
+                    
+                    heatmap = EngagementHeatmap.objects.create(
+                        tenant=tenant.slug,
+                        student_id=student_id,
+                        student_name=student_name,
+                        time_period='weekly',
+                        start_date=start_date,
+                        end_date=end_date,
+                        attendance_score=attendance_score,
+                        lms_activity_score=lms_score,
+                        sentiment_score=sentiment_score,
+                        risk_flags=risk_flags,
+                        heatmap_data=heatmap_data,
+                        engagement_trend=trend,
+                        change_percentage=change_pct,
+                        alerts_triggered=len(risk_flags),
+                        interventions_applied=random.randint(0, len(risk_flags))
+                    )
+                    heatmaps.append(heatmap)
+        
+        return heatmaps
+
+    def create_attendance_records(self, heatmaps):
+        """Create attendance records"""
+        records = []
+        
+        for heatmap in heatmaps:
+            # Create 5 attendance records per week (Mon-Fri)
+            for day in range(5):
+                date = heatmap.start_date + timedelta(days=day)
+                
+                # Determine status based on attendance score
+                if heatmap.attendance_score >= 80:
+                    status = random.choices(
+                        ['present', 'late', 'absent'],
+                        weights=[0.85, 0.10, 0.05]
+                    )[0]
+                elif heatmap.attendance_score >= 60:
+                    status = random.choices(
+                        ['present', 'late', 'absent', 'excused'],
+                        weights=[0.65, 0.15, 0.15, 0.05]
+                    )[0]
+                else:
+                    status = random.choices(
+                        ['present', 'late', 'absent', 'excused'],
+                        weights=[0.40, 0.10, 0.40, 0.10]
+                    )[0]
+                
+                session_start = timezone.now().replace(hour=9, minute=0, second=0, microsecond=0).time()
+                session_end = timezone.now().replace(hour=17, minute=0, second=0, microsecond=0).time()
+                
+                # Calculate arrival and minutes
+                if status == 'present':
+                    actual_arrival = timezone.now().replace(
+                        hour=random.randint(8, 9),
+                        minute=random.randint(0, 59),
+                        second=0,
+                        microsecond=0
+                    ).time()
+                    minutes_late = 0
+                    minutes_attended = random.randint(420, 480)  # 7-8 hours
+                    participation = random.choice(['high', 'medium'])
+                elif status == 'late':
+                    actual_arrival = timezone.now().replace(
+                        hour=random.randint(9, 10),
+                        minute=random.randint(0, 59),
+                        second=0,
+                        microsecond=0
+                    ).time()
+                    minutes_late = random.randint(15, 90)
+                    minutes_attended = random.randint(360, 450)
+                    participation = random.choice(['medium', 'low'])
+                elif status == 'excused':
+                    actual_arrival = None
+                    minutes_late = 0
+                    minutes_attended = 0
+                    participation = 'none'
+                else:  # absent
+                    actual_arrival = None
+                    minutes_late = 0
+                    minutes_attended = 0
+                    participation = 'none'
+                
+                record = AttendanceRecord.objects.create(
+                    heatmap=heatmap,
+                    tenant=heatmap.tenant,
+                    student_id=heatmap.student_id,
+                    date=date,
+                    status=status,
+                    session_name=f"Training Session - {date.strftime('%A')}",
+                    scheduled_start=session_start,
+                    scheduled_end=session_end,
+                    actual_arrival=actual_arrival,
+                    minutes_late=minutes_late,
+                    minutes_attended=minutes_attended,
+                    participation_level=participation
+                )
+                records.append(record)
+        
+        return records
+
+    def create_lms_activities(self, heatmaps):
+        """Create LMS activity records"""
+        activities = []
+        
+        activity_templates = [
+            {'type': 'login', 'name': 'LMS Login', 'duration': 0, 'course': '', 'module': ''},
+            {'type': 'content_view', 'name': 'Week {week} Learning Materials', 'duration': 15, 'course': 'Certificate III', 'module': 'Module {mod}'},
+            {'type': 'video_watch', 'name': 'Introduction to {topic}', 'duration': 25, 'course': 'Certificate III', 'module': 'Module {mod}'},
+            {'type': 'assignment_submit', 'name': 'Assessment Task {task}', 'duration': 120, 'course': 'Certificate III', 'module': 'Module {mod}'},
+            {'type': 'quiz_attempt', 'name': 'Knowledge Check {num}', 'duration': 30, 'course': 'Certificate III', 'module': 'Module {mod}'},
+            {'type': 'forum_post', 'name': 'Discussion Forum', 'duration': 10, 'course': 'Certificate III', 'module': 'Module {mod}'},
+            {'type': 'resource_download', 'name': 'Unit Materials', 'duration': 2, 'course': 'Certificate III', 'module': 'Module {mod}'},
+        ]
+        
+        topics = ['WHS', 'Customer Service', 'Communication', 'Food Safety', 'Industry Standards']
+        
+        for heatmap in heatmaps[:20]:  # Create activities for first 20 heatmaps only
+            # Number of activities based on LMS score
+            if heatmap.lms_activity_score >= 80:
+                num_activities = random.randint(15, 25)
+            elif heatmap.lms_activity_score >= 60:
+                num_activities = random.randint(8, 15)
+            else:
+                num_activities = random.randint(2, 8)
+            
+            for i in range(num_activities):
+                template = random.choice(activity_templates)
+                date = heatmap.start_date + timedelta(days=random.randint(0, 6))
+                
+                activity_name = template['name'].format(
+                    week=random.randint(1, 12),
+                    mod=random.randint(1, 6),
+                    task=random.randint(1, 10),
+                    num=random.randint(1, 5),
+                    topic=random.choice(topics)
+                )
+                
+                # Determine completion status
+                if template['type'] in ['login', 'content_view', 'video_watch', 'resource_download']:
+                    completion = random.choices(
+                        ['completed', 'in_progress', 'started'],
+                        weights=[0.80, 0.15, 0.05]
+                    )[0]
+                else:
+                    completion = random.choices(
+                        ['completed', 'in_progress', 'started', 'abandoned'],
+                        weights=[0.70, 0.15, 0.10, 0.05]
+                    )[0]
+                
+                # Quality score for assignments and quizzes
+                quality = None
+                if template['type'] in ['assignment_submit', 'quiz_attempt']:
+                    if completion == 'completed':
+                        quality = random.uniform(60, 95) if heatmap.lms_activity_score >= 70 else random.uniform(40, 75)
+                
+                # Ensure duration is never negative
+                duration = max(0, template['duration'] + random.randint(-5, 10))
+                
+                activity = LMSActivity.objects.create(
+                    heatmap=heatmap,
+                    tenant=heatmap.tenant,
+                    student_id=heatmap.student_id,
+                    date=date,
+                    activity_type=template['type'],
+                    activity_name=activity_name,
+                    timestamp=timezone.make_aware(
+                        timezone.datetime.combine(date, timezone.now().time())
+                    ),
+                    duration_minutes=duration,
+                    completion_status=completion,
+                    interaction_count=random.randint(1, 20),
+                    course_name=template['course'] if template['course'] else '',
+                    module_name=template['module'].format(mod=random.randint(1, 6)) if template['module'] else '',
+                    quality_score=quality
+                )
+                activities.append(activity)
+        
+        return activities
+
+    def create_discussion_sentiments(self, heatmaps):
+        """Create discussion sentiment records"""
+        sentiments = []
+        
+        message_templates = {
+            'very_positive': [
+                "I really enjoyed today's lesson! The practical examples helped me understand the concepts much better.",
+                "Thank you for the detailed feedback on my assessment. It's really helpful!",
+                "Great discussion everyone! I learned so much from your different perspectives."
+            ],
+            'positive': [
+                "The video tutorial was helpful. I understand the process now.",
+                "Thanks for clarifying that point. Makes sense now.",
+                "Good session today, covered a lot of useful material."
+            ],
+            'neutral': [
+                "I've submitted my assessment task 2.",
+                "Can someone share the link to the reading materials?",
+                "What time is the session tomorrow?"
+            ],
+            'negative': [
+                "I'm finding this topic really difficult to understand.",
+                "I'm not sure I follow the instructions for the assessment.",
+                "Having some technical issues accessing the materials."
+            ],
+            'very_negative': [
+                "I'm really struggling with this unit and feel quite overwhelmed.",
+                "Very frustrated - can't access the LMS again and deadline is approaching.",
+                "I don't think I can complete this on time. Too much is happening."
+            ]
+        }
+        
+        for heatmap in heatmaps[:15]:  # Create sentiments for first 15 heatmaps only
+            # Number of messages based on sentiment score
+            if heatmap.sentiment_score >= 70:
+                num_messages = random.randint(5, 10)
+                sentiment_distribution = {'very_positive': 0.4, 'positive': 0.4, 'neutral': 0.2}
+            elif heatmap.sentiment_score >= 50:
+                num_messages = random.randint(3, 7)
+                sentiment_distribution = {'positive': 0.3, 'neutral': 0.5, 'negative': 0.2}
+            else:
+                num_messages = random.randint(2, 5)
+                sentiment_distribution = {'neutral': 0.3, 'negative': 0.4, 'very_negative': 0.3}
+            
+            for i in range(num_messages):
+                date = heatmap.start_date + timedelta(days=random.randint(0, 6))
+                
+                # Select sentiment label based on distribution
+                sentiment_label = random.choices(
+                    list(sentiment_distribution.keys()),
+                    weights=list(sentiment_distribution.values())
+                )[0]
+                
+                message_content = random.choice(message_templates.get(sentiment_label, message_templates['neutral']))
+                
+                # Convert sentiment label to score
+                sentiment_score_map = {
+                    'very_positive': random.uniform(0.6, 0.9),
+                    'positive': random.uniform(0.2, 0.5),
+                    'neutral': random.uniform(-0.1, 0.1),
+                    'negative': random.uniform(-0.5, -0.2),
+                    'very_negative': random.uniform(-0.9, -0.6)
+                }
+                sentiment_score = sentiment_score_map[sentiment_label]
+                
+                # Determine emotion
+                emotion_map = {
+                    'very_positive': 'joy',
+                    'positive': 'interest',
+                    'neutral': 'interest',
+                    'negative': 'confusion',
+                    'very_negative': random.choice(['frustration', 'anxiety', 'sadness'])
+                }
+                primary_emotion = emotion_map[sentiment_label]
+                
+                # Emotion scores
+                emotion_scores = {
+                    'joy': 0.1, 'interest': 0.2, 'confusion': 0.1,
+                    'frustration': 0.1, 'anxiety': 0.1, 'sadness': 0.05
+                }
+                emotion_scores[primary_emotion] = random.uniform(0.6, 0.9)
+                
+                # Detect negative keywords
+                negative_keywords = []
+                help_keywords = []
+                if sentiment_label in ['negative', 'very_negative']:
+                    negative_keywords = random.sample(
+                        ['difficult', 'struggling', 'confused', 'frustrated', 'overwhelmed', 'stuck'],
+                        k=random.randint(1, 2)
+                    )
+                    help_keywords = random.sample(
+                        ['help', 'clarify', 'explain', 'support', 'assistance'],
+                        k=random.randint(0, 2)
+                    )
+                
+                sentiment = DiscussionSentiment.objects.create(
+                    heatmap=heatmap,
+                    tenant=heatmap.tenant,
+                    student_id=heatmap.student_id,
+                    date=date,
+                    timestamp=timezone.make_aware(
+                        timezone.datetime.combine(date, timezone.now().time())
+                    ),
+                    message_type=random.choice(['forum_post', 'forum_reply', 'chat_message']),
+                    message_content=message_content,
+                    sentiment_score=sentiment_score,
+                    confidence=random.uniform(0.75, 0.95),
+                    primary_emotion=primary_emotion,
+                    emotion_scores=emotion_scores,
+                    word_count=len(message_content.split()),
+                    question_count=message_content.count('?'),
+                    exclamation_count=message_content.count('!'),
+                    negative_keywords=negative_keywords,
+                    help_seeking_keywords=help_keywords,
+                    discussion_topic=random.choice(['Unit Discussion', 'Assessment Help', 'General Questions', 'Technical Support']),
+                    reply_count=random.randint(0, 5)
+                )
+                sentiments.append(sentiment)
+        
+        return sentiments
+
+    def create_engagement_alerts(self, heatmaps):
+        """Create engagement alerts"""
+        alerts = []
+        
+        alert_templates = {
+            'attendance': {
+                'title': 'Low Attendance Warning',
+                'description': 'Student has missed {days} days in the last week. Attendance score: {score}%',
+                'recommended_actions': [
+                    'Contact student to discuss attendance concerns',
+                    'Review any documented reasons for absence',
+                    'Offer catch-up session or additional support',
+                    'Document communication and follow-up plan'
+                ]
+            },
+            'lms_inactivity': {
+                'title': 'LMS Inactivity Detected',
+                'description': 'Student has not logged into LMS for {days} days. Last activity: {last_activity}',
+                'recommended_actions': [
+                    'Send email reminder about upcoming deadlines',
+                    'Check if student is experiencing technical issues',
+                    'Offer one-on-one support session',
+                    'Review course engagement strategies'
+                ]
+            },
+            'negative_sentiment': {
+                'title': 'Negative Sentiment Detected',
+                'description': 'Recent forum posts show concerning sentiment. Keywords detected: {keywords}',
+                'recommended_actions': [
+                    'Reach out to student for welfare check',
+                    'Offer additional learning support',
+                    'Connect with student support services',
+                    'Review workload and deadline flexibility'
+                ]
+            },
+            'overall_engagement': {
+                'title': 'Overall Engagement Risk',
+                'description': 'Multiple engagement metrics below threshold. Overall score: {score}%',
+                'recommended_actions': [
+                    'Schedule intervention meeting with student',
+                    'Develop personalized support plan',
+                    'Consider adjustment to learning pathway',
+                    'Escalate to course coordinator if needed'
+                ]
+            }
+        }
+        
+        for heatmap in heatmaps:
+            # Only create alerts for at-risk students (medium, high, critical)
+            if heatmap.risk_level not in ['medium', 'high', 'critical']:
+                continue
+            
+            # Create 1-3 alerts based on risk flags
+            num_alerts = min(len(heatmap.risk_flags), 3) if heatmap.risk_flags else 0
+            
+            if num_alerts == 0 and heatmap.risk_level in ['high', 'critical']:
+                num_alerts = 1  # Ensure critical students have at least one alert
+            
+            for i in range(num_alerts):
+                # Select alert type based on risk flags or random
+                if heatmap.risk_flags:
+                    if 'low_attendance' in heatmap.risk_flags:
+                        alert_type = 'attendance'
+                        heatmap.risk_flags.remove('low_attendance')
+                    elif 'inactive_lms' in heatmap.risk_flags:
+                        alert_type = 'lms_inactivity'
+                        heatmap.risk_flags.remove('inactive_lms')
+                    elif 'negative_sentiment' in heatmap.risk_flags:
+                        alert_type = 'negative_sentiment'
+                        heatmap.risk_flags.remove('negative_sentiment')
+                    else:
+                        alert_type = 'overall_engagement'
+                else:
+                    alert_type = 'overall_engagement'
+                
+                template = alert_templates[alert_type]
+                
+                # Format description
+                description = template['description'].format(
+                    days=random.randint(2, 5),
+                    score=int(heatmap.attendance_score if alert_type == 'attendance' else heatmap.overall_engagement_score),
+                    last_activity='5 days ago',
+                    keywords=', '.join(['struggling', 'frustrated', 'difficult'])
+                )
+                
+                # Determine severity
+                if heatmap.risk_level == 'critical':
+                    severity = 'critical'
+                elif heatmap.risk_level == 'high':
+                    severity = random.choice(['high', 'critical'])
+                else:
+                    severity = random.choice(['medium', 'high'])
+                
+                # Determine status
+                status = random.choices(
+                    ['active', 'acknowledged', 'resolved'],
+                    weights=[0.50, 0.30, 0.20]
+                )[0]
+                
+                alert = EngagementAlert.objects.create(
+                    heatmap=heatmap,
+                    tenant=heatmap.tenant,
+                    student_id=heatmap.student_id,
+                    student_name=heatmap.student_name,
+                    alert_type=alert_type,
+                    severity=severity,
+                    title=template['title'],
+                    description=description,
+                    trigger_metrics={
+                        'attendance_score': float(heatmap.attendance_score),
+                        'lms_score': float(heatmap.lms_activity_score),
+                        'sentiment_score': float(heatmap.sentiment_score),
+                        'overall_score': float(heatmap.overall_engagement_score)
+                    },
+                    recommended_actions=template['recommended_actions'],
+                    status=status,
+                    acknowledged_by='Trainer Support' if status in ['acknowledged', 'resolved'] else '',
+                    acknowledged_at=timezone.now() - timedelta(days=random.randint(1, 3)) if status in ['acknowledged', 'resolved'] else None,
+                    resolved_at=timezone.now() - timedelta(hours=random.randint(1, 24)) if status == 'resolved' else None,
+                    resolution_notes='Student contacted and support plan created' if status == 'resolved' else ''
+                )
+                alerts.append(alert)
+        
+        return alerts
