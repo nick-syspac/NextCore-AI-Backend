@@ -18,6 +18,7 @@ from assessment_builder.models import Assessment, AssessmentTask, AssessmentCrit
 from audit_assistant.models import Evidence, ClauseEvidence, AuditReport, AuditReportClause
 from auto_marker.models import AutoMarker, MarkedResponse, MarkingCriterion, CriterionScore
 from competency_gap.models import TrainerQualification, UnitOfCompetency, TrainerAssignment, CompetencyGap
+from adaptive_pathway.models import LearningPathway, LearningStep, StudentProgress, PathwayRecommendation
 
 
 class Command(BaseCommand):
@@ -109,6 +110,22 @@ class Command(BaseCommand):
         markers = self.create_auto_markers(tenants, assessments, users)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(markers)} auto markers'))
         
+        # Create learning pathways
+        pathways = self.create_learning_pathways(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(pathways)} learning pathways'))
+        
+        # Create learning steps
+        steps = self.create_learning_steps(pathways)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(steps)} learning steps'))
+        
+        # Create student progress
+        progress = self.create_student_progress(pathways, steps, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(progress)} progress records'))
+        
+        # Create pathway recommendations
+        recommendations = self.create_pathway_recommendations(tenants, users, pathways)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(recommendations)} pathway recommendations'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -121,6 +138,27 @@ class Command(BaseCommand):
         from django.db.utils import ProgrammingError
         
         # Delete in order to avoid foreign key constraints
+        # Adaptive Pathway
+        try:
+            PathwayRecommendation.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            StudentProgress.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            LearningStep.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            LearningPathway.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
         # Assessment Builder
         try:
             AssessmentGenerationLog.objects.all().delete()
@@ -1062,3 +1100,193 @@ Aligns with Standards 6.1 to 6.6:
             markers.append(marker)
         
         return markers
+
+    def create_learning_pathways(self, tenants, users):
+        """Create learning pathways"""
+        pathways = []
+        
+        pathway_templates = [
+            {
+                'name': 'Introduction to Training and Assessment',
+                'difficulty': 'beginner',
+                'duration': 40.0,
+                'description': 'Complete pathway for new trainers to understand VET sector requirements'
+            },
+            {
+                'name': 'Advanced Compliance Management',
+                'difficulty': 'advanced',
+                'duration': 60.0,
+                'description': 'Deep dive into ASQA standards and compliance frameworks'
+            },
+            {
+                'name': 'Assessment Design Mastery',
+                'difficulty': 'intermediate',
+                'duration': 50.0,
+                'description': 'Learn to create effective assessments aligned with industry standards'
+            },
+        ]
+        
+        # Create pathways for trainers
+        for user in users[2:4]:  # trainers
+            for tenant in tenants[:2]:
+                for template in pathway_templates:
+                    pathway = LearningPathway.objects.create(
+                        tenant=tenant.slug,
+                        student_id=str(user.id),
+                        student_name=user.get_full_name(),
+                        pathway_name=template['name'],
+                        description=template['description'],
+                        difficulty_level=template['difficulty'],
+                        estimated_duration_hours=template['duration'],
+                        recommendation_confidence=random.uniform(75, 95),
+                        similarity_score=random.uniform(0.75, 0.95),
+                        status=random.choice(['active', 'active', 'completed']),
+                        total_steps=random.randint(5, 10),
+                        completed_steps=random.randint(0, 5),
+                        personalization_factors={
+                            'learning_style': random.choice(['visual', 'auditory', 'kinesthetic']),
+                            'pace': random.choice(['slow', 'moderate', 'fast']),
+                            'interests': ['compliance', 'assessment', 'training'],
+                            'prior_knowledge': template['difficulty']
+                        },
+                        similar_students=['student_123', 'student_456']
+                    )
+                    
+                    if pathway.status == 'active':
+                        pathway.started_at = timezone.now() - timedelta(days=random.randint(1, 30))
+                    elif pathway.status == 'completed':
+                        pathway.started_at = timezone.now() - timedelta(days=random.randint(30, 90))
+                        pathway.completed_at = timezone.now() - timedelta(days=random.randint(1, 15))
+                    
+                    pathway.save()
+                    pathways.append(pathway)
+        
+        return pathways
+
+    def create_learning_steps(self, pathways):
+        """Create learning steps for pathways"""
+        steps = []
+        
+        content_types = ['video', 'reading', 'quiz', 'assignment', 'interactive']
+        
+        step_templates = [
+            {'title': 'Introduction to VET Standards', 'type': 'video', 'minutes': 15, 'difficulty': 2.0},
+            {'title': 'Understanding ASQA Requirements', 'type': 'reading', 'minutes': 30, 'difficulty': 3.0},
+            {'title': 'Compliance Framework Overview', 'type': 'interactive', 'minutes': 20, 'difficulty': 2.5},
+            {'title': 'Assessment Design Principles', 'type': 'video', 'minutes': 25, 'difficulty': 3.5},
+            {'title': 'Knowledge Check Quiz', 'type': 'quiz', 'minutes': 15, 'difficulty': 3.0},
+            {'title': 'Practical Assessment Task', 'type': 'assignment', 'minutes': 60, 'difficulty': 4.0},
+            {'title': 'Industry Standards Deep Dive', 'type': 'reading', 'minutes': 40, 'difficulty': 4.5},
+        ]
+        
+        for pathway in pathways:
+            num_steps = pathway.total_steps
+            for i in range(num_steps):
+                template = random.choice(step_templates)
+                
+                step = LearningStep.objects.create(
+                    pathway=pathway,
+                    title=template['title'],
+                    description=f'Learning content for {template["title"]}',
+                    content_type=template['type'],
+                    content_url=f'https://learning.example.com/content/{i+1}',
+                    sequence_order=i + 1,
+                    is_prerequisite=(i == 0),
+                    prerequisites=[f'STEP-{i}'] if i > 0 else [],
+                    estimated_minutes=template['minutes'],
+                    difficulty_rating=template['difficulty'],
+                    learning_objectives=[
+                        f'Understand key concepts of {template["title"]}',
+                        'Apply knowledge in practical scenarios',
+                        'Demonstrate mastery through assessment'
+                    ],
+                    tags=['VET', 'compliance', 'training', template['type']],
+                    status=random.choice(['completed', 'in_progress', 'not_started']) if i < pathway.completed_steps else 'not_started'
+                )
+                
+                if step.status == 'completed':
+                    step.started_at = timezone.now() - timedelta(days=random.randint(5, 30))
+                    step.completed_at = timezone.now() - timedelta(days=random.randint(1, 20))
+                    step.completion_score = random.uniform(70, 100)
+                elif step.status == 'in_progress':
+                    step.started_at = timezone.now() - timedelta(days=random.randint(1, 5))
+                
+                step.save()
+                steps.append(step)
+        
+        return steps
+
+    def create_student_progress(self, pathways, steps, users):
+        """Create student progress records"""
+        progress_records = []
+        
+        for pathway in pathways:
+            pathway_steps = [s for s in steps if s.pathway == pathway]
+            
+            for step in pathway_steps[:pathway.completed_steps]:
+                progress = StudentProgress.objects.create(
+                    tenant=pathway.tenant,
+                    student_id=pathway.student_id,
+                    pathway=pathway,
+                    step=step,
+                    time_spent_minutes=random.randint(step.estimated_minutes, step.estimated_minutes * 2),
+                    completion_score=random.uniform(70, 100),
+                    attempts=random.randint(1, 2),
+                    struggle_indicators={
+                        'multiple_attempts': random.choice([True, False]),
+                        'extended_time': random.choice([True, False]),
+                        'help_requests': random.randint(0, 3)
+                    },
+                    engagement_level=random.choice(['high', 'medium', 'low']),
+                    recommended_next_steps=[],
+                    difficulty_adjustment=random.choice(['maintain', 'maintain', 'easier']),
+                    is_completed=True
+                )
+                
+                progress.completed_at = timezone.now() - timedelta(days=random.randint(1, 30))
+                progress.save()
+                progress_records.append(progress)
+        
+        return progress_records
+
+    def create_pathway_recommendations(self, tenants, users, pathways):
+        """Create pathway recommendations"""
+        recommendations = []
+        
+        recommendation_reasons = [
+            'Similar students with your background found this pathway effective',
+            'Based on your learning style and pace preferences',
+            'Recommended to fill identified competency gaps',
+            'Popular choice among trainers in your field',
+            'Aligns with your career development goals'
+        ]
+        
+        for user in users[2:4]:  # trainers
+            for tenant in tenants[:2]:
+                tenant_pathways = [p for p in pathways if p.tenant == tenant.slug and p.student_id != str(user.id)]
+                
+                if tenant_pathways:
+                    for i in range(min(2, len(tenant_pathways))):
+                        sample_pathway = random.choice(tenant_pathways)
+                        
+                        recommendation = PathwayRecommendation.objects.create(
+                            tenant=tenant.slug,
+                            student_id=str(user.id),
+                            student_name=user.get_full_name(),
+                            recommended_pathway=sample_pathway,
+                            algorithm_used=random.choice(['collaborative_filtering', 'content_based', 'hybrid']),
+                            recommendation_score=random.uniform(0.75, 0.95),
+                            collaborative_score=random.uniform(0.70, 0.90),
+                            embedding_similarity=random.uniform(0.75, 0.95),
+                            similar_students_count=random.randint(5, 50),
+                            similar_students_list=['student_123', 'student_456', 'student_789'],
+                            common_pathways=['PATH-001', 'PATH-002'],
+                            recommendation_reasons=[random.choice(recommendation_reasons) for _ in range(2)],
+                            is_accepted=random.choice([True, False, None]),
+                            feedback_score=random.randint(3, 5) if random.random() > 0.5 else None,
+                            expires_at=timezone.now() + timedelta(days=30)
+                        )
+                        
+                        recommendations.append(recommendation)
+        
+        return recommendations
