@@ -9,6 +9,13 @@ import random
 
 from tenants.models import Tenant, TenantUser, TenantAPIKey
 from users.models import UserInvitation, EmailVerification
+from authenticity_check.models import (
+    AuthenticityCheck,
+    SubmissionAnalysis,
+    PlagiarismMatch,
+    MetadataVerification,
+    AnomalyDetection,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -135,6 +142,26 @@ class Command(BaseCommand):
         verifications = self.create_email_verifications(users)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(verifications)} email verifications'))
         
+        # Create authenticity checks
+        authenticity_checks = self.create_authenticity_checks(tenants, users, assessments)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(authenticity_checks)} authenticity checks'))
+        
+        # Create submission analyses
+        submission_analyses = self.create_submission_analyses(authenticity_checks, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(submission_analyses)} submission analyses'))
+        
+        # Create plagiarism matches
+        plagiarism_matches = self.create_plagiarism_matches(submission_analyses)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(plagiarism_matches)} plagiarism matches'))
+        
+        # Create metadata verifications
+        metadata_verifications = self.create_metadata_verifications(submission_analyses)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(metadata_verifications)} metadata verifications'))
+        
+        # Create anomaly detections
+        anomaly_detections = self.create_anomaly_detections(submission_analyses)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(anomaly_detections)} anomaly detections'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -147,6 +174,32 @@ class Command(BaseCommand):
         from django.db.utils import ProgrammingError
         
         # Delete in order to avoid foreign key constraints
+        # Authenticity Check
+        try:
+            AnomalyDetection.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            MetadataVerification.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            PlagiarismMatch.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            SubmissionAnalysis.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            AuthenticityCheck.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
         # Users & Auth
         try:
             UserInvitation.objects.all().delete()
@@ -1407,3 +1460,268 @@ Aligns with Standards 6.1 to 6.6:
             verifications.append(verification)
         
         return verifications
+
+    def create_authenticity_checks(self, tenants, users, assessments):
+        """Create authenticity check records"""
+        checks = []
+        
+        for i, assessment in enumerate(assessments[:3]):  # Create checks for first 3 assessments
+            check = AuthenticityCheck.objects.create(
+                assessment=assessment,
+                name=f"Authenticity Check - {assessment.unit_code}",
+                description=f"Comprehensive authenticity verification for {assessment.unit_title} submissions",
+                plagiarism_threshold=random.choice([0.6, 0.7, 0.75, 0.8]),
+                metadata_verification_enabled=True,
+                anomaly_detection_enabled=True,
+                academic_integrity_mode=random.choice([True, True, False]),
+                status=random.choice(['completed', 'completed', 'processing', 'flagged']),
+                total_submissions_checked=random.randint(5, 15),
+                plagiarism_cases_detected=random.randint(0, 3),
+                metadata_issues_found=random.randint(0, 2),
+                anomalies_detected=random.randint(0, 4),
+                overall_integrity_score=random.uniform(75.0, 95.0),
+                created_by=users[0]
+            )
+            checks.append(check)
+        
+        return checks
+
+    def create_submission_analyses(self, checks, users):
+        """Create submission analysis records"""
+        analyses = []
+        
+        sample_submissions = [
+            {
+                'content': 'This submission demonstrates comprehensive understanding of work health and safety principles. The student has identified key hazards in the workplace including electrical hazards, slips and trips, and manual handling risks. Control measures have been appropriately recommended following the hierarchy of controls, prioritizing elimination and substitution before considering engineering controls and PPE.',
+                'student_name': 'Emma Wilson',
+            },
+            {
+                'content': 'Work health safety principles are important in workplace. Hazards include electrical, slips trips, manual handling. Control measures follow hierarchy of controls with elimination and substitution before engineering controls and PPE.',
+                'student_name': 'James Chen',
+            },
+            {
+                'content': 'The implementation of WHS management systems requires a systematic approach to identifying, assessing and controlling workplace risks. This involves conducting regular workplace inspections, consulting with workers, reviewing incident reports, and maintaining comprehensive documentation. Risk assessments must consider both the likelihood and consequence of potential hazards.',
+                'student_name': 'Sarah Johnson',
+            },
+            {
+                'content': 'In this assignment I will discuss the workplace health and safety requirements. The Work Health and Safety Act 2011 requires employers to provide a safe working environment. This includes providing adequate training, maintaining equipment, and ensuring proper supervision of workers.',
+                'student_name': 'Michael Brown',
+            },
+            {
+                'content': 'This submission demonstrates comprehensive understanding of work health and safety principles. The student has identified key hazards in the workplace including electrical hazards, slips and trips, and manual handling risks. Control measures have been appropriately recommended.',
+                'student_name': 'Jessica Lee',
+            },
+        ]
+        
+        for check in checks:
+            num_submissions = min(len(sample_submissions), check.total_submissions_checked)
+            
+            for i in range(num_submissions):
+                submission = sample_submissions[i]
+                
+                # Generate embedding (mock 384-dimensional vector)
+                embedding = [random.uniform(-1, 1) for _ in range(384)]
+                
+                analysis = SubmissionAnalysis.objects.create(
+                    authenticity_check=check,
+                    submission_id=f"SUB-{timezone.now().strftime('%Y%m%d')}-{i+1:04d}",
+                    student_id=f"STU-{random.randint(1000, 9999)}",
+                    student_name=submission['student_name'],
+                    submission_content=submission['content'],
+                    content_embedding=embedding,
+                    plagiarism_score=random.uniform(0.0, 0.85),
+                    metadata_verification_score=random.uniform(80.0, 100.0),
+                    anomaly_score=random.uniform(0.0, 40.0),
+                    plagiarism_detected=(random.random() < 0.3),
+                    metadata_issues=(random.random() < 0.2),
+                    anomalies_found=(random.random() < 0.25),
+                    analysis_metadata={
+                        'language': 'en-AU',
+                        'submission_time': (timezone.now() - timedelta(hours=random.randint(1, 72))).isoformat(),
+                        'browser': random.choice(['Chrome', 'Firefox', 'Safari', 'Edge']),
+                        'device_type': random.choice(['Desktop', 'Laptop', 'Tablet']),
+                    }
+                )
+                
+                # Calculate combined integrity score
+                analysis.calculate_combined_score()
+                analyses.append(analysis)
+        
+        return analyses
+
+    def create_plagiarism_matches(self, analyses):
+        """Create plagiarism match records"""
+        matches = []
+        
+        # Create matches between similar submissions
+        if len(analyses) >= 2:
+            # Match first and last submission (high similarity)
+            match = PlagiarismMatch.objects.create(
+                source_analysis=analyses[0],
+                matched_analysis=analyses[-1],
+                similarity_score=random.uniform(0.85, 0.95),
+                match_type='embedding',
+                matched_text_segments=[
+                    {
+                        'source_start': 0,
+                        'source_end': 150,
+                        'match_start': 0,
+                        'match_end': 145,
+                        'text': 'work health and safety principles... key hazards'
+                    }
+                ],
+                matched_words_count=random.randint(50, 100),
+                matched_percentage=random.uniform(70, 90),
+                reviewed=random.choice([True, False]),
+                false_positive=False
+            )
+            matches.append(match)
+        
+        if len(analyses) >= 3:
+            # Another match with medium similarity
+            match = PlagiarismMatch.objects.create(
+                source_analysis=analyses[1],
+                matched_analysis=analyses[2],
+                similarity_score=random.uniform(0.65, 0.75),
+                match_type='paraphrased',
+                matched_text_segments=[
+                    {
+                        'source_start': 20,
+                        'source_end': 80,
+                        'match_start': 15,
+                        'match_end': 75,
+                        'text': 'workplace risks... documentation'
+                    }
+                ],
+                matched_words_count=random.randint(20, 40),
+                matched_percentage=random.uniform(40, 60),
+                reviewed=True,
+                false_positive=False,
+                review_notes='Legitimate paraphrasing detected, but similarity warrants monitoring'
+            )
+            matches.append(match)
+        
+        return matches
+
+    def create_metadata_verifications(self, analyses):
+        """Create metadata verification records"""
+        verifications = []
+        
+        for analysis in analyses[:4]:  # Verify first 4 submissions
+            anomalies = []
+            
+            # Randomly add anomalies
+            if random.random() < 0.3:
+                anomalies.append({
+                    'type': 'author_mismatch',
+                    'description': 'Document author does not match student name',
+                    'severity': 'medium'
+                })
+            
+            if random.random() < 0.2:
+                anomalies.append({
+                    'type': 'modification_pattern',
+                    'description': 'Multiple rapid modifications detected',
+                    'severity': 'low'
+                })
+            
+            if random.random() < 0.15:
+                anomalies.append({
+                    'type': 'creation_timestamp',
+                    'description': 'File creation date predates assessment release',
+                    'severity': 'high'
+                })
+            
+            verification = MetadataVerification.objects.create(
+                submission_analysis=analysis,
+                file_metadata={
+                    'file_type': random.choice(['docx', 'pdf', 'txt']),
+                    'file_size': random.randint(50000, 500000),
+                    'page_count': random.randint(3, 15),
+                },
+                creation_timestamp=timezone.now() - timedelta(days=random.randint(1, 30)),
+                modification_timestamp=timezone.now() - timedelta(hours=random.randint(1, 48)),
+                modification_history=[
+                    {
+                        'timestamp': (timezone.now() - timedelta(days=2)).isoformat(),
+                        'action': 'created'
+                    },
+                    {
+                        'timestamp': (timezone.now() - timedelta(days=1)).isoformat(),
+                        'action': 'modified'
+                    }
+                ],
+                author_info={
+                    'name': analysis.student_name,
+                    'email': f"{analysis.student_name.lower().replace(' ', '.')}@example.com"
+                },
+                author_matches_student=(len(anomalies) == 0 or anomalies[0]['type'] != 'author_mismatch'),
+                anomalies_detected=anomalies
+            )
+            verifications.append(verification)
+        
+        return verifications
+
+    def create_anomaly_detections(self, analyses):
+        """Create anomaly detection records"""
+        detections = []
+        
+        anomaly_types_data = [
+            {
+                'type': 'typing_speed',
+                'description': 'Typing speed significantly above student average (250 WPM vs typical 45 WPM)',
+                'severity': 'high',
+                'confidence': 0.85,
+                'data': {'average_wpm': 250, 'student_baseline': 45, 'percentile': 99}
+            },
+            {
+                'type': 'paste_events',
+                'description': 'Multiple large paste events detected throughout submission',
+                'severity': 'medium',
+                'confidence': 0.75,
+                'data': {'paste_count': 12, 'avg_paste_size': 350, 'total_pasted_chars': 4200}
+            },
+            {
+                'type': 'time_gaps',
+                'description': 'Suspicious time gap: 15 minutes inactive followed by 500 words added',
+                'severity': 'medium',
+                'confidence': 0.65,
+                'data': {'gap_duration_minutes': 15, 'words_after_gap': 500, 'normal_rate': 30}
+            },
+            {
+                'type': 'behavioral',
+                'description': 'Writing style differs significantly from previous submissions',
+                'severity': 'high',
+                'confidence': 0.80,
+                'data': {'style_similarity': 0.45, 'vocabulary_overlap': 0.38, 'sentence_structure_diff': 0.72}
+            },
+            {
+                'type': 'pattern',
+                'description': 'Unusual editing pattern: minimal corrections compared to student history',
+                'severity': 'low',
+                'confidence': 0.60,
+                'data': {'correction_count': 3, 'student_avg': 45, 'percentile': 5}
+            },
+        ]
+        
+        for analysis in analyses:
+            # Add 0-2 anomalies per submission
+            num_anomalies = random.choices([0, 1, 2], weights=[0.5, 0.3, 0.2])[0]
+            
+            if analysis.anomalies_found and num_anomalies > 0:
+                selected_anomalies = random.sample(anomaly_types_data, min(num_anomalies, len(anomaly_types_data)))
+                
+                for anomaly_data in selected_anomalies:
+                    detection = AnomalyDetection.objects.create(
+                        submission_analysis=analysis,
+                        anomaly_type=anomaly_data['type'],
+                        severity=anomaly_data['severity'],
+                        description=anomaly_data['description'],
+                        confidence_score=anomaly_data['confidence'],
+                        anomaly_data=anomaly_data['data'],
+                        acknowledged=(random.random() < 0.3),
+                        false_positive=(random.random() < 0.1)
+                    )
+                    detections.append(detection)
+        
+        return detections
