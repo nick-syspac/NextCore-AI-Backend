@@ -8,6 +8,7 @@ from datetime import timedelta
 import random
 
 from tenants.models import Tenant, TenantUser, TenantAPIKey
+from users.models import UserInvitation, EmailVerification
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -126,6 +127,14 @@ class Command(BaseCommand):
         recommendations = self.create_pathway_recommendations(tenants, users, pathways)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(recommendations)} pathway recommendations'))
         
+        # Create user invitations
+        invitations = self.create_user_invitations(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(invitations)} user invitations'))
+        
+        # Create email verifications
+        verifications = self.create_email_verifications(users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(verifications)} email verifications'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -138,6 +147,17 @@ class Command(BaseCommand):
         from django.db.utils import ProgrammingError
         
         # Delete in order to avoid foreign key constraints
+        # Users & Auth
+        try:
+            UserInvitation.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            EmailVerification.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
         # Adaptive Pathway
         try:
             PathwayRecommendation.objects.all().delete()
@@ -1290,3 +1310,100 @@ Aligns with Standards 6.1 to 6.6:
                         recommendations.append(recommendation)
         
         return recommendations
+
+    def create_user_invitations(self, tenants, users):
+        """Create user invitations with various states"""
+        invitations = []
+        
+        invitation_messages = [
+            'We would love to have you join our training team.',
+            'Your expertise would be a great addition to our organization.',
+            'Join us to help deliver quality education and training.',
+            'We think you would be a perfect fit for our team.',
+            'Please accept this invitation to collaborate with us.'
+        ]
+        
+        # Pending invitations (future expiry)
+        for i, tenant in enumerate(tenants):
+            for j in range(2):
+                email = f'pending{i}_{j}@example.com'
+                role = random.choice(['member', 'viewer', 'admin'])
+                
+                invitation = UserInvitation.objects.create(
+                    tenant=tenant,
+                    email=email,
+                    role=role,
+                    invited_by=users[0],  # admin user
+                    message=random.choice(invitation_messages),
+                    status='pending',
+                    expires_at=timezone.now() + timedelta(days=random.randint(3, 7))
+                )
+                invitations.append(invitation)
+        
+        # Accepted invitations (linked to existing TenantUser relationships)
+        for i, tenant in enumerate(tenants):
+            for user in users[1:3]:  # manager and trainer
+                invitation = UserInvitation.objects.create(
+                    tenant=tenant,
+                    email=user.email,
+                    role='member',
+                    invited_by=users[0],
+                    message=invitation_messages[0],
+                    status='accepted',
+                    expires_at=timezone.now() + timedelta(days=7),
+                    accepted_at=timezone.now() - timedelta(days=random.randint(1, 10)),
+                    accepted_by=user
+                )
+                invitations.append(invitation)
+        
+        # Expired invitations (past expiry)
+        for i, tenant in enumerate(tenants[:2]):
+            email = f'expired{i}@example.com'
+            
+            invitation = UserInvitation.objects.create(
+                tenant=tenant,
+                email=email,
+                role='viewer',
+                invited_by=users[0],
+                message='This invitation has expired',
+                status='expired',
+                expires_at=timezone.now() - timedelta(days=random.randint(1, 30))
+            )
+            invitations.append(invitation)
+        
+        # Cancelled invitation
+        invitation = UserInvitation.objects.create(
+            tenant=tenants[0],
+            email='cancelled@example.com',
+            role='member',
+            invited_by=users[0],
+            message='This invitation was cancelled',
+            status='cancelled',
+            expires_at=timezone.now() + timedelta(days=7)
+        )
+        invitations.append(invitation)
+        
+        return invitations
+
+    def create_email_verifications(self, users):
+        """Create email verification records"""
+        verifications = []
+        
+        # Verified users (admin and manager)
+        for user in users[:2]:
+            verification = EmailVerification.objects.create(
+                user=user,
+                verified=True,
+                verified_at=timezone.now() - timedelta(days=random.randint(1, 30))
+            )
+            verifications.append(verification)
+        
+        # Unverified users (trainer and assessor)
+        for user in users[2:4]:
+            verification = EmailVerification.objects.create(
+                user=user,
+                verified=False
+            )
+            verifications.append(verification)
+        
+        return verifications
