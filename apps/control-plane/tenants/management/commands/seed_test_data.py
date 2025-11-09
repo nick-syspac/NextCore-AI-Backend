@@ -16,6 +16,12 @@ from authenticity_check.models import (
     MetadataVerification,
     AnomalyDetection,
 )
+from continuous_improvement.models import (
+    ImprovementCategory,
+    ImprovementAction,
+    ActionTracking,
+    ImprovementReview,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -162,6 +168,22 @@ class Command(BaseCommand):
         anomaly_detections = self.create_anomaly_detections(submission_analyses)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(anomaly_detections)} anomaly detections'))
         
+        # Create improvement categories
+        improvement_categories = self.create_improvement_categories(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(improvement_categories)} improvement categories'))
+        
+        # Create improvement actions
+        improvement_actions = self.create_improvement_actions(tenants, users, improvement_categories)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(improvement_actions)} improvement actions'))
+        
+        # Create action tracking updates
+        action_tracking = self.create_action_tracking(improvement_actions, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(action_tracking)} action tracking updates'))
+        
+        # Create improvement reviews
+        improvement_reviews = self.create_improvement_reviews(tenants, users, improvement_actions)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(improvement_reviews)} improvement reviews'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -174,6 +196,27 @@ class Command(BaseCommand):
         from django.db.utils import ProgrammingError
         
         # Delete in order to avoid foreign key constraints
+        # Continuous Improvement
+        try:
+            ImprovementReview.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            ActionTracking.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            ImprovementAction.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            ImprovementCategory.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
         # Authenticity Check
         try:
             AnomalyDetection.objects.all().delete()
@@ -1725,3 +1768,365 @@ Aligns with Standards 6.1 to 6.6:
                     detections.append(detection)
         
         return detections
+
+    def create_improvement_categories(self, tenants, users):
+        """Create improvement categories"""
+        categories = []
+        
+        category_templates = [
+            {
+                'name': 'Training Delivery',
+                'type': 'training_assessment',
+                'description': 'Improvements related to training delivery methods and effectiveness',
+                'color': '#3B82F6',
+                'standards': ['Standard 1.1', 'Standard 1.2', 'Standard 1.3']
+            },
+            {
+                'name': 'Assessment Quality',
+                'type': 'training_assessment',
+                'description': 'Enhancements to assessment tools, validation, and moderation',
+                'color': '#8B5CF6',
+                'standards': ['Standard 1.8', 'Standard 1.9', 'Standard 1.10']
+            },
+            {
+                'name': 'Trainer Professional Development',
+                'type': 'trainer_qualifications',
+                'description': 'Professional development and upskilling of training staff',
+                'color': '#EC4899',
+                'standards': ['Standard 1.13', 'Standard 1.14', 'Standard 1.15']
+            },
+            {
+                'name': 'Student Support',
+                'type': 'student_support',
+                'description': 'Improvements to student services and support mechanisms',
+                'color': '#10B981',
+                'standards': ['Standard 1.6', 'Standard 1.7']
+            },
+            {
+                'name': 'Compliance Documentation',
+                'type': 'compliance_governance',
+                'description': 'Enhancements to compliance processes and documentation',
+                'color': '#F59E0B',
+                'standards': ['Standard 2.1', 'Standard 2.2', 'Standard 2.3']
+            },
+            {
+                'name': 'Quality Assurance Processes',
+                'type': 'quality_assurance',
+                'description': 'Improvements to internal quality assurance systems',
+                'color': '#06B6D4',
+                'standards': ['Standard 1.11', 'Standard 2.4']
+            },
+        ]
+        
+        for tenant in tenants:
+            for template in category_templates:
+                category = ImprovementCategory.objects.create(
+                    tenant=tenant,
+                    name=template['name'],
+                    category_type=template['type'],
+                    description=template['description'],
+                    color_code=template['color'],
+                    related_standards=template['standards'],
+                    is_active=True,
+                    created_by=users[0]
+                )
+                categories.append(category)
+        
+        return categories
+
+    def create_improvement_actions(self, tenants, users, categories):
+        """Create improvement actions"""
+        actions = []
+        
+        action_templates = [
+            {
+                'title': 'Implement online assessment submission system',
+                'description': 'Deploy digital assessment submission platform to improve efficiency and reduce paper-based processes. This will enable students to submit assessments online, provide automatic tracking, and streamline the marking workflow.',
+                'category_type': 'training_assessment',
+                'priority': 'high',
+                'source': 'staff_suggestion',
+                'root_cause': 'Current paper-based system is time-consuming and prone to loss',
+                'proposed_solution': 'Implement Learning Management System with assessment submission module',
+                'resources_required': 'LMS software license, staff training, technical support',
+                'estimated_cost': 15000.00,
+                'success_criteria': 'All assessments submitted digitally, 90% student satisfaction',
+                'expected_impact': 'Reduce processing time by 50%, improve tracking accuracy',
+                'ai_keywords': ['digital', 'assessment', 'efficiency', 'LMS', 'automation'],
+                'ai_standards': ['Standard 1.8', 'Standard 1.9'],
+                'status': 'in_progress',
+                'days_offset_start': -30,
+                'days_offset_due': 60,
+            },
+            {
+                'title': 'Update trainer qualification records in VETtrak',
+                'description': 'Comprehensive review and update of all trainer and assessor qualification records in VETtrak to ensure accuracy and compliance with ASQA requirements.',
+                'category_type': 'trainer_qualifications',
+                'priority': 'critical',
+                'source': 'audit',
+                'root_cause': 'Quarterly audit identified gaps in currency documentation',
+                'proposed_solution': 'Conduct full audit of trainer files and update VETtrak records',
+                'resources_required': 'Compliance manager time, trainer cooperation',
+                'estimated_cost': 3000.00,
+                'success_criteria': '100% trainer records current and compliant',
+                'expected_impact': 'Full compliance with Standard 1.13-1.15',
+                'ai_keywords': ['compliance', 'qualifications', 'VETtrak', 'audit', 'trainers'],
+                'ai_standards': ['Standard 1.13', 'Standard 1.14', 'Standard 1.15'],
+                'status': 'completed',
+                'days_offset_start': -60,
+                'days_offset_due': -10,
+                'days_offset_completed': -5,
+                'effectiveness': 5,
+            },
+            {
+                'title': 'Establish student feedback collection process',
+                'description': 'Create systematic approach to collecting, analyzing, and responding to student feedback across all courses. Implement quarterly feedback surveys and establish response protocols.',
+                'category_type': 'student_support',
+                'priority': 'high',
+                'source': 'self_assessment',
+                'root_cause': 'Inconsistent feedback collection limiting improvement insights',
+                'proposed_solution': 'Deploy survey tool, create feedback analysis workflow',
+                'resources_required': 'Survey platform subscription, staff training',
+                'estimated_cost': 5000.00,
+                'success_criteria': '80% response rate, documented action items from feedback',
+                'expected_impact': 'Improved student satisfaction, data-driven improvements',
+                'ai_keywords': ['feedback', 'student', 'survey', 'satisfaction', 'continuous improvement'],
+                'ai_standards': ['Standard 1.6', 'Standard 2.4'],
+                'status': 'planned',
+                'days_offset_start': 14,
+                'days_offset_due': 90,
+            },
+            {
+                'title': 'Develop assessment validation schedule',
+                'description': 'Create and implement a comprehensive assessment validation schedule to ensure all assessment tools are validated before use and revalidated regularly.',
+                'category_type': 'training_assessment',
+                'priority': 'high',
+                'source': 'regulator_feedback',
+                'root_cause': 'ASQA noted inconsistent validation practices during audit',
+                'proposed_solution': 'Design validation schedule, assign validators, track completion',
+                'resources_required': 'Validation templates, experienced validators',
+                'estimated_cost': 8000.00,
+                'success_criteria': 'All assessment tools validated, schedule maintained',
+                'expected_impact': 'Full compliance with assessment validation requirements',
+                'ai_keywords': ['validation', 'assessment', 'compliance', 'quality assurance'],
+                'ai_standards': ['Standard 1.9', 'Standard 1.10', 'Standard 1.11'],
+                'status': 'in_progress',
+                'days_offset_start': -20,
+                'days_offset_due': 45,
+            },
+            {
+                'title': 'Enhance compliance documentation system',
+                'description': 'Upgrade document management system to improve organization, accessibility, and version control of compliance documentation.',
+                'category_type': 'compliance_governance',
+                'priority': 'medium',
+                'source': 'staff_suggestion',
+                'root_cause': 'Difficulty locating current versions of policies and procedures',
+                'proposed_solution': 'Implement SharePoint document management system',
+                'resources_required': 'SharePoint license, migration support, training',
+                'estimated_cost': 12000.00,
+                'success_criteria': 'All documents centralized, version control active',
+                'expected_impact': 'Improved compliance evidence accessibility',
+                'ai_keywords': ['documentation', 'compliance', 'SharePoint', 'version control'],
+                'ai_standards': ['Standard 2.1', 'Standard 2.2'],
+                'status': 'identified',
+                'days_offset_start': 30,
+                'days_offset_due': 150,
+            },
+            {
+                'title': 'Implement moderation process for certificate issuance',
+                'description': 'Establish moderation process to verify assessment outcomes before certificate issuance, ensuring accuracy and compliance.',
+                'category_type': 'training_assessment',
+                'priority': 'critical',
+                'source': 'audit',
+                'root_cause': 'Audit identified certificates issued without proper verification',
+                'proposed_solution': 'Create moderation checklist, assign moderators, track completion',
+                'resources_required': 'Moderation templates, moderator training',
+                'estimated_cost': 4000.00,
+                'success_criteria': '100% certificates moderated before issuance',
+                'expected_impact': 'Zero non-compliant certificate issuances',
+                'ai_keywords': ['moderation', 'certificates', 'compliance', 'verification'],
+                'ai_standards': ['Standard 1.10', 'Standard 3.1'],
+                'status': 'in_progress',
+                'days_offset_start': -15,
+                'days_offset_due': 30,
+            },
+        ]
+        
+        for i, tenant in enumerate(tenants):
+            tenant_categories = [c for c in categories if c.tenant == tenant]
+            
+            for j, template in enumerate(action_templates):
+                # Find matching category
+                category = next(
+                    (c for c in tenant_categories if c.category_type == template['category_type']),
+                    None
+                )
+                
+                action_number = f"CI-{timezone.now().year}-{(i*100 + j+1):04d}"
+                
+                action = ImprovementAction.objects.create(
+                    tenant=tenant,
+                    action_number=action_number,
+                    title=template['title'],
+                    description=template['description'],
+                    category=category,
+                    priority=template['priority'],
+                    source=template['source'],
+                    root_cause=template['root_cause'],
+                    proposed_solution=template['proposed_solution'],
+                    resources_required=template['resources_required'],
+                    estimated_cost=template['estimated_cost'],
+                    success_criteria=template['success_criteria'],
+                    expected_impact=template['expected_impact'],
+                    ai_keywords=template['ai_keywords'],
+                    ai_related_standards=template['ai_standards'],
+                    ai_classified_category=template['category_type'],
+                    ai_classification_confidence=random.uniform(0.85, 0.95),
+                    ai_summary=template['title'],
+                    ai_processed_at=timezone.now() - timedelta(days=random.randint(1, 10)),
+                    status=template['status'],
+                    identified_date=timezone.now().date() + timedelta(days=template.get('days_offset_start', -30)),
+                    planned_start_date=timezone.now().date() + timedelta(days=template.get('days_offset_start', -30)),
+                    target_completion_date=timezone.now().date() + timedelta(days=template.get('days_offset_due', 60)),
+                    actual_completion_date=timezone.now().date() + timedelta(days=template['days_offset_completed']) if template.get('days_offset_completed') else None,
+                    responsible_person=users[random.randint(0, min(2, len(users)-1))],
+                    effectiveness_rating=template.get('effectiveness'),
+                    is_critical_compliance=template['priority'] in ['critical', 'high'],
+                    created_by=users[0],
+                    tags=['ai-classified', 'continuous-improvement']
+                )
+                
+                # Add supporting staff
+                if len(users) > 2:
+                    action.supporting_staff.add(users[1], users[2])
+                
+                actions.append(action)
+        
+        return actions
+
+    def create_action_tracking(self, actions, users):
+        """Create action tracking updates"""
+        tracking_updates = []
+        
+        for action in actions:
+            # Create initial status update
+            if action.status != 'identified':
+                tracking = ActionTracking.objects.create(
+                    improvement_action=action,
+                    update_type='status_change',
+                    update_text=f'Action moved from identified to {action.status}',
+                    old_status='identified',
+                    new_status=action.status,
+                    progress_percentage=action.progress_percentage,
+                    created_at=action.identified_date,
+                    created_by=action.created_by
+                )
+                tracking_updates.append(tracking)
+            
+            # Add progress updates for in_progress actions
+            if action.status == 'in_progress':
+                progress_update = ActionTracking.objects.create(
+                    improvement_action=action,
+                    update_type='progress',
+                    update_text=f'Good progress on {action.title}. Initial implementation phase complete. Working on staff training component.',
+                    progress_percentage=random.randint(40, 70),
+                    created_at=timezone.now() - timedelta(days=random.randint(5, 15)),
+                    created_by=action.responsible_person or action.created_by
+                )
+                tracking_updates.append(progress_update)
+                
+                # Some actions have blockers
+                if random.random() < 0.3:
+                    blocker = ActionTracking.objects.create(
+                        improvement_action=action,
+                        update_type='issue',
+                        update_text='Waiting on vendor quote for required software. Expected by end of week.',
+                        is_blocker=True,
+                        blocker_resolved=random.choice([True, False]),
+                        blocker_resolution='Quote received and approved' if random.choice([True, False]) else '',
+                        created_at=timezone.now() - timedelta(days=random.randint(3, 10)),
+                        created_by=action.responsible_person or action.created_by
+                    )
+                    tracking_updates.append(blocker)
+            
+            # Add milestone updates for completed actions
+            if action.status == 'completed':
+                milestone = ActionTracking.objects.create(
+                    improvement_action=action,
+                    update_type='milestone',
+                    update_text='All objectives achieved. Solution implemented and tested successfully.',
+                    progress_percentage=100,
+                    created_at=action.actual_completion_date or timezone.now().date(),
+                    created_by=action.responsible_person or action.created_by,
+                    evidence_provided=[
+                        {'type': 'document', 'name': 'Implementation Report.pdf'},
+                        {'type': 'checklist', 'name': 'Completion Checklist.xlsx'}
+                    ]
+                )
+                tracking_updates.append(milestone)
+                
+                completion = ActionTracking.objects.create(
+                    improvement_action=action,
+                    update_type='completion',
+                    update_text=f'Action completed successfully. Effectiveness rating: {action.effectiveness_rating}/5',
+                    old_status='in_progress',
+                    new_status='completed',
+                    progress_percentage=100,
+                    created_at=action.actual_completion_date or timezone.now().date(),
+                    created_by=action.created_by,
+                    evidence_provided=[
+                        {'type': 'report', 'name': 'Final Report.pdf'}
+                    ]
+                )
+                tracking_updates.append(completion)
+        
+        return tracking_updates
+
+    def create_improvement_reviews(self, tenants, users, actions):
+        """Create improvement reviews"""
+        reviews = []
+        
+        for i, tenant in enumerate(tenants):
+            tenant_actions = [a for a in actions if a.tenant == tenant]
+            
+            # Create quarterly review
+            review = ImprovementReview.objects.create(
+                tenant=tenant,
+                review_number=f"REV-Q{random.randint(1,4)}-{timezone.now().year}",
+                title=f"Q{random.randint(1,4)} {timezone.now().year} Continuous Improvement Review",
+                review_type='quarterly',
+                review_date=timezone.now().date() - timedelta(days=random.randint(5, 30)),
+                review_period_start=timezone.now().date() - timedelta(days=90),
+                review_period_end=timezone.now().date(),
+                key_findings='Overall positive progress on improvement initiatives. Strong engagement from staff. Some delays due to resource constraints.',
+                areas_of_concern='Three actions are overdue and require immediate attention. Budget constraints affecting implementation timelines.',
+                recommendations='Recommend prioritizing critical compliance actions. Consider additional resources for high-priority items.',
+                action_items=[
+                    {'action': 'Escalate overdue actions to management', 'owner': 'Compliance Manager'},
+                    {'action': 'Review budget allocation for CI initiatives', 'owner': 'Finance Manager'},
+                    {'action': 'Schedule follow-up review in 30 days', 'owner': 'Quality Manager'}
+                ],
+                ai_summary='The quarterly review shows strong progress with 2 actions completed and 4 in progress. Key challenges include resource availability and budget constraints. Recommendation to prioritize critical compliance items.',
+                ai_trends=[
+                    {'trend': 'Increasing staff engagement in CI process', 'impact': 'positive'},
+                    {'trend': 'Budget constraints affecting timelines', 'impact': 'negative'},
+                    {'trend': 'Strong focus on compliance-related actions', 'impact': 'positive'}
+                ],
+                ai_recommendations=[
+                    'Allocate additional budget to critical compliance actions',
+                    'Implement project management tools for better tracking',
+                    'Increase frequency of progress reviews for at-risk actions'
+                ],
+                reviewed_by=users[0],
+                notes='Attended by all key stakeholders. General agreement on priorities and recommendations.'
+            )
+            
+            # Add actions to review
+            review.actions_reviewed.set(tenant_actions[:4])
+            review.attendees.set(users[:3])
+            
+            # Calculate statistics
+            review.calculate_statistics()
+            
+            reviews.append(review)
+        
+        return reviews
