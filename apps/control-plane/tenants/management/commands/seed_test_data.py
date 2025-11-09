@@ -22,6 +22,14 @@ from continuous_improvement.models import (
     ActionTracking,
     ImprovementReview,
 )
+from email_assistant.models import (
+    StudentMessage,
+    DraftReply,
+    MessageTemplate,
+    ConversationThread,
+    ToneProfile,
+    ReplyHistory,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -184,6 +192,30 @@ class Command(BaseCommand):
         improvement_reviews = self.create_improvement_reviews(tenants, users, improvement_actions)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(improvement_reviews)} improvement reviews'))
         
+        # Create message templates
+        message_templates = self.create_message_templates(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(message_templates)} message templates'))
+        
+        # Create tone profiles
+        tone_profiles = self.create_tone_profiles(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(tone_profiles)} tone profiles'))
+        
+        # Create conversation threads
+        conversation_threads = self.create_conversation_threads(tenants)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(conversation_threads)} conversation threads'))
+        
+        # Create student messages
+        student_messages = self.create_student_messages(tenants, conversation_threads, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(student_messages)} student messages'))
+        
+        # Create draft replies
+        draft_replies = self.create_draft_replies(student_messages, message_templates, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(draft_replies)} draft replies'))
+        
+        # Create reply history
+        reply_history = self.create_reply_history(student_messages, draft_replies, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(reply_history)} reply history records'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -196,6 +228,37 @@ class Command(BaseCommand):
         from django.db.utils import ProgrammingError
         
         # Delete in order to avoid foreign key constraints
+        # Email Assistant
+        try:
+            ReplyHistory.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            DraftReply.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            StudentMessage.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            ConversationThread.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            ToneProfile.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            MessageTemplate.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
         # Continuous Improvement
         try:
             ImprovementReview.objects.all().delete()
@@ -1951,6 +2014,7 @@ Aligns with Standards 6.1 to 6.6:
             },
         ]
         
+        action_counter = 1
         for i, tenant in enumerate(tenants):
             tenant_categories = [c for c in categories if c.tenant == tenant]
             
@@ -1961,7 +2025,8 @@ Aligns with Standards 6.1 to 6.6:
                     None
                 )
                 
-                action_number = f"CI-{timezone.now().year}-{(i*100 + j+1):04d}"
+                action_number = f"CI-{timezone.now().year}-{action_counter:04d}"
+                action_counter += 1
                 
                 action = ImprovementAction.objects.create(
                     tenant=tenant,
@@ -2130,3 +2195,459 @@ Aligns with Standards 6.1 to 6.6:
             reviews.append(review)
         
         return reviews
+
+    def create_message_templates(self, tenants, users):
+        """Create message templates"""
+        templates = []
+        
+        template_data = [
+            {
+                'name': 'Assessment Extension Request',
+                'type': 'extension',
+                'description': 'Response to student requesting assessment deadline extension',
+                'body': '''Hi {student_name},
+
+Thank you for reaching out regarding your assessment extension request for {unit_code}.
+
+I've reviewed your circumstances and I'm pleased to confirm that we can grant an extension until {new_due_date}. This should give you adequate time to complete the assessment to the required standard.
+
+Please ensure you submit your assessment by the new deadline. If you have any questions or need further support, please don't hesitate to contact us.
+
+Best regards,''',
+                'placeholders': ['{student_name}', '{unit_code}', '{new_due_date}'],
+                'tone': 'professional',
+                'formality': 4,
+            },
+            {
+                'name': 'Assessment Submission Confirmation',
+                'type': 'assessment',
+                'description': 'Confirmation that student assessment was received',
+                'body': '''Hi {student_name},
+
+This is to confirm that we have received your assessment submission for {unit_code} - {unit_title}.
+
+Your submission will be marked within {marking_timeframe} business days. You will be notified via email when your results are available in the LMS.
+
+If you have any questions about your submission, please feel free to contact us.
+
+Best regards,''',
+                'placeholders': ['{student_name}', '{unit_code}', '{unit_title}', '{marking_timeframe}'],
+                'tone': 'friendly',
+                'formality': 3,
+            },
+            {
+                'name': 'Technical Support Response',
+                'type': 'technical',
+                'description': 'Response to technical issues accessing LMS or materials',
+                'body': '''Hi {student_name},
+
+Thank you for contacting us about the technical issue you're experiencing with {system_name}.
+
+I've checked your account and {resolution_action}. You should now be able to access the system without issues.
+
+If you continue to experience problems, please try clearing your browser cache and cookies, or try accessing the system from a different browser. If the issue persists, please let me know and I'll escalate this to our IT support team.
+
+Best regards,''',
+                'placeholders': ['{student_name}', '{system_name}', '{resolution_action}'],
+                'tone': 'empathetic',
+                'formality': 3,
+            },
+            {
+                'name': 'General Enrollment Query',
+                'type': 'enrollment',
+                'description': 'Response to general enrollment questions',
+                'body': '''Hi {student_name},
+
+Thank you for your interest in {course_name}.
+
+The next intake for this course begins on {start_date}. The course duration is {duration} and includes {unit_count} units of competency.
+
+To enroll, please complete the online enrollment form at {enrollment_link}. If you have any questions about the enrollment process, course content, or payment options, please don't hesitate to ask.
+
+I'm here to help!
+
+Best regards,''',
+                'placeholders': ['{student_name}', '{course_name}', '{start_date}', '{duration}', '{unit_count}', '{enrollment_link}'],
+                'tone': 'friendly',
+                'formality': 2,
+            },
+            {
+                'name': 'Assessment Results Available',
+                'type': 'assessment',
+                'description': 'Notification that assessment results are ready',
+                'body': '''Hi {student_name},
+
+Your assessment results for {unit_code} - {unit_title} are now available in the LMS.
+
+Result: {result_status}
+
+{additional_feedback}
+
+If you would like to discuss your results or receive additional feedback, please don't hesitate to schedule a call with your trainer.
+
+Best regards,''',
+                'placeholders': ['{student_name}', '{unit_code}', '{unit_title}', '{result_status}', '{additional_feedback}'],
+                'tone': 'professional',
+                'formality': 3,
+            },
+        ]
+        
+        for tenant in tenants:
+            for template_info in template_data:
+                template = MessageTemplate.objects.create(
+                    tenant=tenant.slug,
+                    name=template_info['name'],
+                    description=template_info['description'],
+                    template_type=template_info['type'],
+                    template_body=template_info['body'],
+                    placeholders=template_info['placeholders'],
+                    default_tone=template_info['tone'],
+                    formality_level=template_info['formality'],
+                    usage_count=random.randint(5, 50),
+                    success_rate=random.uniform(0.75, 0.95),
+                    last_used_at=timezone.now() - timedelta(days=random.randint(1, 30)),
+                    is_active=True,
+                    is_system_template=True,
+                    created_by=users[0].get_full_name()
+                )
+                templates.append(template)
+        
+        return templates
+
+    def create_tone_profiles(self, tenants, users):
+        """Create tone profiles"""
+        profiles = []
+        
+        profile_data = [
+            {
+                'name': 'Professional Standard',
+                'description': 'Default professional tone for most communications',
+                'tone': 'professional',
+                'formality': 4,
+                'empathy': 3,
+                'brevity': 3,
+                'contractions': False,
+                'emojis': False,
+                'greeting': 'Dear {name},',
+                'closing': 'Kind regards,',
+                'recommended': ['general', 'enrollment', 'assessment'],
+                'is_default': True,
+            },
+            {
+                'name': 'Friendly & Approachable',
+                'description': 'Warm, friendly tone for student engagement',
+                'tone': 'friendly',
+                'formality': 2,
+                'empathy': 4,
+                'brevity': 3,
+                'contractions': True,
+                'emojis': False,
+                'greeting': 'Hi {name},',
+                'closing': 'Best regards,',
+                'recommended': ['general', 'feedback'],
+                'is_default': False,
+            },
+            {
+                'name': 'Empathetic Support',
+                'description': 'Highly empathetic tone for complaints and concerns',
+                'tone': 'empathetic',
+                'formality': 3,
+                'empathy': 5,
+                'brevity': 4,
+                'contractions': True,
+                'emojis': False,
+                'greeting': 'Hi {name},',
+                'closing': 'I\'m here to help,',
+                'recommended': ['complaint', 'technical', 'extension'],
+                'is_default': False,
+            },
+            {
+                'name': 'Brief & Direct',
+                'description': 'Concise responses for simple queries',
+                'tone': 'professional',
+                'formality': 3,
+                'empathy': 2,
+                'brevity': 1,
+                'contractions': True,
+                'emojis': False,
+                'greeting': 'Hi {name},',
+                'closing': 'Thanks,',
+                'recommended': ['technical', 'general'],
+                'is_default': False,
+            },
+        ]
+        
+        for tenant in tenants:
+            for profile_info in profile_data:
+                profile = ToneProfile.objects.create(
+                    tenant=tenant.slug,
+                    name=profile_info['name'],
+                    description=profile_info['description'],
+                    tone_descriptor=profile_info['tone'],
+                    formality_level=profile_info['formality'],
+                    empathy_level=profile_info['empathy'],
+                    brevity_level=profile_info['brevity'],
+                    use_contractions=profile_info['contractions'],
+                    use_emojis=profile_info['emojis'],
+                    greeting_style=profile_info['greeting'],
+                    closing_style=profile_info['closing'],
+                    recommended_for=profile_info['recommended'],
+                    is_default=profile_info['is_default'],
+                    usage_count=random.randint(10, 100) if profile_info['is_default'] else random.randint(0, 30),
+                    is_active=True
+                )
+                profiles.append(profile)
+        
+        return profiles
+
+    def create_conversation_threads(self, tenants):
+        """Create conversation threads"""
+        threads = []
+        
+        student_data = [
+            {'name': 'Emma Wilson', 'email': 'emma.wilson@example.com', 'subject': 'Assessment Extension Request'},
+            {'name': 'James Chen', 'email': 'james.chen@example.com', 'subject': 'Technical Issue with LMS Access'},
+            {'name': 'Sarah Johnson', 'email': 'sarah.johnson@example.com', 'subject': 'Course Enrollment Question'},
+            {'name': 'Michael Brown', 'email': 'michael.brown@example.com', 'subject': 'Assessment Feedback Query'},
+            {'name': 'Jessica Lee', 'email': 'jessica.lee@example.com', 'subject': 'Unit Materials Not Available'},
+        ]
+        
+        for i, tenant in enumerate(tenants):
+            for j, student in enumerate(student_data[:3]):  # 3 threads per tenant
+                thread = ConversationThread.objects.create(
+                    tenant=tenant.slug,
+                    student_email=student['email'],
+                    student_name=student['name'],
+                    subject=student['subject'],
+                    message_count=random.randint(1, 4),
+                    first_message_date=timezone.now() - timedelta(days=random.randint(5, 30)),
+                    last_message_date=timezone.now() - timedelta(days=random.randint(0, 5)),
+                    is_active=random.choice([True, False]),
+                    is_resolved=random.choice([True, False]),
+                    resolved_at=timezone.now() - timedelta(days=random.randint(1, 3)) if random.choice([True, False]) else None,
+                    primary_category=random.choice(['assessment', 'technical', 'enrollment', 'general']),
+                    tags=['student-query', 'email']
+                )
+                threads.append(thread)
+        
+        return threads
+
+    def create_student_messages(self, tenants, threads, users):
+        """Create student messages"""
+        messages = []
+        
+        message_samples = [
+            {
+                'subject': 'Request for Assessment Extension - BSBWHS521',
+                'body': 'Hi, I am writing to request an extension for my BSBWHS521 assessment. I have been dealing with a family emergency and need an additional two weeks to complete the work to a high standard. I have completed about 70% of the assessment and just need more time to finish properly. Is this possible? Thank you.',
+                'type': 'email',
+                'priority': 'high',
+                'category': 'Extension Request',
+                'sentiment': 'neutral',
+                'topics': ['assessment', 'extension', 'deadline'],
+            },
+            {
+                'subject': 'Cannot Access LMS - Urgent',
+                'body': 'Hello, I\'m having trouble logging into the LMS. It keeps saying "invalid credentials" even though I\'m sure my password is correct. I need to access my unit materials for tomorrow\'s class. Can someone help me urgently please?',
+                'type': 'email',
+                'priority': 'urgent',
+                'category': 'Technical Support',
+                'sentiment': 'frustrated',
+                'topics': ['technical', 'login', 'access', 'urgent'],
+            },
+            {
+                'subject': 'Enrollment for Certificate III in Hospitality',
+                'body': 'Hi there, I\'m interested in enrolling in the Certificate III in Hospitality course. Could you please let me know when the next intake is and what the fees are? Also, do you offer payment plans? Thanks!',
+                'type': 'email',
+                'priority': 'medium',
+                'category': 'Enrollment',
+                'sentiment': 'positive',
+                'topics': ['enrollment', 'hospitality', 'fees', 'payment'],
+            },
+            {
+                'subject': 'Question about Assessment Results',
+                'body': 'Hello, I received my results for SITHCCC023 and I\'m marked as "Not Yet Competent". I\'m a bit confused about what I need to improve. Could I please get more detailed feedback or arrange a time to discuss this with my trainer?',
+                'type': 'email',
+                'priority': 'high',
+                'category': 'Assessment Query',
+                'sentiment': 'concerned',
+                'topics': ['assessment', 'results', 'feedback', 'NYC'],
+            },
+            {
+                'subject': 'Missing Unit Materials',
+                'body': 'Hi, I noticed that the learning materials for Unit 5 are not showing up in my LMS dashboard. Other students in my class have access but I don\'t. Can you please check what\'s wrong? The unit starts next week.',
+                'type': 'email',
+                'priority': 'high',
+                'category': 'Technical Support',
+                'sentiment': 'neutral',
+                'topics': ['materials', 'access', 'LMS', 'unit'],
+            },
+            {
+                'subject': 'Thank you for the support',
+                'body': 'Just wanted to say thank you for extending my assessment deadline. I really appreciate the understanding and support. I\'m confident I can now submit quality work. Thanks again!',
+                'type': 'email',
+                'priority': 'low',
+                'category': 'General Query',
+                'sentiment': 'positive',
+                'topics': ['feedback', 'thanks', 'extension'],
+            },
+        ]
+        
+        for tenant in tenants:
+            tenant_threads = [t for t in threads if t.tenant == tenant.slug]
+            
+            for i, sample in enumerate(message_samples):
+                # Some messages belong to threads, some are standalone
+                thread = tenant_threads[i % len(tenant_threads)] if i < len(tenant_threads) else None
+                
+                message = StudentMessage.objects.create(
+                    tenant=tenant.slug,
+                    student_name=thread.student_name if thread else f"Student {i+1}",
+                    student_email=thread.student_email if thread else f"student{i+1}@example.com",
+                    student_id=f"STU{random.randint(1000, 9999)}",
+                    message_type=sample['type'],
+                    subject=sample['subject'],
+                    message_body=sample['body'],
+                    received_date=timezone.now() - timedelta(hours=random.randint(1, 72)),
+                    priority=sample['priority'],
+                    category=sample['category'],
+                    detected_sentiment=sample['sentiment'],
+                    detected_topics=sample['topics'],
+                    status=random.choice(['new', 'draft_generated', 'replied']),
+                    requires_human_review=(sample['priority'] in ['urgent', 'high'] and random.random() < 0.3),
+                    conversation_thread=thread,
+                    previous_message_count=random.randint(0, 3) if thread else 0
+                )
+                messages.append(message)
+        
+        return messages
+
+    def create_draft_replies(self, messages, templates, users):
+        """Create draft replies"""
+        drafts = []
+        
+        for message in messages:
+            # Only create drafts for messages that have draft_generated or replied status
+            if message.status in ['draft_generated', 'replied']:
+                # Find matching template
+                template = None
+                for t in templates:
+                    if t.tenant == message.tenant and t.template_type.lower() in message.category.lower():
+                        template = t
+                        break
+                
+                # Generate draft reply based on message type
+                if 'extension' in message.category.lower():
+                    reply_body = f'''Hi {message.student_name},
+
+Thank you for reaching out regarding your assessment extension request for BSBWHS521.
+
+I understand you're dealing with a family emergency, and I appreciate you letting us know. Given your circumstances and the fact that you've already completed 70% of the assessment, I'm pleased to confirm that we can grant an extension of two weeks.
+
+Your new due date is {(timezone.now() + timedelta(days=14)).strftime("%B %d, %Y")}. This should give you adequate time to complete the assessment to the required standard.
+
+Please ensure you submit your assessment by the new deadline. If you have any questions or need further support, please don't hesitate to contact us.
+
+Best regards,
+Training Support Team'''
+                elif 'technical' in message.category.lower():
+                    reply_body = f'''Hi {message.student_name},
+
+Thank you for contacting us about the login issue you're experiencing with the LMS.
+
+I've checked your account and reset your password. You should receive a password reset email within the next few minutes. Please use the link in that email to set a new password.
+
+Once you've reset your password, you should be able to access the system without issues. If you continue to experience problems, please try clearing your browser cache and cookies, or try accessing the system from a different browser.
+
+If the issue persists after trying these steps, please let me know and I'll escalate this to our IT support team immediately.
+
+Best regards,
+Technical Support Team'''
+                elif 'enrollment' in message.category.lower():
+                    reply_body = f'''Hi {message.student_name},
+
+Thank you for your interest in the Certificate III in Hospitality!
+
+The next intake for this course begins on {(timezone.now() + timedelta(days=30)).strftime("%B %d, %Y")}. The course duration is 12 months and includes 33 units of competency.
+
+Course fees are $4,500, and yes, we do offer flexible payment plans! You can choose from:
+- Upfront payment with 10% discount ($4,050)
+- Monthly installments over 12 months ($395/month)
+- Split payment (50% upfront, 50% at 6 months)
+
+To enroll, please complete the online enrollment form at our website. If you have any questions about the enrollment process, course content, or payment options, please don't hesitate to ask.
+
+I'm here to help!
+
+Best regards,
+Enrollment Team'''
+                else:
+                    reply_body = f'''Hi {message.student_name},
+
+Thank you for your message regarding {message.subject}.
+
+{message.message_body[:100]}... 
+
+I've reviewed your query and I'm happy to help. Let me provide you with some information to assist you.
+
+If you have any further questions, please feel free to reach out.
+
+Best regards,
+Student Support Team'''
+                
+                draft = DraftReply.objects.create(
+                    student_message=message,
+                    reply_body=reply_body,
+                    reply_subject=f"Re: {message.subject}",
+                    tone_used=random.choice(['professional', 'friendly', 'empathetic']),
+                    formality_level=random.randint(2, 4),
+                    include_greeting=True,
+                    include_signature=True,
+                    template_used=template,
+                    confidence_score=random.uniform(0.75, 0.95),
+                    readability_score=random.uniform(60, 80),
+                    was_edited=random.choice([True, False]),
+                    was_sent=(message.status == 'replied'),
+                    was_rejected=False,
+                    generation_status='completed',
+                    generation_time_ms=random.randint(800, 2500),
+                    llm_model_used=random.choice(['gpt-4', 'gpt-4-turbo', 'claude-3-sonnet']),
+                    sent_at=timezone.now() - timedelta(hours=random.randint(1, 48)) if message.status == 'replied' else None
+                )
+                drafts.append(draft)
+        
+        return drafts
+
+    def create_reply_history(self, messages, drafts, users):
+        """Create reply history records"""
+        history = []
+        
+        # Only create history for replied messages
+        replied_messages = [m for m in messages if m.status == 'replied']
+        
+        for message in replied_messages:
+            # Find the draft for this message
+            draft = next((d for d in drafts if d.student_message == message and d.was_sent), None)
+            
+            if draft:
+                time_to_first_draft = random.randint(60, 300)  # 1-5 minutes
+                time_to_send = random.randint(300, 1800)  # 5-30 minutes
+                
+                history_record = ReplyHistory.objects.create(
+                    student_message=message,
+                    draft_reply=draft,
+                    final_reply_body=draft.reply_body,
+                    final_subject=draft.reply_subject,
+                    time_to_first_draft_seconds=time_to_first_draft,
+                    time_to_send_seconds=time_to_send,
+                    edit_count=random.randint(0, 3) if draft.was_edited else 0,
+                    estimated_manual_time_seconds=random.randint(300, 600),  # 5-10 minutes
+                    sent_by=users[random.randint(0, min(2, len(users)-1))].get_full_name(),
+                    sent_at=draft.sent_at or timezone.now(),
+                    student_responded=random.choice([True, False]),
+                    student_satisfied=random.choice([True, True, None]),  # Mostly satisfied
+                    follow_up_required=random.choice([True, False])
+                )
+                history.append(history_record)
+        
+        return history
