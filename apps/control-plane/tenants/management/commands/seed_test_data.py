@@ -64,6 +64,19 @@ from industry_currency.models import (
     CurrencyEvidence,
     EntityExtraction,
 )
+from integrations.models import (
+    Integration,
+    IntegrationLog,
+    IntegrationMapping,
+)
+from intervention_tracker.models import (
+    Intervention,
+    InterventionRule,
+    InterventionWorkflow,
+    InterventionStep,
+    InterventionOutcome,
+    AuditLog as InterventionAuditLog,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -327,6 +340,35 @@ class Command(BaseCommand):
         currency_evidence = self.create_currency_evidence(trainer_profiles, verification_scans, linkedin_activities, github_activities)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(currency_evidence)} currency evidence documents'))
         
+        # Create integrations data
+        integrations = self.create_integrations(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(integrations)} integrations'))
+        
+        integration_logs = self.create_integration_logs(integrations)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(integration_logs)} integration logs'))
+        
+        integration_mappings = self.create_integration_mappings(integrations)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(integration_mappings)} integration mappings'))
+        
+        # Create intervention tracker data
+        intervention_rules = self.create_intervention_rules(tenants)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(intervention_rules)} intervention rules'))
+        
+        intervention_workflows = self.create_intervention_workflows(tenants)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(intervention_workflows)} intervention workflows'))
+        
+        interventions = self.create_interventions(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(interventions)} interventions'))
+        
+        intervention_steps = self.create_intervention_steps(interventions, intervention_workflows)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(intervention_steps)} intervention steps'))
+        
+        intervention_outcomes = self.create_intervention_outcomes(interventions)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(intervention_outcomes)} intervention outcomes'))
+        
+        intervention_audit_logs = self.create_intervention_audit_logs(interventions, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(intervention_audit_logs)} intervention audit logs'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -461,6 +503,53 @@ class Command(BaseCommand):
         
         try:
             TrainerProfile.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        # Integrations
+        try:
+            IntegrationMapping.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            IntegrationLog.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            Integration.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        # Intervention Tracker
+        try:
+            InterventionAuditLog.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            InterventionOutcome.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            InterventionStep.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            Intervention.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            InterventionWorkflow.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            InterventionRule.objects.all().delete()
         except ProgrammingError:
             pass
         
@@ -5561,3 +5650,1184 @@ Currency Score: {recent_scan.currency_score:.1f}/100
                 evidence_docs.append(evidence)
         
         return evidence_docs
+    
+    def create_integrations(self, tenants, users):
+        """Create third-party integrations"""
+        integrations = []
+        
+        integration_configs = {
+            'axcelerate': {
+                'name': 'Axcelerate SMS',
+                'description': 'Student Management System integration for syncing student records, enrolments, and outcomes',
+                'config': {
+                    'sync_students': True,
+                    'sync_courses': True,
+                    'sync_enrolments': True,
+                    'sync_outcomes': True,
+                    'sync_direction': 'bidirectional',
+                },
+                'api_base_url': 'https://api.axcelerate.com.au/v1',
+                'sync_interval': 30,
+            },
+            'canvas': {
+                'name': 'Canvas LMS',
+                'description': 'Learning Management System for course delivery and assessment',
+                'config': {
+                    'sync_courses': True,
+                    'sync_assignments': True,
+                    'sync_grades': True,
+                    'auto_create_courses': True,
+                    'lti_enabled': True,
+                },
+                'api_base_url': 'https://canvas.instructure.com/api/v1',
+                'sync_interval': 60,
+            },
+            'xero': {
+                'name': 'Xero Accounting',
+                'description': 'Accounting integration for invoicing and financial reporting',
+                'config': {
+                    'sync_invoices': True,
+                    'sync_payments': True,
+                    'auto_invoice': True,
+                    'invoice_template': 'default',
+                    'tax_type': 'GST',
+                },
+                'api_base_url': 'https://api.xero.com/api.xro/2.0',
+                'sync_interval': 120,
+            },
+            'moodle': {
+                'name': 'Moodle LMS',
+                'description': 'Open-source Learning Management System integration',
+                'config': {
+                    'sync_users': True,
+                    'sync_courses': True,
+                    'sync_enrolments': True,
+                    'web_services_enabled': True,
+                },
+                'api_base_url': 'https://moodle.example.com/webservice/rest/server.php',
+                'sync_interval': 60,
+            },
+            'vettrak': {
+                'name': 'VETtrak SMS',
+                'description': 'VET Student Management System by ReadyTech',
+                'config': {
+                    'sync_students': True,
+                    'sync_qualifications': True,
+                    'sync_units': True,
+                    'avetmiss_reporting': True,
+                },
+                'api_base_url': 'https://api.vettrak.com.au/v2',
+                'sync_interval': 45,
+            },
+            'stripe': {
+                'name': 'Stripe Payments',
+                'description': 'Payment gateway for course fees and student payments',
+                'config': {
+                    'mode': 'live',
+                    'currency': 'AUD',
+                    'auto_capture': True,
+                    'webhook_events': ['payment_intent.succeeded', 'payment_intent.failed'],
+                },
+                'api_base_url': 'https://api.stripe.com/v1',
+                'sync_interval': 0,  # Event-driven
+            },
+        }
+        
+        for tenant in tenants:
+            # Each tenant gets 2-4 integrations
+            selected_integrations = random.sample(list(integration_configs.keys()), k=random.randint(2, 4))
+            
+            for integration_type in selected_integrations:
+                config_data = integration_configs[integration_type]
+                
+                # Determine status - most active, some pending/error
+                status_options = ['active', 'active', 'active', 'pending', 'error']
+                status = random.choice(status_options)
+                
+                # Generate OAuth tokens for some integrations
+                has_oauth = integration_type in ['canvas', 'xero']
+                
+                if has_oauth and status == 'active':
+                    access_token = f"tok_{random.randint(10**20, 10**21)}"
+                    refresh_token = f"ref_{random.randint(10**20, 10**21)}"
+                    token_expires_at = timezone.now() + timedelta(days=random.randint(1, 60))
+                else:
+                    access_token = ''
+                    refresh_token = ''
+                    token_expires_at = None
+                
+                # API key for non-OAuth integrations
+                api_key = f"sk_{integration_type}_{random.randint(10**15, 10**16)}" if not has_oauth else ''
+                
+                # Last sync details
+                if status == 'active':
+                    last_sync_at = timezone.now() - timedelta(minutes=random.randint(10, 180))
+                    last_sync_status = random.choice(['success', 'success', 'success', 'warning'])
+                    last_sync_error = 'Some items could not be synced' if last_sync_status == 'warning' else ''
+                elif status == 'error':
+                    last_sync_at = timezone.now() - timedelta(hours=random.randint(1, 48))
+                    last_sync_status = 'error'
+                    last_sync_error = random.choice([
+                        'Authentication failed - invalid credentials',
+                        'API rate limit exceeded',
+                        'Connection timeout',
+                        'Invalid response from external API',
+                    ])
+                else:
+                    last_sync_at = None
+                    last_sync_status = ''
+                    last_sync_error = ''
+                
+                integration = Integration.objects.create(
+                    tenant=tenant,
+                    integration_type=integration_type,
+                    name=config_data['name'],
+                    description=config_data['description'],
+                    status=status,
+                    config=config_data['config'],
+                    client_id=f"client_{integration_type}_{random.randint(1000, 9999)}" if has_oauth else '',
+                    client_secret=f"secret_{random.randint(10**20, 10**21)}" if has_oauth else '',
+                    access_token=access_token,
+                    refresh_token=refresh_token,
+                    token_expires_at=token_expires_at,
+                    api_base_url=config_data['api_base_url'],
+                    api_key=api_key,
+                    webhook_url=f"https://nextcore.example.com/webhooks/{integration_type}/{tenant.id}" if integration_type in ['stripe', 'xero'] else '',
+                    webhook_secret=f"whsec_{random.randint(10**20, 10**21)}" if integration_type in ['stripe', 'xero'] else '',
+                    auto_sync_enabled=(status == 'active' and config_data['sync_interval'] > 0),
+                    sync_interval_minutes=config_data['sync_interval'],
+                    last_sync_at=last_sync_at,
+                    last_sync_status=last_sync_status,
+                    last_sync_error=last_sync_error,
+                    created_by=random.choice(users).username,
+                )
+                integrations.append(integration)
+        
+        return integrations
+    
+    def create_integration_logs(self, integrations):
+        """Create integration activity logs"""
+        logs = []
+        
+        log_messages = {
+            'connect': [
+                'Successfully connected to {integration}',
+                'Integration configured and authenticated',
+                'Initial connection established',
+            ],
+            'disconnect': [
+                'Integration disconnected by user',
+                'Connection removed',
+                'Integration deactivated',
+            ],
+            'sync': [
+                'Synchronization completed successfully',
+                'Synced {count} records from {integration}',
+                'Data sync finished with no errors',
+                'Partial sync completed - {count} items processed',
+            ],
+            'error': [
+                'Authentication failed - please check credentials',
+                'API rate limit exceeded - retry after cooldown',
+                'Connection timeout - remote server not responding',
+                'Invalid API response received',
+                'Sync failed due to data validation errors',
+            ],
+            'config_update': [
+                'Integration configuration updated',
+                'Sync settings modified',
+                'Field mappings reconfigured',
+            ],
+            'webhook': [
+                'Webhook received and processed',
+                'Event notification handled: {event}',
+                'Incoming webhook validated',
+            ],
+        }
+        
+        for integration in integrations:
+            # Create connection log
+            log = IntegrationLog.objects.create(
+                integration=integration,
+                action='connect',
+                status='success',
+                message=random.choice(log_messages['connect']).format(integration=integration.name),
+                details={
+                    'integration_type': integration.integration_type,
+                    'configured_by': integration.created_by,
+                },
+                created_at=integration.created_at,
+            )
+            logs.append(log)
+            
+            # Create 3-8 sync logs for active integrations
+            if integration.status == 'active' and integration.last_sync_at:
+                num_syncs = random.randint(3, 8)
+                
+                for i in range(num_syncs):
+                    # Calculate sync time going backwards
+                    hours_ago = random.randint(i * 2, (i + 1) * 6)
+                    sync_time = timezone.now() - timedelta(hours=hours_ago)
+                    
+                    # Most syncs successful, occasional warnings
+                    sync_status = random.choice(['success', 'success', 'success', 'success', 'warning'])
+                    
+                    if sync_status == 'success':
+                        record_count = random.randint(10, 500)
+                        message = random.choice(log_messages['sync']).format(
+                            integration=integration.name,
+                            count=record_count
+                        )
+                        details = {
+                            'records_processed': record_count,
+                            'records_created': random.randint(0, record_count // 3),
+                            'records_updated': random.randint(0, record_count // 2),
+                            'duration_seconds': random.uniform(5, 60),
+                        }
+                    else:
+                        record_count = random.randint(10, 200)
+                        failed_count = random.randint(1, 10)
+                        message = f"Sync completed with warnings - {failed_count} items failed"
+                        details = {
+                            'records_processed': record_count,
+                            'records_failed': failed_count,
+                            'warning_messages': ['Data validation failed for some records'],
+                        }
+                    
+                    log = IntegrationLog.objects.create(
+                        integration=integration,
+                        action='sync',
+                        status=sync_status,
+                        message=message,
+                        details=details,
+                        request_data={'sync_type': 'scheduled', 'entities': list(integration.config.keys())[:3]},
+                        response_data={'success': True, 'records': record_count},
+                        created_at=sync_time,
+                    )
+                    logs.append(log)
+            
+            # Create error logs for integrations with errors
+            if integration.status == 'error':
+                error_time = integration.last_sync_at or (timezone.now() - timedelta(hours=random.randint(1, 24)))
+                
+                log = IntegrationLog.objects.create(
+                    integration=integration,
+                    action='error',
+                    status='error',
+                    message=integration.last_sync_error or random.choice(log_messages['error']),
+                    details={
+                        'error_code': random.choice(['AUTH_ERROR', 'RATE_LIMIT', 'TIMEOUT', 'INVALID_RESPONSE']),
+                        'retry_count': random.randint(1, 3),
+                    },
+                    request_data={'endpoint': integration.api_base_url},
+                    response_data={'error': integration.last_sync_error},
+                    created_at=error_time,
+                )
+                logs.append(log)
+            
+            # Create 1-2 config update logs
+            for _ in range(random.randint(1, 2)):
+                update_time = integration.created_at + timedelta(days=random.randint(1, 30))
+                
+                log = IntegrationLog.objects.create(
+                    integration=integration,
+                    action='config_update',
+                    status='success',
+                    message=random.choice(log_messages['config_update']),
+                    details={
+                        'updated_fields': random.sample(['sync_interval', 'auto_sync_enabled', 'config'], k=random.randint(1, 2)),
+                        'updated_by': integration.created_by,
+                    },
+                    created_at=update_time,
+                )
+                logs.append(log)
+            
+            # Create webhook logs for integrations that support webhooks
+            if integration.webhook_url:
+                for _ in range(random.randint(2, 5)):
+                    webhook_time = timezone.now() - timedelta(hours=random.randint(1, 72))
+                    
+                    events = {
+                        'stripe': ['payment_intent.succeeded', 'payment_intent.failed', 'charge.succeeded'],
+                        'xero': ['invoice.created', 'payment.received', 'contact.updated'],
+                    }
+                    
+                    event_type = random.choice(events.get(integration.integration_type, ['event.received']))
+                    
+                    log = IntegrationLog.objects.create(
+                        integration=integration,
+                        action='webhook',
+                        status='success',
+                        message=random.choice(log_messages['webhook']).format(event=event_type),
+                        details={
+                            'event_type': event_type,
+                            'webhook_id': f"wh_{random.randint(10**10, 10**11)}",
+                        },
+                        request_data={
+                            'event': event_type,
+                            'data': {'id': f"obj_{random.randint(10**10, 10**11)}"},
+                        },
+                        created_at=webhook_time,
+                    )
+                    logs.append(log)
+        
+        return logs
+    
+    def create_integration_mappings(self, integrations):
+        """Create field mappings between systems"""
+        mappings = []
+        
+        # Define mapping templates for different integration types
+        mapping_templates = {
+            'axcelerate': [
+                {'source_entity': 'user', 'source_field': 'email', 'target_entity': 'contact', 'target_field': 'EmailAddress', 'bidirectional': True},
+                {'source_entity': 'user', 'source_field': 'first_name', 'target_entity': 'contact', 'target_field': 'GivenName', 'bidirectional': True},
+                {'source_entity': 'user', 'source_field': 'last_name', 'target_entity': 'contact', 'target_field': 'FamilyName', 'bidirectional': True},
+                {'source_entity': 'course', 'source_field': 'code', 'target_entity': 'qualification', 'target_field': 'Code', 'bidirectional': False},
+                {'source_entity': 'enrolment', 'source_field': 'status', 'target_entity': 'enrolment', 'target_field': 'Status', 'bidirectional': True},
+            ],
+            'canvas': [
+                {'source_entity': 'user', 'source_field': 'email', 'target_entity': 'user', 'target_field': 'login_id', 'bidirectional': False},
+                {'source_entity': 'user', 'source_field': 'full_name', 'target_entity': 'user', 'target_field': 'name', 'bidirectional': False},
+                {'source_entity': 'course', 'source_field': 'title', 'target_entity': 'course', 'target_field': 'name', 'bidirectional': False},
+                {'source_entity': 'assessment', 'source_field': 'title', 'target_entity': 'assignment', 'target_field': 'name', 'bidirectional': False},
+                {'source_entity': 'assessment', 'source_field': 'due_date', 'target_entity': 'assignment', 'target_field': 'due_at', 'bidirectional': False},
+            ],
+            'xero': [
+                {'source_entity': 'user', 'source_field': 'email', 'target_entity': 'contact', 'target_field': 'EmailAddress', 'bidirectional': False},
+                {'source_entity': 'user', 'source_field': 'full_name', 'target_entity': 'contact', 'target_field': 'Name', 'bidirectional': False},
+                {'source_entity': 'invoice', 'source_field': 'amount', 'target_entity': 'invoice', 'target_field': 'Total', 'bidirectional': False},
+                {'source_entity': 'invoice', 'source_field': 'due_date', 'target_entity': 'invoice', 'target_field': 'DueDate', 'bidirectional': False},
+                {'source_entity': 'invoice', 'source_field': 'status', 'target_entity': 'invoice', 'target_field': 'Status', 'bidirectional': True},
+            ],
+            'moodle': [
+                {'source_entity': 'user', 'source_field': 'username', 'target_entity': 'user', 'target_field': 'username', 'bidirectional': False},
+                {'source_entity': 'user', 'source_field': 'email', 'target_entity': 'user', 'target_field': 'email', 'bidirectional': False},
+                {'source_entity': 'course', 'source_field': 'code', 'target_entity': 'course', 'target_field': 'shortname', 'bidirectional': False},
+                {'source_entity': 'course', 'source_field': 'title', 'target_entity': 'course', 'target_field': 'fullname', 'bidirectional': False},
+            ],
+            'vettrak': [
+                {'source_entity': 'user', 'source_field': 'student_id', 'target_entity': 'client', 'target_field': 'ClientID', 'bidirectional': True},
+                {'source_entity': 'course', 'source_field': 'code', 'target_entity': 'qualification', 'target_field': 'QualCode', 'bidirectional': False},
+                {'source_entity': 'unit', 'source_field': 'code', 'target_entity': 'unit', 'target_field': 'UnitCode', 'bidirectional': False},
+                {'source_entity': 'outcome', 'source_field': 'result', 'target_entity': 'outcome', 'target_field': 'Result', 'bidirectional': True},
+            ],
+            'stripe': [
+                {'source_entity': 'user', 'source_field': 'email', 'target_entity': 'customer', 'target_field': 'email', 'bidirectional': False},
+                {'source_entity': 'invoice', 'source_field': 'amount', 'target_entity': 'payment_intent', 'target_field': 'amount', 'bidirectional': False},
+                {'source_entity': 'payment', 'source_field': 'status', 'target_entity': 'payment_intent', 'target_field': 'status', 'bidirectional': True},
+            ],
+        }
+        
+        # Transform rules for common transformations
+        transform_rules = [
+            '',  # No transformation
+            'value.upper()',  # Uppercase
+            'value.strip()',  # Trim whitespace
+            'datetime.strptime(value, "%Y-%m-%d").isoformat()',  # Date format conversion
+            'float(value) * 100',  # Dollar to cents
+            '"ACTIVE" if value == "enrolled" else "INACTIVE"',  # Status mapping
+        ]
+        
+        for integration in integrations:
+            # Get mapping template for this integration type
+            template = mapping_templates.get(integration.integration_type, [])
+            
+            # Create 3-5 mappings per integration
+            for mapping_data in random.sample(template, k=min(random.randint(3, 5), len(template))):
+                mapping = IntegrationMapping.objects.create(
+                    integration=integration,
+                    source_entity=mapping_data['source_entity'],
+                    source_field=mapping_data['source_field'],
+                    target_entity=mapping_data['target_entity'],
+                    target_field=mapping_data['target_field'],
+                    transform_rule=random.choice(transform_rules),
+                    is_bidirectional=mapping_data.get('bidirectional', False),
+                )
+                mappings.append(mapping)
+        
+        return mappings
+
+    def create_intervention_rules(self, tenants):
+        """Create intervention rules for automatic triggering"""
+        rules = []
+        
+        # Rule templates
+        rule_templates = [
+            {
+                'name': 'Low Attendance Alert',
+                'description': 'Trigger intervention when student attendance drops below 75% over 2 weeks',
+                'condition_type': 'attendance',
+                'conditions': {
+                    'metric': 'attendance_rate',
+                    'operator': 'less_than',
+                    'threshold': 75,
+                    'period': 'last_2_weeks'
+                },
+                'intervention_type': 'attendance_followup',
+                'priority_level': 'high',
+                'assigned_to_role': 'Course Coordinator',
+                'compliance_requirement': 'ASQA Standard 1.7 - Student support',
+            },
+            {
+                'name': 'Failing Grades Pattern',
+                'description': 'Trigger when student receives 3 or more failing grades',
+                'condition_type': 'grade',
+                'conditions': {
+                    'metric': 'failing_assessments',
+                    'operator': 'greater_than_or_equal',
+                    'threshold': 3,
+                    'period': 'last_4_weeks'
+                },
+                'intervention_type': 'academic_support',
+                'priority_level': 'high',
+                'assigned_to_role': 'Learning Support Officer',
+                'compliance_requirement': 'ASQA Standard 1.5 - Assessment quality',
+            },
+            {
+                'name': 'No LMS Activity',
+                'description': 'Student has not logged into LMS for 7 days',
+                'condition_type': 'engagement',
+                'conditions': {
+                    'metric': 'days_since_last_login',
+                    'operator': 'greater_than',
+                    'threshold': 7,
+                    'period': 'current'
+                },
+                'intervention_type': 're_engagement',
+                'priority_level': 'medium',
+                'assigned_to_role': 'Student Success Advisor',
+                'compliance_requirement': 'ASQA Standard 1.7 - Student retention',
+            },
+            {
+                'name': 'High Risk Score',
+                'description': 'Student risk score indicates high likelihood of withdrawal',
+                'condition_type': 'risk_score',
+                'conditions': {
+                    'metric': 'risk_score',
+                    'operator': 'greater_than',
+                    'threshold': 80,
+                    'period': 'current'
+                },
+                'intervention_type': 'wellbeing_check',
+                'priority_level': 'urgent',
+                'assigned_to_role': 'Head of Student Services',
+                'compliance_requirement': 'ASQA Standard 1.7 - Student welfare',
+            },
+            {
+                'name': 'Late Submissions Pattern',
+                'description': 'Multiple late assessment submissions',
+                'condition_type': 'submission',
+                'conditions': {
+                    'metric': 'late_submissions',
+                    'operator': 'greater_than_or_equal',
+                    'threshold': 2,
+                    'period': 'last_4_weeks'
+                },
+                'intervention_type': 'progress_review',
+                'priority_level': 'medium',
+                'assigned_to_role': 'Trainer',
+                'compliance_requirement': 'ASQA Standard 1.8 - Assessment completion',
+            },
+            {
+                'name': 'Course Duration Exceeded',
+                'description': 'Student has exceeded expected course duration',
+                'condition_type': 'duration',
+                'conditions': {
+                    'metric': 'days_enrolled',
+                    'operator': 'greater_than',
+                    'threshold': 365,
+                    'period': 'current'
+                },
+                'intervention_type': 'progress_review',
+                'priority_level': 'high',
+                'assigned_to_role': 'Course Coordinator',
+                'compliance_requirement': 'ASQA Standard 1.1 - Training outcomes',
+            },
+        ]
+        
+        for tenant in tenants:
+            tenant_id = str(tenant.id)
+            
+            # Create 4-6 rules per tenant
+            for template in random.sample(rule_templates, k=random.randint(4, 6)):
+                is_active = random.random() < 0.85  # 85% active
+                
+                rule = InterventionRule.objects.create(
+                    tenant=tenant_id,
+                    rule_name=template['name'],
+                    description=template['description'],
+                    is_active=is_active,
+                    priority=random.randint(1, 5),
+                    condition_type=template['condition_type'],
+                    conditions=template['conditions'],
+                    intervention_type=template['intervention_type'],
+                    priority_level=template['priority_level'],
+                    assigned_to_role=template['assigned_to_role'],
+                    notify_staff=random.random() < 0.9,  # 90% have notifications
+                    notification_recipients=[
+                        f"{template['assigned_to_role'].lower().replace(' ', '.')}@example.com"
+                    ],
+                    notification_template=f"Alert: {template['name']} triggered for {{student_name}}. Please review and take appropriate action.",
+                    compliance_requirement=template['compliance_requirement'],
+                    trigger_count=random.randint(0, 50) if is_active else 0,
+                    last_triggered=timezone.now() - timedelta(days=random.randint(1, 30)) if is_active and random.random() < 0.7 else None,
+                )
+                rules.append(rule)
+        
+        return rules
+
+    def create_intervention_workflows(self, tenants):
+        """Create intervention workflows for structured processes"""
+        workflows = []
+        
+        # Workflow templates
+        workflow_templates = [
+            {
+                'name': 'Academic Support Workflow',
+                'description': 'Structured process for providing academic support to struggling students',
+                'intervention_types': ['academic_support', 'progress_review'],
+                'steps': [
+                    {
+                        'step_number': 1,
+                        'step_name': 'Initial Assessment',
+                        'description': 'Review student academic records and identify specific areas of difficulty',
+                        'required': True,
+                        'estimated_duration': 20,
+                        'fields_required': ['assessment_notes', 'areas_of_concern']
+                    },
+                    {
+                        'step_number': 2,
+                        'step_name': 'Student Meeting',
+                        'description': 'Meet with student to discuss challenges and available support',
+                        'required': True,
+                        'estimated_duration': 30,
+                        'fields_required': ['meeting_notes', 'student_agreement']
+                    },
+                    {
+                        'step_number': 3,
+                        'step_name': 'Support Plan Development',
+                        'description': 'Create personalized academic support plan',
+                        'required': True,
+                        'estimated_duration': 15,
+                        'fields_required': ['support_plan', 'goals', 'timeline']
+                    },
+                    {
+                        'step_number': 4,
+                        'step_name': 'Follow-up Review',
+                        'description': 'Check progress after 2 weeks',
+                        'required': True,
+                        'estimated_duration': 15,
+                        'fields_required': ['progress_notes', 'next_steps']
+                    },
+                ],
+                'requires_approval': False,
+                'required_documentation': ['Support plan', 'Student consent', 'Progress notes'],
+                'compliance_standard': 'ASQA Standard 1.5 - Assessment support',
+            },
+            {
+                'name': 'Attendance Follow-up Workflow',
+                'description': 'Process for addressing attendance issues',
+                'intervention_types': ['attendance_followup'],
+                'steps': [
+                    {
+                        'step_number': 1,
+                        'step_name': 'Contact Student',
+                        'description': 'Initial contact to understand reason for absence',
+                        'required': True,
+                        'estimated_duration': 10,
+                        'fields_required': ['contact_method', 'response_received']
+                    },
+                    {
+                        'step_number': 2,
+                        'step_name': 'Document Reason',
+                        'description': 'Record and categorize absence reason',
+                        'required': True,
+                        'estimated_duration': 5,
+                        'fields_required': ['absence_reason', 'supporting_evidence']
+                    },
+                    {
+                        'step_number': 3,
+                        'step_name': 'Action Plan',
+                        'description': 'Develop plan to improve attendance',
+                        'required': True,
+                        'estimated_duration': 15,
+                        'fields_required': ['action_plan', 'student_commitment']
+                    },
+                ],
+                'requires_approval': False,
+                'required_documentation': ['Attendance records', 'Contact log', 'Action plan'],
+                'compliance_standard': 'ASQA Standard 1.7 - Attendance monitoring',
+            },
+            {
+                'name': 'Wellbeing Check Workflow',
+                'description': 'Sensitive process for student wellbeing concerns',
+                'intervention_types': ['wellbeing_check', 'referral'],
+                'steps': [
+                    {
+                        'step_number': 1,
+                        'step_name': 'Private Conversation',
+                        'description': 'Confidential discussion with student',
+                        'required': True,
+                        'estimated_duration': 30,
+                        'fields_required': ['wellbeing_concerns', 'student_disclosure']
+                    },
+                    {
+                        'step_number': 2,
+                        'step_name': 'Risk Assessment',
+                        'description': 'Assess level of concern and immediate needs',
+                        'required': True,
+                        'estimated_duration': 10,
+                        'fields_required': ['risk_level', 'immediate_action_required']
+                    },
+                    {
+                        'step_number': 3,
+                        'step_name': 'Support Referral',
+                        'description': 'Connect student with appropriate support services',
+                        'required': True,
+                        'estimated_duration': 15,
+                        'fields_required': ['referral_service', 'student_consent', 'contact_made']
+                    },
+                    {
+                        'step_number': 4,
+                        'step_name': 'Follow-up',
+                        'description': 'Check in with student within one week',
+                        'required': True,
+                        'estimated_duration': 15,
+                        'fields_required': ['followup_date', 'student_status', 'ongoing_support']
+                    },
+                ],
+                'requires_approval': True,
+                'approval_roles': ['Head of Student Services', 'Director of Studies'],
+                'required_documentation': ['Wellbeing notes (confidential)', 'Referral confirmation', 'Student consent form'],
+                'compliance_standard': 'ASQA Standard 1.7 - Student welfare and duty of care',
+            },
+        ]
+        
+        for tenant in tenants:
+            tenant_id = str(tenant.id)
+            
+            # Create 2-3 workflows per tenant
+            for template in random.sample(workflow_templates, k=random.randint(2, 3)):
+                workflow = InterventionWorkflow.objects.create(
+                    tenant=tenant_id,
+                    workflow_name=template['name'],
+                    description=template['description'],
+                    intervention_types=template['intervention_types'],
+                    is_active=random.random() < 0.9,  # 90% active
+                    steps=template['steps'],
+                    requires_approval=template['requires_approval'],
+                    approval_roles=template.get('approval_roles', []),
+                    required_documentation=template['required_documentation'],
+                    compliance_standard=template['compliance_standard'],
+                    audit_requirements=[
+                        'All steps documented',
+                        'Student consent obtained where required',
+                        'Follow-up completed within timeframe',
+                    ],
+                )
+                workflows.append(workflow)
+        
+        return workflows
+
+    def create_interventions(self, tenants, users):
+        """Create intervention records"""
+        interventions = []
+        
+        # Sample student data
+        student_names = [
+            'Sarah Johnson', 'Michael Chen', 'Emma Wilson', 'James Martinez',
+            'Olivia Brown', 'Liam Taylor', 'Ava Anderson', 'Noah Thomas',
+            'Isabella Garcia', 'Mason Rodriguez', 'Sophia Lee', 'Lucas White',
+            'Mia Harris', 'Ethan Clark', 'Charlotte Lewis', 'Alexander Walker'
+        ]
+        
+        course_names = [
+            'Certificate IV in Business', 'Diploma of Leadership',
+            'Certificate III in Hospitality', 'Diploma of IT',
+            'Certificate IV in Education Support', 'Diploma of Accounting',
+            'Certificate III in Early Childhood', 'Diploma of Project Management',
+        ]
+        
+        intervention_types_data = {
+            'academic_support': {
+                'priority': ['medium', 'high'],
+                'triggers': ['manual', 'rule_engine'],
+                'communication': ['face_to_face', 'video_call', 'email'],
+            },
+            'attendance_followup': {
+                'priority': ['high', 'urgent'],
+                'triggers': ['rule_engine', 'system_alert'],
+                'communication': ['phone_call', 'email', 'sms'],
+            },
+            'wellbeing_check': {
+                'priority': ['high', 'urgent'],
+                'triggers': ['manual', 'third_party'],
+                'communication': ['face_to_face', 'phone_call'],
+            },
+            'behaviour_management': {
+                'priority': ['medium', 'high'],
+                'triggers': ['manual'],
+                'communication': ['face_to_face', 'written_note'],
+            },
+            'career_guidance': {
+                'priority': ['low', 'medium'],
+                'triggers': ['manual'],
+                'communication': ['face_to_face', 'video_call'],
+            },
+            'extension_approval': {
+                'priority': ['medium'],
+                'triggers': ['manual'],
+                'communication': ['email', 'lms_message'],
+            },
+            'progress_review': {
+                'priority': ['medium', 'high'],
+                'triggers': ['rule_engine', 'manual'],
+                'communication': ['face_to_face', 'video_call'],
+            },
+            're_engagement': {
+                'priority': ['high', 'urgent'],
+                'triggers': ['rule_engine', 'system_alert'],
+                'communication': ['phone_call', 'email', 'sms'],
+            },
+        }
+        
+        action_descriptions = {
+            'academic_support': [
+                'Reviewed assessment results with student and identified knowledge gaps in core competencies. Provided additional learning resources and scheduled follow-up tutoring sessions.',
+                'Conducted one-on-one support session focusing on study skills and time management. Student demonstrated improved understanding of assessment requirements.',
+                'Arranged peer mentoring support and access to online learning modules. Student committed to weekly check-ins.',
+            ],
+            'attendance_followup': [
+                'Contacted student regarding absences. Student explained work commitments were causing scheduling conflicts. Arranged flexible attendance options.',
+                'Met with student to discuss attendance concerns. Discovered transportation issues. Connected student with travel support program.',
+                'Phone discussion revealed health issues affecting attendance. Provided information on special consideration process and flexible learning options.',
+            ],
+            'wellbeing_check': [
+                'Sensitive conversation regarding student wellbeing. Student disclosed family pressures. Referred to counseling services with student consent.',
+                'Checked in with student after observed changes in engagement. Student appreciated support and agreed to regular check-ins.',
+                'Met privately with student regarding concerns. Connected student with external support services. Following up in one week.',
+            ],
+            'progress_review': [
+                'Comprehensive review of student progress. Identified areas requiring additional support. Developed revised study plan with achievable milestones.',
+                'Progress meeting indicated student on track but experiencing time pressure. Adjusted deadlines and provided additional resources.',
+                'Reviewed competency completion rates. Student making good progress. Encouraged to maintain momentum.',
+            ],
+            're_engagement': [
+                'Reached out to student who had stopped attending. Student experiencing personal challenges. Discussed options to resume studies when ready.',
+                'Multiple contact attempts made. Finally connected via SMS. Student agreed to meeting to discuss return to study options.',
+                'Contact established after period of non-engagement. Student ready to return. Welcomed back and caught up on missed content.',
+            ],
+        }
+        
+        for tenant in tenants:
+            tenant_id = str(tenant.id)
+            trainer_users = [u for u in users if u.username in ['trainer', 'manager', 'admin']]
+            
+            # Create 8-15 interventions per tenant
+            for _ in range(random.randint(8, 15)):
+                student_name = random.choice(student_names)
+                student_id = f"STU{random.randint(1000, 9999)}"
+                course_name = random.choice(course_names)
+                course_id = f"CRS{random.randint(100, 999)}"
+                
+                intervention_type = random.choice(list(intervention_types_data.keys()))
+                type_data = intervention_types_data[intervention_type]
+                
+                priority_level = random.choice(type_data['priority'])
+                trigger_type = random.choice(type_data['triggers'])
+                communication_method = random.choice(type_data['communication'])
+                
+                # Determine status (more recent interventions likely still in progress)
+                days_ago = random.randint(1, 90)
+                if days_ago < 7:
+                    status = random.choice(['initiated', 'in_progress', 'in_progress'])
+                elif days_ago < 30:
+                    status = random.choice(['in_progress', 'completed', 'completed'])
+                else:
+                    status = random.choice(['completed', 'closed', 'closed'])
+                
+                action_date = timezone.now() - timedelta(days=days_ago)
+                trainer = random.choice(trainer_users)
+                
+                # Trigger details
+                trigger_details = {}
+                if trigger_type == 'rule_engine':
+                    if 'attendance' in intervention_type:
+                        trigger_details = {
+                            'attendance_rate': random.randint(45, 74),
+                            'absences': random.randint(3, 8),
+                            'period': 'last_2_weeks'
+                        }
+                    elif intervention_type == 'academic_support':
+                        trigger_details = {
+                            'failing_assessments': random.randint(3, 5),
+                            'average_grade': random.randint(35, 49),
+                            'period': 'last_4_weeks'
+                        }
+                    elif intervention_type == 're_engagement':
+                        trigger_details = {
+                            'days_since_last_login': random.randint(8, 21),
+                            'missed_submissions': random.randint(2, 4)
+                        }
+                
+                action_desc = random.choice(action_descriptions.get(intervention_type, [
+                    f'Intervention conducted for {intervention_type}. Student supported and action plan developed.'
+                ]))
+                
+                # Outcome
+                if status in ['completed', 'closed']:
+                    outcome_achieved = random.choice(['successful', 'successful', 'successful', 'partial', 'unsuccessful'])
+                else:
+                    outcome_achieved = 'pending'
+                
+                outcome_desc = ''
+                if outcome_achieved == 'successful':
+                    outcome_desc = random.choice([
+                        'Student engagement improved significantly. All targets met.',
+                        'Positive outcome achieved. Student back on track with studies.',
+                        'Successful intervention. Student demonstrating improved performance.',
+                    ])
+                elif outcome_achieved == 'partial':
+                    outcome_desc = 'Some improvement noted but ongoing support required.'
+                elif outcome_achieved == 'unsuccessful':
+                    outcome_desc = 'Student did not respond to intervention. Escalated to senior staff.'
+                
+                # Follow-up
+                requires_followup = False
+                followup_date = None
+                if status == 'in_progress' or outcome_achieved == 'partial':
+                    requires_followup = True
+                    followup_date = (timezone.now() + timedelta(days=random.randint(7, 21))).date()
+                
+                # Referral
+                referred_to = ''
+                referral_accepted = None
+                referral_date = None
+                if intervention_type in ['wellbeing_check', 're_engagement'] and random.random() < 0.4:
+                    referred_to = random.choice([
+                        'Student Counseling Service',
+                        'Disability Support Services',
+                        'Career Guidance Office',
+                        'Learning Skills Workshop',
+                        'Mental Health First Aider',
+                    ])
+                    referral_accepted = random.choice([True, True, False])
+                    referral_date = (action_date + timedelta(days=random.randint(1, 3))).date()
+                
+                intervention = Intervention.objects.create(
+                    tenant=tenant_id,
+                    student_id=student_id,
+                    student_name=student_name,
+                    course_id=course_id,
+                    course_name=course_name,
+                    intervention_type=intervention_type,
+                    priority_level=priority_level,
+                    status=status,
+                    trigger_type=trigger_type,
+                    trigger_rule_id=f"RULE-{random.randint(1000, 9999)}" if trigger_type == 'rule_engine' else '',
+                    trigger_details=trigger_details,
+                    action_description=action_desc,
+                    action_taken_by=f"{trainer.first_name} {trainer.last_name}",
+                    action_taken_by_role=random.choice(['Trainer', 'Course Coordinator', 'Student Services Officer']),
+                    action_date=action_date,
+                    communication_method=communication_method,
+                    communication_notes=f"Communication conducted via {communication_method}. Student responsive and engaged in discussion.",
+                    outcome_achieved=outcome_achieved,
+                    outcome_description=outcome_desc,
+                    outcome_evidence=[
+                        {'type': 'attendance_record', 'url': f'/evidence/{student_id}/attendance.pdf'},
+                        {'type': 'meeting_notes', 'url': f'/evidence/{student_id}/meeting_{action_date.strftime("%Y%m%d")}.pdf'},
+                    ] if status in ['completed', 'closed'] else [],
+                    requires_followup=requires_followup,
+                    followup_date=followup_date,
+                    followup_notes='Schedule follow-up meeting to review progress' if requires_followup else '',
+                    referred_to=referred_to,
+                    referral_accepted=referral_accepted,
+                    referral_date=referral_date,
+                    completed_at=action_date + timedelta(days=random.randint(7, 30)) if status in ['completed', 'closed'] else None,
+                    audit_notes=f'Intervention documented in compliance with {random.choice(["ASQA Standard 1.5", "ASQA Standard 1.7", "ASQA Standard 1.8"])}',
+                    compliance_category=random.choice([
+                        'ASQA Standard 1.5 - Assessment',
+                        'ASQA Standard 1.7 - Student support',
+                        'ASQA Standard 1.8 - Completion and outcomes',
+                    ]),
+                    attachments=[
+                        {'filename': f'intervention_form_{action_date.strftime("%Y%m%d")}.pdf', 'size': random.randint(50, 500) * 1024},
+                        {'filename': f'student_consent_{action_date.strftime("%Y%m%d")}.pdf', 'size': random.randint(20, 100) * 1024},
+                    ],
+                )
+                interventions.append(intervention)
+        
+        return interventions
+
+    def create_intervention_steps(self, interventions, workflows):
+        """Create workflow steps for interventions"""
+        steps = []
+        
+        # Map intervention types to workflows
+        workflow_map = {}
+        for workflow in workflows:
+            for int_type in workflow.intervention_types:
+                if int_type not in workflow_map:
+                    workflow_map[int_type] = []
+                workflow_map[int_type].append(workflow)
+        
+        for intervention in interventions:
+            # 60% of interventions follow a workflow
+            if random.random() < 0.6 and intervention.intervention_type in workflow_map:
+                workflow_options = workflow_map[intervention.intervention_type]
+                # Filter by same tenant
+                workflow_options = [w for w in workflow_options if w.tenant == intervention.tenant]
+                
+                if not workflow_options:
+                    continue
+                
+                workflow = random.choice(workflow_options)
+                
+                # Create steps from workflow template
+                for step_template in workflow.steps:
+                    # Determine step status based on intervention status
+                    if intervention.status == 'initiated':
+                        step_status = 'pending' if step_template['step_number'] == 1 else 'pending'
+                    elif intervention.status == 'in_progress':
+                        if step_template['step_number'] <= random.randint(1, len(workflow.steps) - 1):
+                            step_status = 'completed'
+                        elif step_template['step_number'] == random.randint(2, len(workflow.steps)):
+                            step_status = 'in_progress'
+                        else:
+                            step_status = 'pending'
+                    else:  # completed, closed, etc.
+                        step_status = 'completed'
+                    
+                    completed_at = None
+                    completed_by = ''
+                    completion_notes = ''
+                    duration_minutes = None
+                    
+                    if step_status == 'completed':
+                        days_offset = step_template['step_number'] * random.randint(1, 3)
+                        completed_at = intervention.action_date + timedelta(days=days_offset)
+                        completed_by = intervention.action_taken_by
+                        completion_notes = f"Step completed successfully. {random.choice(['Student engaged positively.', 'Good progress made.', 'All requirements met.', 'Documentation completed.'])}"
+                        duration_minutes = step_template['estimated_duration'] + random.randint(-5, 10)
+                    
+                    step = InterventionStep.objects.create(
+                        intervention=intervention,
+                        workflow=workflow,
+                        step_number=step_template['step_number'],
+                        step_name=step_template['step_name'],
+                        step_description=step_template['description'],
+                        status=step_status,
+                        completed_by=completed_by,
+                        completed_at=completed_at,
+                        completion_notes=completion_notes,
+                        duration_minutes=duration_minutes,
+                        evidence_provided=[
+                            {'type': field, 'status': 'provided'} 
+                            for field in step_template.get('fields_required', [])
+                        ] if step_status == 'completed' else [],
+                        attachments=[
+                            {'filename': f'{step_template["step_name"].lower().replace(" ", "_")}.pdf', 'size': random.randint(50, 200) * 1024}
+                        ] if step_status == 'completed' and random.random() < 0.7 else [],
+                    )
+                    steps.append(step)
+        
+        return steps
+
+    def create_intervention_outcomes(self, interventions):
+        """Create outcome tracking records"""
+        outcomes = []
+        
+        # Only create outcomes for completed/closed interventions
+        completed_interventions = [i for i in interventions if i.status in ['completed', 'closed']]
+        
+        metric_types_by_intervention = {
+            'academic_support': ['grade_improvement', 'completion_rate'],
+            'attendance_followup': ['attendance_improvement', 'engagement_increase'],
+            'wellbeing_check': ['satisfaction', 'engagement_increase'],
+            'progress_review': ['completion_rate', 'grade_improvement'],
+            're_engagement': ['attendance_improvement', 'engagement_increase'],
+            'behaviour_management': ['behaviour_change', 'satisfaction'],
+        }
+        
+        for intervention in completed_interventions:
+            # Create 1-2 outcomes per intervention
+            metric_types = metric_types_by_intervention.get(
+                intervention.intervention_type,
+                ['custom']
+            )
+            
+            for metric_type in random.sample(metric_types, k=min(random.randint(1, 2), len(metric_types))):
+                # Generate realistic baseline, target, and actual values
+                if metric_type in ['attendance_improvement', 'completion_rate', 'engagement_increase']:
+                    baseline_value = random.uniform(40, 70)
+                    target_value = baseline_value + random.uniform(15, 25)
+                    # Success varies
+                    if intervention.outcome_achieved == 'successful':
+                        actual_value = target_value + random.uniform(-5, 10)
+                    elif intervention.outcome_achieved == 'partial':
+                        actual_value = baseline_value + random.uniform(5, 15)
+                    else:
+                        actual_value = baseline_value + random.uniform(-5, 5)
+                
+                elif metric_type == 'grade_improvement':
+                    baseline_value = random.uniform(35, 55)
+                    target_value = 65.0
+                    if intervention.outcome_achieved == 'successful':
+                        actual_value = random.uniform(65, 85)
+                    elif intervention.outcome_achieved == 'partial':
+                        actual_value = random.uniform(55, 65)
+                    else:
+                        actual_value = random.uniform(35, 55)
+                
+                elif metric_type == 'satisfaction':
+                    baseline_value = random.uniform(3, 5)
+                    target_value = 8.0
+                    if intervention.outcome_achieved == 'successful':
+                        actual_value = random.uniform(8, 10)
+                    else:
+                        actual_value = random.uniform(6, 8)
+                
+                elif metric_type == 'behaviour_change':
+                    baseline_value = random.uniform(2, 4)
+                    target_value = 8.0
+                    if intervention.outcome_achieved == 'successful':
+                        actual_value = random.uniform(7, 9)
+                    else:
+                        actual_value = random.uniform(5, 7)
+                
+                else:  # custom
+                    baseline_value = random.uniform(1, 5)
+                    target_value = random.uniform(7, 10)
+                    actual_value = random.uniform(5, 10)
+                
+                # Determine impact rating
+                improvement_pct = ((actual_value - baseline_value) / baseline_value) * 100 if baseline_value > 0 else 0
+                
+                if improvement_pct >= 30:
+                    impact_rating = 'significant'
+                elif improvement_pct >= 15:
+                    impact_rating = 'moderate'
+                elif improvement_pct >= 5:
+                    impact_rating = 'minimal'
+                elif improvement_pct >= 0:
+                    impact_rating = 'none'
+                else:
+                    impact_rating = 'negative'
+                
+                measurement_date = (intervention.completed_at or timezone.now()).date()
+                
+                outcome = InterventionOutcome.objects.create(
+                    intervention=intervention,
+                    metric_type=metric_type,
+                    baseline_value=round(baseline_value, 2),
+                    target_value=round(target_value, 2),
+                    actual_value=round(actual_value, 2),
+                    measurement_date=measurement_date,
+                    impact_rating=impact_rating,
+                    evidence_description=f"Measured {metric_type.replace('_', ' ')} through {random.choice(['student records', 'LMS analytics', 'attendance data', 'assessment results', 'student feedback'])}",
+                    evidence_links=[
+                        {'type': 'analytics_report', 'url': f'/reports/{metric_type}/{intervention.student_id}.pdf'},
+                        {'type': 'comparison_chart', 'url': f'/charts/{metric_type}/{intervention.student_id}.png'},
+                    ],
+                    notes=f"Improvement of {improvement_pct:.1f}% from baseline. {'Target achieved.' if actual_value >= target_value else 'Target not fully achieved but positive progress made.'}",
+                )
+                outcomes.append(outcome)
+        
+        return outcomes
+
+    def create_intervention_audit_logs(self, interventions, users):
+        """Create comprehensive audit trail"""
+        logs = []
+        
+        action_types_sequence = [
+            'created',
+            'status_changed',
+            'step_completed',
+            'document_attached',
+            'outcome_recorded',
+            'notification_sent',
+            'closed',
+        ]
+        
+        for intervention in interventions:
+            # Create creation log
+            create_date = intervention.action_date or intervention.created_at
+            
+            log = InterventionAuditLog.objects.create(
+                tenant=intervention.tenant,
+                intervention=intervention,
+                action_type='created',
+                action_description=f'Intervention {intervention.intervention_number} created for student {intervention.student_name}',
+                performed_by=intervention.action_taken_by,
+                performed_by_role=intervention.action_taken_by_role,
+                changes={
+                    'status': {'old': None, 'new': 'initiated'},
+                    'priority_level': {'old': None, 'new': intervention.priority_level},
+                    'intervention_type': {'old': None, 'new': intervention.intervention_type},
+                },
+                ip_address=f'10.0.{random.randint(1, 255)}.{random.randint(1, 255)}',
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                timestamp=create_date,
+            )
+            logs.append(log)
+            
+            # Create 2-5 additional logs based on intervention status
+            num_logs = random.randint(2, 5) if intervention.status in ['completed', 'closed'] else random.randint(1, 3)
+            
+            log_timestamp = create_date
+            for i in range(num_logs):
+                log_timestamp = log_timestamp + timedelta(days=random.randint(1, 7), hours=random.randint(0, 23))
+                
+                action_type = random.choice([
+                    'updated', 'status_changed', 'step_completed', 
+                    'document_attached', 'notification_sent'
+                ])
+                
+                if action_type == 'status_changed':
+                    old_status = random.choice(['initiated', 'in_progress'])
+                    new_status = intervention.status if i == num_logs - 1 else random.choice(['in_progress', 'completed'])
+                    action_description = f'Status changed from {old_status} to {new_status}'
+                    changes = {'status': {'old': old_status, 'new': new_status}}
+                
+                elif action_type == 'step_completed':
+                    step_num = i + 1
+                    action_description = f'Workflow step {step_num} completed'
+                    changes = {'workflow_step': {'step': step_num, 'status': 'completed'}}
+                
+                elif action_type == 'document_attached':
+                    doc_name = random.choice(['meeting_notes.pdf', 'support_plan.pdf', 'student_consent.pdf'])
+                    action_description = f'Document attached: {doc_name}'
+                    changes = {'documents': {'added': doc_name}}
+                
+                elif action_type == 'notification_sent':
+                    recipient = random.choice(['Course Coordinator', 'Student Services', 'Head of Department'])
+                    action_description = f'Notification sent to {recipient}'
+                    changes = {'notification': {'recipient': recipient, 'sent': True}}
+                
+                else:  # updated
+                    action_description = 'Intervention details updated'
+                    changes = {'notes': {'updated': True}}
+                
+                performer = random.choice([intervention.action_taken_by] + [f"{u.first_name} {u.last_name}" for u in users[:3]])
+                
+                log = InterventionAuditLog.objects.create(
+                    tenant=intervention.tenant,
+                    intervention=intervention,
+                    action_type=action_type,
+                    action_description=action_description,
+                    performed_by=performer,
+                    performed_by_role=random.choice(['Trainer', 'Course Coordinator', 'Student Services Officer', 'Admin']),
+                    changes=changes,
+                    ip_address=f'10.0.{random.randint(1, 255)}.{random.randint(1, 255)}',
+                    user_agent=random.choice([
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+                        'Mozilla/5.0 (X11; Linux x86_64)',
+                    ]),
+                    timestamp=log_timestamp,
+                )
+                logs.append(log)
+        
+        return logs
