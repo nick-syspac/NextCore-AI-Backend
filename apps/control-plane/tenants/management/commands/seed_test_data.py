@@ -37,6 +37,13 @@ from engagement_heatmap.models import (
     DiscussionSentiment,
     EngagementAlert,
 )
+from evidence_mapper.models import (
+    EvidenceMapping,
+    SubmissionEvidence,
+    CriteriaTag,
+    EvidenceAudit,
+    EmbeddingSearch,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -239,6 +246,22 @@ class Command(BaseCommand):
         engagement_alerts = self.create_engagement_alerts(engagement_heatmaps)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(engagement_alerts)} engagement alerts'))
         
+        # Create evidence mapper data
+        evidence_mappings = self.create_evidence_mappings(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(evidence_mappings)} evidence mappings'))
+        
+        submission_evidence = self.create_submission_evidence(evidence_mappings)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(submission_evidence)} submission evidence'))
+        
+        criteria_tags = self.create_criteria_tags(submission_evidence)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(criteria_tags)} criteria tags'))
+        
+        evidence_audits = self.create_evidence_audits(evidence_mappings, submission_evidence, criteria_tags)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(evidence_audits)} evidence audit logs'))
+        
+        embedding_searches = self.create_embedding_searches(evidence_mappings)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(embedding_searches)} embedding searches'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -274,6 +297,32 @@ class Command(BaseCommand):
         
         try:
             EngagementHeatmap.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        # Evidence Mapper
+        try:
+            EmbeddingSearch.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            EvidenceAudit.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            CriteriaTag.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            SubmissionEvidence.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            EvidenceMapping.objects.all().delete()
         except ProgrammingError:
             pass
         
@@ -3194,3 +3243,615 @@ Student Support Team'''
                 alerts.append(alert)
         
         return alerts
+
+    def create_evidence_mappings(self, tenants, users):
+        """Create evidence mappings"""
+        mappings = []
+        
+        assessment_templates = [
+            {
+                'name': 'Certificate III Assessment Portfolio',
+                'description': 'Portfolio-based assessment for Certificate III qualification covering multiple units',
+                'assessment_type': 'portfolio',
+                'assessment_title': 'Certificate III in Business - Portfolio Assessment',
+                'unit_code': 'BSB30120',
+                'total_criteria': 15,
+                'auto_extract_text': True,
+                'generate_embeddings': True,
+            },
+            {
+                'name': 'Practical Demonstration Assessment',
+                'description': 'Hands-on practical demonstration with video evidence and supporting documentation',
+                'assessment_type': 'practical',
+                'assessment_title': 'Certificate IV in Training and Assessment - Practical Demo',
+                'unit_code': 'TAE40116',
+                'total_criteria': 12,
+                'auto_extract_text': True,
+                'generate_embeddings': False,
+            },
+            {
+                'name': 'Written Assignment Assessment',
+                'description': 'Written assignment with research and case study components',
+                'assessment_type': 'written',
+                'assessment_title': 'Diploma of Leadership - Written Assignment',
+                'unit_code': 'BSB50420',
+                'total_criteria': 10,
+                'auto_extract_text': True,
+                'generate_embeddings': True,
+            },
+            {
+                'name': 'Project Work Assessment',
+                'description': 'Major project with planning documentation, implementation evidence, and review',
+                'assessment_type': 'project',
+                'assessment_title': 'Certificate IV in Project Management - Major Project',
+                'unit_code': 'BSB40920',
+                'total_criteria': 18,
+                'auto_extract_text': True,
+                'generate_embeddings': True,
+            },
+        ]
+        
+        for i, tenant in enumerate(tenants):
+            # Create 1-2 mappings per tenant
+            for j, template in enumerate(assessment_templates[:2]):
+                mapping = EvidenceMapping.objects.create(
+                    name=template['name'],
+                    description=template['description'],
+                    assessment_type=template['assessment_type'],
+                    assessment_title=template['assessment_title'],
+                    unit_code=template['unit_code'],
+                    total_criteria=template['total_criteria'],
+                    auto_extract_text=template['auto_extract_text'],
+                    generate_embeddings=template['generate_embeddings'],
+                    require_evidence_per_criterion=True,
+                    min_evidence_length=50,
+                    status=random.choice(['active', 'completed', 'draft']),
+                    created_by=random.choice(users).username,
+                )
+                mappings.append(mapping)
+        
+        return mappings
+
+    def create_submission_evidence(self, mappings):
+        """Create submission evidence"""
+        submissions = []
+        
+        sample_texts = [
+            {
+                'title': 'Business Communication Report',
+                'text': '''Business Communication in the Digital Age
+
+Introduction:
+Effective business communication is essential in today's fast-paced corporate environment. This report examines key principles of professional communication, including written correspondence, verbal presentations, and digital communication channels.
+
+Key Findings:
+1. Written Communication: Clear and concise writing is crucial for professional success. All business correspondence should maintain a professional tone while remaining accessible to the intended audience.
+
+2. Verbal Communication: Face-to-face meetings and presentations require careful preparation. Speaking clearly, maintaining eye contact, and using appropriate body language enhances message delivery.
+
+3. Digital Communication: Email, instant messaging, and video conferencing have become standard business tools. Understanding when to use each channel appropriately demonstrates professional competency.
+
+Best Practices:
+- Always proofread written communications before sending
+- Tailor your message to your audience
+- Use active listening techniques in conversations
+- Respond to communications in a timely manner
+- Maintain professionalism across all channels
+
+Conclusion:
+Mastering business communication skills requires continuous practice and refinement. By following established principles and adapting to new technologies, professionals can communicate effectively in any business context.'''
+            },
+            {
+                'title': 'Workplace Health and Safety Analysis',
+                'text': '''Workplace Health and Safety Compliance Report
+
+Executive Summary:
+This report analyzes current workplace health and safety practices and identifies areas for improvement to ensure full compliance with regulatory requirements.
+
+Current Safety Measures:
+Our organization has implemented several safety protocols including:
+- Regular safety inductions for all new staff
+- Monthly workplace inspections
+- Incident reporting systems
+- Personal protective equipment (PPE) provision
+- Emergency evacuation procedures
+
+Risk Assessment:
+Through comprehensive workplace audits, we have identified the following risk areas:
+1. Manual handling tasks requiring proper training
+2. Workstation ergonomics needing assessment
+3. Emergency exits requiring clearer signage
+4. First aid supplies needing restocking
+
+Recommendations:
+1. Implement monthly manual handling training sessions
+2. Conduct ergonomic assessments for all workstations
+3. Install illuminated emergency exit signs
+4. Establish quarterly first aid supply audits
+5. Create a safety committee with staff representatives
+
+Implementation Timeline:
+- Month 1: Address critical safety signage
+- Month 2-3: Roll out training programs
+- Month 4: Complete workstation assessments
+- Ongoing: Regular monitoring and review
+
+By implementing these recommendations, we will create a safer workplace environment and ensure regulatory compliance.'''
+            },
+            {
+                'title': 'Customer Service Case Study',
+                'text': '''Customer Service Excellence: A Case Study Analysis
+
+Background:
+This case study examines a challenging customer service situation and demonstrates effective problem-solving techniques.
+
+The Situation:
+A long-term client contacted our support team expressing frustration about a delayed shipment. The product was critical for their upcoming event, and the delay threatened their business relationship with their own client.
+
+Initial Response:
+Upon receiving the complaint, I immediately:
+1. Acknowledged the customer's concerns with empathy
+2. Apologized for the inconvenience without making excuses
+3. Gathered all relevant information about the order
+4. Investigated the cause of the delay with the logistics team
+
+Problem-Solving Approach:
+After identifying that a warehouse error caused the delay, I took the following actions:
+- Arranged for express shipping at no additional cost
+- Provided real-time tracking information
+- Called the customer personally with updates
+- Offered a discount on their next order as compensation
+
+Resolution:
+The product arrived one day before the client's event. The customer appreciated the proactive communication and problem-solving approach. They continued their business relationship and later provided positive feedback about the service recovery.
+
+Key Learnings:
+1. Prompt acknowledgment and empathy are crucial
+2. Taking ownership builds trust
+3. Proactive communication reduces anxiety
+4. Going above and beyond can turn negatives into positives
+5. Following up ensures lasting satisfaction
+
+This experience reinforced the importance of excellent customer service skills in maintaining strong business relationships.'''
+            },
+            {
+                'title': 'Team Leadership Reflection',
+                'text': '''Leadership Reflection: Managing a Diverse Team
+
+Introduction:
+As team leader for the Q4 project implementation, I gained valuable insights into effective leadership practices, particularly when managing a diverse team with varying skill levels and backgrounds.
+
+Team Composition:
+Our team consisted of six members with different experience levels:
+- Two senior staff with 5+ years experience
+- Three mid-level team members
+- One graduate trainee
+
+Leadership Challenges:
+Initially, I faced several challenges:
+1. Balancing workload distribution fairly
+2. Ensuring clear communication across experience levels
+3. Motivating team members with different working styles
+4. Managing conflicts arising from diverse perspectives
+
+Strategies Implemented:
+To address these challenges, I employed several leadership strategies:
+
+Delegation:
+- Assigned tasks based on individual strengths and development needs
+- Provided clear instructions and expected outcomes
+- Allowed autonomy while remaining available for support
+
+Communication:
+- Held weekly team meetings for updates and concerns
+- Maintained an open-door policy for individual discussions
+- Used multiple communication channels (email, meetings, chat)
+
+Team Development:
+- Paired experienced staff with junior members for mentoring
+- Encouraged knowledge sharing through lunch-and-learn sessions
+- Provided constructive feedback regularly
+
+Conflict Resolution:
+- Addressed conflicts promptly and privately
+- Listened to all perspectives before making decisions
+- Focused on solutions rather than blame
+
+Results:
+The project was completed two weeks ahead of schedule with all quality standards met. Team satisfaction surveys showed 95% positive feedback about team leadership and collaboration.
+
+Personal Growth:
+This experience taught me that effective leadership requires:
+- Adaptability to different team member needs
+- Active listening and empathy
+- Clear communication
+- Delegation balanced with support
+- Recognition of individual contributions
+
+Moving forward, I will continue developing these leadership competencies and seeking opportunities to enhance team performance.'''
+            },
+        ]
+        
+        for mapping in mappings:
+            # Create 3-5 submissions per mapping
+            num_submissions = random.randint(3, 5)
+            
+            for i in range(num_submissions):
+                student_id = f"STU{random.randint(1000, 9999)}"
+                student_name = random.choice([
+                    'Emma Wilson', 'James Chen', 'Sarah Johnson', 
+                    'Michael Brown', 'Jessica Lee', 'Daniel Kim',
+                    'Olivia Martinez', 'Ryan Taylor'
+                ])
+                
+                sample = random.choice(sample_texts)
+                
+                # Simulate extraction
+                extraction_status = random.choices(
+                    ['completed', 'processing', 'pending', 'failed'],
+                    weights=[0.80, 0.10, 0.05, 0.05]
+                )[0]
+                
+                extracted_text = sample['text'] if extraction_status == 'completed' else ''
+                
+                # Generate mock embedding (vector of 384 dimensions)
+                embedding = []
+                if mapping.generate_embeddings and extraction_status == 'completed':
+                    embedding = [random.uniform(-1, 1) for _ in range(384)]
+                
+                submission = SubmissionEvidence.objects.create(
+                    mapping=mapping,
+                    student_id=student_id,
+                    student_name=student_name,
+                    submission_id=f"SUB-{random.randint(10000, 99999)}",
+                    submission_title=sample['title'],
+                    submission_type=random.choice(['PDF', 'DOCX', 'Video', 'Portfolio']),
+                    file_path=f"/submissions/{mapping.id}/{student_id}/{sample['title'].replace(' ', '_')}.pdf",
+                    file_size_bytes=random.randint(100000, 5000000),
+                    extracted_text=extracted_text,
+                    extraction_status=extraction_status,
+                    extraction_method=random.choice(['PDF Parser', 'OCR', 'Speech-to-text', 'DOCX Parser']),
+                    text_embedding=embedding,
+                    embedding_model='sentence-transformers/all-MiniLM-L6-v2' if embedding else '',
+                    embedding_dimension=384 if embedding else None,
+                    metadata={
+                        'language': 'en',
+                        'readability_score': random.uniform(60, 85),
+                        'word_count': len(extracted_text.split()) if extracted_text else 0,
+                        'extracted_keywords': ['business', 'communication', 'professional', 'assessment'] if extracted_text else [],
+                    },
+                    submitted_at=timezone.now() - timedelta(days=random.randint(1, 30)),
+                    extracted_at=timezone.now() - timedelta(days=random.randint(0, 25)) if extraction_status == 'completed' else None,
+                )
+                submissions.append(submission)
+                
+                # Update mapping statistics
+                mapping.total_submissions += 1
+                if extraction_status == 'completed':
+                    mapping.total_text_extracted += 1
+                if embedding:
+                    mapping.embeddings_generated += 1
+                mapping.save()
+        
+        return submissions
+
+    def create_criteria_tags(self, submissions):
+        """Create criteria tags"""
+        tags = []
+        
+        criteria_templates = [
+            {
+                'id': 'CRIT-001',
+                'name': 'Demonstrate effective written communication',
+                'description': 'Student demonstrates clear, professional written communication appropriate to context',
+            },
+            {
+                'id': 'CRIT-002',
+                'name': 'Apply workplace health and safety principles',
+                'description': 'Student identifies and applies WHS principles in workplace scenarios',
+            },
+            {
+                'id': 'CRIT-003',
+                'name': 'Provide quality customer service',
+                'description': 'Student demonstrates customer service skills including problem-solving and empathy',
+            },
+            {
+                'id': 'CRIT-004',
+                'name': 'Demonstrate leadership capabilities',
+                'description': 'Student shows evidence of leadership, delegation, and team management',
+            },
+            {
+                'id': 'CRIT-005',
+                'name': 'Conduct risk assessment',
+                'description': 'Student identifies workplace risks and proposes mitigation strategies',
+            },
+            {
+                'id': 'CRIT-006',
+                'name': 'Resolve conflicts effectively',
+                'description': 'Student demonstrates conflict resolution techniques in workplace situations',
+            },
+        ]
+        
+        for submission in submissions:
+            if submission.extraction_status != 'completed' or not submission.extracted_text:
+                continue
+            
+            # Create 2-4 tags per submission
+            num_tags = random.randint(2, 4)
+            criteria_used = random.sample(criteria_templates, min(num_tags, len(criteria_templates)))
+            
+            for criterion in criteria_used:
+                # Find relevant text excerpt (simulate intelligent extraction)
+                text_paragraphs = submission.extracted_text.split('\n\n')
+                relevant_paragraph = random.choice([p for p in text_paragraphs if len(p) > 100])
+                
+                # Extract a sentence or two
+                sentences = [s.strip() + '.' for s in relevant_paragraph.split('.') if len(s.strip()) > 20]
+                if not sentences:
+                    continue
+                
+                tagged_text = ' '.join(sentences[:2])
+                start_pos = submission.extracted_text.find(tagged_text)
+                
+                if start_pos == -1:
+                    continue
+                
+                end_pos = start_pos + len(tagged_text)
+                
+                # Get context
+                context_start = max(0, start_pos - 100)
+                context_end = min(len(submission.extracted_text), end_pos + 100)
+                context_before = submission.extracted_text[context_start:start_pos]
+                context_after = submission.extracted_text[end_pos:context_end]
+                
+                # Determine tag details
+                tag_type = random.choices(
+                    ['direct', 'indirect', 'supporting', 'reference'],
+                    weights=[0.60, 0.25, 0.10, 0.05]
+                )[0]
+                
+                confidence_level = random.choices(
+                    ['high', 'medium', 'low', 'manual'],
+                    weights=[0.30, 0.25, 0.15, 0.30]
+                )[0]
+                
+                confidence_score = {
+                    'high': random.uniform(0.8, 1.0),
+                    'medium': random.uniform(0.5, 0.8),
+                    'low': random.uniform(0.3, 0.5),
+                    'manual': 1.0,
+                }[confidence_level]
+                
+                is_validated = random.random() < 0.6
+                
+                tag = CriteriaTag.objects.create(
+                    evidence=submission,
+                    criterion_id=criterion['id'],
+                    criterion_name=criterion['name'],
+                    criterion_description=criterion['description'],
+                    tagged_text=tagged_text,
+                    text_start_position=start_pos,
+                    text_end_position=end_pos,
+                    context_before=context_before,
+                    context_after=context_after,
+                    tag_type=tag_type,
+                    confidence_level=confidence_level,
+                    confidence_score=confidence_score,
+                    notes=random.choice([
+                        'Clear demonstration of competency',
+                        'Good example with practical application',
+                        'Meets criteria requirements',
+                        'Strong evidence of understanding',
+                        ''
+                    ]),
+                    keywords=['assessment', 'competency', 'evidence', criterion['name'].split()[1].lower()],
+                    is_validated=is_validated,
+                    validated_by=random.choice(['Jane Smith', 'John Doe', 'Mary Johnson']) if is_validated else '',
+                    validated_at=timezone.now() - timedelta(days=random.randint(1, 15)) if is_validated else None,
+                    tagged_by=random.choice(['Jane Smith', 'John Doe', 'Mary Johnson', 'AI Assistant']),
+                )
+                tags.append(tag)
+                
+                # Update submission statistics
+                submission.total_tags += 1
+                if criterion['id'] not in submission.criteria_covered:
+                    submission.criteria_covered.append(criterion['id'])
+                submission.save()
+                
+                # Update mapping statistics
+                submission.mapping.total_evidence_tagged += 1
+                submission.mapping.save()
+        
+        # Update coverage percentages for mappings
+        for submission in submissions:
+            mapping = submission.mapping
+            mapping.coverage_percentage = mapping.calculate_coverage()
+            mapping.save()
+        
+        return tags
+
+    def create_evidence_audits(self, mappings, submissions, tags):
+        """Create evidence audit logs"""
+        audits = []
+        
+        for mapping in mappings:
+            # Mapping created audit
+            audit = EvidenceAudit.objects.create(
+                mapping=mapping,
+                action='mapping_created',
+                description=f'Evidence mapping "{mapping.name}" created',
+                action_data={
+                    'assessment_type': mapping.assessment_type,
+                    'total_criteria': mapping.total_criteria,
+                    'auto_extract': mapping.auto_extract_text,
+                },
+                performed_by=mapping.created_by,
+                user_role='Assessor',
+                timestamp=mapping.created_at,
+            )
+            audits.append(audit)
+        
+        for submission in submissions[:10]:  # Audit logs for first 10 submissions
+            # Submission added
+            audit = EvidenceAudit.objects.create(
+                mapping=submission.mapping,
+                action='submission_added',
+                description=f'Submission "{submission.submission_title}" added for student {submission.student_id}',
+                submission_id=submission.submission_id,
+                action_data={
+                    'student_name': submission.student_name,
+                    'submission_type': submission.submission_type,
+                    'file_size': submission.file_size_bytes,
+                },
+                performed_by='System',
+                user_role='Automated',
+            )
+            audits.append(audit)
+            
+            if submission.extraction_status == 'completed':
+                # Text extracted
+                audit = EvidenceAudit.objects.create(
+                    mapping=submission.mapping,
+                    action='text_extracted',
+                    description=f'Text extracted from submission {submission.evidence_number}',
+                    submission_id=submission.submission_id,
+                    action_data={
+                        'text_length': submission.text_length,
+                        'extraction_method': submission.extraction_method,
+                    },
+                    processing_time_ms=random.randint(500, 5000),
+                    performed_by='System',
+                    user_role='Automated',
+                )
+                audits.append(audit)
+            
+            if submission.text_embedding:
+                # Embedding generated
+                audit = EvidenceAudit.objects.create(
+                    mapping=submission.mapping,
+                    action='embedding_generated',
+                    description=f'Embeddings generated for submission {submission.evidence_number}',
+                    submission_id=submission.submission_id,
+                    action_data={
+                        'embedding_model': submission.embedding_model,
+                        'embedding_dimension': submission.embedding_dimension,
+                    },
+                    processing_time_ms=random.randint(1000, 3000),
+                    performed_by='System',
+                    user_role='Automated',
+                )
+                audits.append(audit)
+        
+        for tag in tags[:15]:  # Audit logs for first 15 tags
+            # Evidence tagged
+            audit = EvidenceAudit.objects.create(
+                mapping=tag.evidence.mapping,
+                action='evidence_tagged',
+                description=f'Evidence tagged for criterion {tag.criterion_id}',
+                submission_id=tag.evidence.submission_id,
+                criterion_id=tag.criterion_id,
+                tag_id=tag.id,
+                action_data={
+                    'tag_type': tag.tag_type,
+                    'confidence': tag.confidence_score,
+                    'text_length': len(tag.tagged_text),
+                },
+                performed_by=tag.tagged_by,
+                user_role='Assessor',
+            )
+            audits.append(audit)
+            
+            if tag.is_validated:
+                # Tag validated
+                audit = EvidenceAudit.objects.create(
+                    mapping=tag.evidence.mapping,
+                    action='tag_validated',
+                    description=f'Evidence tag validated for criterion {tag.criterion_id}',
+                    submission_id=tag.evidence.submission_id,
+                    criterion_id=tag.criterion_id,
+                    tag_id=tag.id,
+                    action_data={
+                        'previous_status': 'unvalidated',
+                        'new_status': 'validated',
+                    },
+                    changes_made={
+                        'is_validated': {'from': False, 'to': True},
+                        'validated_by': {'from': '', 'to': tag.validated_by},
+                    },
+                    performed_by=tag.validated_by,
+                    user_role='Lead Assessor',
+                    timestamp=tag.validated_at,
+                )
+                audits.append(audit)
+        
+        return audits
+
+    def create_embedding_searches(self, mappings):
+        """Create embedding search logs"""
+        searches = []
+        
+        search_queries = [
+            {
+                'type': 'similarity',
+                'query': 'Demonstrate effective written communication in business context',
+                'results': 8,
+            },
+            {
+                'type': 'criteria_match',
+                'query': 'Leadership and team management evidence',
+                'results': 5,
+            },
+            {
+                'type': 'keyword',
+                'query': 'workplace health and safety risk assessment',
+                'results': 12,
+            },
+            {
+                'type': 'hybrid',
+                'query': 'Customer service problem solving with empathy',
+                'results': 7,
+            },
+            {
+                'type': 'similarity',
+                'query': 'Conflict resolution in workplace scenarios',
+                'results': 4,
+            },
+        ]
+        
+        for mapping in mappings:
+            if not mapping.generate_embeddings:
+                continue
+            
+            # Create 2-3 search logs per mapping
+            for i in range(random.randint(2, 3)):
+                query_template = random.choice(search_queries)
+                
+                # Generate mock embedding for query
+                query_embedding = [random.uniform(-1, 1) for _ in range(384)]
+                
+                # Mock top results
+                top_results = []
+                for j in range(query_template['results']):
+                    top_results.append({
+                        'submission_id': f"SUB-{random.randint(10000, 99999)}",
+                        'similarity_score': random.uniform(0.6, 0.95),
+                        'text_excerpt': 'Sample text excerpt from matching submission...',
+                    })
+                
+                search = EmbeddingSearch.objects.create(
+                    mapping=mapping,
+                    search_type=query_template['type'],
+                    query_text=query_template['query'],
+                    query_embedding=query_embedding,
+                    filter_criteria={
+                        'date_range': 'last_30_days',
+                        'min_confidence': 0.7,
+                    },
+                    results_count=query_template['results'],
+                    top_results=top_results,
+                    search_time_ms=random.randint(50, 500),
+                    performed_by=random.choice(['Jane Smith', 'John Doe', 'Mary Johnson']),
+                )
+                searches.append(search)
+        
+        return searches
