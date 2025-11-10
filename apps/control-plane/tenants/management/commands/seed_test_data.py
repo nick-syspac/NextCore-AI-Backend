@@ -50,6 +50,12 @@ from feedback_assistant.models import (
     FeedbackCriterion,
     FeedbackLog,
 )
+from funding_eligibility.models import (
+    JurisdictionRequirement,
+    EligibilityRule,
+    EligibilityCheck,
+    EligibilityCheckLog,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -281,6 +287,19 @@ class Command(BaseCommand):
         feedback_logs = self.create_feedback_logs(feedback_templates, generated_feedback)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(feedback_logs)} feedback logs'))
         
+        # Create funding eligibility data
+        jurisdiction_requirements = self.create_jurisdiction_requirements(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(jurisdiction_requirements)} jurisdiction requirements'))
+        
+        eligibility_rules = self.create_eligibility_rules(tenants, jurisdiction_requirements, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(eligibility_rules)} eligibility rules'))
+        
+        eligibility_checks = self.create_eligibility_checks(tenants, jurisdiction_requirements, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(eligibility_checks)} eligibility checks'))
+        
+        eligibility_check_logs = self.create_eligibility_check_logs(eligibility_checks, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(eligibility_check_logs)} eligibility check logs'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -363,6 +382,27 @@ class Command(BaseCommand):
         
         try:
             FeedbackTemplate.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        # Funding Eligibility
+        try:
+            EligibilityCheckLog.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            EligibilityCheck.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            EligibilityRule.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            JurisdictionRequirement.objects.all().delete()
         except ProgrammingError:
             pass
         
@@ -4332,5 +4372,608 @@ Moving forward, I will continue developing these leadership competencies and see
                 timestamp=feedback.delivered_at,
             )
             logs.append(log)
+        
+        return logs
+    
+    def create_jurisdiction_requirements(self, tenants, users):
+        """Create jurisdiction funding requirements"""
+        requirements = []
+        
+        # Australian jurisdictions and their funding programs
+        jurisdictions_data = [
+            {
+                'jurisdiction': 'nsw',
+                'name': 'Smart and Skilled NSW',
+                'code': 'SS-NSW',
+                'min_age': 15,
+                'max_age': None,
+                'requires_australian_citizen': True,
+                'requires_permanent_resident': False,
+                'requires_jurisdiction_resident': True,
+                'min_jurisdiction_residency_months': 6,
+                'requires_year_12': False,
+                'allows_year_10_completion': True,
+                'requires_unemployed': False,
+                'allows_employed': True,
+                'restricts_higher_qualifications': True,
+                'max_aqf_level': 5,
+                'has_income_threshold': False,
+                'funding_percentage': 70.00,
+                'student_contribution': 1000.00,
+            },
+            {
+                'jurisdiction': 'vic',
+                'name': 'Skills First Victoria',
+                'code': 'SF-VIC',
+                'min_age': 17,
+                'max_age': None,
+                'requires_australian_citizen': True,
+                'requires_permanent_resident': True,
+                'requires_jurisdiction_resident': True,
+                'min_jurisdiction_residency_months': 12,
+                'requires_year_12': False,
+                'allows_year_10_completion': True,
+                'requires_unemployed': False,
+                'allows_employed': True,
+                'restricts_higher_qualifications': True,
+                'max_aqf_level': 6,
+                'has_income_threshold': True,
+                'max_annual_income': 80000.00,
+                'funding_percentage': 85.00,
+                'student_contribution': 500.00,
+            },
+            {
+                'jurisdiction': 'qld',
+                'name': 'Certificate 3 Guarantee QLD',
+                'code': 'C3G-QLD',
+                'min_age': 15,
+                'max_age': None,
+                'requires_australian_citizen': True,
+                'requires_permanent_resident': False,
+                'requires_jurisdiction_resident': True,
+                'min_jurisdiction_residency_months': 6,
+                'requires_year_12': False,
+                'allows_year_10_completion': True,
+                'requires_unemployed': False,
+                'allows_employed': True,
+                'restricts_higher_qualifications': True,
+                'max_aqf_level': 3,
+                'has_income_threshold': False,
+                'funding_percentage': 100.00,
+                'student_contribution': 0.00,
+            },
+            {
+                'jurisdiction': 'wa',
+                'name': 'Jobs and Skills WA',
+                'code': 'JS-WA',
+                'min_age': 16,
+                'max_age': None,
+                'requires_australian_citizen': True,
+                'requires_permanent_resident': False,
+                'requires_jurisdiction_resident': True,
+                'min_jurisdiction_residency_months': 3,
+                'requires_year_12': False,
+                'allows_year_10_completion': True,
+                'requires_unemployed': False,
+                'allows_employed': True,
+                'restricts_higher_qualifications': False,
+                'has_income_threshold': False,
+                'funding_percentage': 75.00,
+                'student_contribution': 750.00,
+            },
+            {
+                'jurisdiction': 'sa',
+                'name': 'Skills for All SA',
+                'code': 'SFA-SA',
+                'min_age': 15,
+                'max_age': None,
+                'requires_australian_citizen': True,
+                'requires_permanent_resident': False,
+                'requires_jurisdiction_resident': True,
+                'min_jurisdiction_residency_months': 6,
+                'requires_year_12': False,
+                'allows_year_10_completion': True,
+                'requires_unemployed': False,
+                'allows_employed': True,
+                'restricts_higher_qualifications': True,
+                'max_aqf_level': 4,
+                'has_income_threshold': False,
+                'funding_percentage': 80.00,
+                'student_contribution': 600.00,
+            },
+            {
+                'jurisdiction': 'federal',
+                'name': 'Australian Apprenticeships',
+                'code': 'AA-FED',
+                'min_age': 15,
+                'max_age': None,
+                'requires_australian_citizen': True,
+                'requires_permanent_resident': True,
+                'requires_jurisdiction_resident': False,
+                'min_jurisdiction_residency_months': 0,
+                'requires_year_12': False,
+                'allows_year_10_completion': True,
+                'requires_unemployed': False,
+                'allows_employed': True,
+                'requires_apprentice_trainee': True,
+                'restricts_higher_qualifications': False,
+                'has_income_threshold': False,
+                'funding_percentage': 100.00,
+                'student_contribution': 0.00,
+            },
+        ]
+        
+        for tenant in tenants:
+            # Create 2-3 jurisdiction requirements per tenant
+            for juris_data in random.sample(jurisdictions_data, random.randint(2, 3)):
+                requirement = JurisdictionRequirement.objects.create(
+                    tenant=tenant,
+                    jurisdiction=juris_data['jurisdiction'],
+                    name=juris_data['name'],
+                    code=juris_data['code'],
+                    requires_australian_citizen=juris_data['requires_australian_citizen'],
+                    requires_permanent_resident=juris_data.get('requires_permanent_resident', False),
+                    requires_jurisdiction_resident=juris_data['requires_jurisdiction_resident'],
+                    min_jurisdiction_residency_months=juris_data['min_jurisdiction_residency_months'],
+                    min_age=juris_data.get('min_age'),
+                    max_age=juris_data.get('max_age'),
+                    requires_year_12=juris_data['requires_year_12'],
+                    allows_year_10_completion=juris_data['allows_year_10_completion'],
+                    requires_unemployed=juris_data['requires_unemployed'],
+                    allows_employed=juris_data['allows_employed'],
+                    requires_apprentice_trainee=juris_data.get('requires_apprentice_trainee', False),
+                    restricts_higher_qualifications=juris_data['restricts_higher_qualifications'],
+                    max_aqf_level=juris_data.get('max_aqf_level'),
+                    has_income_threshold=juris_data['has_income_threshold'],
+                    max_annual_income=juris_data.get('max_annual_income'),
+                    allows_concession_card=True,
+                    allows_disability=True,
+                    allows_indigenous=True,
+                    priority_indigenous=random.choice([True, False]),
+                    funding_percentage=juris_data['funding_percentage'],
+                    student_contribution=juris_data['student_contribution'],
+                    api_endpoint=random.choice([
+                        None,
+                        f"https://api.funding.{juris_data['jurisdiction']}.gov.au/verify",
+                    ]),
+                    api_key_required=random.choice([True, False]),
+                    additional_rules={
+                        'documentation_required': ['proof_of_identity', 'proof_of_residency'],
+                        'special_conditions': ['First qualification at this level'],
+                    },
+                    is_active=random.choice([True, True, True, False]),  # 75% active
+                    effective_from=timezone.now().date() - timedelta(days=random.randint(30, 365)),
+                    effective_to=timezone.now().date() + timedelta(days=random.randint(365, 730)) if random.random() < 0.3 else None,
+                    created_by=random.choice(users),
+                )
+                requirements.append(requirement)
+        
+        return requirements
+    
+    def create_eligibility_rules(self, tenants, requirements, users):
+        """Create custom eligibility rules"""
+        rules = []
+        
+        rule_definitions = [
+            {
+                'rule_type': 'age',
+                'name': 'Minimum Age for Youth Programs',
+                'description': 'Student must be at least 15 years old for youth-focused programs',
+                'field_name': 'age',
+                'operator': 'greater_equal',
+                'expected_value': '15',
+                'error_message': 'Student must be at least 15 years old to be eligible for this program',
+                'priority': 5,
+            },
+            {
+                'rule_type': 'age',
+                'name': 'Maximum Age for Youth Programs',
+                'description': 'Student must be under 25 years old for youth programs',
+                'field_name': 'age',
+                'operator': 'less_than',
+                'expected_value': '25',
+                'error_message': 'This program is only available to students under 25 years of age',
+                'priority': 5,
+                'is_mandatory': False,
+            },
+            {
+                'rule_type': 'citizenship',
+                'name': 'Australian Citizenship Required',
+                'description': 'Student must be an Australian citizen',
+                'field_name': 'citizenship_status',
+                'operator': 'equals',
+                'expected_value': 'australian_citizen',
+                'error_message': 'Australian citizenship is required for this funding program',
+                'priority': 1,
+            },
+            {
+                'rule_type': 'citizenship',
+                'name': 'Citizen or Permanent Resident',
+                'description': 'Student must be an Australian citizen or permanent resident',
+                'field_name': 'citizenship_status',
+                'operator': 'in_list',
+                'expected_value': 'australian_citizen,permanent_resident',
+                'error_message': 'You must be an Australian citizen or permanent resident to be eligible',
+                'priority': 1,
+            },
+            {
+                'rule_type': 'residency',
+                'name': 'State Residency Requirement',
+                'description': 'Student must be a resident of the jurisdiction',
+                'field_name': 'jurisdiction_resident',
+                'operator': 'equals',
+                'expected_value': 'true',
+                'error_message': 'You must be a resident of this state/territory to access this funding',
+                'priority': 2,
+            },
+            {
+                'rule_type': 'residency',
+                'name': 'Minimum Residency Duration',
+                'description': 'Student must have resided in jurisdiction for at least 6 months',
+                'field_name': 'residency_months',
+                'operator': 'greater_equal',
+                'expected_value': '6',
+                'error_message': 'You must have lived in this state for at least 6 months',
+                'priority': 3,
+            },
+            {
+                'rule_type': 'education',
+                'name': 'Year 10 Completion',
+                'description': 'Student must have completed Year 10 or equivalent',
+                'field_name': 'education_level',
+                'operator': 'in_list',
+                'expected_value': 'year_10,year_11,year_12,certificate,diploma,degree',
+                'error_message': 'Year 10 completion or equivalent is required',
+                'priority': 4,
+            },
+            {
+                'rule_type': 'qualification',
+                'name': 'No Higher Qualifications',
+                'description': 'Student must not have a qualification at a higher AQF level',
+                'field_name': 'highest_aqf_level',
+                'operator': 'less_than',
+                'expected_value': '4',
+                'error_message': 'You already hold a qualification at a higher level than this course',
+                'priority': 6,
+            },
+            {
+                'rule_type': 'employment',
+                'name': 'Apprenticeship Required',
+                'description': 'Student must be enrolled in an apprenticeship or traineeship',
+                'field_name': 'employment_type',
+                'operator': 'in_list',
+                'expected_value': 'apprentice,trainee',
+                'error_message': 'This program requires you to be an apprentice or trainee',
+                'priority': 7,
+            },
+            {
+                'rule_type': 'income',
+                'name': 'Income Threshold',
+                'description': 'Student or household income must be below threshold',
+                'field_name': 'annual_income',
+                'operator': 'less_equal',
+                'expected_value': '80000',
+                'error_message': 'Your income exceeds the maximum threshold for this funding',
+                'priority': 8,
+            },
+            {
+                'rule_type': 'concession',
+                'name': 'Concession Card Bonus',
+                'description': 'Students with concession cards receive priority',
+                'field_name': 'has_concession_card',
+                'operator': 'equals',
+                'expected_value': 'true',
+                'error_message': '',
+                'priority': 10,
+                'is_mandatory': False,
+            },
+            {
+                'rule_type': 'indigenous',
+                'name': 'Indigenous Priority',
+                'description': 'Indigenous students receive priority access',
+                'field_name': 'is_indigenous',
+                'operator': 'equals',
+                'expected_value': 'true',
+                'error_message': '',
+                'priority': 10,
+                'is_mandatory': False,
+            },
+            {
+                'rule_type': 'visa',
+                'name': 'Valid Visa Requirement',
+                'description': 'Student must hold a valid visa with work/study rights',
+                'field_name': 'visa_type',
+                'operator': 'in_list',
+                'expected_value': 'student,skilled,working_holiday,partner',
+                'error_message': 'Your visa type does not permit access to this funding program',
+                'priority': 2,
+            },
+            {
+                'rule_type': 'language',
+                'name': 'English Proficiency',
+                'description': 'Minimum English language proficiency required',
+                'field_name': 'english_proficiency',
+                'operator': 'in_list',
+                'expected_value': 'native,advanced,upper_intermediate',
+                'error_message': 'Minimum upper-intermediate English proficiency required',
+                'priority': 9,
+            },
+        ]
+        
+        for tenant in tenants:
+            tenant_requirements = [r for r in requirements if r.tenant == tenant]
+            
+            # Create 3-5 rules per requirement
+            for requirement in tenant_requirements:
+                for rule_def in random.sample(rule_definitions, random.randint(3, 5)):
+                    rule = EligibilityRule.objects.create(
+                        tenant=tenant,
+                        jurisdiction_requirement=requirement,
+                        rule_type=rule_def['rule_type'],
+                        name=rule_def['name'],
+                        description=rule_def['description'],
+                        field_name=rule_def['field_name'],
+                        operator=rule_def['operator'],
+                        expected_value=rule_def['expected_value'],
+                        is_mandatory=rule_def.get('is_mandatory', True),
+                        priority=rule_def['priority'],
+                        error_message=rule_def['error_message'],
+                        override_allowed=random.choice([True, False]),
+                        is_active=True,
+                        created_by=random.choice(users),
+                    )
+                    rules.append(rule)
+        
+        return rules
+    
+    def create_eligibility_checks(self, tenants, requirements, users):
+        """Create eligibility check records"""
+        checks = []
+        
+        first_names = ['Emma', 'Oliver', 'Ava', 'William', 'Sophia', 'Noah', 'Isabella', 'James', 'Mia', 'Lucas',
+                      'Charlotte', 'Ethan', 'Amelia', 'Mason', 'Harper', 'Logan', 'Evelyn', 'Alexander', 'Abigail', 'Jackson']
+        last_names = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez',
+                     'Hernandez', 'Lopez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee']
+        
+        courses = [
+            {'code': 'BSB50120', 'name': 'Diploma of Business', 'aqf': 5},
+            {'code': 'ICT50220', 'name': 'Diploma of Information Technology', 'aqf': 5},
+            {'code': 'CHC33015', 'name': 'Certificate III in Individual Support', 'aqf': 3},
+            {'code': 'SIT40516', 'name': 'Certificate IV in Commercial Cookery', 'aqf': 4},
+            {'code': 'AUR30620', 'name': 'Certificate III in Light Vehicle Mechanical Technology', 'aqf': 3},
+            {'code': 'BSB40520', 'name': 'Certificate IV in Leadership and Management', 'aqf': 4},
+            {'code': 'TAE40116', 'name': 'Certificate IV in Training and Assessment', 'aqf': 4},
+            {'code': 'CHC50113', 'name': 'Diploma of Early Childhood Education', 'aqf': 5},
+        ]
+        
+        citizenship_statuses = ['australian_citizen', 'permanent_resident', 'temporary_visa', 'international']
+        employment_types = ['unemployed', 'employed_full_time', 'employed_part_time', 'apprentice', 'trainee', 'self_employed']
+        education_levels = ['year_10', 'year_11', 'year_12', 'certificate', 'diploma']
+        
+        for tenant in tenants:
+            tenant_requirements = [r for r in requirements if r.tenant == tenant and r.is_active]
+            
+            if not tenant_requirements:
+                continue
+            
+            # Create 4-6 checks per tenant
+            for _ in range(random.randint(4, 6)):
+                requirement = random.choice(tenant_requirements)
+                first_name = random.choice(first_names)
+                last_name = random.choice(last_names)
+                dob = timezone.now().date() - timedelta(days=random.randint(365*16, 365*55))
+                course = random.choice(courses)
+                
+                # Generate student data
+                age = (timezone.now().date() - dob).days // 365
+                citizenship = random.choice(citizenship_statuses)
+                employment = random.choice(employment_types)
+                education = random.choice(education_levels)
+                
+                student_data = {
+                    'age': age,
+                    'citizenship_status': citizenship,
+                    'jurisdiction_resident': random.choice(['true', 'false']),
+                    'residency_months': random.randint(0, 60),
+                    'education_level': education,
+                    'highest_aqf_level': random.randint(0, 6),
+                    'employment_type': employment,
+                    'annual_income': random.randint(20000, 120000),
+                    'has_concession_card': random.choice(['true', 'false']),
+                    'is_indigenous': random.choice(['true', 'false']),
+                    'has_disability': random.choice(['true', 'false']),
+                    'visa_type': random.choice(['student', 'skilled', 'working_holiday', 'partner', 'none']),
+                    'english_proficiency': random.choice(['native', 'advanced', 'upper_intermediate', 'intermediate']),
+                }
+                
+                # Determine eligibility based on random criteria
+                rules_checked = random.randint(5, 12)
+                rules_passed = random.randint(3, rules_checked)
+                rules_failed = rules_checked - rules_passed
+                eligibility_percentage = (rules_passed / rules_checked * 100) if rules_checked > 0 else 0
+                
+                is_eligible = eligibility_percentage >= 80
+                
+                if is_eligible:
+                    status = random.choice(['eligible', 'eligible', 'conditional'])
+                else:
+                    status = random.choice(['ineligible', 'pending', 'override'])
+                
+                # Generate failed rules
+                failed_rules_list = []
+                if rules_failed > 0:
+                    failed_rule_types = random.sample([
+                        'Age requirement not met',
+                        'Citizenship status does not qualify',
+                        'Residency duration insufficient',
+                        'Prior qualifications restrict eligibility',
+                        'Income exceeds threshold',
+                    ], min(rules_failed, 3))
+                    
+                    for rule_type in failed_rule_types:
+                        failed_rules_list.append({
+                            'rule': rule_type,
+                            'expected': 'Pass',
+                            'actual': 'Fail',
+                            'can_override': random.choice([True, False]),
+                        })
+                
+                # Create check
+                check = EligibilityCheck.objects.create(
+                    tenant=tenant,
+                    student_first_name=first_name,
+                    student_last_name=last_name,
+                    student_dob=dob,
+                    student_email=f"{first_name.lower()}.{last_name.lower()}@example.com",
+                    student_phone=f"+61 4{random.randint(10000000, 99999999)}",
+                    course_code=course['code'],
+                    course_name=course['name'],
+                    aqf_level=course['aqf'],
+                    intended_start_date=timezone.now().date() + timedelta(days=random.randint(14, 180)),
+                    jurisdiction=requirement.jurisdiction,
+                    jurisdiction_requirement=requirement,
+                    funding_program_code=requirement.code,
+                    student_data=student_data,
+                    status=status,
+                    is_eligible=is_eligible,
+                    eligibility_percentage=eligibility_percentage,
+                    rules_checked=rules_checked,
+                    rules_passed=rules_passed,
+                    rules_failed=rules_failed,
+                    check_results={
+                        'citizenship_check': 'passed' if citizenship in ['australian_citizen', 'permanent_resident'] else 'failed',
+                        'age_check': 'passed' if requirement.min_age <= age <= (requirement.max_age or 100) else 'failed',
+                        'residency_check': 'passed' if student_data['jurisdiction_resident'] == 'true' else 'failed',
+                        'education_check': 'passed',
+                    },
+                    failed_rules=failed_rules_list,
+                    warnings=[
+                        'Documentation required within 14 days',
+                        'Proof of residency must be current (within 3 months)',
+                    ] if random.random() < 0.5 else [],
+                    api_verified=random.choice([True, False]),
+                    api_response={'status': 'verified', 'confidence': random.uniform(0.85, 0.99)} if random.random() < 0.6 else {},
+                    api_verified_at=timezone.now() if random.random() < 0.6 else None,
+                    override_required=(status == 'override'),
+                    override_approved=(status == 'override' and random.random() < 0.7),
+                    override_reason='Special circumstances - student demonstrates exceptional commitment' if status == 'override' else '',
+                    override_approved_by=random.choice(users) if status == 'override' and random.random() < 0.7 else None,
+                    override_approved_at=timezone.now() if status == 'override' and random.random() < 0.7 else None,
+                    prevents_enrollment=not is_eligible,
+                    compliance_notes=f"Checked against {requirement.name} requirements" if random.random() < 0.7 else '',
+                    valid_until=timezone.now().date() + timedelta(days=random.randint(90, 365)) if is_eligible else None,
+                    checked_by=random.choice(users),
+                )
+                checks.append(check)
+        
+        return checks
+    
+    def create_eligibility_check_logs(self, checks, users):
+        """Create eligibility check audit logs"""
+        logs = []
+        
+        for check in checks:
+            # Always create check_created log
+            log = EligibilityCheckLog.objects.create(
+                eligibility_check=check,
+                action='check_created',
+                details={
+                    'student': f"{check.student_first_name} {check.student_last_name}",
+                    'course': check.course_name,
+                    'jurisdiction': check.get_jurisdiction_display(),
+                },
+                notes=f"Eligibility check initiated for {check.course_name}",
+                performed_by=check.checked_by,
+                performed_at=check.checked_at,
+            )
+            logs.append(log)
+            
+            # Create rule_evaluated logs for each rule checked
+            for i in range(min(check.rules_checked, 5)):  # Log first 5 rules
+                log = EligibilityCheckLog.objects.create(
+                    eligibility_check=check,
+                    action='rule_evaluated',
+                    details={
+                        'rule_number': i + 1,
+                        'result': 'passed' if i < check.rules_passed else 'failed',
+                        'evaluation_time': random.uniform(0.1, 0.5),
+                    },
+                    notes=f"Rule {i + 1} evaluation completed",
+                    performed_by=check.checked_by,
+                    performed_at=check.checked_at + timedelta(seconds=i * 2),
+                )
+                logs.append(log)
+            
+            # API call log if verified
+            if check.api_verified:
+                log = EligibilityCheckLog.objects.create(
+                    eligibility_check=check,
+                    action='api_called',
+                    details={
+                        'endpoint': check.jurisdiction_requirement.api_endpoint if check.jurisdiction_requirement else None,
+                        'response_code': 200,
+                        'verification_result': 'verified',
+                    },
+                    notes='External API verification completed successfully',
+                    performed_by=check.checked_by,
+                    performed_at=check.api_verified_at or check.checked_at + timedelta(minutes=2),
+                )
+                logs.append(log)
+            
+            # Status change log
+            log = EligibilityCheckLog.objects.create(
+                eligibility_check=check,
+                action='status_changed',
+                details={
+                    'old_status': 'pending',
+                    'new_status': check.status,
+                    'eligibility_percentage': float(check.eligibility_percentage),
+                },
+                notes=f"Status updated to {check.get_status_display()}",
+                performed_by=check.checked_by,
+                performed_at=check.checked_at + timedelta(minutes=5),
+            )
+            logs.append(log)
+            
+            # Override logs if applicable
+            if check.override_required:
+                log = EligibilityCheckLog.objects.create(
+                    eligibility_check=check,
+                    action='override_requested',
+                    details={
+                        'reason': check.override_reason,
+                        'failed_rules': len(check.failed_rules),
+                    },
+                    notes='Manual override requested due to failed eligibility requirements',
+                    performed_by=check.checked_by,
+                    performed_at=check.checked_at + timedelta(hours=1),
+                )
+                logs.append(log)
+                
+                if check.override_approved:
+                    log = EligibilityCheckLog.objects.create(
+                        eligibility_check=check,
+                        action='override_approved',
+                        details={
+                            'approver': check.override_approved_by.get_full_name() if check.override_approved_by else 'Unknown',
+                            'reason': check.override_reason,
+                        },
+                        notes='Override approved by authorized personnel',
+                        performed_by=check.override_approved_by,
+                        performed_at=check.override_approved_at or check.checked_at + timedelta(hours=2),
+                    )
+                    logs.append(log)
+                elif random.random() < 0.3:  # 30% chance of rejection
+                    log = EligibilityCheckLog.objects.create(
+                        eligibility_check=check,
+                        action='override_rejected',
+                        details={
+                            'reason': 'Does not meet minimum program requirements',
+                        },
+                        notes='Override request rejected - student does not qualify',
+                        performed_by=random.choice(users),
+                        performed_at=check.checked_at + timedelta(hours=3),
+                    )
+                    logs.append(log)
         
         return logs
