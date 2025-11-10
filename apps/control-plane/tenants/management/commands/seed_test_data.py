@@ -56,6 +56,14 @@ from funding_eligibility.models import (
     EligibilityCheck,
     EligibilityCheckLog,
 )
+from industry_currency.models import (
+    TrainerProfile,
+    VerificationScan,
+    LinkedInActivity,
+    GitHubActivity,
+    CurrencyEvidence,
+    EntityExtraction,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -300,6 +308,25 @@ class Command(BaseCommand):
         eligibility_check_logs = self.create_eligibility_check_logs(eligibility_checks, users)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(eligibility_check_logs)} eligibility check logs'))
         
+        # Create industry currency verifier data
+        trainer_profiles = self.create_trainer_profiles(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(trainer_profiles)} trainer profiles'))
+        
+        verification_scans = self.create_verification_scans(trainer_profiles)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(verification_scans)} verification scans'))
+        
+        linkedin_activities = self.create_linkedin_activities(verification_scans)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(linkedin_activities)} LinkedIn activities'))
+        
+        github_activities = self.create_github_activities(verification_scans)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(github_activities)} GitHub activities'))
+        
+        entity_extractions = self.create_entity_extractions(verification_scans)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(entity_extractions)} entity extractions'))
+        
+        currency_evidence = self.create_currency_evidence(trainer_profiles, verification_scans, linkedin_activities, github_activities)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(currency_evidence)} currency evidence documents'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -403,6 +430,37 @@ class Command(BaseCommand):
         
         try:
             JurisdictionRequirement.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        # Industry Currency Verifier
+        try:
+            EntityExtraction.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            CurrencyEvidence.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            GitHubActivity.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            LinkedInActivity.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            VerificationScan.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            TrainerProfile.objects.all().delete()
         except ProgrammingError:
             pass
         
@@ -4977,3 +5035,529 @@ Moving forward, I will continue developing these leadership competencies and see
                     logs.append(log)
         
         return logs
+    
+    def create_trainer_profiles(self, tenants, users):
+        """Create trainer profiles for industry currency verification"""
+        profiles = []
+        
+        trainer_names = [
+            'Sarah Chen', 'Michael O\'Brien', 'Emma Thompson', 'David Kumar', 
+            'Rachel Green', 'James Wilson', 'Lisa Anderson', 'Peter Martinez',
+            'Sophie Zhang', 'Daniel Brown', 'Jessica Lee', 'Thomas Wright'
+        ]
+        
+        industries = [
+            'Information Technology',
+            'Business Management',
+            'Healthcare',
+            'Hospitality',
+            'Construction',
+            'Automotive',
+            'Education & Training',
+            'Community Services',
+        ]
+        
+        specializations_by_industry = {
+            'Information Technology': [
+                ['Python Programming', 'Web Development', 'Cloud Computing'],
+                ['Cybersecurity', 'Network Administration', 'DevOps'],
+                ['Mobile Development', 'React', 'Node.js'],
+                ['Data Science', 'Machine Learning', 'AI'],
+            ],
+            'Business Management': [
+                ['Project Management', 'Agile', 'Scrum'],
+                ['Leadership', 'Change Management', 'Strategic Planning'],
+                ['Financial Management', 'Accounting', 'Budgeting'],
+                ['Marketing', 'Digital Marketing', 'Social Media'],
+            ],
+            'Healthcare': [
+                ['Nursing', 'Patient Care', 'Clinical Practice'],
+                ['Allied Health', 'Aged Care', 'Disability Support'],
+                ['Mental Health', 'Counseling', 'Wellbeing'],
+            ],
+            'Hospitality': [
+                ['Commercial Cookery', 'Culinary Arts', 'Food Safety'],
+                ['Hotel Management', 'Customer Service', 'Front Office'],
+                ['Events Management', 'Tourism', 'Travel'],
+            ],
+        }
+        
+        for tenant in tenants:
+            # Create 3-5 trainer profiles per tenant
+            for i in range(random.randint(3, 5)):
+                name = random.choice(trainer_names)
+                trainer_id = f"TRAIN{random.randint(1000, 9999)}"
+                industry = random.choice(industries)
+                
+                # Get specializations for this industry
+                if industry in specializations_by_industry:
+                    specializations = random.choice(specializations_by_industry[industry])
+                else:
+                    specializations = ['Training', 'Assessment', 'Compliance']
+                
+                # Determine currency status based on last verification
+                last_verified = timezone.now().date() - timedelta(days=random.randint(0, 200))
+                days_since_verification = (timezone.now().date() - last_verified).days
+                
+                if days_since_verification < 60:
+                    status = 'current'
+                    score = random.uniform(75, 95)
+                elif days_since_verification < 90:
+                    status = 'expiring_soon'
+                    score = random.uniform(60, 80)
+                elif days_since_verification < 150:
+                    status = 'expired'
+                    score = random.uniform(40, 65)
+                else:
+                    status = 'not_verified'
+                    score = 0
+                
+                # Clean name for URLs
+                clean_name = name.lower().replace(' ', '').replace("'", '')
+                clean_name_dash = name.lower().replace(' ', '-').replace("'", '')
+                clean_name_dot = name.lower().replace(' ', '.').replace("'", '')
+                
+                profile = TrainerProfile.objects.create(
+                    tenant=str(tenant.id),
+                    trainer_id=trainer_id,
+                    trainer_name=name,
+                    email=f"{clean_name_dot}@example.com",
+                    linkedin_url=f"https://linkedin.com/in/{clean_name_dash}",
+                    github_url=f"https://github.com/{clean_name}" if industry == 'Information Technology' else '',
+                    twitter_url=f"https://twitter.com/{clean_name}" if random.random() < 0.4 else '',
+                    personal_website=f"https://{clean_name}.dev" if random.random() < 0.3 else '',
+                    primary_industry=industry,
+                    specializations=specializations,
+                    years_experience=random.randint(3, 25),
+                    last_verified_date=last_verified if status != 'not_verified' else None,
+                    currency_status=status,
+                    currency_score=score,
+                    auto_verify_enabled=random.choice([True, True, True, False]),  # 75% enabled
+                    verification_frequency_days=random.choice([30, 60, 90, 180]),
+                    next_verification_date=timezone.now().date() + timedelta(days=random.randint(1, 90)) if status == 'current' else None,
+                )
+                profiles.append(profile)
+        
+        return profiles
+    
+    def create_verification_scans(self, profiles):
+        """Create verification scans for trainer profiles"""
+        scans = []
+        
+        for profile in profiles:
+            # Create 1-3 scans per profile
+            num_scans = random.randint(1, 3)
+            
+            for i in range(num_scans):
+                scan_type = random.choice(['manual', 'scheduled', 'automatic'])
+                
+                # Determine sources to scan based on profile
+                sources = ['linkedin']
+                if profile.github_url:
+                    sources.append('github')
+                if profile.twitter_url:
+                    sources.append('twitter')
+                
+                # Determine status (most recent scan more likely to be completed)
+                if i == 0:  # Most recent scan
+                    status = random.choice(['completed', 'completed', 'completed', 'scanning', 'analyzing'])
+                else:
+                    status = 'completed'
+                
+                # Calculate scan metrics
+                if status == 'completed':
+                    total_items = random.randint(15, 80)
+                    relevant_items = int(total_items * random.uniform(0.4, 0.8))
+                    currency_score = random.uniform(50, 95)
+                    scan_duration = random.uniform(30, 180)
+                    
+                    started_at = timezone.now() - timedelta(days=random.randint(1, 90), hours=random.randint(0, 23))
+                    completed_at = started_at + timedelta(seconds=scan_duration)
+                else:
+                    total_items = 0
+                    relevant_items = 0
+                    currency_score = 0
+                    scan_duration = None
+                    started_at = timezone.now() - timedelta(minutes=random.randint(1, 30))
+                    completed_at = None
+                
+                scan = VerificationScan.objects.create(
+                    trainer_profile=profile,
+                    scan_type=scan_type,
+                    sources_to_scan=sources,
+                    scan_status=status,
+                    total_items_found=total_items,
+                    relevant_items_count=relevant_items,
+                    currency_score=currency_score,
+                    scan_duration_seconds=scan_duration,
+                    error_message='',
+                    started_at=started_at,
+                    completed_at=completed_at,
+                )
+                scans.append(scan)
+        
+        return scans
+    
+    def create_linkedin_activities(self, scans):
+        """Create LinkedIn activities extracted from scans"""
+        activities = []
+        
+        activity_types_data = {
+            'post': {
+                'titles': [
+                    'Excited to share our latest project success',
+                    'Key learnings from implementing Agile methodology',
+                    'Best practices for cloud security in 2025',
+                    'How we improved student engagement by 40%',
+                    'Thoughts on the future of vocational education',
+                ],
+                'technologies': ['Azure', 'AWS', 'Docker', 'Kubernetes', 'React', 'Python', 'Node.js'],
+                'skills': ['Leadership', 'Project Management', 'Training Design', 'Cloud Computing', 'DevOps'],
+            },
+            'certification': {
+                'titles': [
+                    'AWS Certified Solutions Architect - Associate',
+                    'Certified Scrum Master (CSM)',
+                    'TAE40116 Certificate IV in Training and Assessment',
+                    'Microsoft Certified: Azure Fundamentals',
+                    'Project Management Professional (PMP)',
+                ],
+                'technologies': ['AWS', 'Azure', 'Cloud Computing', 'Kubernetes'],
+                'skills': ['Cloud Architecture', 'Agile', 'Training & Assessment', 'Project Management'],
+            },
+            'course': {
+                'titles': [
+                    'Completed: Advanced Machine Learning Specialization',
+                    'Finished: Full Stack Web Development Bootcamp',
+                    'Completed: Leadership in Education',
+                    'Finished: Cybersecurity Fundamentals',
+                ],
+                'technologies': ['Python', 'TensorFlow', 'React', 'Docker', 'Security'],
+                'skills': ['Machine Learning', 'Web Development', 'Leadership', 'Cybersecurity'],
+            },
+            'position': {
+                'titles': [
+                    'Senior Trainer - Information Technology',
+                    'Lead Assessor - Business Management',
+                    'Industry Curriculum Developer',
+                    'VET Training Coordinator',
+                ],
+                'technologies': [],
+                'skills': ['Training Delivery', 'Assessment', 'Curriculum Development', 'Leadership'],
+            },
+        }
+        
+        completed_scans = [s for s in scans if s.scan_status == 'completed' and 'linkedin' in s.sources_to_scan]
+        
+        for scan in completed_scans:
+            # Create 5-15 LinkedIn activities per completed scan
+            num_activities = random.randint(5, 15)
+            
+            for _ in range(num_activities):
+                activity_type = random.choice(['post', 'certification', 'course', 'position', 'skill_endorsement'])
+                
+                if activity_type in activity_types_data:
+                    type_data = activity_types_data[activity_type]
+                    title = random.choice(type_data['titles'])
+                    technologies = random.sample(type_data['technologies'], k=min(random.randint(1, 3), len(type_data['technologies']))) if type_data['technologies'] else []
+                    skills = random.sample(type_data['skills'], k=min(random.randint(1, 3), len(type_data['skills'])))
+                else:
+                    title = 'Skill endorsement received'
+                    technologies = []
+                    skills = random.sample(['Training', 'Assessment', 'Leadership'], k=2)
+                
+                activity_date = timezone.now().date() - timedelta(days=random.randint(1, 365))
+                
+                # Determine relevance
+                is_relevant = random.random() < 0.7  # 70% relevant
+                relevance_score = random.uniform(0.6, 0.95) if is_relevant else random.uniform(0.2, 0.5)
+                
+                activity = LinkedInActivity.objects.create(
+                    verification_scan=scan,
+                    activity_type=activity_type,
+                    title=title,
+                    description=f"Details about {title.lower()}. Demonstrates industry engagement and professional development.",
+                    url=f"https://linkedin.com/posts/activity-{random.randint(100000, 999999)}",
+                    activity_date=activity_date,
+                    date_text=activity_date.strftime('%B %Y'),
+                    skills_mentioned=skills,
+                    technologies=technologies,
+                    companies=random.sample(['Microsoft', 'AWS', 'Google', 'Training Org', 'RTO'], k=random.randint(0, 2)),
+                    keywords=skills + technologies,
+                    relevance_score=relevance_score,
+                    is_industry_relevant=is_relevant,
+                    relevance_reasoning=f"Activity demonstrates current industry practice in {', '.join(skills[:2])}" if is_relevant else "Limited relevance to current teaching role",
+                    raw_data={'source': 'linkedin', 'type': activity_type},
+                )
+                activities.append(activity)
+        
+        return activities
+    
+    def create_github_activities(self, scans):
+        """Create GitHub activities extracted from scans"""
+        activities = []
+        
+        repo_data = [
+            {
+                'name': 'python-web-scraper',
+                'description': 'Web scraping tool for educational data analysis',
+                'language': 'Python',
+                'languages': ['Python', 'HTML', 'CSS'],
+                'topics': ['web-scraping', 'data-analysis', 'education'],
+                'technologies': ['Python', 'BeautifulSoup', 'Pandas'],
+            },
+            {
+                'name': 'react-learning-platform',
+                'description': 'Interactive learning platform built with React',
+                'language': 'JavaScript',
+                'languages': ['JavaScript', 'TypeScript', 'CSS'],
+                'topics': ['react', 'education', 'learning-platform'],
+                'technologies': ['React', 'Node.js', 'Express', 'MongoDB'],
+            },
+            {
+                'name': 'docker-training-environments',
+                'description': 'Docker configurations for training environments',
+                'language': 'Dockerfile',
+                'languages': ['Dockerfile', 'Shell'],
+                'topics': ['docker', 'devops', 'training'],
+                'technologies': ['Docker', 'Kubernetes', 'Linux'],
+            },
+            {
+                'name': 'assessment-automation',
+                'description': 'Automated assessment marking tools',
+                'language': 'Python',
+                'languages': ['Python', 'JavaScript'],
+                'topics': ['education', 'automation', 'assessment'],
+                'technologies': ['Python', 'NLP', 'Machine Learning'],
+            },
+        ]
+        
+        completed_scans = [s for s in scans if s.scan_status == 'completed' and 'github' in s.sources_to_scan]
+        
+        for scan in completed_scans:
+            # Create 3-10 GitHub activities per completed scan
+            num_activities = random.randint(3, 10)
+            
+            for _ in range(num_activities):
+                activity_type = random.choice(['repository', 'commit', 'pull_request', 'contribution'])
+                repo = random.choice(repo_data)
+                
+                activity_date = timezone.now().date() - timedelta(days=random.randint(1, 365))
+                last_updated = activity_date + timedelta(days=random.randint(0, 30))
+                
+                # Determine relevance
+                is_relevant = random.random() < 0.75  # 75% relevant
+                relevance_score = random.uniform(0.65, 0.95) if is_relevant else random.uniform(0.25, 0.55)
+                
+                activity = GitHubActivity.objects.create(
+                    verification_scan=scan,
+                    activity_type=activity_type,
+                    repository_name=repo['name'],
+                    title=f"{activity_type.title()} in {repo['name']}",
+                    description=repo['description'],
+                    url=f"https://github.com/trainer/{repo['name']}",
+                    activity_date=activity_date,
+                    last_updated=last_updated,
+                    language=repo['language'],
+                    languages_used=repo['languages'],
+                    topics=repo['topics'],
+                    stars=random.randint(0, 50),
+                    forks=random.randint(0, 15),
+                    technologies=repo['technologies'],
+                    frameworks=random.sample(['React', 'Django', 'Flask', 'Express', 'Docker'], k=random.randint(1, 3)),
+                    keywords=repo['topics'] + repo['technologies'],
+                    relevance_score=relevance_score,
+                    is_industry_relevant=is_relevant,
+                    relevance_reasoning=f"Demonstrates current industry practice with {repo['language']} and {', '.join(repo['technologies'][:2])}" if is_relevant else "Personal project with limited teaching relevance",
+                    commits_count=random.randint(5, 200),
+                    contributions_count=random.randint(1, 50),
+                    raw_data={'source': 'github', 'repository': repo['name']},
+                )
+                activities.append(activity)
+        
+        return activities
+    
+    def create_entity_extractions(self, scans):
+        """Create NLP entity extraction results"""
+        extractions = []
+        
+        sample_texts = {
+            'linkedin': [
+                "Recently completed AWS Solutions Architect certification. Excited to bring cloud computing expertise to our students. Working with Docker and Kubernetes daily.",
+                "Led a workshop on React and Node.js for 30 industry professionals. Topics covered: modern web development, microservices, and CI/CD pipelines.",
+                "Thrilled to join Microsoft's educator program. Looking forward to integrating Azure services into our curriculum. #CloudComputing #Education",
+            ],
+            'github': [
+                "Implemented automated testing using pytest and GitHub Actions. Repository demonstrates best practices for Python development and CI/CD.",
+                "Created learning platform using React, Express, and MongoDB. Features include real-time collaboration and automated assessment.",
+                "Docker-based training environment for teaching DevOps. Includes Kubernetes examples and infrastructure as code with Terraform.",
+            ],
+        }
+        
+        entity_patterns = {
+            'linkedin': {
+                'TECH': ['AWS', 'Docker', 'Kubernetes', 'React', 'Node.js', 'Azure', 'Python', 'CI/CD'],
+                'SKILL': ['Cloud Computing', 'Web Development', 'Microservices', 'DevOps', 'Teaching'],
+                'ORG': ['Microsoft', 'AWS', 'GitHub'],
+                'CERT': ['Solutions Architect', 'Educator Program'],
+            },
+            'github': {
+                'TECH': ['pytest', 'GitHub Actions', 'Python', 'React', 'Express', 'MongoDB', 'Docker', 'Kubernetes', 'Terraform'],
+                'SKILL': ['Automated Testing', 'CI/CD', 'Web Development', 'DevOps', 'Infrastructure as Code'],
+                'LANGUAGE': ['Python', 'JavaScript', 'TypeScript'],
+            },
+        }
+        
+        completed_scans = [s for s in scans if s.scan_status == 'completed']
+        
+        for scan in completed_scans:
+            # Create 2-4 entity extractions per scan (one per source)
+            for source in scan.sources_to_scan[:2]:  # Limit to first 2 sources
+                source_type = source
+                text = random.choice(sample_texts.get(source_type, sample_texts['linkedin']))
+                patterns = entity_patterns.get(source_type, entity_patterns['linkedin'])
+                
+                # Build entities dict
+                entities = {}
+                entity_count = 0
+                
+                for entity_type, entity_list in patterns.items():
+                    # Select 2-4 entities of each type
+                    selected = random.sample(entity_list, k=min(random.randint(2, 4), len(entity_list)))
+                    entities[entity_type] = selected
+                    entity_count += len(selected)
+                
+                extraction = EntityExtraction.objects.create(
+                    verification_scan=scan,
+                    source_type=source_type,
+                    source_url=f"https://{source_type}.com/trainer/profile",
+                    source_text=text,
+                    entities=entities,
+                    extraction_confidence=random.uniform(0.75, 0.95),
+                    entity_count=entity_count,
+                    nlp_model_used='spacy-en_core_web_lg',
+                    processing_time_ms=random.uniform(50, 500),
+                )
+                extractions.append(extraction)
+        
+        return extractions
+    
+    def create_currency_evidence(self, profiles, scans, linkedin_activities, github_activities):
+        """Create currency evidence documents"""
+        evidence_docs = []
+        
+        for profile in profiles:
+            # Get scans for this profile
+            profile_scans = [s for s in scans if s.trainer_profile_id == profile.id and s.scan_status == 'completed']
+            
+            if not profile_scans:
+                continue
+            
+            # Use most recent scan
+            recent_scan = profile_scans[0]
+            
+            # Get activities for this scan
+            scan_linkedin = [a for a in linkedin_activities if a.verification_scan_id == recent_scan.id]
+            scan_github = [a for a in github_activities if a.verification_scan_id == recent_scan.id]
+            
+            # Create 1-3 evidence documents per profile
+            evidence_types = ['combined_report', 'linkedin_summary', 'github_summary', 'skills_matrix']
+            
+            for evidence_type in random.sample(evidence_types, k=random.randint(1, 3)):
+                if evidence_type == 'linkedin_summary' and not scan_linkedin:
+                    continue
+                if evidence_type == 'github_summary' and not scan_github:
+                    continue
+                
+                # Calculate metrics
+                if evidence_type == 'linkedin_summary':
+                    activities = scan_linkedin
+                    relevant = [a for a in activities if a.is_industry_relevant]
+                    title = f"LinkedIn Industry Currency Summary - {profile.trainer_name}"
+                elif evidence_type == 'github_summary':
+                    activities = scan_github
+                    relevant = [a for a in activities if a.is_industry_relevant]
+                    title = f"GitHub Industry Currency Summary - {profile.trainer_name}"
+                elif evidence_type == 'combined_report':
+                    activities = scan_linkedin + scan_github
+                    relevant = [a for a in scan_linkedin if a.is_industry_relevant] + [a for a in scan_github if a.is_industry_relevant]
+                    title = f"Industry Currency Report - {profile.trainer_name}"
+                else:  # skills_matrix
+                    activities = scan_linkedin + scan_github
+                    relevant = activities
+                    title = f"Skills and Technology Matrix - {profile.trainer_name}"
+                
+                total_count = len(activities)
+                relevant_count = len(relevant)
+                
+                # Generate content
+                content = f"""# {title}
+                
+**Profile:** {profile.profile_number}  
+**Industry:** {profile.primary_industry}  
+**Specializations:** {', '.join(profile.specializations)}  
+**Verification Period:** {recent_scan.started_at.strftime('%Y-%m-%d')} to {recent_scan.completed_at.strftime('%Y-%m-%d') if recent_scan.completed_at else 'In Progress'}
+
+## Summary
+
+Total Activities Found: {total_count}  
+Industry Relevant Activities: {relevant_count}  
+Currency Score: {recent_scan.currency_score:.1f}/100
+
+## Key Findings
+
+- Active engagement in professional development
+- Current with industry technologies and practices
+- Demonstrates ongoing learning and skill development
+
+## Evidence of Currency
+
+"""
+                
+                # Add activity samples
+                for i, activity in enumerate(relevant[:5], 1):
+                    if hasattr(activity, 'title'):
+                        content += f"{i}. **{activity.title}** ({activity.activity_date.strftime('%B %Y')})\n"
+                        if hasattr(activity, 'technologies') and activity.technologies:
+                            content += f"   Technologies: {', '.join(activity.technologies)}\n"
+                    
+                content += "\n## Conclusion\n\nTrainer demonstrates current industry currency through active engagement with modern technologies and practices."
+                
+                # Determine date range
+                if activities:
+                    dates = [a.activity_date for a in activities if a.activity_date]
+                    if dates:
+                        start_date = min(dates)
+                        end_date = max(dates)
+                    else:
+                        start_date = timezone.now().date() - timedelta(days=365)
+                        end_date = timezone.now().date()
+                else:
+                    start_date = timezone.now().date() - timedelta(days=365)
+                    end_date = timezone.now().date()
+                
+                evidence = CurrencyEvidence.objects.create(
+                    trainer_profile=profile,
+                    verification_scan=recent_scan,
+                    evidence_type=evidence_type,
+                    title=title,
+                    content=content,
+                    evidence_start_date=start_date,
+                    evidence_end_date=end_date,
+                    total_activities=total_count,
+                    relevant_activities=relevant_count,
+                    currency_score=recent_scan.currency_score,
+                    linkedin_activities_included=[str(a.id) for a in scan_linkedin[:10]],
+                    github_activities_included=[str(a.id) for a in scan_github[:10]],
+                    file_format=random.choice(['markdown', 'html', 'pdf']),
+                    file_path=f"/evidence/{profile.profile_number}/{evidence_type}_{timezone.now().strftime('%Y%m%d')}.md",
+                    file_size_kb=random.uniform(5, 50),
+                    meets_rto_standards=recent_scan.currency_score >= 70,
+                    compliance_notes="Meets ASQA requirements for industry currency" if recent_scan.currency_score >= 70 else "Additional evidence may be required",
+                    is_approved=random.choice([True, True, False]),  # 67% approved
+                    approved_by=f"Quality Manager" if random.random() < 0.67 else '',
+                    approved_at=timezone.now() if random.random() < 0.67 else None,
+                )
+                evidence_docs.append(evidence)
+        
+        return evidence_docs
