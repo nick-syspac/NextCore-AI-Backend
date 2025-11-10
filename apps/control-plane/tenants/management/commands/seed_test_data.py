@@ -44,6 +44,12 @@ from evidence_mapper.models import (
     EvidenceAudit,
     EmbeddingSearch,
 )
+from feedback_assistant.models import (
+    FeedbackTemplate,
+    GeneratedFeedback,
+    FeedbackCriterion,
+    FeedbackLog,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -262,6 +268,19 @@ class Command(BaseCommand):
         embedding_searches = self.create_embedding_searches(evidence_mappings)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(embedding_searches)} embedding searches'))
         
+        # Create feedback assistant data
+        feedback_templates = self.create_feedback_templates(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(feedback_templates)} feedback templates'))
+        
+        feedback_criteria = self.create_feedback_criteria(feedback_templates)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(feedback_criteria)} feedback criteria'))
+        
+        generated_feedback = self.create_generated_feedback(feedback_templates, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(generated_feedback)} generated feedbacks'))
+        
+        feedback_logs = self.create_feedback_logs(feedback_templates, generated_feedback)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(feedback_logs)} feedback logs'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -323,6 +342,27 @@ class Command(BaseCommand):
         
         try:
             EvidenceMapping.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        # Feedback Assistant
+        try:
+            FeedbackLog.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            FeedbackCriterion.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            GeneratedFeedback.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            FeedbackTemplate.objects.all().delete()
         except ProgrammingError:
             pass
         
@@ -3855,3 +3895,442 @@ Moving forward, I will continue developing these leadership competencies and see
                 searches.append(search)
         
         return searches
+
+    def create_feedback_templates(self, tenants, users):
+        """Create feedback templates"""
+        templates = []
+        
+        template_configs = [
+            {
+                'name': 'Formative Assessment Feedback',
+                'description': 'Encouraging feedback for ongoing assessments to support student learning',
+                'feedback_type': 'formative',
+                'sentiment': 'encouraging',
+                'tone': 'supportive',
+                'positivity_level': 8,
+                'directness_level': 5,
+                'formality_level': 6,
+                'opening_template': 'Hi {student_name},\n\nThank you for submitting your {assessment_title}.',
+                'strengths_template': 'You demonstrated strong skills in: {strengths}',
+                'improvements_template': 'To further develop your understanding, consider: {improvements}',
+                'next_steps_template': 'Recommended next steps:\n{next_steps}',
+                'closing_template': 'Keep up the excellent work! I look forward to seeing your continued progress.',
+            },
+            {
+                'name': 'Summative Assessment Feedback',
+                'description': 'Professional feedback for final assessments with clear performance indicators',
+                'feedback_type': 'summative',
+                'sentiment': 'constructive',
+                'tone': 'professional',
+                'positivity_level': 6,
+                'directness_level': 7,
+                'formality_level': 8,
+                'opening_template': 'Dear {student_name},\n\nYour {assessment_title} has been assessed.',
+                'strengths_template': 'Strengths demonstrated:\n{strengths}',
+                'improvements_template': 'Areas requiring attention:\n{improvements}',
+                'next_steps_template': 'For future assessments:\n{next_steps}',
+                'closing_template': 'If you have questions about this feedback, please schedule a consultation.',
+            },
+            {
+                'name': 'Peer Review Feedback',
+                'description': 'Constructive peer feedback template with balanced tone',
+                'feedback_type': 'peer',
+                'sentiment': 'constructive',
+                'tone': 'friendly',
+                'positivity_level': 7,
+                'directness_level': 6,
+                'formality_level': 5,
+                'opening_template': 'Hey {student_name},\n\nI reviewed your {assessment_title} and have some thoughts to share.',
+                'strengths_template': 'What worked really well:\n{strengths}',
+                'improvements_template': 'Some suggestions for improvement:\n{improvements}',
+                'next_steps_template': 'Consider trying:\n{next_steps}',
+                'closing_template': 'Great effort overall! Looking forward to your next submission.',
+            },
+            {
+                'name': 'Motivational Feedback',
+                'description': 'Highly encouraging feedback to motivate struggling students',
+                'feedback_type': 'formative',
+                'sentiment': 'motivational',
+                'tone': 'supportive',
+                'positivity_level': 9,
+                'directness_level': 4,
+                'formality_level': 5,
+                'opening_template': 'Hello {student_name},\n\nI can see the effort you put into your {assessment_title}!',
+                'strengths_template': 'You are making progress in these areas:\n{strengths}',
+                'improvements_template': 'Let\'s work together on:\n{improvements}',
+                'next_steps_template': 'To help you succeed:\n{next_steps}',
+                'closing_template': 'Remember, learning is a journey! You\'re capable of great things. Keep going!',
+            },
+        ]
+        
+        for tenant in tenants:
+            # Create 2-3 templates per tenant
+            for config in template_configs[:random.randint(2, 3)]:
+                template = FeedbackTemplate.objects.create(
+                    name=config['name'],
+                    description=config['description'],
+                    tenant=tenant.slug,
+                    created_by=random.choice(users),
+                    feedback_type=config['feedback_type'],
+                    sentiment=config['sentiment'],
+                    tone=config['tone'],
+                    include_student_name=True,
+                    include_strengths=True,
+                    include_improvements=True,
+                    include_next_steps=True,
+                    include_encouragement=True,
+                    opening_template=config['opening_template'],
+                    strengths_template=config['strengths_template'],
+                    improvements_template=config['improvements_template'],
+                    next_steps_template=config['next_steps_template'],
+                    closing_template=config['closing_template'],
+                    positivity_level=config['positivity_level'],
+                    directness_level=config['directness_level'],
+                    formality_level=config['formality_level'],
+                    status=random.choice(['active', 'active', 'draft']),
+                )
+                templates.append(template)
+        
+        return templates
+
+    def create_feedback_criteria(self, templates):
+        """Create feedback criteria"""
+        criteria = []
+        
+        criterion_templates = [
+            {
+                'name': 'Content Knowledge',
+                'description': 'Demonstration of understanding of subject matter',
+                'excellent': 'Demonstrates exceptional understanding of all key concepts with sophisticated analysis and synthesis of information.',
+                'good': 'Shows solid understanding of main concepts with good application of knowledge.',
+                'satisfactory': 'Demonstrates basic understanding of core concepts with some gaps.',
+                'needs_improvement': 'Shows limited understanding of key concepts. Review course materials and seek additional support.',
+                'weight': 0.30,
+            },
+            {
+                'name': 'Critical Thinking',
+                'description': 'Analysis, evaluation, and problem-solving abilities',
+                'excellent': 'Presents insightful analysis with well-supported arguments and creative problem-solving approaches.',
+                'good': 'Demonstrates good analytical skills with logical reasoning and valid conclusions.',
+                'satisfactory': 'Shows basic analytical thinking but could develop deeper analysis.',
+                'needs_improvement': 'Analysis lacks depth. Practice examining issues from multiple perspectives.',
+                'weight': 0.25,
+            },
+            {
+                'name': 'Communication',
+                'description': 'Clarity and effectiveness of written/verbal expression',
+                'excellent': 'Communicates ideas with exceptional clarity, precision, and professional polish.',
+                'good': 'Expresses ideas clearly with good structure and appropriate language.',
+                'satisfactory': 'Communication is generally clear but could be more refined.',
+                'needs_improvement': 'Work on clarity and organization. Consider using writing support services.',
+                'weight': 0.20,
+            },
+            {
+                'name': 'Research & Evidence',
+                'description': 'Use of appropriate sources and supporting evidence',
+                'excellent': 'Incorporates excellent range of credible sources with proper citation and integration.',
+                'good': 'Uses relevant sources effectively to support arguments.',
+                'satisfactory': 'Includes some supporting evidence but could be more comprehensive.',
+                'needs_improvement': 'Strengthen arguments with additional credible sources and proper citations.',
+                'weight': 0.15,
+            },
+            {
+                'name': 'Technical Skills',
+                'description': 'Application of technical or practical skills',
+                'excellent': 'Demonstrates mastery of technical skills with professional-level execution.',
+                'good': 'Shows competent application of required technical skills.',
+                'satisfactory': 'Basic technical skills present but need further development.',
+                'needs_improvement': 'Technical skills require significant improvement. Practice fundamental techniques.',
+                'weight': 0.10,
+            },
+        ]
+        
+        for template in templates:
+            # Create 3-5 criteria per template
+            num_criteria = random.randint(3, 5)
+            for i, criterion in enumerate(criterion_templates[:num_criteria]):
+                fb_criterion = FeedbackCriterion.objects.create(
+                    template=template,
+                    criterion_name=criterion['name'],
+                    description=criterion['description'],
+                    excellent_feedback=criterion['excellent'],
+                    good_feedback=criterion['good'],
+                    satisfactory_feedback=criterion['satisfactory'],
+                    needs_improvement_feedback=criterion['needs_improvement'],
+                    weight=criterion['weight'],
+                    display_order=i + 1,
+                )
+                criteria.append(fb_criterion)
+        
+        return criteria
+
+    def create_generated_feedback(self, templates, users):
+        """Create generated feedback"""
+        feedbacks = []
+        
+        student_names = [
+            'Emma Wilson', 'James Chen', 'Sarah Johnson', 
+            'Michael Brown', 'Jessica Lee', 'Daniel Kim',
+            'Olivia Martinez', 'Ryan Taylor', 'Sophia Anderson',
+            'Liam Thompson', 'Ava Rodriguez', 'Noah Williams'
+        ]
+        
+        assessment_titles = [
+            'Business Communication Report',
+            'Project Management Assignment',
+            'Customer Service Case Study',
+            'Workplace Health & Safety Analysis',
+            'Team Leadership Reflection',
+            'Marketing Strategy Presentation',
+            'Financial Analysis Report',
+            'Quality Assurance Assessment',
+        ]
+        
+        strengths = [
+            ['Clear understanding of core concepts', 'Well-structured analysis', 'Professional presentation'],
+            ['Strong research skills', 'Critical thinking demonstrated', 'Effective use of examples'],
+            ['Excellent writing quality', 'Good time management', 'Thorough coverage of topics'],
+            ['Creative problem-solving', 'Attention to detail', 'Professional formatting'],
+            ['Strong analytical skills', 'Good use of evidence', 'Clear communication'],
+        ]
+        
+        improvements = [
+            ['Expand analysis of key theories', 'Include more recent sources', 'Strengthen conclusion'],
+            ['Develop critical evaluation further', 'Add more practical examples', 'Review citation format'],
+            ['Consider alternative perspectives', 'Deepen theoretical analysis', 'Improve paragraph transitions'],
+            ['Strengthen evidence base', 'Clarify methodology', 'Expand discussion section'],
+        ]
+        
+        next_steps = [
+            ['Review feedback and schedule consultation if needed', 'Practice similar assessments', 'Read suggested resources'],
+            ['Work on identified improvement areas', 'Seek peer review before submission', 'Utilize learning support services'],
+            ['Apply feedback to future work', 'Develop action plan for skill development', 'Request additional examples'],
+        ]
+        
+        for template in templates:
+            # Create 4-6 feedbacks per template
+            num_feedbacks = random.randint(4, 6)
+            
+            for i in range(num_feedbacks):
+                student_name = random.choice(student_names)
+                student_id = f"STU{random.randint(1000, 9999)}"
+                assessment = random.choice(assessment_titles)
+                
+                # Generate scores
+                score = random.uniform(50, 100)
+                max_score = 100.0
+                
+                # Determine grade based on score
+                if score >= 85:
+                    grade = 'HD'
+                    strength_set = random.choice(strengths)
+                    improvement_set = random.choice(improvements[:2])
+                elif score >= 75:
+                    grade = 'D'
+                    strength_set = random.choice(strengths[:3])
+                    improvement_set = random.choice(improvements[:3])
+                elif score >= 65:
+                    grade = 'C'
+                    strength_set = random.choice(strengths[:3])
+                    improvement_set = random.choice(improvements)
+                elif score >= 50:
+                    grade = 'P'
+                    strength_set = random.choice(strengths[:2])
+                    improvement_set = random.choice(improvements)
+                else:
+                    grade = 'F'
+                    strength_set = random.choice(strengths[:1])
+                    improvement_set = improvements[0]
+                
+                next_step_set = random.choice(next_steps)
+                
+                # Generate feedback text using template
+                feedback_parts = []
+                
+                if template.include_student_name:
+                    feedback_parts.append(
+                        template.opening_template.format(
+                            student_name=student_name,
+                            assessment_title=assessment
+                        )
+                    )
+                
+                feedback_parts.append(f"\nYou achieved a score of {score:.1f}/{max_score} ({grade} grade).\n")
+                
+                if template.include_strengths:
+                    strengths_text = '\n'.join([f'• {s}' for s in strength_set])
+                    feedback_parts.append(
+                        template.strengths_template.format(strengths=strengths_text)
+                    )
+                
+                if template.include_improvements:
+                    improvements_text = '\n'.join([f'• {i}' for i in improvement_set])
+                    feedback_parts.append(
+                        template.improvements_template.format(improvements=improvements_text)
+                    )
+                
+                if template.include_next_steps:
+                    next_steps_text = '\n'.join([f'{idx}. {step}' for idx, step in enumerate(next_step_set, 1)])
+                    feedback_parts.append(
+                        template.next_steps_template.format(next_steps=next_steps_text)
+                    )
+                
+                if template.include_encouragement:
+                    feedback_parts.append(f"\n{template.closing_template}")
+                
+                feedback_text = '\n\n'.join(feedback_parts)
+                
+                # Calculate sentiment score based on template settings
+                base_sentiment = (template.positivity_level - 5.5) / 4.5  # -1 to 1 scale
+                sentiment_score = max(-1.0, min(1.0, base_sentiment + random.uniform(-0.1, 0.1)))
+                
+                # Determine status
+                status = random.choices(
+                    ['generated', 'reviewed', 'delivered', 'revised'],
+                    weights=[0.20, 0.30, 0.40, 0.10]
+                )[0]
+                
+                requires_review = score < 50 or random.random() < 0.2
+                
+                feedback = GeneratedFeedback.objects.create(
+                    template=template,
+                    student_id=student_id,
+                    student_name=student_name,
+                    assessment_title=assessment,
+                    score=score,
+                    max_score=max_score,
+                    grade=grade,
+                    feedback_text=feedback_text,
+                    strengths_identified=strength_set,
+                    improvements_identified=improvement_set,
+                    next_steps_suggested=next_step_set,
+                    sentiment_score=sentiment_score,
+                    tone_consistency=random.uniform(0.85, 0.98),
+                    reading_level=random.choice(['Grade 10', 'Grade 11', 'Grade 12', 'University']),
+                    personalization_score=random.uniform(0.75, 0.95),
+                    requires_review=requires_review,
+                    review_notes=random.choice([
+                        'Approved for delivery',
+                        'Minor adjustments made',
+                        'Content reviewed and verified',
+                        ''
+                    ]) if status in ['reviewed', 'delivered'] else '',
+                    reviewed_by=random.choice([None, random.choice(users)]) if status in ['reviewed', 'delivered'] else None,
+                    reviewed_at=timezone.now() - timedelta(hours=random.randint(1, 48)) if status in ['reviewed', 'delivered'] else None,
+                    delivered_at=timezone.now() - timedelta(hours=random.randint(1, 24)) if status == 'delivered' else None,
+                    delivery_method=random.choice(['email', 'LMS', 'portal', 'manual']) if status == 'delivered' else '',
+                    status=status,
+                    generation_time=random.uniform(2.5, 8.0),
+                )
+                feedbacks.append(feedback)
+                
+                # Update template statistics
+                template.total_feedback_generated += 1
+                total_time = template.average_generation_time * (template.total_feedback_generated - 1)
+                total_time += feedback.generation_time
+                template.average_generation_time = total_time / template.total_feedback_generated
+                template.save()
+        
+        return feedbacks
+
+    def create_feedback_logs(self, templates, feedbacks):
+        """Create feedback logs"""
+        logs = []
+        
+        # Template creation logs
+        for template in templates:
+            log = FeedbackLog.objects.create(
+                template=template,
+                action='template_update',
+                performed_by=template.created_by,
+                feedbacks_generated=0,
+                total_time=0.5,
+                average_time_per_feedback=0.0,
+                details={
+                    'action': 'created',
+                    'sentiment': template.sentiment,
+                    'tone': template.tone,
+                    'positivity_level': template.positivity_level,
+                },
+                timestamp=template.created_at,
+            )
+            logs.append(log)
+        
+        # Batch generation logs
+        for template in templates:
+            template_feedbacks = [f for f in feedbacks if f.template == template]
+            
+            if template_feedbacks:
+                # Create 1-2 batch generation logs
+                for batch_num in range(random.randint(1, 2)):
+                    batch_size = random.randint(2, 5)
+                    batch_feedbacks = template_feedbacks[:batch_size]
+                    
+                    total_time = sum(f.generation_time for f in batch_feedbacks)
+                    avg_sentiment = sum(f.sentiment_score for f in batch_feedbacks) / len(batch_feedbacks)
+                    avg_personalization = sum(f.personalization_score for f in batch_feedbacks) / len(batch_feedbacks)
+                    
+                    log = FeedbackLog.objects.create(
+                        template=template,
+                        action='generate_batch',
+                        performed_by=template.created_by,
+                        feedbacks_generated=len(batch_feedbacks),
+                        total_time=total_time,
+                        average_sentiment=avg_sentiment,
+                        average_personalization=avg_personalization,
+                        details={
+                            'batch_size': len(batch_feedbacks),
+                            'assessment_types': list(set(f.assessment_title for f in batch_feedbacks)),
+                            'grade_distribution': {
+                                'HD': len([f for f in batch_feedbacks if f.grade == 'HD']),
+                                'D': len([f for f in batch_feedbacks if f.grade == 'D']),
+                                'C': len([f for f in batch_feedbacks if f.grade == 'C']),
+                                'P': len([f for f in batch_feedbacks if f.grade == 'P']),
+                                'F': len([f for f in batch_feedbacks if f.grade == 'F']),
+                            },
+                        },
+                    )
+                    logs.append(log)
+        
+        # Review logs for reviewed feedbacks
+        reviewed_feedbacks = [f for f in feedbacks if f.status in ['reviewed', 'delivered'] and f.reviewed_by]
+        
+        for feedback in reviewed_feedbacks[:15]:  # Log first 15 reviews
+            log = FeedbackLog.objects.create(
+                template=feedback.template,
+                feedback=feedback,
+                action='review',
+                performed_by=feedback.reviewed_by,
+                feedbacks_generated=1,
+                total_time=random.uniform(3.0, 8.0),
+                details={
+                    'student_id': feedback.student_id,
+                    'grade': feedback.grade,
+                    'requires_review': feedback.requires_review,
+                    'review_outcome': 'approved',
+                },
+                timestamp=feedback.reviewed_at,
+            )
+            logs.append(log)
+        
+        # Delivery logs
+        delivered_feedbacks = [f for f in feedbacks if f.status == 'delivered']
+        
+        for feedback in delivered_feedbacks[:10]:  # Log first 10 deliveries
+            log = FeedbackLog.objects.create(
+                template=feedback.template,
+                feedback=feedback,
+                action='deliver',
+                performed_by=feedback.reviewed_by or feedback.template.created_by,
+                feedbacks_generated=1,
+                total_time=random.uniform(0.5, 2.0),
+                details={
+                    'student_id': feedback.student_id,
+                    'delivery_method': feedback.delivery_method,
+                    'grade': feedback.grade,
+                },
+                timestamp=feedback.delivered_at,
+            )
+            logs.append(log)
+        
+        return logs
