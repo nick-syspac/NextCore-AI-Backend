@@ -103,6 +103,12 @@ from risk_engine.models import (
     SentimentAnalysis,
     InterventionAction,
 )
+from rubric_generator.models import (
+    Rubric,
+    RubricCriterion,
+    RubricLevel,
+    RubricGenerationLog,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -453,6 +459,19 @@ class Command(BaseCommand):
         intervention_actions = self.create_intervention_actions(risk_assessments, users)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(intervention_actions)} intervention actions'))
         
+        # Rubric Generator
+        rubrics = self.create_rubrics(tenants, assessments, tasks, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(rubrics)} rubrics'))
+        
+        rubric_criteria = self.create_rubric_criteria(rubrics)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(rubric_criteria)} rubric criteria'))
+        
+        rubric_levels = self.create_rubric_levels(rubric_criteria)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(rubric_levels)} rubric levels'))
+        
+        rubric_generation_logs = self.create_rubric_generation_logs(rubrics, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(rubric_generation_logs)} rubric generation logs'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -728,6 +747,27 @@ class Command(BaseCommand):
         
         try:
             RiskAssessment.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        # Rubric Generator
+        try:
+            RubricGenerationLog.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            RubricLevel.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            RubricCriterion.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            Rubric.objects.all().delete()
         except ProgrammingError:
             pass
         
@@ -3178,10 +3218,14 @@ Student Support Team'''
         """Create engagement heatmaps"""
         heatmaps = []
         
+        # Use a counter for unique student IDs
+        student_counter = 0
+        
         # Create heatmaps for 5 students per tenant over last 4 weeks
         for tenant in tenants:
             for student_idx in range(5):
-                student_id = f"STU{random.randint(1000, 9999)}"
+                student_counter += 1
+                student_id = f"STU{str(student_counter).zfill(6)}"
                 student_name = random.choice([
                     'Emma Wilson', 'James Chen', 'Sarah Johnson', 
                     'Michael Brown', 'Jessica Lee', 'Daniel Kim',
@@ -9132,3 +9176,644 @@ Currency Score: {recent_scan.currency_score:.1f}/100
                 actions.append(action)
         
         return actions
+    
+    def create_rubrics(self, tenants, assessments, tasks, users):
+        """Create rubrics for assessments and tasks"""
+        rubrics = []
+        
+        # Create rubrics for some assessments
+        for assessment in random.sample(list(assessments), min(8, len(list(assessments)))):
+            rubric_types = ['analytic', 'holistic', 'checklist', 'single_point']
+            rubric_type = random.choice(rubric_types)
+            
+            # Status distribution
+            status = random.choices(
+                ['draft', 'generating', 'review', 'approved', 'published', 'archived'],
+                weights=[0.15, 0.05, 0.20, 0.25, 0.30, 0.05],
+                k=1
+            )[0]
+            
+            # Total points
+            total_points = random.choice([50, 75, 100, 150, 200])
+            passing_score = int(total_points * random.uniform(0.45, 0.55))
+            
+            # AI generation details
+            ai_generated = random.random() > 0.3
+            ai_models = ['gpt-4', 'gpt-4-turbo', 'claude-3-opus', 'claude-3-sonnet']
+            ai_model = random.choice(ai_models) if ai_generated else ''
+            ai_generation_time = random.uniform(2.5, 15.8) if ai_generated else None
+            ai_generated_at = timezone.now() - timedelta(days=random.randint(1, 30)) if ai_generated else None
+            
+            ai_prompts = [
+                f"Generate a {rubric_type} rubric for assessing {assessment.title}. Include clear criteria and performance levels.",
+                f"Create an assessment rubric with {total_points} total points for {assessment.title}. Focus on competency-based assessment.",
+                f"Design a comprehensive rubric for {assessment.title} that aligns with unit requirements and industry standards.",
+            ]
+            ai_prompt = random.choice(ai_prompts) if ai_generated else ''
+            
+            # NLP summary
+            nlp_summaries = [
+                f"This rubric assesses student competency in {assessment.title} through multiple performance criteria.",
+                f"Evaluates key skills and knowledge required for {assessment.title} with clear performance indicators.",
+                f"Comprehensive assessment tool for measuring achievement of learning outcomes in {assessment.title}.",
+            ]
+            nlp_summary = random.choice(nlp_summaries) if random.random() > 0.4 else ''
+            
+            # NLP key points
+            nlp_key_points = []
+            if random.random() > 0.5:
+                key_points_options = [
+                    'Demonstrates practical application of skills',
+                    'Shows understanding of theoretical concepts',
+                    'Meets industry standards and requirements',
+                    'Exhibits critical thinking and problem-solving',
+                    'Applies knowledge to workplace scenarios',
+                    'Communicates effectively and professionally',
+                ]
+                nlp_key_points = random.sample(key_points_options, random.randint(3, 5))
+            
+            # Taxonomy tags
+            taxonomy_tags = []
+            if random.random() > 0.4:
+                tag_options = [
+                    "Bloom's: Remember", "Bloom's: Understand", "Bloom's: Apply",
+                    "Bloom's: Analyze", "Bloom's: Evaluate", "Bloom's: Create",
+                    "SOLO: Prestructural", "SOLO: Unistructural", "SOLO: Multistructural",
+                    "SOLO: Relational", "SOLO: Extended Abstract",
+                ]
+                taxonomy_tags = random.sample(tag_options, random.randint(2, 4))
+            
+            # Bloom's levels distribution
+            blooms_levels = {}
+            if taxonomy_tags:
+                blooms_options = ['Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create']
+                selected_blooms = random.sample(blooms_options, random.randint(2, 4))
+                remaining = 100
+                for i, level in enumerate(selected_blooms):
+                    if i == len(selected_blooms) - 1:
+                        blooms_levels[level] = remaining
+                    else:
+                        percentage = random.randint(10, min(40, remaining - 10 * (len(selected_blooms) - i - 1)))
+                        blooms_levels[level] = percentage
+                        remaining -= percentage
+            
+            # Review workflow
+            reviewed_by = None
+            reviewed_at = None
+            approved_by = None
+            approved_at = None
+            
+            if status in ['approved', 'published', 'archived']:
+                reviewed_by = random.choice(list(users))
+                reviewed_at = timezone.now() - timedelta(days=random.randint(5, 25))
+                approved_by = random.choice(list(users))
+                approved_at = reviewed_at + timedelta(days=random.randint(1, 5))
+            elif status == 'review':
+                reviewed_by = random.choice(list(users))
+                reviewed_at = timezone.now() - timedelta(days=random.randint(1, 10))
+            
+            created_by = random.choice(list(users))
+            
+            rubric = Rubric.objects.create(
+                tenant=assessment.tenant,
+                title=f"Assessment Rubric: {assessment.title}",
+                description=f"Marking rubric for {assessment.title} - {rubric_type} approach",
+                rubric_type=rubric_type,
+                status=status,
+                assessment=assessment,
+                task=None,
+                total_points=total_points,
+                passing_score=passing_score,
+                ai_generated=ai_generated,
+                ai_model=ai_model,
+                ai_prompt=ai_prompt,
+                ai_generation_time=ai_generation_time,
+                ai_generated_at=ai_generated_at,
+                nlp_summary=nlp_summary,
+                nlp_key_points=nlp_key_points,
+                taxonomy_tags=taxonomy_tags,
+                blooms_levels=blooms_levels,
+                created_by=created_by,
+                reviewed_by=reviewed_by,
+                reviewed_at=reviewed_at,
+                approved_by=approved_by,
+                approved_at=approved_at,
+            )
+            rubrics.append(rubric)
+        
+        # Create rubrics for some individual tasks
+        for task in random.sample(list(tasks), min(6, len(list(tasks)))):
+            rubric_type = random.choice(['analytic', 'checklist', 'single_point'])
+            
+            status = random.choices(
+                ['draft', 'review', 'approved', 'published'],
+                weights=[0.20, 0.25, 0.30, 0.25],
+                k=1
+            )[0]
+            
+            total_points = random.choice([25, 50, 75, 100])
+            passing_score = int(total_points * random.uniform(0.45, 0.55))
+            
+            ai_generated = random.random() > 0.4
+            ai_model = random.choice(['gpt-4', 'gpt-4-turbo', 'claude-3-sonnet']) if ai_generated else ''
+            ai_generation_time = random.uniform(1.8, 8.5) if ai_generated else None
+            ai_generated_at = timezone.now() - timedelta(days=random.randint(1, 20)) if ai_generated else None
+            
+            task_desc = task.question[:50] + '...' if len(task.question) > 50 else task.question
+            ai_prompt = f"Generate a task-specific {rubric_type} rubric for task '{task_desc}' worth {total_points} points." if ai_generated else ''
+            
+            nlp_summary = f"Task-specific rubric for assessing task {task.task_number} completion and quality." if random.random() > 0.5 else ''
+            
+            nlp_key_points = []
+            if random.random() > 0.6:
+                nlp_key_points = random.sample([
+                    'Task completion accuracy',
+                    'Quality of work output',
+                    'Adherence to specifications',
+                    'Time management',
+                ], random.randint(2, 3))
+            
+            taxonomy_tags = []
+            if random.random() > 0.5:
+                taxonomy_tags = random.sample([
+                    "Bloom's: Apply", "Bloom's: Analyze", "Bloom's: Evaluate",
+                    "SOLO: Multistructural", "SOLO: Relational",
+                ], random.randint(1, 3))
+            
+            blooms_levels = {}
+            if taxonomy_tags:
+                selected_blooms = random.sample(['Apply', 'Analyze', 'Evaluate'], random.randint(1, 2))
+                if len(selected_blooms) == 1:
+                    blooms_levels[selected_blooms[0]] = 100
+                else:
+                    blooms_levels[selected_blooms[0]] = random.randint(40, 70)
+                    blooms_levels[selected_blooms[1]] = 100 - blooms_levels[selected_blooms[0]]
+            
+            reviewed_by = None
+            reviewed_at = None
+            approved_by = None
+            approved_at = None
+            
+            if status in ['approved', 'published']:
+                reviewed_by = random.choice(list(users))
+                reviewed_at = timezone.now() - timedelta(days=random.randint(3, 15))
+                approved_by = random.choice(list(users))
+                approved_at = reviewed_at + timedelta(days=random.randint(1, 3))
+            elif status == 'review':
+                reviewed_by = random.choice(list(users))
+                reviewed_at = timezone.now() - timedelta(days=random.randint(1, 7))
+            
+            created_by = random.choice(list(users))
+            
+            rubric = Rubric.objects.create(
+                tenant=task.assessment.tenant,
+                title=f"Task Rubric: Task {task.task_number}",
+                description=f"Marking rubric for task {task.task_number}: {task_desc}",
+                rubric_type=rubric_type,
+                status=status,
+                assessment=task.assessment,
+                task=task,
+                total_points=total_points,
+                passing_score=passing_score,
+                ai_generated=ai_generated,
+                ai_model=ai_model,
+                ai_prompt=ai_prompt,
+                ai_generation_time=ai_generation_time,
+                ai_generated_at=ai_generated_at,
+                nlp_summary=nlp_summary,
+                nlp_key_points=nlp_key_points,
+                taxonomy_tags=taxonomy_tags,
+                blooms_levels=blooms_levels,
+                created_by=created_by,
+                reviewed_by=reviewed_by,
+                reviewed_at=reviewed_at,
+                approved_by=approved_by,
+                approved_at=approved_at,
+            )
+            rubrics.append(rubric)
+        
+        return rubrics
+    
+    def create_rubric_criteria(self, rubrics):
+        """Create criteria for each rubric"""
+        criteria = []
+        
+        # Criterion templates by rubric type
+        analytic_criteria_templates = [
+            ('Knowledge & Understanding', 'Demonstrates understanding of key concepts and principles'),
+            ('Application', 'Applies knowledge to practical situations and workplace scenarios'),
+            ('Analysis', 'Analyzes information and identifies relationships and patterns'),
+            ('Problem Solving', 'Develops effective solutions to complex problems'),
+            ('Communication', 'Communicates information clearly and professionally'),
+            ('Quality of Work', 'Produces work that meets industry standards'),
+            ('Safety & Compliance', 'Follows safety procedures and regulatory requirements'),
+            ('Teamwork', 'Collaborates effectively with others'),
+        ]
+        
+        holistic_criteria_templates = [
+            ('Overall Performance', 'Comprehensive assessment of all learning outcomes and competencies'),
+        ]
+        
+        checklist_criteria_templates = [
+            ('Task Completion', 'All required tasks completed'),
+            ('Documentation', 'Appropriate documentation provided'),
+            ('Safety Procedures', 'Safety procedures followed correctly'),
+            ('Quality Standards', 'Work meets quality standards'),
+            ('Time Management', 'Completed within allocated timeframe'),
+            ('Resource Usage', 'Used resources appropriately and efficiently'),
+        ]
+        
+        single_point_criteria_templates = [
+            ('Meets Standard', 'Work meets the expected standard and requirements'),
+            ('Competency Achieved', 'Demonstrates required competency level'),
+            ('Industry Benchmark', 'Performance aligns with industry expectations'),
+        ]
+        
+        for rubric in rubrics:
+            # Select templates based on rubric type
+            if rubric.rubric_type == 'analytic':
+                templates = random.sample(analytic_criteria_templates, random.randint(4, 6))
+            elif rubric.rubric_type == 'holistic':
+                templates = holistic_criteria_templates
+            elif rubric.rubric_type == 'checklist':
+                templates = random.sample(checklist_criteria_templates, random.randint(5, 6))
+            else:  # single_point
+                templates = random.sample(single_point_criteria_templates, random.randint(2, 3))
+            
+            # Calculate points distribution
+            total_points = rubric.total_points
+            num_criteria = len(templates)
+            base_points = total_points // num_criteria
+            remainder = total_points % num_criteria
+            
+            blooms_options = ['Remember', 'Understand', 'Apply', 'Analyze', 'Evaluate', 'Create']
+            
+            for idx, (title, description) in enumerate(templates):
+                # Assign points
+                max_points = base_points + (1 if idx < remainder else 0)
+                weight = random.randint(1, 3)
+                
+                # Criterion number
+                criterion_number = str(idx + 1)
+                
+                # Maps to elements (random UOC elements)
+                maps_to_elements = []
+                if random.random() > 0.5:
+                    maps_to_elements = [f"Element {random.randint(1, 5)}.{random.randint(1, 4)}" for _ in range(random.randint(1, 3))]
+                
+                # Maps to performance criteria
+                maps_to_performance_criteria = []
+                if random.random() > 0.4:
+                    maps_to_performance_criteria = [
+                        f"PC{random.randint(1, 5)}.{random.randint(1, 6)}" for _ in range(random.randint(1, 4))
+                    ]
+                
+                # Maps to knowledge evidence
+                maps_to_knowledge_evidence = []
+                if random.random() > 0.6:
+                    maps_to_knowledge_evidence = [
+                        f"Knowledge of {item}" for item in random.sample([
+                            'relevant legislation', 'industry standards', 'safety procedures',
+                            'quality requirements', 'workplace policies', 'technical specifications'
+                        ], random.randint(1, 3))
+                    ]
+                
+                # Taxonomy tagging
+                taxonomy_tags = []
+                blooms_level = ''
+                if random.random() > 0.4:
+                    blooms_level = random.choice(blooms_options)
+                    taxonomy_tags.append(f"Bloom's: {blooms_level}")
+                    if random.random() > 0.6:
+                        solo_level = random.choice(['Unistructural', 'Multistructural', 'Relational'])
+                        taxonomy_tags.append(f"SOLO: {solo_level}")
+                
+                # AI metadata
+                ai_generated = rubric.ai_generated and random.random() > 0.3
+                ai_rationale = ''
+                if ai_generated:
+                    rationales = [
+                        'Essential criterion for assessing core competency',
+                        'Aligns with unit requirements and industry standards',
+                        'Critical for demonstrating workplace capability',
+                        'Key performance indicator for this assessment',
+                    ]
+                    ai_rationale = random.choice(rationales)
+                
+                # NLP keywords
+                nlp_keywords = []
+                if random.random() > 0.5:
+                    keyword_options = title.lower().split() + description.lower().split()
+                    nlp_keywords = [kw for kw in keyword_options if len(kw) > 4][:random.randint(2, 5)]
+                
+                criterion = RubricCriterion.objects.create(
+                    rubric=rubric,
+                    criterion_number=criterion_number,
+                    title=title,
+                    description=description,
+                    weight=weight,
+                    max_points=max_points,
+                    maps_to_elements=maps_to_elements,
+                    maps_to_performance_criteria=maps_to_performance_criteria,
+                    maps_to_knowledge_evidence=maps_to_knowledge_evidence,
+                    taxonomy_tags=taxonomy_tags,
+                    blooms_level=blooms_level,
+                    ai_generated=ai_generated,
+                    ai_rationale=ai_rationale,
+                    nlp_keywords=nlp_keywords,
+                    display_order=idx,
+                )
+                criteria.append(criterion)
+        
+        return criteria
+    
+    def create_rubric_levels(self, criteria):
+        """Create performance levels for each criterion"""
+        levels = []
+        
+        for criterion in criteria:
+            rubric_type = criterion.rubric.rubric_type
+            max_points = criterion.max_points
+            
+            if rubric_type == 'analytic':
+                # Create 4-5 performance levels
+                num_levels = random.choice([4, 5])
+                
+                if num_levels == 4:
+                    level_configs = [
+                        ('Exemplary', 'exemplary', 1.0, 'Exceeds all expectations with exceptional quality'),
+                        ('Proficient', 'proficient', 0.75, 'Meets all requirements competently'),
+                        ('Developing', 'developing', 0.50, 'Partially meets requirements, needs improvement'),
+                        ('Unsatisfactory', 'unsatisfactory', 0.25, 'Does not meet minimum requirements'),
+                    ]
+                else:
+                    level_configs = [
+                        ('Exemplary', 'exemplary', 1.0, 'Outstanding performance, exceeds all standards'),
+                        ('Proficient', 'proficient', 0.85, 'Fully competent, meets all standards'),
+                        ('Competent', 'competent', 0.65, 'Meets basic requirements'),
+                        ('Developing', 'developing', 0.40, 'Approaching competency, requires development'),
+                        ('Unsatisfactory', 'unsatisfactory', 0.15, 'Well below required standard'),
+                    ]
+                
+                for idx, (level_name, level_type, multiplier, base_desc) in enumerate(level_configs):
+                    points = int(max_points * multiplier)
+                    
+                    # Detailed description based on criterion
+                    if 'Knowledge' in criterion.title:
+                        descriptions = [
+                            f"{base_desc}. {level_name} understanding of concepts and principles.",
+                            f"{base_desc}. Demonstrates {level_name.lower()} grasp of theoretical knowledge.",
+                            f"{base_desc}. Knowledge application is {level_name.lower()}.",
+                        ]
+                    elif 'Application' in criterion.title or 'Problem Solving' in criterion.title:
+                        descriptions = [
+                            f"{base_desc}. {level_name} application of skills to practical scenarios.",
+                            f"{base_desc}. Problem-solving approach is {level_name.lower()}.",
+                            f"{base_desc}. Practical skills demonstrated at {level_name.lower()} level.",
+                        ]
+                    elif 'Communication' in criterion.title:
+                        descriptions = [
+                            f"{base_desc}. Communication is {level_name.lower()} in clarity and professionalism.",
+                            f"{base_desc}. {level_name} presentation of information and ideas.",
+                            f"{base_desc}. Written and verbal communication at {level_name.lower()} standard.",
+                        ]
+                    else:
+                        descriptions = [
+                            f"{base_desc}. {level_name} performance for this criterion.",
+                            f"{base_desc}. Work quality is {level_name.lower()}.",
+                            f"{base_desc}. Demonstrates {level_name.lower()} competency.",
+                        ]
+                    
+                    description = random.choice(descriptions)
+                    
+                    # Indicators
+                    indicators = []
+                    if random.random() > 0.4:
+                        if level_type in ['exemplary', 'proficient']:
+                            indicators = random.sample([
+                                'All requirements fully met',
+                                'High quality work output',
+                                'Consistent accuracy',
+                                'Professional presentation',
+                                'Exceeds minimum standards',
+                                'Independent completion',
+                            ], random.randint(2, 4))
+                        elif level_type == 'competent':
+                            indicators = random.sample([
+                                'Basic requirements met',
+                                'Acceptable quality',
+                                'Minor errors present',
+                                'Some guidance needed',
+                                'Meets minimum standards',
+                            ], random.randint(2, 3))
+                        else:
+                            indicators = random.sample([
+                                'Requirements not fully met',
+                                'Quality below standard',
+                                'Significant errors',
+                                'Extensive guidance required',
+                                'Does not meet standards',
+                            ], random.randint(2, 3))
+                    
+                    # Examples
+                    examples = ''
+                    if random.random() > 0.6:
+                        examples = f"Example: Student work at this level would show {description.lower()}"
+                    
+                    # AI generation
+                    ai_generated = criterion.ai_generated and random.random() > 0.4
+                    nlp_summary = f"{level_name}: {base_desc}" if random.random() > 0.5 else ''
+                    
+                    level = RubricLevel.objects.create(
+                        criterion=criterion,
+                        level_name=level_name,
+                        level_type=level_type,
+                        points=points,
+                        description=description,
+                        indicators=indicators,
+                        examples=examples,
+                        ai_generated=ai_generated,
+                        nlp_summary=nlp_summary,
+                        display_order=idx,
+                    )
+                    levels.append(level)
+            
+            elif rubric_type == 'holistic':
+                # Single holistic scale with multiple levels
+                level_configs = [
+                    ('Outstanding', 'exemplary', 1.0, 'Exceptional performance across all aspects'),
+                    ('Very Good', 'proficient', 0.85, 'Strong performance, minor areas for improvement'),
+                    ('Good', 'proficient', 0.70, 'Solid performance, meets most requirements'),
+                    ('Satisfactory', 'competent', 0.55, 'Acceptable performance, meets basic requirements'),
+                    ('Unsatisfactory', 'unsatisfactory', 0.30, 'Performance below acceptable standard'),
+                ]
+                
+                for idx, (level_name, level_type, multiplier, description) in enumerate(level_configs):
+                    points = int(max_points * multiplier)
+                    
+                    indicators = []
+                    if level_type == 'exemplary':
+                        indicators = ['Exceeds all expectations', 'Outstanding quality', 'Comprehensive understanding']
+                    elif level_type == 'proficient':
+                        indicators = ['Meets expectations', 'Good quality', 'Sound understanding']
+                    elif level_type == 'competent':
+                        indicators = ['Meets minimum requirements', 'Acceptable quality', 'Basic understanding']
+                    else:
+                        indicators = ['Below expectations', 'Poor quality', 'Limited understanding']
+                    
+                    level = RubricLevel.objects.create(
+                        criterion=criterion,
+                        level_name=level_name,
+                        level_type=level_type,
+                        points=points,
+                        description=description,
+                        indicators=indicators,
+                        examples='',
+                        ai_generated=criterion.ai_generated,
+                        nlp_summary='',
+                        display_order=idx,
+                    )
+                    levels.append(level)
+            
+            elif rubric_type == 'checklist':
+                # Simple yes/no levels
+                level_configs = [
+                    ('Yes', 'proficient', max_points, 'Criterion met successfully'),
+                    ('No', 'not_demonstrated', 0, 'Criterion not met'),
+                ]
+                
+                for idx, (level_name, level_type, points, description) in enumerate(level_configs):
+                    level = RubricLevel.objects.create(
+                        criterion=criterion,
+                        level_name=level_name,
+                        level_type=level_type,
+                        points=points,
+                        description=description,
+                        indicators=[],
+                        examples='',
+                        ai_generated=False,
+                        nlp_summary='',
+                        display_order=idx,
+                    )
+                    levels.append(level)
+            
+            else:  # single_point
+                # Single point rubric: Below/Meets/Exceeds
+                level_configs = [
+                    ('Exceeds Standard', 'exemplary', max_points + int(max_points * 0.2), 'Goes beyond the expected standard'),
+                    ('Meets Standard', 'proficient', max_points, 'Achieves the expected standard'),
+                    ('Below Standard', 'developing', int(max_points * 0.5), 'Does not yet meet the expected standard'),
+                ]
+                
+                for idx, (level_name, level_type, points, description) in enumerate(level_configs):
+                    indicators = []
+                    if level_type == 'exemplary':
+                        indicators = ['Exceptional quality', 'Additional elements included', 'Outstanding execution']
+                    elif level_type == 'proficient':
+                        indicators = ['Meets all requirements', 'Appropriate quality', 'Competent execution']
+                    else:
+                        indicators = ['Some requirements not met', 'Quality needs improvement', 'Requires development']
+                    
+                    level = RubricLevel.objects.create(
+                        criterion=criterion,
+                        level_name=level_name,
+                        level_type=level_type,
+                        points=points,
+                        description=description,
+                        indicators=indicators,
+                        examples='',
+                        ai_generated=criterion.ai_generated,
+                        nlp_summary='',
+                        display_order=idx,
+                    )
+                    levels.append(level)
+        
+        return levels
+    
+    def create_rubric_generation_logs(self, rubrics, users):
+        """Create generation logs for rubrics"""
+        logs = []
+        
+        for rubric in rubrics:
+            if not rubric.ai_generated:
+                continue
+            
+            # Create 1-3 logs per AI-generated rubric
+            num_logs = random.randint(1, 3)
+            
+            for _ in range(num_logs):
+                action = random.choice([
+                    'generate_full',
+                    'generate_criterion',
+                    'generate_levels',
+                    'nlp_summarize',
+                    'tag_taxonomy',
+                ])
+                
+                # AI/NLP models
+                if action in ['generate_full', 'generate_criterion', 'generate_levels']:
+                    ai_model = rubric.ai_model
+                    nlp_model = ''
+                else:
+                    ai_model = ''
+                    nlp_model = random.choice(['spacy-en-core-lg', 'nltk-punkt', 'transformer-bert'])
+                
+                # Prompt used
+                prompts = {
+                    'generate_full': f"Generate a complete {rubric.rubric_type} rubric for {rubric.title}",
+                    'generate_criterion': f"Generate assessment criterion for {rubric.title}",
+                    'generate_levels': "Generate performance level descriptions with clear indicators",
+                    'nlp_summarize': f"Summarize the purpose and scope of rubric: {rubric.title}",
+                    'tag_taxonomy': f"Identify and tag educational taxonomy levels for {rubric.title}",
+                }
+                prompt_used = prompts.get(action, '')
+                
+                # Response text (truncated for brevity)
+                response_texts = {
+                    'generate_full': f"Generated {rubric.rubric_type} rubric with {rubric.get_criterion_count()} criteria totaling {rubric.total_points} points.",
+                    'generate_criterion': "Created criterion with mapped performance criteria and knowledge evidence requirements.",
+                    'generate_levels': "Generated performance levels ranging from exemplary to unsatisfactory with detailed indicators.",
+                    'nlp_summarize': f"Summary: {rubric.nlp_summary[:100]}..." if rubric.nlp_summary else "Generated comprehensive summary.",
+                    'tag_taxonomy': f"Applied taxonomy tags: {', '.join(rubric.taxonomy_tags[:3])}..." if rubric.taxonomy_tags else "Tagged with educational taxonomy.",
+                }
+                response_text = response_texts.get(action, '')
+                
+                # Metrics
+                if action in ['generate_full', 'generate_criterion', 'generate_levels']:
+                    tokens_used = random.randint(500, 2500)
+                    generation_time = random.uniform(2.0, 12.0)
+                else:
+                    tokens_used = random.randint(100, 800)
+                    generation_time = random.uniform(0.5, 3.5)
+                
+                # Success rate
+                success = random.random() > 0.05
+                error_message = ''
+                if not success:
+                    error_message = random.choice([
+                        'API rate limit exceeded',
+                        'Model timeout - request too complex',
+                        'Invalid response format',
+                        'Connection timeout',
+                    ])
+                
+                performed_by = rubric.created_by
+                performed_at = rubric.created_at + timedelta(seconds=random.randint(1, 300))
+                
+                log = RubricGenerationLog.objects.create(
+                    rubric=rubric,
+                    action=action,
+                    ai_model=ai_model,
+                    nlp_model=nlp_model,
+                    prompt_used=prompt_used,
+                    response_text=response_text,
+                    tokens_used=tokens_used,
+                    generation_time=round(generation_time, 2),
+                    success=success,
+                    error_message=error_message,
+                    performed_by=performed_by,
+                    performed_at=performed_at,
+                )
+                logs.append(log)
+        
+        return logs
