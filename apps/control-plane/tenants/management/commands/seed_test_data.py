@@ -96,6 +96,13 @@ from pd_tracker.models import (
     ComplianceRule,
     ComplianceCheck,
 )
+from risk_engine.models import (
+    RiskAssessment,
+    RiskFactor,
+    StudentEngagementMetric,
+    SentimentAnalysis,
+    InterventionAction,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -430,6 +437,22 @@ class Command(BaseCommand):
         compliance_checks = self.create_compliance_checks(pd_trainer_profiles, compliance_rules, users)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(compliance_checks)} compliance checks'))
         
+        # Risk Engine
+        student_engagement_metrics = self.create_student_engagement_metrics(users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(student_engagement_metrics)} student engagement metrics'))
+        
+        risk_assessments = self.create_risk_assessments(student_engagement_metrics, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(risk_assessments)} risk assessments'))
+        
+        risk_factors = self.create_risk_factors(risk_assessments)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(risk_factors)} risk factors'))
+        
+        sentiment_analyses = self.create_sentiment_analyses(risk_assessments)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(sentiment_analyses)} sentiment analyses'))
+        
+        intervention_actions = self.create_intervention_actions(risk_assessments, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(intervention_actions)} intervention actions'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -679,6 +702,32 @@ class Command(BaseCommand):
         
         try:
             PDTrainerProfile.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        # Risk Engine
+        try:
+            InterventionAction.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            SentimentAnalysis.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            RiskFactor.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            StudentEngagementMetric.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            RiskAssessment.objects.all().delete()
         except ProgrammingError:
             pass
         
@@ -8520,3 +8569,566 @@ Currency Score: {recent_scan.currency_score:.1f}/100
                 checks.append(check)
         
         return checks
+    
+    def create_student_engagement_metrics(self, users):
+        """Create student engagement metrics"""
+        metrics = []
+        student_names = [
+            'Emma Wilson', 'Liam Thompson', 'Olivia Martin', 'Noah Anderson',
+            'Ava Taylor', 'James Brown', 'Isabella Moore', 'William Jackson',
+            'Sophia White', 'Lucas Harris', 'Mia Clark', 'Benjamin Lewis',
+            'Charlotte Walker', 'Mason Hall', 'Amelia Young', 'Ethan King',
+            'Harper Wright', 'Alexander Scott', 'Evelyn Green', 'Daniel Adams',
+            'Abigail Baker', 'Michael Nelson', 'Emily Carter', 'Matthew Mitchell',
+            'Elizabeth Perez', 'David Roberts', 'Sofia Turner', 'Joseph Phillips',
+            'Avery Campbell', 'Andrew Parker', 'Ella Evans', 'Joshua Edwards',
+            'Scarlett Collins', 'Christopher Stewart', 'Grace Morris', 'Ryan Rogers',
+            'Chloe Reed', 'Nicholas Cook', 'Lily Morgan', 'John Bell',
+            'Aria Murphy', 'Jonathan Bailey', 'Zoe Rivera', 'Anthony Cooper',
+            'Penelope Richardson', 'Kevin Cox', 'Layla Howard', 'Thomas Ward'
+        ]
+        
+        for i, student_name in enumerate(student_names[:40]):
+            student_id = f"STU{str(i+1).zfill(6)}"
+            
+            # Create varied engagement patterns
+            pattern = random.choice(['high', 'medium', 'low', 'declining', 'improving'])
+            
+            if pattern == 'high':
+                login_freq = random.randint(8, 15)
+                time_platform = random.uniform(10, 25)
+                submission_rate = random.uniform(85, 100)
+                forum_participation = random.randint(15, 40)
+                peer_score = random.uniform(75, 100)
+                days_inactive = random.randint(0, 2)
+                decline_rate = random.uniform(-5, 5)
+                engagement_score = random.uniform(85, 100)
+            elif pattern == 'medium':
+                login_freq = random.randint(4, 7)
+                time_platform = random.uniform(5, 10)
+                submission_rate = random.uniform(65, 85)
+                forum_participation = random.randint(5, 15)
+                peer_score = random.uniform(50, 75)
+                days_inactive = random.randint(2, 5)
+                decline_rate = random.uniform(-10, 10)
+                engagement_score = random.uniform(60, 85)
+            elif pattern == 'low':
+                login_freq = random.randint(1, 3)
+                time_platform = random.uniform(1, 5)
+                submission_rate = random.uniform(40, 65)
+                forum_participation = random.randint(0, 5)
+                peer_score = random.uniform(20, 50)
+                days_inactive = random.randint(5, 14)
+                decline_rate = random.uniform(-5, 15)
+                engagement_score = random.uniform(30, 60)
+            elif pattern == 'declining':
+                login_freq = random.randint(2, 5)
+                time_platform = random.uniform(2, 7)
+                submission_rate = random.uniform(35, 60)
+                forum_participation = random.randint(0, 8)
+                peer_score = random.uniform(25, 55)
+                days_inactive = random.randint(7, 21)
+                decline_rate = random.uniform(15, 45)
+                engagement_score = random.uniform(20, 50)
+            else:  # improving
+                login_freq = random.randint(5, 10)
+                time_platform = random.uniform(6, 15)
+                submission_rate = random.uniform(70, 90)
+                forum_participation = random.randint(8, 20)
+                peer_score = random.uniform(60, 85)
+                days_inactive = random.randint(0, 3)
+                decline_rate = random.uniform(-25, -10)
+                engagement_score = random.uniform(65, 85)
+            
+            last_login = timezone.now() - timedelta(days=days_inactive)
+            
+            metric = StudentEngagementMetric.objects.create(
+                student_id=student_id,
+                student_name=student_name,
+                login_frequency=login_freq,
+                time_on_platform=round(time_platform, 2),
+                assignment_submission_rate=round(submission_rate, 1),
+                forum_participation=forum_participation,
+                peer_interaction_score=round(peer_score, 1),
+                last_login=last_login,
+                days_inactive=days_inactive,
+                activity_decline_rate=round(decline_rate, 1),
+                overall_engagement_score=round(engagement_score, 1),
+            )
+            metrics.append(metric)
+        
+        return metrics
+    
+    def create_risk_assessments(self, student_engagement_metrics, users):
+        """Create risk assessments for students"""
+        assessments = []
+        
+        for metric in student_engagement_metrics:
+            # Calculate dropout probability based on engagement
+            base_probability = 0.0
+            
+            # Engagement score impact (40% weight)
+            if metric.overall_engagement_score < 30:
+                base_probability += 0.40
+            elif metric.overall_engagement_score < 50:
+                base_probability += 0.30
+            elif metric.overall_engagement_score < 70:
+                base_probability += 0.15
+            else:
+                base_probability += 0.05
+            
+            # Inactivity impact (25% weight)
+            if metric.days_inactive > 14:
+                base_probability += 0.25
+            elif metric.days_inactive > 7:
+                base_probability += 0.15
+            elif metric.days_inactive > 3:
+                base_probability += 0.08
+            
+            # Decline rate impact (20% weight)
+            if metric.activity_decline_rate > 30:
+                base_probability += 0.20
+            elif metric.activity_decline_rate > 15:
+                base_probability += 0.12
+            elif metric.activity_decline_rate > 5:
+                base_probability += 0.05
+            
+            # Submission rate impact (15% weight)
+            if metric.assignment_submission_rate < 40:
+                base_probability += 0.15
+            elif metric.assignment_submission_rate < 60:
+                base_probability += 0.10
+            elif metric.assignment_submission_rate < 75:
+                base_probability += 0.05
+            
+            # Add some randomness
+            dropout_probability = min(max(base_probability + random.uniform(-0.05, 0.05), 0.0), 1.0)
+            
+            # Calculate risk score (0-100)
+            risk_score = dropout_probability * 100
+            
+            # Component scores
+            engagement_score = metric.overall_engagement_score
+            performance_score = metric.assignment_submission_rate
+            attendance_score = max(0, 100 - (metric.days_inactive * 5))
+            sentiment_score = random.uniform(-0.8, 0.8)
+            
+            # Adjust sentiment based on engagement
+            if engagement_score < 40:
+                sentiment_score = random.uniform(-0.8, 0.0)
+            elif engagement_score > 80:
+                sentiment_score = random.uniform(0.2, 0.8)
+            
+            # Status determination
+            if dropout_probability >= 0.75:
+                status = 'intervention_required'
+            elif dropout_probability >= 0.50:
+                status = random.choice(['monitoring', 'intervention_required'])
+            else:
+                status = 'active'
+            
+            # Check if student actually dropped out (low probability)
+            if dropout_probability > 0.80 and random.random() < 0.15:
+                status = 'dropped_out'
+            
+            # Alert triggering
+            alert_triggered = dropout_probability >= 0.50
+            alert_acknowledged = alert_triggered and random.random() > 0.3
+            alert_acknowledged_by = random.choice(list(users)) if alert_acknowledged else None
+            alert_acknowledged_at = timezone.now() - timedelta(days=random.randint(0, 7)) if alert_acknowledged else None
+            
+            # Intervention assignment
+            intervention_assigned = status in ['intervention_required', 'monitoring'] and random.random() > 0.2
+            intervention_notes = ''
+            if intervention_assigned:
+                notes_options = [
+                    'Student showing signs of disengagement. Outreach initiated.',
+                    'Multiple missed assignments. Academic support recommended.',
+                    'Extended period of inactivity. Welfare check required.',
+                    'Performance declining. One-on-one meeting scheduled.',
+                    'Low forum participation. Peer mentoring assigned.',
+                    'Struggling with course content. Tutoring sessions arranged.',
+                ]
+                intervention_notes = random.choice(notes_options)
+            
+            created_by = random.choice(list(users))
+            
+            assessment = RiskAssessment.objects.create(
+                student_id=metric.student_id,
+                student_name=metric.student_name,
+                dropout_probability=round(dropout_probability, 3),
+                risk_score=round(risk_score, 1),
+                engagement_score=round(engagement_score, 1),
+                performance_score=round(performance_score, 1),
+                attendance_score=round(attendance_score, 1),
+                sentiment_score=round(sentiment_score, 2),
+                model_version='logistic_v1.0',
+                confidence=random.randint(75, 98),
+                status=status,
+                alert_triggered=alert_triggered,
+                alert_acknowledged=alert_acknowledged,
+                alert_acknowledged_by=alert_acknowledged_by,
+                alert_acknowledged_at=alert_acknowledged_at,
+                intervention_assigned=intervention_assigned,
+                intervention_notes=intervention_notes,
+                created_by=created_by,
+            )
+            assessments.append(assessment)
+        
+        return assessments
+    
+    def create_risk_factors(self, risk_assessments):
+        """Create risk factors for each assessment"""
+        factors = []
+        
+        factor_templates = {
+            'academic': [
+                ('Low Assignment Completion', 'Student consistently misses assignment deadlines', 0.25),
+                ('Poor Quiz Performance', 'Average quiz scores below 50%', 0.20),
+                ('Failed Assessments', 'Multiple failed assessments requiring resubmission', 0.30),
+                ('Lack of Progress', 'Not meeting course milestone requirements', 0.25),
+            ],
+            'attendance': [
+                ('Low Login Frequency', 'Infrequent platform access compared to peers', 0.20),
+                ('Missed Live Sessions', 'Absent from scheduled online classes', 0.25),
+                ('Extended Absences', 'Periods of no activity exceeding one week', 0.30),
+                ('Irregular Access Pattern', 'Unpredictable and sporadic login times', 0.15),
+            ],
+            'engagement': [
+                ('No Forum Participation', 'Student does not engage in discussion forums', 0.20),
+                ('Limited Peer Interaction', 'Minimal collaboration with classmates', 0.15),
+                ('Low Resource Usage', 'Course materials rarely accessed', 0.20),
+                ('Declining Activity', 'Week-over-week reduction in engagement', 0.25),
+            ],
+            'behavioral': [
+                ('Late Submissions', 'Assignments submitted after deadlines', 0.15),
+                ('Incomplete Work', 'Partially completed assignments', 0.20),
+                ('No Communication', 'Does not respond to instructor messages', 0.25),
+                ('Help-Seeking Avoidance', 'Student does not request assistance when needed', 0.20),
+            ],
+            'sentiment': [
+                ('Negative Communication', 'Emails and messages express frustration', 0.20),
+                ('Stress Indicators', 'Language suggesting high stress levels', 0.25),
+                ('Disengagement Language', 'Communications indicate loss of interest', 0.30),
+                ('Confusion Expressed', 'Frequent statements of not understanding material', 0.15),
+            ],
+            'personal': [
+                ('Work-Life Balance', 'Student mentions conflicting time commitments', 0.20),
+                ('Health Issues', 'References to personal or family health concerns', 0.25),
+                ('Financial Stress', 'Indicates financial difficulties', 0.20),
+                ('Technology Barriers', 'Limited access to reliable internet or devices', 0.15),
+            ],
+        }
+        
+        for assessment in risk_assessments:
+            # Number of factors based on risk level
+            if assessment.dropout_probability >= 0.75:
+                num_factors = random.randint(6, 8)
+            elif assessment.dropout_probability >= 0.50:
+                num_factors = random.randint(4, 6)
+            elif assessment.dropout_probability >= 0.25:
+                num_factors = random.randint(3, 5)
+            else:
+                num_factors = random.randint(2, 4)
+            
+            # Select factor types
+            selected_types = random.sample(list(factor_templates.keys()), min(num_factors, len(factor_templates)))
+            
+            for factor_type in selected_types:
+                template = random.choice(factor_templates[factor_type])
+                factor_name, description, base_weight = template
+                
+                # Adjust weight based on risk level
+                weight = base_weight * random.uniform(0.8, 1.2)
+                weight = min(max(weight, 0.0), 1.0)
+                
+                # Calculate contribution (percentage)
+                contribution = weight * 100 / num_factors
+                
+                # Determine severity
+                if contribution > 20:
+                    severity = 'critical'
+                elif contribution > 15:
+                    severity = 'high'
+                elif contribution > 10:
+                    severity = 'medium'
+                else:
+                    severity = 'low'
+                
+                # Current value and threshold
+                current_value = random.uniform(0, 100)
+                threshold_value = random.uniform(current_value + 5, 100) if random.random() > 0.3 else random.uniform(0, current_value)
+                
+                # Trend analysis
+                if assessment.dropout_probability >= 0.75:
+                    trend = random.choice(['declining', 'critical_decline', 'critical_decline'])
+                elif assessment.dropout_probability >= 0.50:
+                    trend = random.choice(['declining', 'stable', 'declining'])
+                elif assessment.dropout_probability < 0.25:
+                    trend = random.choice(['improving', 'stable', 'stable'])
+                else:
+                    trend = random.choice(['improving', 'stable', 'declining'])
+                
+                factor = RiskFactor.objects.create(
+                    assessment=assessment,
+                    factor_type=factor_type,
+                    factor_name=factor_name,
+                    description=description,
+                    weight=round(weight, 3),
+                    contribution=round(contribution, 1),
+                    severity=severity,
+                    current_value=round(current_value, 1),
+                    threshold_value=round(threshold_value, 1),
+                    trend=trend,
+                )
+                factors.append(factor)
+        
+        return factors
+    
+    def create_sentiment_analyses(self, risk_assessments):
+        """Create sentiment analyses for assessments"""
+        analyses = []
+        
+        text_samples = {
+            'very_negative': [
+                "I don't understand any of this and nobody is helping me. I'm about to give up.",
+                "This course is impossible. I've tried everything and nothing works.",
+                "I can't keep up with the workload. This is too much stress.",
+                "I feel like I'm wasting my time. Nothing makes sense anymore.",
+            ],
+            'negative': [
+                "I'm struggling with this assignment. Not sure if I can complete it.",
+                "The instructions are confusing and I'm falling behind.",
+                "I'm having trouble with the course material. It's quite difficult.",
+                "Not doing well on the assessments. Feeling discouraged.",
+            ],
+            'neutral': [
+                "I have a question about assignment 3. Could you clarify the requirements?",
+                "I submitted my work yesterday. When will I receive feedback?",
+                "Is there additional reading material available for this topic?",
+                "I need an extension on the upcoming deadline due to work commitments.",
+            ],
+            'positive': [
+                "I'm really enjoying this module. The content is very relevant.",
+                "Thanks for the feedback on my last assignment. It was very helpful.",
+                "I'm making good progress on the course. Looking forward to the next section.",
+                "The course materials are excellent. I'm learning a lot.",
+            ],
+            'very_positive': [
+                "This course is fantastic! I'm so glad I enrolled. The content is amazing.",
+                "I love how engaging the material is. Best course I've taken!",
+                "Thank you so much for all your support. I'm doing really well thanks to you.",
+                "I'm excited about completing this course. It's been an excellent experience.",
+            ],
+        }
+        
+        for assessment in risk_assessments:
+            # Number of analyses based on risk level
+            if assessment.dropout_probability >= 0.75:
+                num_analyses = random.randint(3, 4)
+            elif assessment.dropout_probability >= 0.50:
+                num_analyses = random.randint(2, 3)
+            else:
+                num_analyses = random.randint(1, 2)
+            
+            for _ in range(num_analyses):
+                source_type = random.choice(['email', 'forum_post', 'chat', 'feedback'])
+                
+                # Sentiment score based on risk level
+                if assessment.dropout_probability >= 0.75:
+                    sentiment_score = random.uniform(-1.0, -0.3)
+                elif assessment.dropout_probability >= 0.50:
+                    sentiment_score = random.uniform(-0.6, 0.0)
+                elif assessment.dropout_probability >= 0.25:
+                    sentiment_score = random.uniform(-0.3, 0.3)
+                else:
+                    sentiment_score = random.uniform(0.0, 1.0)
+                
+                # Select text sample
+                if sentiment_score <= -0.6:
+                    text_sample = random.choice(text_samples['very_negative'])
+                elif sentiment_score <= -0.2:
+                    text_sample = random.choice(text_samples['negative'])
+                elif sentiment_score <= 0.2:
+                    text_sample = random.choice(text_samples['neutral'])
+                elif sentiment_score <= 0.6:
+                    text_sample = random.choice(text_samples['positive'])
+                else:
+                    text_sample = random.choice(text_samples['very_positive'])
+                
+                # Emotion detection
+                frustration_detected = sentiment_score < -0.4 and random.random() > 0.5
+                stress_detected = sentiment_score < -0.3 and random.random() > 0.6
+                confusion_detected = sentiment_score < 0.0 and random.random() > 0.7
+                disengagement_detected = sentiment_score < -0.5 and random.random() > 0.4
+                
+                # Negative keywords
+                negative_keywords = []
+                if sentiment_score < -0.3:
+                    keywords = ['struggling', 'difficult', 'confused', 'frustrated', 'give up', 
+                               'overwhelmed', 'impossible', 'can\'t', 'behind', 'stressed']
+                    negative_keywords = random.sample(keywords, random.randint(2, 5))
+                
+                # Risk indicators
+                risk_indicators = []
+                if sentiment_score < -0.5:
+                    indicators = ['expressing_frustration', 'considering_withdrawal', 
+                                 'lack_of_support', 'workload_stress', 'poor_comprehension',
+                                 'low_motivation', 'time_management_issues']
+                    risk_indicators = random.sample(indicators, random.randint(2, 4))
+                
+                confidence = random.randint(70, 95)
+                
+                analysis = SentimentAnalysis.objects.create(
+                    assessment=assessment,
+                    source_type=source_type,
+                    text_sample=text_sample,
+                    sentiment_score=round(sentiment_score, 2),
+                    confidence=confidence,
+                    frustration_detected=frustration_detected,
+                    stress_detected=stress_detected,
+                    confusion_detected=confusion_detected,
+                    disengagement_detected=disengagement_detected,
+                    negative_keywords=negative_keywords,
+                    risk_indicators=risk_indicators,
+                )
+                analyses.append(analysis)
+        
+        return analyses
+    
+    def create_intervention_actions(self, risk_assessments, users):
+        """Create intervention actions for at-risk students"""
+        actions = []
+        
+        action_templates = {
+            'email_outreach': [
+                'Send personalized email checking on student progress and offering support',
+                'Email with course resources and study tips',
+                'Reach out to understand barriers to engagement',
+            ],
+            'phone_call': [
+                'Schedule phone call to discuss student concerns',
+                'Personal call to check on student wellbeing',
+                'Contact to discuss course progress and options',
+            ],
+            'meeting_scheduled': [
+                'One-on-one meeting to review coursework',
+                'Face-to-face discussion about academic goals',
+                'Meeting with student and academic advisor',
+            ],
+            'counseling_referral': [
+                'Refer to student counseling services',
+                'Connect with mental health support resources',
+                'Arrange counseling for stress management',
+            ],
+            'academic_support': [
+                'Assign peer tutor for additional help',
+                'Provide supplementary learning materials',
+                'Offer extra tutoring sessions',
+            ],
+            'mentoring': [
+                'Connect student with peer mentor',
+                'Assign senior student as mentor',
+                'Arrange mentoring for study skills',
+            ],
+            'course_adjustment': [
+                'Discuss possible course load reduction',
+                'Review course schedule and adjust deadlines',
+                'Consider course withdrawal options',
+            ],
+            'financial_support': [
+                'Refer to financial aid office',
+                'Provide information on emergency funding',
+                'Connect with hardship support services',
+            ],
+        }
+        
+        for assessment in risk_assessments:
+            # Only create interventions for at-risk students
+            if assessment.dropout_probability < 0.40:
+                continue
+            
+            # Number of interventions based on risk level
+            if assessment.dropout_probability >= 0.75:
+                num_actions = random.randint(3, 5)
+            elif assessment.dropout_probability >= 0.50:
+                num_actions = random.randint(2, 3)
+            else:
+                num_actions = random.randint(1, 2)
+            
+            # Select action types
+            action_types = random.sample(list(action_templates.keys()), min(num_actions, len(action_templates)))
+            
+            for action_type in action_types:
+                description = random.choice(action_templates[action_type])
+                
+                # Priority based on risk level
+                if assessment.dropout_probability >= 0.75:
+                    priority = random.choice(['urgent', 'high'])
+                elif assessment.dropout_probability >= 0.60:
+                    priority = 'high'
+                elif assessment.dropout_probability >= 0.50:
+                    priority = random.choice(['high', 'medium'])
+                else:
+                    priority = 'medium'
+                
+                # Status distribution
+                status = random.choices(
+                    ['planned', 'in_progress', 'completed', 'cancelled'],
+                    weights=[0.3, 0.4, 0.25, 0.05],
+                    k=1
+                )[0]
+                
+                # Scheduled date
+                scheduled_date = timezone.now() + timedelta(days=random.randint(1, 14))
+                
+                # Completed date if applicable
+                completed_date = None
+                if status == 'completed':
+                    days_to_complete = random.randint(1, 10)
+                    completed_date = scheduled_date + timedelta(days=days_to_complete)
+                
+                # Assigned to
+                assigned_to = random.choice(list(users))
+                
+                # Outcome notes for completed actions
+                outcome_notes = ''
+                effectiveness_rating = None
+                if status == 'completed':
+                    outcomes = [
+                        'Student responded positively and committed to catching up',
+                        'Identified barriers and developed action plan',
+                        'Student engaged well, showing improved motivation',
+                        'Arranged additional support services',
+                        'Student appreciates outreach, working on assignments',
+                        'Made progress, scheduling follow-up session',
+                    ]
+                    outcome_notes = random.choice(outcomes)
+                    effectiveness_rating = random.randint(3, 5)
+                elif status == 'in_progress':
+                    outcome_notes = 'Intervention underway, awaiting student response'
+                elif status == 'cancelled':
+                    outcome_notes = random.choice([
+                        'Student already receiving support from another source',
+                        'Student withdrew from course',
+                        'Situation resolved without intervention',
+                    ])
+                
+                created_by = random.choice(list(users))
+                
+                action = InterventionAction.objects.create(
+                    assessment=assessment,
+                    action_type=action_type,
+                    description=description,
+                    priority=priority,
+                    scheduled_date=scheduled_date,
+                    completed_date=completed_date,
+                    status=status,
+                    assigned_to=assigned_to,
+                    outcome_notes=outcome_notes,
+                    effectiveness_rating=effectiveness_rating,
+                    created_by=created_by,
+                )
+                actions.append(action)
+        
+        return actions
