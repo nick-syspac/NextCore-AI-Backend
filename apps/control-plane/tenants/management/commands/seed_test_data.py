@@ -89,6 +89,13 @@ from moderation_tool.models import (
     BiasScore,
     ModerationLog,
 )
+from pd_tracker.models import (
+    PDActivity,
+    TrainerProfile as PDTrainerProfile,
+    PDSuggestion,
+    ComplianceRule,
+    ComplianceCheck,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -407,6 +414,22 @@ class Command(BaseCommand):
         moderation_logs = self.create_moderation_logs(moderation_sessions, users)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(moderation_logs)} moderation logs'))
         
+        # Create PD Tracker data
+        pd_trainer_profiles = self.create_pd_trainer_profiles(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(pd_trainer_profiles)} PD trainer profiles'))
+        
+        compliance_rules = self.create_compliance_rules(tenants)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(compliance_rules)} compliance rules'))
+        
+        pd_activities = self.create_pd_activities(pd_trainer_profiles, tenants)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(pd_activities)} PD activities'))
+        
+        pd_suggestions = self.create_pd_suggestions(pd_trainer_profiles)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(pd_suggestions)} PD suggestions'))
+        
+        compliance_checks = self.create_compliance_checks(pd_trainer_profiles, compliance_rules, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(compliance_checks)} compliance checks'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -630,6 +653,32 @@ class Command(BaseCommand):
         
         try:
             ModerationSession.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        # PD Tracker
+        try:
+            ComplianceCheck.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            PDSuggestion.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            PDActivity.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            ComplianceRule.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            PDTrainerProfile.objects.all().delete()
         except ProgrammingError:
             pass
         
@@ -7841,3 +7890,633 @@ Currency Score: {recent_scan.currency_score:.1f}/100
                 logs.append(log)
         
         return logs
+    
+    def create_pd_trainer_profiles(self, tenants, users):
+        """Create PD trainer profiles"""
+        profiles = []
+        trainer_counter = 1  # Global counter for unique trainer IDs
+        
+        roles = ['Senior Trainer', 'Trainer/Assessor', 'Lead Assessor', 'Training Manager', 'Industry Specialist']
+        departments = ['Business', 'Information Technology', 'Hospitality', 'Health & Community Services', 'Engineering']
+        teaching_subjects = [
+            ['Project Management', 'Business Operations'],
+            ['Programming', 'Web Development', 'Database Design'],
+            ['Commercial Cookery', 'Hospitality Management'],
+            ['Aged Care', 'Disability Support', 'Community Services'],
+            ['Electrical', 'Automotive', 'Construction']
+        ]
+        industry_sectors_list = [
+            ['Business Services', 'Management'],
+            ['Information Technology', 'Software Development'],
+            ['Hospitality', 'Tourism'],
+            ['Health Care', 'Community Services'],
+            ['Engineering', 'Manufacturing']
+        ]
+        
+        for tenant in tenants:
+            # Create 4-6 trainer profiles per tenant
+            tenant_users = [u for u in users if 'trainer' in u.email.lower() or 'manager' in u.email.lower()][:6]
+            if not tenant_users:
+                tenant_users = list(users)[:6]
+            
+            for i, user in enumerate(tenant_users):
+                dept_idx = i % len(departments)
+                role = random.choice(roles)
+                
+                # Currency status
+                currency_statuses = ['current', 'expiring_soon', 'expired']
+                vocational_status = random.choice(currency_statuses)
+                industry_status = random.choice(currency_statuses)
+                
+                # PD hours
+                total_hours = random.uniform(10, 50)
+                vocational_hours = random.uniform(5, 20)
+                industry_hours = random.uniform(5, 20)
+                teaching_hours = random.uniform(5, 15)
+                
+                # Last PD dates
+                last_vocational = timezone.now().date() - timedelta(days=random.randint(30, 365))
+                last_industry = timezone.now().date() - timedelta(days=random.randint(30, 365))
+                last_teaching = timezone.now().date() - timedelta(days=random.randint(30, 365))
+                
+                # Compliance issues
+                compliance_issues = []
+                meets_asqa = True
+                if vocational_status == 'expired' or industry_status == 'expired':
+                    meets_asqa = False
+                    if vocational_status == 'expired':
+                        compliance_issues.append({
+                            'type': 'vocational_currency_expired',
+                            'description': 'Vocational currency has expired - requires immediate action',
+                            'severity': 'critical'
+                        })
+                    if industry_status == 'expired':
+                        compliance_issues.append({
+                            'type': 'industry_currency_expired',
+                            'description': 'Industry currency has expired - update required',
+                            'severity': 'high'
+                        })
+                
+                # PD goals
+                pd_goals = [
+                    {
+                        'goal': 'Complete industry placement in relevant sector',
+                        'target_date': (timezone.now().date() + timedelta(days=random.randint(60, 180))).isoformat(),
+                        'status': 'in_progress'
+                    },
+                    {
+                        'goal': 'Attend professional conference',
+                        'target_date': (timezone.now().date() + timedelta(days=random.randint(90, 270))).isoformat(),
+                        'status': 'planned'
+                    },
+                ]
+                
+                profile = PDTrainerProfile.objects.create(
+                    tenant=str(tenant.id),
+                    trainer_id=f"TRN{trainer_counter:04d}",
+                    trainer_name=f"{user.first_name} {user.last_name}",
+                    email=user.email,
+                    role=role,
+                    department=departments[dept_idx],
+                    employment_start_date=timezone.now().date() - timedelta(days=random.randint(365, 3650)),
+                    highest_qualification=random.choice([
+                        'Bachelor of Education',
+                        'Graduate Diploma in VET',
+                        'Certificate IV in Training and Assessment',
+                        'Master of Education',
+                        'Diploma of VET'
+                    ]),
+                    teaching_qualifications=[
+                        'Certificate IV in Training and Assessment',
+                        random.choice(['Diploma of VET', 'Graduate Diploma in VET'])
+                    ],
+                    industry_qualifications=[
+                        random.choice(['Certificate III', 'Certificate IV', 'Diploma', 'Advanced Diploma']),
+                        random.choice(['Bachelor Degree', 'Trade Certificate', 'Professional Certification'])
+                    ],
+                    teaching_subjects=teaching_subjects[dept_idx],
+                    teaching_qualification_levels=['Certificate III', 'Certificate IV', 'Diploma'],
+                    industry_sectors=industry_sectors_list[dept_idx],
+                    vocational_currency_required=True,
+                    industry_currency_required=True,
+                    teaching_currency_required=True,
+                    total_pd_hours=round(total_hours, 1),
+                    vocational_pd_hours=round(vocational_hours, 1),
+                    industry_pd_hours=round(industry_hours, 1),
+                    teaching_pd_hours=round(teaching_hours, 1),
+                    last_vocational_pd=last_vocational,
+                    last_industry_pd=last_industry,
+                    last_teaching_pd=last_teaching,
+                    vocational_currency_status=vocational_status,
+                    industry_currency_status=industry_status,
+                    meets_asqa_requirements=meets_asqa,
+                    last_compliance_check=timezone.now().date() - timedelta(days=random.randint(1, 90)),
+                    compliance_issues=compliance_issues,
+                    annual_pd_goal_hours=random.choice([20, 25, 30, 40]),
+                    current_year_hours=round(random.uniform(5, 35), 1),
+                    pd_goals=pd_goals,
+                )
+                profiles.append(profile)
+                trainer_counter += 1  # Increment for next trainer
+        
+        return profiles
+    
+    def create_compliance_rules(self, tenants):
+        """Create compliance rules for PD requirements"""
+        rules = []
+        
+        # Base ASQA rules (apply to all tenants)
+        base_rules = [
+            {
+                'name': 'ASQA Standard 1.13 - Vocational Competency',
+                'description': 'Trainers and assessors must have vocational competency in the areas they deliver',
+                'regulatory_source': 'asqa',
+                'reference_code': 'Standard 1.13',
+                'requirement_type': 'minimum_hours',
+                'requirement_details': {
+                    'minimum_hours': 20,
+                    'period': 'annual',
+                    'activity_types': ['industry_placement', 'formal_course', 'workshop']
+                },
+                'applies_to_roles': ['Trainer/Assessor', 'Senior Trainer', 'Lead Assessor'],
+                'applies_to_sectors': [],  # All sectors
+                'applies_to_qualifications': [],  # All qualifications
+            },
+            {
+                'name': 'ASQA Standard 1.14 - Industry Currency',
+                'description': 'Trainers must maintain currency of industry skills and knowledge',
+                'regulatory_source': 'asqa',
+                'reference_code': 'Standard 1.14',
+                'requirement_type': 'industry_engagement',
+                'requirement_details': {
+                    'minimum_hours': 15,
+                    'period': 'annual',
+                    'activity_types': ['industry_placement', 'networking', 'conference'],
+                    'industry_engagement_required': True
+                },
+                'applies_to_roles': ['Trainer/Assessor', 'Senior Trainer', 'Industry Specialist'],
+                'applies_to_sectors': [],
+                'applies_to_qualifications': [],
+            },
+            {
+                'name': 'Certificate IV TAE Maintenance',
+                'description': 'Maintain current Certificate IV in Training and Assessment',
+                'regulatory_source': 'vet_quality',
+                'reference_code': 'TAE40116 / TAE40122',
+                'requirement_type': 'qualification_maintenance',
+                'requirement_details': {
+                    'minimum_hours': 10,
+                    'period': 'annual',
+                    'activity_types': ['formal_course', 'webinar', 'workshop'],
+                    'focus_areas': ['assessment', 'training_delivery', 'compliance']
+                },
+                'applies_to_roles': ['Trainer/Assessor', 'Senior Trainer', 'Lead Assessor', 'Training Manager'],
+                'applies_to_sectors': [],
+                'applies_to_qualifications': [],
+            },
+        ]
+        
+        for tenant in tenants:
+            for rule_template in base_rules:
+                rule = ComplianceRule.objects.create(
+                    tenant=str(tenant.id),
+                    rule_name=rule_template['name'],
+                    description=rule_template['description'],
+                    regulatory_source=rule_template['regulatory_source'],
+                    reference_code=rule_template['reference_code'],
+                    requirement_type=rule_template['requirement_type'],
+                    requirement_details=rule_template['requirement_details'],
+                    applies_to_roles=rule_template['applies_to_roles'],
+                    applies_to_sectors=rule_template['applies_to_sectors'],
+                    applies_to_qualifications=rule_template['applies_to_qualifications'],
+                    is_active=True,
+                    effective_date=timezone.now().date() - timedelta(days=365),
+                )
+                rules.append(rule)
+            
+            # Add 1-2 RTO-specific rules per tenant
+            rto_rules = [
+                {
+                    'name': f'{tenant.name} Professional Development Policy',
+                    'description': 'Minimum 25 hours of professional development annually',
+                    'regulatory_source': 'rto_policy',
+                    'reference_code': 'PD-001',
+                    'requirement_type': 'minimum_hours',
+                    'requirement_details': {
+                        'minimum_hours': 25,
+                        'period': 'annual',
+                        'documentation_required': True
+                    },
+                    'applies_to_roles': [],  # All roles
+                    'applies_to_sectors': [],
+                    'applies_to_qualifications': [],
+                },
+            ]
+            
+            for rto_rule in rto_rules:
+                rule = ComplianceRule.objects.create(
+                    tenant=str(tenant.id),
+                    rule_name=rto_rule['name'],
+                    description=rto_rule['description'],
+                    regulatory_source=rto_rule['regulatory_source'],
+                    reference_code=rto_rule['reference_code'],
+                    requirement_type=rto_rule['requirement_type'],
+                    requirement_details=rto_rule['requirement_details'],
+                    applies_to_roles=rto_rule['applies_to_roles'],
+                    applies_to_sectors=rto_rule['applies_to_sectors'],
+                    applies_to_qualifications=rto_rule['applies_to_qualifications'],
+                    is_active=True,
+                    effective_date=timezone.now().date() - timedelta(days=180),
+                )
+                rules.append(rule)
+        
+        return rules
+    
+    def create_pd_activities(self, pd_trainer_profiles, tenants):
+        """Create PD activities for trainers"""
+        activities = []
+        
+        activity_types = [
+            'formal_course', 'workshop', 'conference', 'webinar', 'industry_placement',
+            'networking', 'research', 'mentoring', 'self_study', 'certification',
+            'teaching_observation', 'curriculum_development'
+        ]
+        
+        evidence_types = [
+            'certificate', 'attendance_record', 'transcript', 'letter',
+            'portfolio', 'statutory_declaration'
+        ]
+        
+        statuses = ['completed', 'completed', 'completed', 'in_progress', 'planned']
+        verification_statuses = ['verified', 'verified', 'verified', 'pending', 'rejected']
+        
+        # Activity templates
+        activity_templates = {
+            'formal_course': [
+                ('Advanced Training Techniques Workshop', 'Intensive workshop on contemporary training delivery methods', 16),
+                ('Assessment Validation Certificate', 'Certificate course in assessment validation and moderation', 24),
+                ('Workplace Learning Design', 'Course on designing effective workplace learning programs', 20),
+            ],
+            'workshop': [
+                ('Digital Learning Tools Workshop', 'Hands-on workshop exploring digital learning platforms', 8),
+                ('Inclusive Education Practices', 'Workshop on inclusive teaching strategies', 6),
+                ('Assessment Rubric Development', 'Practical workshop on creating assessment rubrics', 4),
+            ],
+            'conference': [
+                ('National VET Conference', 'Annual vocational education and training conference', 16),
+                ('Industry Skills Forum', 'Forum on emerging industry skills and trends', 12),
+                ('Assessment Excellence Symposium', 'Symposium on assessment best practices', 8),
+            ],
+            'webinar': [
+                ('Compliance Update Webinar', 'Latest updates on VET regulatory compliance', 2),
+                ('Technology in Training Webinar', 'Integrating technology into training delivery', 1.5),
+                ('Student Engagement Strategies', 'Online session on improving student engagement', 2),
+            ],
+            'industry_placement': [
+                ('Industry Placement - IT Sector', 'Two-week placement with industry partner', 80),
+                ('Industry Placement - Hospitality', 'One-week placement in commercial kitchen', 40),
+                ('Industry Placement - Health Services', 'Industry observation and networking', 24),
+            ],
+        }
+        
+        for profile in pd_trainer_profiles:
+            # Create 6-12 activities per trainer
+            num_activities = random.randint(6, 12)
+            
+            for i in range(num_activities):
+                activity_type = random.choice(activity_types)
+                status = random.choice(statuses)
+                
+                # Get template or generate generic activity
+                if activity_type in activity_templates:
+                    templates = activity_templates[activity_type]
+                    title, description, hours = random.choice(templates)
+                else:
+                    title = f"{activity_type.replace('_', ' ').title()} Activity"
+                    description = f"Professional development activity: {activity_type}"
+                    hours = random.choice([4, 8, 16, 24, 40])
+                
+                # Dates based on status
+                if status == 'completed':
+                    start_date = timezone.now().date() - timedelta(days=random.randint(30, 365))
+                    end_date = start_date + timedelta(days=random.randint(1, 14))
+                    verification_status = random.choice(verification_statuses)
+                elif status == 'in_progress':
+                    start_date = timezone.now().date() - timedelta(days=random.randint(1, 30))
+                    end_date = start_date + timedelta(days=random.randint(7, 60))
+                    verification_status = 'pending'
+                else:  # planned
+                    start_date = timezone.now().date() + timedelta(days=random.randint(14, 180))
+                    end_date = start_date + timedelta(days=random.randint(1, 7))
+                    verification_status = 'pending'
+                
+                # Compliance areas
+                compliance_areas = []
+                maintains_vocational = False
+                maintains_industry = False
+                maintains_teaching = False
+                
+                if activity_type in ['formal_course', 'certification', 'curriculum_development']:
+                    compliance_areas.append('Vocational Competency')
+                    maintains_vocational = True
+                if activity_type in ['industry_placement', 'networking', 'conference']:
+                    compliance_areas.append('Industry Currency')
+                    maintains_industry = True
+                if activity_type in ['workshop', 'webinar', 'teaching_observation', 'mentoring']:
+                    compliance_areas.append('Teaching Skills')
+                    maintains_teaching = True
+                
+                # Evidence files
+                evidence_files = []
+                if status == 'completed' and verification_status == 'verified':
+                    evidence_files = [
+                        f"/evidence/pd/{profile.trainer_id}/{random.randint(1000, 9999)}_certificate.pdf",
+                        f"/evidence/pd/{profile.trainer_id}/{random.randint(1000, 9999)}_attendance.pdf"
+                    ]
+                
+                # Verified details
+                verified_by = ''
+                verified_date = None
+                if verification_status == 'verified':
+                    verified_by = random.choice(['Training Manager', 'Compliance Officer', 'Quality Assurance'])
+                    verified_date = end_date + timedelta(days=random.randint(1, 14))
+                
+                activity = PDActivity.objects.create(
+                    tenant=profile.tenant,
+                    trainer_id=profile.trainer_id,
+                    trainer_name=profile.trainer_name,
+                    trainer_role=profile.role,
+                    department=profile.department,
+                    activity_type=activity_type,
+                    activity_title=title,
+                    description=description,
+                    provider=random.choice([
+                        'Australian Institute of Training',
+                        'VET Development Centre',
+                        'Professional Training Australia',
+                        'Industry Skills Council',
+                        'National Training Organisation',
+                        profile.tenant  # Internal training
+                    ]),
+                    start_date=start_date,
+                    end_date=end_date,
+                    hours_completed=hours if status == 'completed' else 0,
+                    compliance_areas=compliance_areas,
+                    industry_sectors=profile.industry_sectors if random.random() > 0.3 else [],
+                    qualification_levels=profile.teaching_qualification_levels if random.random() > 0.5 else [],
+                    evidence_type=random.choice(evidence_types) if status == 'completed' else '',
+                    evidence_files=evidence_files,
+                    verification_status=verification_status,
+                    verified_by=verified_by,
+                    verified_date=verified_date,
+                    learning_outcomes=f"Developed skills in {activity_type.replace('_', ' ')} relevant to {profile.department}" if status == 'completed' else '',
+                    application_to_practice=f"Applied learning to improve {random.choice(['assessment practices', 'training delivery', 'student engagement', 'curriculum design'])}" if status == 'completed' and random.random() > 0.5 else '',
+                    reflection_notes=f"Valuable experience that enhanced my {random.choice(['teaching capabilities', 'industry knowledge', 'assessment skills', 'professional network'])}" if status == 'completed' and random.random() > 0.6 else '',
+                    maintains_vocational_currency=maintains_vocational,
+                    maintains_industry_currency=maintains_industry,
+                    maintains_teaching_currency=maintains_teaching,
+                    meets_asqa_requirements=random.random() > 0.2,
+                    compliance_notes='Meets ASQA Standards 1.13 and 1.14 requirements' if random.random() > 0.5 else '',
+                    status=status,
+                )
+                activities.append(activity)
+        
+        return activities
+    
+    def create_pd_suggestions(self, pd_trainer_profiles):
+        """Create LLM-generated PD suggestions"""
+        suggestions = []
+        
+        suggestion_templates = {
+            'vocational': [
+                {
+                    'title': 'Advanced Assessment Validation Workshop',
+                    'description': 'Intensive 2-day workshop on assessment validation and moderation practices',
+                    'rationale': 'Your vocational currency is approaching expiry. This workshop will refresh your assessment skills and ensure compliance with current standards.',
+                    'providers': ['Australian Institute of Training', 'VET Development Centre'],
+                    'hours': 16,
+                    'cost': 850,
+                },
+                {
+                    'title': 'Certificate IV in Training and Assessment Refresh',
+                    'description': 'Refresher course covering updates to TAE qualification',
+                    'rationale': 'New TAE qualification requirements have been introduced. This course ensures your training qualification remains current.',
+                    'providers': ['Professional Training Australia', 'National Training Centre'],
+                    'hours': 24,
+                    'cost': 1200,
+                },
+            ],
+            'industry': [
+                {
+                    'title': 'Industry Placement Program',
+                    'description': '2-week industry placement with leading industry partner',
+                    'rationale': 'Your industry currency has expired. A placement will provide hands-on experience with current industry practices and technology.',
+                    'providers': ['Industry Skills Council', 'Local Industry Partners'],
+                    'hours': 80,
+                    'cost': 0,
+                },
+                {
+                    'title': 'Industry Networking Event',
+                    'description': 'Regional industry networking forum and skills symposium',
+                    'rationale': 'Build connections with industry professionals and stay informed of emerging trends in your sector.',
+                    'providers': ['Industry Chamber of Commerce', 'Professional Association'],
+                    'hours': 8,
+                    'cost': 350,
+                },
+            ],
+            'teaching': [
+                {
+                    'title': 'Digital Learning Tools Workshop',
+                    'description': 'Hands-on workshop exploring contemporary e-learning platforms and tools',
+                    'rationale': 'Enhance your digital teaching capabilities to improve student engagement and learning outcomes.',
+                    'providers': ['EdTech Training Institute', 'VET Development Centre'],
+                    'hours': 12,
+                    'cost': 550,
+                },
+                {
+                    'title': 'Inclusive Education Practices',
+                    'description': 'Workshop on supporting diverse learners and inclusive teaching strategies',
+                    'rationale': 'Develop skills to support students with diverse needs and create inclusive learning environments.',
+                    'providers': ['Australian Institute of Training', 'Inclusive Education Centre'],
+                    'hours': 8,
+                    'cost': 400,
+                },
+            ],
+        }
+        
+        for profile in pd_trainer_profiles:
+            # Create 2-5 suggestions per trainer based on their currency status
+            num_suggestions = random.randint(2, 5)
+            
+            # Determine suggestion types based on currency status
+            suggestion_types = []
+            if profile.vocational_currency_status in ['expired', 'expiring_soon']:
+                suggestion_types.append(('vocational', 'critical' if profile.vocational_currency_status == 'expired' else 'high'))
+            if profile.industry_currency_status in ['expired', 'expiring_soon']:
+                suggestion_types.append(('industry', 'critical' if profile.industry_currency_status == 'expired' else 'high'))
+            if profile.current_year_hours < profile.annual_pd_goal_hours * 0.5:
+                suggestion_types.append(('teaching', 'medium'))
+            
+            # Add random suggestions
+            while len(suggestion_types) < num_suggestions:
+                suggestion_types.append((random.choice(['vocational', 'industry', 'teaching']), random.choice(['medium', 'low'])))
+            
+            for currency_type, priority in suggestion_types[:num_suggestions]:
+                template = random.choice(suggestion_templates[currency_type])
+                
+                # Determine status
+                statuses = ['pending_review', 'pending_review', 'accepted', 'planned', 'dismissed']
+                status = random.choice(statuses)
+                
+                # Timeframe and deadline
+                if priority == 'critical':
+                    timeframe = 'Within 30 days'
+                    deadline = timezone.now().date() + timedelta(days=30)
+                elif priority == 'high':
+                    timeframe = 'Within 90 days'
+                    deadline = timezone.now().date() + timedelta(days=90)
+                else:
+                    timeframe = 'Within 6 months'
+                    deadline = timezone.now().date() + timedelta(days=180)
+                
+                suggestion = PDSuggestion.objects.create(
+                    trainer_profile=profile,
+                    suggested_activity_type=random.choice([
+                        'formal_course', 'workshop', 'industry_placement',
+                        'conference', 'webinar', 'certification'
+                    ]),
+                    activity_title=template['title'],
+                    description=template['description'],
+                    rationale=template['rationale'],
+                    addresses_currency_gap=currency_type,
+                    priority_level=priority,
+                    suggested_providers=template['providers'],
+                    estimated_hours=template['hours'],
+                    estimated_cost=template['cost'],
+                    suggested_timeframe=timeframe,
+                    deadline=deadline,
+                    generated_by_model='gpt-4',
+                    prompt_used=f"Generate PD suggestion for {profile.trainer_name} to address {currency_type} currency gap",
+                    confidence_score=random.uniform(0.75, 0.95),
+                    status=status,
+                    trainer_feedback='Looks good, will plan to attend' if status in ['accepted', 'planned'] else '',
+                )
+                suggestions.append(suggestion)
+        
+        return suggestions
+    
+    def create_compliance_checks(self, pd_trainer_profiles, compliance_rules, users):
+        """Create compliance checks for trainers"""
+        checks = []
+        
+        for profile in pd_trainer_profiles:
+            # Create 1-3 compliance checks per trainer
+            num_checks = random.randint(1, 3)
+            
+            for i in range(num_checks):
+                # Check period
+                check_date = timezone.now().date() - timedelta(days=random.randint(1, 180))
+                check_period_end = check_date
+                check_period_start = check_period_end - timedelta(days=365)
+                
+                # Get rules for this trainer's tenant
+                tenant_rules = [r for r in compliance_rules if r.tenant == profile.tenant]
+                rules_checked = [r.rule_number for r in tenant_rules]
+                
+                # Determine compliance status
+                hours_required = sum(r.requirement_details.get('minimum_hours', 0) for r in tenant_rules)
+                hours_completed = profile.current_year_hours
+                hours_shortfall = max(0, hours_required - hours_completed)
+                
+                # Rules met/not met
+                rules_met = []
+                rules_not_met = []
+                findings = []
+                
+                for rule in tenant_rules:
+                    min_hours = rule.requirement_details.get('minimum_hours', 0)
+                    if rule.requirement_type == 'minimum_hours':
+                        if profile.current_year_hours >= min_hours:
+                            rules_met.append(rule.rule_number)
+                        else:
+                            rules_not_met.append(rule.rule_number)
+                            findings.append({
+                                'rule': rule.rule_number,
+                                'rule_name': rule.rule_name,
+                                'status': 'not_met',
+                                'issue': f"Only {profile.current_year_hours} hours completed, {min_hours} required",
+                                'shortfall': min_hours - profile.current_year_hours
+                            })
+                    elif rule.requirement_type == 'industry_engagement':
+                        if profile.industry_currency_status == 'current':
+                            rules_met.append(rule.rule_number)
+                        else:
+                            rules_not_met.append(rule.rule_number)
+                            findings.append({
+                                'rule': rule.rule_number,
+                                'rule_name': rule.rule_name,
+                                'status': 'not_met',
+                                'issue': f"Industry currency status is {profile.industry_currency_status}",
+                                'action_required': 'Industry placement or engagement required'
+                            })
+                
+                # Overall status
+                if not rules_not_met:
+                    overall_status = 'compliant'
+                elif len(rules_not_met) <= len(rules_met):
+                    overall_status = 'at_risk'
+                else:
+                    overall_status = 'non_compliant'
+                
+                # Compliance score
+                if rules_checked:
+                    compliance_score = (len(rules_met) / len(rules_checked)) * 100
+                else:
+                    compliance_score = 100
+                
+                # Recommendations
+                recommendations = []
+                if hours_shortfall > 0:
+                    recommendations.append({
+                        'type': 'hours_shortfall',
+                        'recommendation': f"Complete {hours_shortfall:.1f} additional PD hours",
+                        'priority': 'high' if hours_shortfall > 10 else 'medium'
+                    })
+                if profile.industry_currency_status != 'current':
+                    recommendations.append({
+                        'type': 'industry_currency',
+                        'recommendation': 'Undertake industry placement or engagement activity',
+                        'priority': 'critical' if profile.industry_currency_status == 'expired' else 'high'
+                    })
+                
+                # Action required
+                requires_action = overall_status != 'compliant'
+                action_deadline = None
+                if requires_action:
+                    action_deadline = check_date + timedelta(days=random.randint(30, 90))
+                
+                checked_by = random.choice(list(users))
+                
+                check = ComplianceCheck.objects.create(
+                    trainer_profile=profile,
+                    check_date=check_date,
+                    check_period_start=check_period_start,
+                    check_period_end=check_period_end,
+                    checked_by=f"{checked_by.first_name} {checked_by.last_name}",
+                    overall_status=overall_status,
+                    rules_checked=rules_checked,
+                    rules_met=rules_met,
+                    rules_not_met=rules_not_met,
+                    compliance_score=round(compliance_score, 1),
+                    hours_required=hours_required,
+                    hours_completed=hours_completed,
+                    hours_shortfall=hours_shortfall,
+                    findings=findings,
+                    recommendations=recommendations,
+                    requires_action=requires_action,
+                    action_deadline=action_deadline,
+                    actions_taken='Follow-up meeting scheduled with trainer' if requires_action and random.random() > 0.5 else '',
+                )
+                checks.append(check)
+        
+        return checks
