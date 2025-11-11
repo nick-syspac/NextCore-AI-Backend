@@ -82,6 +82,13 @@ from micro_credential.models import (
     MicroCredentialVersion,
     MicroCredentialEnrollment,
 )
+from moderation_tool.models import (
+    ModerationSession,
+    AssessorDecision,
+    OutlierDetection,
+    BiasScore,
+    ModerationLog,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -384,6 +391,22 @@ class Command(BaseCommand):
         micro_credential_enrollments = self.create_micro_credential_enrollments(micro_credentials)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(micro_credential_enrollments)} micro credential enrollments'))
         
+        # Create moderation tool data
+        moderation_sessions = self.create_moderation_sessions(tenants, users, assessments)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(moderation_sessions)} moderation sessions'))
+        
+        assessor_decisions = self.create_assessor_decisions(moderation_sessions, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(assessor_decisions)} assessor decisions'))
+        
+        outlier_detections = self.create_outlier_detections(moderation_sessions, assessor_decisions, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(outlier_detections)} outlier detections'))
+        
+        bias_scores = self.create_bias_scores(moderation_sessions, assessor_decisions, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(bias_scores)} bias scores'))
+        
+        moderation_logs = self.create_moderation_logs(moderation_sessions, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(moderation_logs)} moderation logs'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -581,6 +604,32 @@ class Command(BaseCommand):
         
         try:
             MicroCredential.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        # Moderation Tool
+        try:
+            ModerationLog.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            BiasScore.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            OutlierDetection.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            AssessorDecision.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            ModerationSession.objects.all().delete()
         except ProgrammingError:
             pass
         
@@ -2375,7 +2424,21 @@ Aligns with Standards 6.1 to 6.6:
             },
         ]
         
-        action_counter = 1
+        # Get highest existing action number to continue sequence
+        from django.db.models import Max
+        last_action = ImprovementAction.objects.filter(
+            action_number__startswith=f"CI-{timezone.now().year}-"
+        ).aggregate(Max('action_number'))
+        
+        if last_action['action_number__max']:
+            # Extract number from last action_number (e.g., "CI-2025-0012" -> 12)
+            try:
+                action_counter = int(last_action['action_number__max'].split('-')[-1]) + 1
+            except (ValueError, IndexError):
+                action_counter = 1
+        else:
+            action_counter = 1
+        
         for i, tenant in enumerate(tenants):
             tenant_categories = [c for c in categories if c.tenant == tenant]
             
@@ -7305,3 +7368,476 @@ Currency Score: {recent_scan.currency_score:.1f}/100
                 enrollments.append(enrollment)
         
         return enrollments
+    
+    def create_moderation_sessions(self, tenants, users, assessments):
+        """Create moderation sessions"""
+        sessions = []
+        assessment_types = ['exam', 'assignment', 'project', 'practical', 'portfolio']
+        statuses = ['active', 'completed', 'completed', 'archived']
+        
+        for tenant in tenants:
+            # Select assessments for this tenant
+            tenant_assessments = [a for a in assessments if a.tenant == tenant]
+            if not tenant_assessments:
+                continue
+            
+            # Create 8-12 moderation sessions per tenant
+            for i in range(random.randint(8, 12)):
+                assessment = random.choice(tenant_assessments)
+                status = random.choice(statuses)
+                assessment_type = random.choice(assessment_types)
+                
+                # Set thresholds and sensitivity
+                outlier_threshold = random.choice([1.5, 2.0, 2.5, 3.0])
+                bias_sensitivity = random.randint(5, 8)
+                
+                # Initial statistics
+                total_submissions = random.randint(20, 50)
+                assessors_count = random.randint(2, 4)
+                
+                if status in ['completed', 'archived']:
+                    outliers_detected = random.randint(0, 5)
+                    bias_flags_raised = random.randint(0, 3)
+                    decisions_compared = total_submissions * assessors_count
+                    average_agreement_rate = random.uniform(0.75, 0.95)
+                else:
+                    outliers_detected = 0
+                    bias_flags_raised = 0
+                    decisions_compared = 0
+                    average_agreement_rate = 0.0
+                
+                session = ModerationSession.objects.create(
+                    name=f"Moderation - {assessment_type.title()} - {assessment.unit_title[:30]}",
+                    description=f"Moderation session for {assessment.unit_code} - {assessment.assessment_type} assessment",
+                    assessment_type=assessment_type,
+                    assessment_title=assessment.title,
+                    total_submissions=total_submissions,
+                    assessors_count=assessors_count,
+                    outlier_threshold=outlier_threshold,
+                    bias_sensitivity=bias_sensitivity,
+                    status=status,
+                    outliers_detected=outliers_detected,
+                    bias_flags_raised=bias_flags_raised,
+                    decisions_compared=decisions_compared,
+                    average_agreement_rate=average_agreement_rate,
+                    created_by=f"{users[0].first_name} {users[0].last_name}",
+                )
+                sessions.append(session)
+        
+        return sessions
+    
+    def create_assessor_decisions(self, moderation_sessions, users):
+        """Create assessor decisions for moderation sessions"""
+        decisions = []
+        
+        for session in moderation_sessions:
+            # Skip some active sessions
+            if session.status == 'active' and random.random() < 0.3:
+                continue
+            
+            # Use session statistics
+            num_students = session.total_submissions
+            num_assessors = session.assessors_count
+            
+            # Select random assessors
+            assessors = random.sample(list(users), min(num_assessors, len(users)))
+            
+            # Create decisions for each student
+            for student_idx in range(num_students):
+                student_id = f"STU{random.randint(10000, 99999)}"
+                student_name = f"Student {random.randint(1000, 9999)}"
+                submission_id = f"SUB{random.randint(10000, 99999)}"
+                
+                # Each assessor marks this student
+                for assessor in assessors:
+                    # Generate realistic score with some assessor bias
+                    base_score = random.uniform(50, 90)
+                    assessor_bias = random.uniform(-5, 5)
+                    score = max(0, min(100, base_score + assessor_bias))
+                    max_score = 100
+                    
+                    # Determine grade based on score
+                    if score >= 85:
+                        grade = 'HD'
+                    elif score >= 75:
+                        grade = 'D'
+                    elif score >= 65:
+                        grade = 'C'
+                    elif score >= 50:
+                        grade = 'P'
+                    else:
+                        grade = random.choice(['F', 'NYC'])
+                    
+                    # Generate criterion scores (4-8 criteria)
+                    num_criteria = random.randint(4, 8)
+                    criterion_scores = {}
+                    for c in range(1, num_criteria + 1):
+                        criterion_score = max(0, min(100, score + random.uniform(-10, 10)))
+                        criterion_scores[f"criterion_{c}"] = {
+                            'score': round(criterion_score, 1),
+                            'max_score': 100,
+                            'weight': round(1.0 / num_criteria, 2),
+                            'feedback': random.choice([
+                                'Excellent work', 'Good effort', 'Meets requirements',
+                                'Needs improvement', 'Well done', 'Satisfactory'
+                            ])
+                        }
+                    
+                    # Random flags for outlier/bias detection
+                    is_outlier = random.random() < 0.1
+                    has_bias_flag = random.random() < 0.05
+                    requires_review = is_outlier or has_bias_flag
+                    
+                    # Marking time in minutes
+                    marking_time = random.randint(10, 60)
+                    marked_at = timezone.now() - timedelta(hours=random.randint(1, 72))
+                    
+                    decision = AssessorDecision.objects.create(
+                        session=session,
+                        student_id=student_id,
+                        student_name=student_name,
+                        submission_id=submission_id,
+                        assessor_id=f"ASR{assessor.id}",
+                        assessor_name=f"{assessor.first_name} {assessor.last_name}",
+                        score=round(score, 2),
+                        max_score=max_score,
+                        grade=grade,
+                        criterion_scores=criterion_scores,
+                        is_outlier=is_outlier,
+                        has_bias_flag=has_bias_flag,
+                        requires_review=requires_review,
+                        comments=random.choice([
+                            'Strong performance overall',
+                            'Good understanding of concepts',
+                            'Meets all assessment criteria',
+                            'Some areas need improvement',
+                            'Excellent submission',
+                        ]) if random.random() < 0.7 else '',
+                        marking_time_minutes=marking_time,
+                        marked_at=marked_at,
+                    )
+                    decisions.append(decision)
+        
+        return decisions
+    
+    def create_outlier_detections(self, moderation_sessions, assessor_decisions, users):
+        """Create outlier detections for assessor decisions"""
+        detections = []
+        outlier_types = ['high_scorer', 'low_scorer', 'inconsistent', 'statistical']
+        severity_levels = ['low', 'medium', 'high', 'critical']
+        
+        for session in moderation_sessions:
+            # Only completed sessions have outlier detection
+            if session.status not in ['completed', 'archived']:
+                continue
+            
+            # Get decisions for this session
+            session_decisions = [d for d in assessor_decisions if d.session == session]
+            if not session_decisions:
+                continue
+            
+            # Select some decisions as outliers (5-15%)
+            num_outliers = int(len(session_decisions) * random.uniform(0.05, 0.15))
+            outlier_decisions = random.sample(session_decisions, min(num_outliers, len(session_decisions)))
+            
+            for decision in outlier_decisions:
+                outlier_type = random.choice(outlier_types)
+                
+                # Calculate statistics
+                z_score = random.choice([
+                    random.uniform(2.0, 3.5),  # Moderate outlier
+                    random.uniform(3.5, 5.0),  # Significant outlier
+                    random.uniform(-3.5, -2.0),  # Low outlier
+                ])
+                
+                deviation_percentage = abs(z_score) * 10  # Rough approximation
+                
+                # Determine severity based on z_score
+                abs_z = abs(z_score)
+                if abs_z >= 4.0:
+                    severity = 'critical'
+                elif abs_z >= 3.0:
+                    severity = 'high'
+                elif abs_z >= 2.5:
+                    severity = 'medium'
+                else:
+                    severity = 'low'
+                
+                # Calculate cohort statistics
+                scores = [d.score for d in session_decisions]
+                mean_score = sum(scores) / len(scores) if scores else 0
+                std_dev = (sum((s - mean_score) ** 2 for s in scores) / len(scores)) ** 0.5 if len(scores) > 1 else 0
+                
+                # Get assessor decisions for this assessor
+                assessor_decisions_list = [d for d in session_decisions if d.assessor_id == decision.assessor_id]
+                assessor_scores = [d.score for d in assessor_decisions_list]
+                assessor_mean = sum(assessor_scores) / len(assessor_scores) if assessor_scores else 0
+                
+                # Expected vs actual
+                expected_score = mean_score
+                actual_score = decision.score
+                
+                # Confidence score
+                confidence_score = min(abs(z_score) / 5.0, 1.0)
+                
+                # Resolution details
+                is_resolved = random.random() < 0.7
+                resolved_by = ''
+                resolved_at = None
+                resolution_notes = ''
+                if is_resolved:
+                    resolved_by = f"{users[0].first_name} {users[0].last_name}"
+                    resolved_at = timezone.now() - timedelta(days=random.randint(1, 30))
+                    resolution_notes = random.choice([
+                        'Confirmed as valid outlier - no action',
+                        'Score adjusted after review',
+                        'Assessment criteria clarified',
+                        'Assessor feedback provided',
+                        'Second opinion requested',
+                    ])
+                
+                detection = OutlierDetection.objects.create(
+                    session=session,
+                    decision=decision,
+                    outlier_type=outlier_type,
+                    severity=severity,
+                    z_score=round(z_score, 3),
+                    deviation_percentage=round(deviation_percentage, 2),
+                    expected_score=round(expected_score, 2),
+                    actual_score=round(actual_score, 2),
+                    cohort_mean=round(mean_score, 2),
+                    cohort_std_dev=round(std_dev, 2),
+                    assessor_mean=round(assessor_mean, 2),
+                    explanation=f"{outlier_type.replace('_', ' ').title()} detected - {severity} severity. Z-score: {z_score:.2f}",
+                    confidence_score=round(confidence_score, 3),
+                    is_resolved=is_resolved,
+                    resolved_by=resolved_by,
+                    resolved_at=resolved_at,
+                    resolution_notes=resolution_notes,
+                )
+                detections.append(detection)
+        
+        return detections
+    
+    def create_bias_scores(self, moderation_sessions, assessor_decisions, users):
+        """Create bias scores for assessors"""
+        bias_scores = []
+        bias_types = [
+            'leniency', 'severity', 'central_tendency', 
+            'halo_effect', 'recency', 'demographic', 'timing'
+        ]
+        
+        for session in moderation_sessions:
+            # Only completed sessions have bias analysis
+            if session.status not in ['completed', 'archived']:
+                continue
+            
+            # Get decisions for this session
+            session_decisions = [d for d in assessor_decisions if d.session == session]
+            if not session_decisions:
+                continue
+            
+            # Get unique assessors in this session
+            assessors = list(set((d.assessor_id, d.assessor_name) for d in session_decisions))
+            
+            # Randomly detect bias in 20-40% of assessors
+            num_biased = int(len(assessors) * random.uniform(0.2, 0.4))
+            biased_assessors = random.sample(assessors, min(num_biased, len(assessors)))
+            
+            for assessor_id, assessor_name in biased_assessors:
+                bias_type = random.choice(bias_types)
+                
+                # Calculate bias score (0-1, higher = more bias)
+                bias_score = random.uniform(0.3, 0.8)
+                
+                # Statistical evidence
+                assessor_decisions_list = [d for d in session_decisions if d.assessor_id == assessor_id]
+                assessor_scores = [d.score for d in assessor_decisions_list]
+                all_scores = [d.score for d in session_decisions]
+                
+                mean_difference = sum(assessor_scores) / len(assessor_scores) - sum(all_scores) / len(all_scores) if assessor_scores and all_scores else 0
+                
+                assessor_std = (sum((s - (sum(assessor_scores) / len(assessor_scores))) ** 2 for s in assessor_scores) / len(assessor_scores)) ** 0.5 if len(assessor_scores) > 1 else 0
+                cohort_std = (sum((s - (sum(all_scores) / len(all_scores))) ** 2 for s in all_scores) / len(all_scores)) ** 0.5 if len(all_scores) > 1 else 0
+                std_dev_ratio = assessor_std / cohort_std if cohort_std > 0 else 1.0
+                
+                statistical_evidence = {
+                    'sample_size': len(assessor_scores),
+                    'mean_difference': round(mean_difference, 2),
+                    'std_dev_ratio': round(std_dev_ratio, 3),
+                    'confidence_level': random.choice([0.90, 0.95, 0.99]),
+                }
+                
+                # Affected students (randomly select some)
+                num_affected = random.randint(2, min(8, len(assessor_decisions_list)))
+                affected_students = random.sample(
+                    [d.student_id for d in assessor_decisions_list],
+                    num_affected
+                )
+                
+                # Statistical evidence dictionary
+                sample_size = len(assessor_scores)
+                
+                # Severity level based on bias score
+                severity_level = int(bias_score * 10)
+                
+                # Recommendations
+                recommendation_text = ''
+                if bias_type == 'leniency':
+                    recommendation_text = 'Review marking rubric with assessor. Provide examples of appropriate standards. Monitor future assessments closely.'
+                elif bias_type == 'severity':
+                    recommendation_text = 'Discuss expectations with assessor. Compare with cohort standards. Provide calibration training.'
+                elif bias_type == 'central_tendency':
+                    recommendation_text = 'Encourage use of full marking scale. Provide exemplars at all grade levels. Review assessment design.'
+                elif bias_type == 'halo_effect':
+                    recommendation_text = 'Assess each criterion independently. Use blind marking where possible. Structured marking rubrics.'
+                elif bias_type == 'recency':
+                    recommendation_text = 'Randomize marking order. Take breaks between assessments. Review first and last marked submissions.'
+                elif bias_type == 'demographic':
+                    recommendation_text = 'Implement blind marking protocols. Unconscious bias training required. Independent review of affected assessments.'
+                else:  # timing
+                    recommendation_text = 'Standardize marking time allocation. Avoid fatigue effects - limit sessions. Review assessments marked under time pressure.'
+                
+                # Evidence dictionary
+                evidence = {
+                    'mean_difference': round(mean_difference, 2),
+                    'std_dev_ratio': round(std_dev_ratio, 3),
+                    'sample_size': sample_size,
+                    'confidence_level': random.choice([0.90, 0.95, 0.99]),
+                }
+                
+                # Validation
+                is_validated = random.random() < 0.6
+                validated_at = None
+                validated_by = ''
+                validation_notes = ''
+                
+                if is_validated:
+                    validated_at = timezone.now() - timedelta(days=random.randint(1, 20))
+                    validated_by = f"{users[0].first_name} {users[0].last_name}"
+                    validation_notes = random.choice([
+                        'Bias confirmed through statistical analysis',
+                        'Pattern consistent with known cognitive bias',
+                        'Requires assessor training intervention',
+                        'Within acceptable range - monitoring only',
+                    ])
+                
+                bias = BiasScore.objects.create(
+                    session=session,
+                    assessor_id=assessor_id,
+                    assessor_name=assessor_name,
+                    bias_type=bias_type,
+                    bias_score=round(bias_score, 3),
+                    sample_size=sample_size,
+                    mean_difference=round(mean_difference, 2),
+                    std_dev_ratio=round(std_dev_ratio, 3),
+                    evidence=evidence,
+                    affected_students=affected_students,
+                    is_validated=is_validated,
+                    validated_at=validated_at,
+                    validated_by=validated_by,
+                    validation_notes=validation_notes,
+                    recommendation=recommendation_text,
+                    severity_level=severity_level,
+                )
+                bias_scores.append(bias)
+        
+        return bias_scores
+    
+    def create_moderation_logs(self, moderation_sessions, users):
+        """Create audit logs for moderation activities"""
+        logs = []
+        action_types = [
+            'session_created', 'decision_added', 'outlier_detected', 
+            'bias_calculated', 'comparison_run', 'validation_completed', 
+            'session_completed'
+        ]
+        
+        for session in moderation_sessions:
+            # Always log session creation
+            session_creator = random.choice(list(users))
+            
+            log = ModerationLog.objects.create(
+                session=session,
+                action='session_created',
+                description=f"Moderation session created: {session.name}",
+                decisions_processed=0,
+                outliers_found=0,
+                bias_flags=0,
+                processing_time_ms=random.randint(100, 500),
+                performed_by=f"{session_creator.first_name} {session_creator.last_name}",
+            )
+            logs.append(log)
+            
+            # Add more logs for completed sessions
+            if session.status in ['completed', 'archived']:
+                # Decision added logs (3-8 entries)
+                for i in range(random.randint(3, 8)):
+                    performer = random.choice(list(users))
+                    log = ModerationLog.objects.create(
+                        session=session,
+                        action='decision_added',
+                        description=f"Added {random.randint(1, 5)} assessor decisions",
+                        decisions_processed=random.randint(1, 5),
+                        outliers_found=0,
+                        bias_flags=0,
+                        processing_time_ms=random.randint(200, 1000),
+                        performed_by=f"{performer.first_name} {performer.last_name}",
+                    )
+                    logs.append(log)
+                
+                # Comparison run
+                log = ModerationLog.objects.create(
+                    session=session,
+                    action='comparison_run',
+                    description=f"Compared {session.decisions_compared} decisions across {session.assessors_count} assessors",
+                    decisions_processed=session.decisions_compared,
+                    outliers_found=0,
+                    bias_flags=0,
+                    processing_time_ms=random.randint(500, 3000),
+                    performed_by=f"{session_creator.first_name} {session_creator.last_name}",
+                )
+                logs.append(log)
+                
+                # Outlier detection
+                if session.outliers_detected > 0:
+                    log = ModerationLog.objects.create(
+                        session=session,
+                        action='outlier_detected',
+                        description=f"Detected {session.outliers_detected} outliers using threshold {session.outlier_threshold}",
+                        decisions_processed=session.decisions_compared,
+                        outliers_found=session.outliers_detected,
+                        bias_flags=0,
+                        processing_time_ms=random.randint(1000, 3000),
+                        performed_by=f"{session_creator.first_name} {session_creator.last_name}",
+                    )
+                    logs.append(log)
+                
+                # Bias calculation
+                if session.bias_flags_raised > 0:
+                    log = ModerationLog.objects.create(
+                        session=session,
+                        action='bias_calculated',
+                        description=f"Calculated bias scores for {session.assessors_count} assessors, found {session.bias_flags_raised} bias flags",
+                        decisions_processed=session.decisions_compared,
+                        outliers_found=0,
+                        bias_flags=session.bias_flags_raised,
+                        processing_time_ms=random.randint(1000, 5000),
+                        performed_by=f"{session_creator.first_name} {session_creator.last_name}",
+                    )
+                    logs.append(log)
+                
+                # Session completion
+                log = ModerationLog.objects.create(
+                    session=session,
+                    action='session_completed',
+                    description=f"Session completed with fairness score: {session.get_fairness_score():.1f}",
+                    decisions_processed=session.decisions_compared,
+                    outliers_found=session.outliers_detected,
+                    bias_flags=session.bias_flags_raised,
+                    processing_time_ms=0,
+                    performed_by=f"{session_creator.first_name} {session_creator.last_name}",
+                )
+                logs.append(log)
+        
+        return logs
