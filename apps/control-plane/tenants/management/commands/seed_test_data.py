@@ -109,6 +109,13 @@ from rubric_generator.models import (
     RubricLevel,
     RubricGenerationLog,
 )
+from study_coach.models import (
+    ChatSession,
+    ChatMessage,
+    KnowledgeDocument,
+    CoachingInsight,
+    CoachConfiguration,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -472,6 +479,22 @@ class Command(BaseCommand):
         rubric_generation_logs = self.create_rubric_generation_logs(rubrics, users)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(rubric_generation_logs)} rubric generation logs'))
         
+        # Study Coach
+        coach_configs = self.create_coach_configurations(tenants)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(coach_configs)} coach configurations'))
+        
+        knowledge_documents = self.create_knowledge_documents(tenants)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(knowledge_documents)} knowledge documents'))
+        
+        chat_sessions = self.create_chat_sessions(tenants)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(chat_sessions)} chat sessions'))
+        
+        chat_messages = self.create_chat_messages(chat_sessions, knowledge_documents)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(chat_messages)} chat messages'))
+        
+        coaching_insights = self.create_coaching_insights(tenants, chat_sessions)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(coaching_insights)} coaching insights'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -768,6 +791,32 @@ class Command(BaseCommand):
         
         try:
             Rubric.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        # Study Coach
+        try:
+            CoachConfiguration.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            CoachingInsight.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            ChatMessage.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            ChatSession.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            KnowledgeDocument.objects.all().delete()
         except ProgrammingError:
             pass
         
@@ -9817,3 +9866,606 @@ Currency Score: {recent_scan.currency_score:.1f}/100
                 logs.append(log)
         
         return logs
+    
+    def create_coach_configurations(self, tenants):
+        """Create AI coach configurations for each tenant"""
+        configs = []
+        
+        for tenant in tenants:
+            coaching_styles = ['encouraging', 'socratic', 'direct', 'adaptive']
+            style = random.choice(coaching_styles)
+            
+            personality_traits = random.sample([
+                'patient', 'empathetic', 'motivating', 'knowledgeable',
+                'supportive', 'enthusiastic', 'clear', 'adaptive'
+            ], random.randint(3, 5))
+            
+            response_guidelines = [
+                'Always encourage and support student learning',
+                'Ask clarifying questions to understand student needs',
+                'Provide explanations with examples',
+                'Guide students to find answers themselves when appropriate',
+                'Use positive reinforcement',
+                'Break down complex topics into manageable parts',
+            ]
+            
+            prohibited_topics = [
+                'medical advice', 'legal advice', 'financial advice',
+                'personal relationship counseling', 'political discussions'
+            ]
+            
+            escalation_keywords = [
+                'suicide', 'self-harm', 'abuse', 'emergency',
+                'crisis', 'danger', 'threat'
+            ]
+            
+            system_prompts = {
+                'encouraging': "You are an encouraging and supportive AI study coach. Your role is to help students learn and succeed by providing clear explanations, positive reinforcement, and guidance. Always maintain a warm, patient tone.",
+                'socratic': "You are a Socratic AI study coach. Guide students to discover answers through thoughtful questioning. Ask probing questions that help students think critically and arrive at understanding themselves.",
+                'direct': "You are a direct and efficient AI study coach. Provide clear, concise answers and explanations. Focus on accuracy and efficiency while remaining helpful and supportive.",
+                'adaptive': "You are an adaptive AI study coach. Adjust your teaching style based on the student's needs, learning pace, and preferences. Be flexible and responsive to each student's unique situation.",
+            }
+            
+            config = CoachConfiguration.objects.create(
+                tenant=tenant.slug,
+                primary_model='gpt-4',
+                fallback_model='gpt-3.5-turbo',
+                temperature=random.uniform(0.6, 0.8),
+                max_tokens=random.choice([400, 500, 600]),
+                coaching_style=style,
+                personality_traits=personality_traits,
+                system_prompt=system_prompts[style],
+                response_guidelines=response_guidelines,
+                prohibited_topics=prohibited_topics,
+                vector_db_enabled=True,
+                top_k_results=random.choice([3, 5, 7]),
+                similarity_threshold=random.uniform(0.65, 0.75),
+                content_filter_enabled=True,
+                profanity_filter=True,
+                escalation_keywords=escalation_keywords,
+                available_24_7=random.choice([True, False]),
+                business_hours_only=random.choice([True, False]),
+                timezone=random.choice(['UTC', 'America/New_York', 'America/Los_Angeles', 'Australia/Sydney']),
+            )
+            configs.append(config)
+        
+        return configs
+    
+    def create_knowledge_documents(self, tenants):
+        """Create knowledge base documents for RAG"""
+        documents = []
+        
+        subjects = [
+            'Business Administration', 'Information Technology', 'Hospitality',
+            'Healthcare', 'Engineering', 'Design', 'Marketing', 'Finance'
+        ]
+        
+        document_templates = {
+            'syllabus': {
+                'titles': [
+                    'Course Syllabus - {subject}',
+                    '{subject} Unit Overview',
+                    '{subject} Course Structure',
+                ],
+                'content': "This course covers fundamental concepts in {subject}. Learning outcomes include understanding key principles, applying practical skills, and demonstrating competency in workplace scenarios. Assessment methods include written exams, practical demonstrations, and project work. Prerequisites: Basic knowledge of related concepts. Duration: 12 weeks.",
+            },
+            'lecture_notes': {
+                'titles': [
+                    '{subject} - Week {week} Lecture Notes',
+                    'Topic: {topic} - Lecture Summary',
+                    '{subject} Class Notes - {topic}',
+                ],
+                'content': "Key concepts covered in this session: {topic}. Main points: 1) Foundational understanding of core principles, 2) Practical application methods, 3) Industry best practices, 4) Real-world examples and case studies. Important terms and definitions included. Remember to review the assigned readings and complete practice exercises.",
+            },
+            'study_guide': {
+                'titles': [
+                    '{subject} Exam Preparation Guide',
+                    'Study Guide: {topic}',
+                    '{subject} Review Sheet',
+                ],
+                'content': "Study guide for {topic} in {subject}. Focus areas: Key concepts, important formulas/processes, common mistakes to avoid, practice questions with solutions. Tips for success: Review regularly, practice application, understand underlying principles rather than memorization. Additional resources available in course materials.",
+            },
+            'faq': {
+                'titles': [
+                    '{subject} - Frequently Asked Questions',
+                    'Common Questions about {topic}',
+                    '{subject} FAQ Document',
+                ],
+                'content': "Q: What are the key requirements? A: Students must demonstrate understanding of core concepts and practical application. Q: How is assessment conducted? A: Through a combination of theory and practical components. Q: What resources are available? A: Textbooks, online materials, practice exercises, and coaching support. Q: When are assignments due? A: Check course schedule for specific dates.",
+            },
+        }
+        
+        for tenant in tenants:
+            # Create 10-15 documents per tenant
+            num_docs = random.randint(10, 15)
+            
+            for _ in range(num_docs):
+                subject = random.choice(subjects)
+                doc_type = random.choice(list(document_templates.keys()))
+                template = document_templates[doc_type]
+                
+                # Generate title
+                title_template = random.choice(template['titles'])
+                title = title_template.format(
+                    subject=subject,
+                    topic=f"Module {random.randint(1, 10)}",
+                    week=random.randint(1, 12)
+                )
+                
+                # Generate content
+                content = template['content'].format(
+                    subject=subject,
+                    topic=random.choice([
+                        'Introduction to Core Concepts',
+                        'Practical Applications',
+                        'Industry Standards',
+                        'Case Study Analysis',
+                        'Advanced Techniques',
+                    ])
+                )
+                
+                # Add more detailed content
+                content += f"\n\nAdditional information: This material is essential for understanding {subject}. Students should be able to explain key concepts, demonstrate practical skills, and apply knowledge to workplace scenarios."
+                
+                # Generate summary
+                summary = f"Overview of {subject} concepts covering fundamental principles and practical applications."
+                
+                # Generate keywords
+                keywords = random.sample([
+                    subject.lower(), 'learning', 'assessment', 'practical', 'theory',
+                    'competency', 'skills', 'knowledge', 'application', 'workplace',
+                    'understanding', 'demonstration', 'requirements', 'outcomes'
+                ], random.randint(5, 8))
+                
+                # Vector DB settings
+                chunk_size = random.choice([256, 512, 1024])
+                chunks_count = random.randint(1, 5)
+                
+                # Visibility and access
+                visibility = random.choice(['public', 'course_specific', 'restricted'])
+                course_ids = [f"COURSE_{random.randint(1000, 9999)}" for _ in range(random.randint(1, 3))] if visibility == 'course_specific' else []
+                
+                doc = KnowledgeDocument.objects.create(
+                    tenant=tenant.slug,
+                    title=title,
+                    document_type=doc_type,
+                    subject=subject,
+                    topic=random.choice(['Module 1', 'Module 2', 'Module 3', 'General']),
+                    content=content,
+                    summary=summary,
+                    keywords=keywords,
+                    embedding_model='all-MiniLM-L6-v2',
+                    chunk_size=chunk_size,
+                    chunks_count=chunks_count,
+                    retrieval_count=random.randint(0, 50),
+                    average_relevance_score=random.uniform(0.65, 0.95),
+                    last_retrieved_at=timezone.now() - timedelta(days=random.randint(0, 30)) if random.random() > 0.3 else None,
+                    visibility=visibility,
+                    course_ids=course_ids,
+                )
+                documents.append(doc)
+        
+        return documents
+    
+    def create_chat_sessions(self, tenants):
+        """Create chat sessions for students"""
+        sessions = []
+        
+        student_names = [
+            'Alex Johnson', 'Maria Garcia', 'James Smith', 'Emma Williams',
+            'David Brown', 'Sarah Jones', 'Michael Davis', 'Jessica Miller',
+            'Christopher Wilson', 'Ashley Martinez', 'Daniel Anderson', 'Emily Taylor'
+        ]
+        
+        session_types = [
+            'homework_help', 'concept_review', 'exam_prep',
+            'project_guidance', 'career_advice', 'study_tips', 'general_chat'
+        ]
+        
+        subjects = [
+            'Business Administration', 'Information Technology', 'Hospitality',
+            'Healthcare', 'Engineering', 'Design', 'Marketing', 'Finance'
+        ]
+        
+        for tenant in tenants:
+            # Create 8-12 sessions per tenant
+            num_sessions = random.randint(8, 12)
+            
+            for _ in range(num_sessions):
+                student_id = f"STU{random.randint(10000, 99999)}"
+                student_name = random.choice(student_names)
+                session_type = random.choice(session_types)
+                subject = random.choice(subjects)
+                
+                # Generate topic based on session type
+                if session_type == 'homework_help':
+                    topics = ['Assignment Questions', 'Problem Set', 'Practice Exercises', 'Calculations']
+                elif session_type == 'concept_review':
+                    topics = ['Core Concepts', 'Theory Review', 'Fundamentals', 'Key Principles']
+                elif session_type == 'exam_prep':
+                    topics = ['Exam Review', 'Practice Questions', 'Study Strategy', 'Test Preparation']
+                elif session_type == 'project_guidance':
+                    topics = ['Project Planning', 'Research Help', 'Implementation', 'Documentation']
+                else:
+                    topics = ['General Questions', 'Study Tips', 'Career Path', 'Time Management']
+                
+                topic = random.choice(topics)
+                
+                # Session status
+                status = random.choices(
+                    ['active', 'paused', 'completed', 'archived'],
+                    weights=[0.15, 0.05, 0.70, 0.10],
+                    k=1
+                )[0]
+                
+                # Message count (will be updated when creating messages)
+                message_count = random.randint(4, 20)
+                
+                # Duration based on message count
+                total_duration = int(message_count * random.uniform(1.5, 3.5))
+                
+                # Satisfaction rating (for completed sessions)
+                satisfaction_rating = None
+                student_feedback = ''
+                if status == 'completed':
+                    satisfaction_rating = random.randint(3, 5)
+                    if satisfaction_rating >= 4:
+                        feedbacks = [
+                            'Very helpful! The explanations were clear and easy to understand.',
+                            'Great support. I feel much more confident now.',
+                            'Really appreciate the guidance. This helped a lot.',
+                            'Excellent coaching. Made complex topics easy to grasp.',
+                        ]
+                    else:
+                        feedbacks = [
+                            'Helpful overall, but needed more specific examples.',
+                            'Good session, but took a while to get to my question.',
+                            'Decent help, though some explanations could be clearer.',
+                        ]
+                    student_feedback = random.choice(feedbacks) if random.random() > 0.4 else ''
+                
+                # Referenced materials (documents used in session)
+                referenced_materials = [f"DOC-{random.randint(1000, 9999)}" for _ in range(random.randint(0, 4))]
+                
+                # Key concepts discussed
+                concept_options = [
+                    'Core principles', 'Practical application', 'Industry standards',
+                    'Best practices', 'Common mistakes', 'Key terminology',
+                    'Problem-solving approach', 'Real-world examples'
+                ]
+                key_concepts = random.sample(concept_options, random.randint(2, 5))
+                
+                # Follow-up needed
+                follow_up_needed = random.random() < 0.25
+                follow_up_reasons = [
+                    'Student struggling with advanced concepts',
+                    'Additional practice needed',
+                    'Requires more detailed explanation',
+                    'Follow-up on assignment progress',
+                ]
+                follow_up_reason = random.choice(follow_up_reasons) if follow_up_needed else ''
+                
+                # Completed timestamp
+                completed_at = None
+                if status == 'completed':
+                    completed_at = timezone.now() - timedelta(days=random.randint(0, 30))
+                
+                session = ChatSession.objects.create(
+                    tenant=tenant.slug,
+                    student_id=student_id,
+                    student_name=student_name,
+                    subject=subject,
+                    topic=topic,
+                    session_type=session_type,
+                    status=status,
+                    message_count=message_count,
+                    total_duration_minutes=total_duration,
+                    satisfaction_rating=satisfaction_rating,
+                    student_feedback=student_feedback,
+                    referenced_materials=referenced_materials,
+                    key_concepts_discussed=key_concepts,
+                    follow_up_needed=follow_up_needed,
+                    follow_up_reason=follow_up_reason,
+                    completed_at=completed_at,
+                )
+                sessions.append(session)
+        
+        return sessions
+    
+    def create_chat_messages(self, sessions, knowledge_documents):
+        """Create messages for each chat session"""
+        messages = []
+        
+        # Message templates for students
+        student_questions = [
+            "Can you help me understand {topic}?",
+            "I'm confused about {topic}. Can you explain it?",
+            "What's the best way to approach {topic}?",
+            "I need help with {topic} for my assignment.",
+            "Could you give me some examples of {topic}?",
+            "I don't understand how to apply {topic}.",
+            "Can you break down {topic} for me?",
+            "What are the key points I should know about {topic}?",
+        ]
+        
+        student_followups = [
+            "That makes sense, thank you!",
+            "Can you give me another example?",
+            "I think I understand now.",
+            "What about in practical situations?",
+            "How does this apply to the workplace?",
+            "Could you clarify that last part?",
+            "That's helpful, but I'm still unsure about...",
+            "Thanks! One more question...",
+        ]
+        
+        # Coach response templates
+        coach_responses = [
+            "Great question! Let me explain {topic}. The key concept here is...",
+            "I'd be happy to help you with {topic}. Let's break it down step by step...",
+            "Let's look at {topic} together. First, it's important to understand that...",
+            "To understand {topic}, we need to consider several key points...",
+            "I can help clarify {topic} for you. Here's a practical approach...",
+            "{topic} is an important concept. Here's how I suggest thinking about it...",
+        ]
+        
+        coach_elaborations = [
+            "To expand on that, consider this example...",
+            "Another way to think about this is...",
+            "In practical terms, this means...",
+            "A helpful analogy would be...",
+            "Let me provide some additional context...",
+            "Building on what we just discussed...",
+        ]
+        
+        for session in sessions:
+            # Create conversation flow
+            num_messages = session.message_count
+            session_start = session.created_at
+            
+            for msg_idx in range(num_messages):
+                # Alternate between student and coach
+                if msg_idx == 0:
+                    # First message is always student
+                    role = 'student'
+                    if random.random() > 0.3:
+                        content = random.choice(student_questions).format(topic=session.topic)
+                    else:
+                        content = f"Hi, I need help with {session.subject}."
+                    
+                    sentiment = random.choice(['neutral', 'confused'])
+                    intent_detected = 'question'
+                    
+                    message = ChatMessage.objects.create(
+                        session=session,
+                        role=role,
+                        content=content,
+                        sentiment=sentiment,
+                        intent_detected=intent_detected,
+                        created_at=session_start + timedelta(seconds=msg_idx * 60),
+                    )
+                    messages.append(message)
+                    
+                elif msg_idx % 2 == 1:
+                    # Coach responses
+                    role = 'coach'
+                    if msg_idx == 1:
+                        content = random.choice(coach_responses).format(topic=session.topic)
+                    else:
+                        content = random.choice(coach_elaborations)
+                    
+                    # Add detailed explanation
+                    content += " " + f"This is important because it forms the foundation for understanding more advanced concepts. In practical application, you'll find that these principles guide decision-making and problem-solving."
+                    
+                    # LLM metadata
+                    model_used = random.choice(['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo'])
+                    prompt_tokens = random.randint(150, 400)
+                    completion_tokens = random.randint(100, 300)
+                    total_tokens = prompt_tokens + completion_tokens
+                    response_time_ms = random.randint(800, 3500)
+                    
+                    # Context and retrieval (RAG)
+                    context_used = {}
+                    vector_search_results = []
+                    relevance_scores = []
+                    
+                    if random.random() > 0.3:
+                        # Use some knowledge documents
+                        relevant_docs = random.sample(
+                            list(knowledge_documents),
+                            min(random.randint(1, 3), len(list(knowledge_documents)))
+                        )
+                        
+                        for doc in relevant_docs:
+                            relevance_score = random.uniform(0.70, 0.95)
+                            vector_search_results.append({
+                                'document_id': doc.document_number,
+                                'title': doc.title,
+                                'chunk': doc.content[:200] + '...',
+                            })
+                            relevance_scores.append(round(relevance_score, 3))
+                        
+                        context_used = {
+                            'documents_retrieved': len(relevant_docs),
+                            'average_relevance': round(sum(relevance_scores) / len(relevance_scores), 3) if relevance_scores else 0,
+                        }
+                    
+                    message = ChatMessage.objects.create(
+                        session=session,
+                        role=role,
+                        content=content,
+                        model_used=model_used,
+                        prompt_tokens=prompt_tokens,
+                        completion_tokens=completion_tokens,
+                        total_tokens=total_tokens,
+                        response_time_ms=response_time_ms,
+                        context_used=context_used,
+                        vector_search_results=vector_search_results,
+                        relevance_scores=relevance_scores,
+                        created_at=session_start + timedelta(seconds=msg_idx * 60),
+                    )
+                    messages.append(message)
+                    
+                else:
+                    # Student follow-ups
+                    role = 'student'
+                    content = random.choice(student_followups)
+                    
+                    # Sentiment improves as session progresses
+                    if msg_idx > num_messages * 0.7:
+                        sentiment = random.choice(['positive', 'positive', 'neutral'])
+                    else:
+                        sentiment = random.choice(['neutral', 'confused', 'positive'])
+                    
+                    intent_detected = random.choice(['clarification', 'confirmation', 'follow_up_question'])
+                    
+                    message = ChatMessage.objects.create(
+                        session=session,
+                        role=role,
+                        content=content,
+                        sentiment=sentiment,
+                        intent_detected=intent_detected,
+                        created_at=session_start + timedelta(seconds=msg_idx * 60),
+                    )
+                    messages.append(message)
+        
+        return messages
+    
+    def create_coaching_insights(self, tenants, sessions):
+        """Create analytics insights from coaching sessions"""
+        insights = []
+        
+        for tenant in tenants:
+            tenant_sessions = [s for s in sessions if s.tenant == tenant.slug]
+            
+            if not tenant_sessions:
+                continue
+            
+            # Group by student for insights
+            students = {}
+            for session in tenant_sessions:
+                if session.student_id not in students:
+                    students[session.student_id] = []
+                students[session.student_id].append(session)
+            
+            # Create insights for 3-5 students
+            for student_id, student_sessions in list(students.items())[:min(5, len(students))]:
+                time_period = timezone.now().strftime('%Y-%m')
+                
+                # Calculate metrics
+                total_sessions = len(student_sessions)
+                total_messages = sum(s.message_count for s in student_sessions)
+                total_duration = sum(s.total_duration_minutes for s in student_sessions)
+                average_session_length = total_duration / total_sessions if total_sessions > 0 else 0
+                
+                # Session type distribution
+                session_type_dist = {}
+                for session in student_sessions:
+                    session_type = session.session_type
+                    session_type_dist[session_type] = session_type_dist.get(session_type, 0) + 1
+                
+                # Most discussed subjects and topics
+                subjects = [s.subject for s in student_sessions]
+                topics = [s.topic for s in student_sessions]
+                
+                from collections import Counter
+                subject_counts = Counter(subjects)
+                topic_counts = Counter(topics)
+                
+                most_discussed_subjects = [
+                    {'subject': subj, 'count': count}
+                    for subj, count in subject_counts.most_common(3)
+                ]
+                most_discussed_topics = [
+                    {'topic': topic, 'count': count}
+                    for topic, count in topic_counts.most_common(3)
+                ]
+                
+                # Knowledge gaps (from follow-up needed sessions)
+                knowledge_gaps = []
+                for session in student_sessions:
+                    if session.follow_up_needed and session.follow_up_reason:
+                        knowledge_gaps.append(session.follow_up_reason)
+                knowledge_gaps = list(set(knowledge_gaps))[:5]
+                
+                # Sentiment analysis
+                # Calculate average sentiment (simplified)
+                sentiment_scores = []
+                for session in student_sessions:
+                    if session.satisfaction_rating:
+                        # Convert 1-5 rating to -1 to 1 scale
+                        score = (session.satisfaction_rating - 3) / 2
+                        sentiment_scores.append(score)
+                
+                average_sentiment = sum(sentiment_scores) / len(sentiment_scores) if sentiment_scores else 0
+                
+                # Sentiment trend
+                if average_sentiment > 0.2:
+                    sentiment_trend = 'improving'
+                elif average_sentiment < -0.2:
+                    sentiment_trend = 'declining'
+                else:
+                    sentiment_trend = 'stable'
+                
+                # Satisfaction metrics
+                sessions_with_feedback = sum(1 for s in student_sessions if s.student_feedback)
+                avg_satisfaction = sum(s.satisfaction_rating for s in student_sessions if s.satisfaction_rating) / max(1, sessions_with_feedback)
+                
+                # Recommendations
+                recommended_resources = []
+                if 'exam_prep' in session_type_dist:
+                    recommended_resources.append({
+                        'type': 'study_guide',
+                        'reason': 'Student preparing for exams',
+                    })
+                if total_sessions > 5 and average_sentiment < 0:
+                    recommended_resources.append({
+                        'type': 'one_on_one_tutoring',
+                        'reason': 'High engagement but struggling with concepts',
+                    })
+                
+                # Follow-up actions
+                follow_up_actions = []
+                if knowledge_gaps:
+                    follow_up_actions.append({
+                        'action': 'Review identified knowledge gaps',
+                        'priority': 'high',
+                    })
+                if average_sentiment < -0.2:
+                    follow_up_actions.append({
+                        'action': 'Check in on student wellbeing and progress',
+                        'priority': 'medium',
+                    })
+                
+                # At-risk indicators
+                at_risk = []
+                if average_sentiment < -0.3:
+                    at_risk.append('Declining sentiment in coaching sessions')
+                if total_sessions > 8:
+                    at_risk.append('High frequency of help-seeking behavior')
+                if len(knowledge_gaps) > 3:
+                    at_risk.append('Multiple knowledge gaps identified')
+                
+                insight = CoachingInsight.objects.create(
+                    tenant=tenant.slug,
+                    student_id=student_id,
+                    time_period=time_period,
+                    total_sessions=total_sessions,
+                    total_messages=total_messages,
+                    total_duration_minutes=total_duration,
+                    average_session_length=round(average_session_length, 1),
+                    session_type_distribution=session_type_dist,
+                    most_discussed_subjects=most_discussed_subjects,
+                    most_discussed_topics=most_discussed_topics,
+                    knowledge_gaps_identified=knowledge_gaps,
+                    average_sentiment_score=round(average_sentiment, 2),
+                    sentiment_trend=sentiment_trend,
+                    average_satisfaction=round(avg_satisfaction, 1) if sessions_with_feedback > 0 else 0,
+                    sessions_with_feedback=sessions_with_feedback,
+                    recommended_resources=recommended_resources,
+                    follow_up_actions=follow_up_actions,
+                    at_risk_indicators=at_risk,
+                )
+                insights.append(insight)
+        
+        return insights
