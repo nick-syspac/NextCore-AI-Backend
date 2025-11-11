@@ -77,6 +77,11 @@ from intervention_tracker.models import (
     InterventionOutcome,
     AuditLog as InterventionAuditLog,
 )
+from micro_credential.models import (
+    MicroCredential,
+    MicroCredentialVersion,
+    MicroCredentialEnrollment,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -369,6 +374,16 @@ class Command(BaseCommand):
         intervention_audit_logs = self.create_intervention_audit_logs(interventions, users)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(intervention_audit_logs)} intervention audit logs'))
         
+        # Create micro credential data
+        micro_credentials = self.create_micro_credentials(tenants, users, units)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(micro_credentials)} micro credentials'))
+        
+        micro_credential_versions = self.create_micro_credential_versions(micro_credentials, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(micro_credential_versions)} micro credential versions'))
+        
+        micro_credential_enrollments = self.create_micro_credential_enrollments(micro_credentials)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(micro_credential_enrollments)} micro credential enrollments'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -545,6 +560,27 @@ class Command(BaseCommand):
         
         try:
             InterventionWorkflow.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            InterventionRule.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        # Micro Credential
+        try:
+            MicroCredentialEnrollment.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            MicroCredentialVersion.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            MicroCredential.objects.all().delete()
         except ProgrammingError:
             pass
         
@@ -6831,3 +6867,441 @@ Currency Score: {recent_scan.currency_score:.1f}/100
                 logs.append(log)
         
         return logs
+
+    def create_micro_credentials(self, tenants, users, units):
+        """Create micro credentials from training package units"""
+        credentials = []
+        
+        # Sample micro credential templates
+        credential_templates = [
+            {
+                'title': 'Digital Marketing Essentials',
+                'code': 'MC-DIGMKT-001',
+                'description': 'Learn the fundamentals of digital marketing including social media, email marketing, and SEO. Perfect for small business owners and marketing professionals.',
+                'duration_hours': 40,
+                'delivery_mode': 'online',
+                'target_audience': 'Small business owners, marketing professionals, entrepreneurs',
+                'skills_covered': ['Social Media Marketing', 'Email Marketing', 'SEO Basics', 'Content Creation', 'Google Analytics'],
+                'industry_sectors': ['Marketing', 'Small Business', 'E-commerce'],
+                'aqf_level': 'Certificate IV equivalent',
+                'price': 495.00,
+            },
+            {
+                'title': 'Cybersecurity Fundamentals',
+                'code': 'MC-CYBER-001',
+                'description': 'Essential cybersecurity skills for protecting business data and systems. Covers threat awareness, secure practices, and incident response basics.',
+                'duration_hours': 30,
+                'delivery_mode': 'blended',
+                'target_audience': 'IT professionals, business owners, security officers',
+                'skills_covered': ['Network Security', 'Risk Assessment', 'Incident Response', 'Security Policies', 'Data Protection'],
+                'industry_sectors': ['Information Technology', 'Finance', 'Healthcare'],
+                'aqf_level': 'Certificate III equivalent',
+                'price': 650.00,
+            },
+            {
+                'title': 'Leadership Foundations',
+                'code': 'MC-LEAD-001',
+                'description': 'Develop core leadership skills including team management, communication, and strategic thinking. Ideal for emerging leaders and supervisors.',
+                'duration_hours': 35,
+                'delivery_mode': 'face_to_face',
+                'target_audience': 'Supervisors, team leaders, aspiring managers',
+                'skills_covered': ['Team Leadership', 'Communication', 'Conflict Resolution', 'Performance Management', 'Strategic Planning'],
+                'industry_sectors': ['Management', 'Business', 'Healthcare', 'Education'],
+                'aqf_level': 'Diploma equivalent',
+                'price': 795.00,
+            },
+            {
+                'title': 'Project Management Basics',
+                'code': 'MC-PROJ-001',
+                'description': 'Introduction to project management methodologies, tools, and best practices. Learn to plan, execute, and deliver successful projects.',
+                'duration_hours': 45,
+                'delivery_mode': 'online',
+                'target_audience': 'Project coordinators, team members, business professionals',
+                'skills_covered': ['Project Planning', 'Risk Management', 'Stakeholder Engagement', 'Agile Methods', 'Project Tools'],
+                'industry_sectors': ['Construction', 'IT', 'Engineering', 'Business'],
+                'aqf_level': 'Certificate IV equivalent',
+                'price': 550.00,
+            },
+            {
+                'title': 'Customer Service Excellence',
+                'code': 'MC-CUST-001',
+                'description': 'Master customer service skills to deliver exceptional experiences. Covers communication, problem-solving, and complaint handling.',
+                'duration_hours': 25,
+                'delivery_mode': 'workplace',
+                'target_audience': 'Customer service representatives, retail staff, hospitality workers',
+                'skills_covered': ['Customer Communication', 'Problem Solving', 'Complaint Handling', 'Service Recovery', 'Product Knowledge'],
+                'industry_sectors': ['Retail', 'Hospitality', 'Healthcare', 'Telecommunications'],
+                'aqf_level': 'Certificate III equivalent',
+                'price': 395.00,
+            },
+            {
+                'title': 'Data Analytics Introduction',
+                'code': 'MC-DATA-001',
+                'description': 'Introduction to data analytics using Excel and Power BI. Learn to analyze data, create visualizations, and generate insights.',
+                'duration_hours': 50,
+                'delivery_mode': 'blended',
+                'target_audience': 'Business analysts, data enthusiasts, managers',
+                'skills_covered': ['Excel Advanced', 'Power BI', 'Data Visualization', 'Statistical Analysis', 'Dashboard Creation'],
+                'industry_sectors': ['Business', 'Finance', 'IT', 'Marketing'],
+                'aqf_level': 'Certificate IV equivalent',
+                'price': 750.00,
+            },
+            {
+                'title': 'Workplace Health & Safety',
+                'code': 'MC-WHS-001',
+                'description': 'Essential workplace health and safety knowledge for supervisors and safety officers. Covers risk assessment, compliance, and safety culture.',
+                'duration_hours': 30,
+                'delivery_mode': 'face_to_face',
+                'target_audience': 'Supervisors, safety officers, managers',
+                'skills_covered': ['Risk Assessment', 'Safety Legislation', 'Incident Investigation', 'Safety Culture', 'Hazard Control'],
+                'industry_sectors': ['Construction', 'Manufacturing', 'Healthcare', 'Mining'],
+                'aqf_level': 'Certificate IV equivalent',
+                'price': 595.00,
+            },
+            {
+                'title': 'Social Media Content Creation',
+                'code': 'MC-SOCIAL-001',
+                'description': 'Create engaging social media content across platforms. Learn content strategy, visual design, and community management.',
+                'duration_hours': 35,
+                'delivery_mode': 'online',
+                'target_audience': 'Content creators, social media managers, marketers',
+                'skills_covered': ['Content Strategy', 'Visual Design', 'Copywriting', 'Video Editing', 'Community Management'],
+                'industry_sectors': ['Marketing', 'Media', 'Entertainment', 'E-commerce'],
+                'aqf_level': 'Certificate III equivalent',
+                'price': 495.00,
+            },
+        ]
+        
+        for tenant in tenants:
+            # Create 3-5 micro credentials per tenant
+            for template in random.sample(credential_templates, k=random.randint(3, 5)):
+                # Select 2-4 units from the available units for this tenant
+                tenant_units = [u for u in units if u.tenant == tenant]
+                selected_units = random.sample(tenant_units, k=min(random.randint(2, 4), len(tenant_units)))
+                
+                # Build source units data
+                source_units = []
+                for unit in selected_units:
+                    source_units.append({
+                        'code': unit.code,
+                        'title': unit.title,
+                        'nominal_hours': random.randint(8, 25),
+                        'elements': [
+                            f'Element {i+1}: {random.choice(["Perform", "Apply", "Develop", "Implement", "Manage"])} {random.choice(["procedures", "strategies", "systems", "processes", "techniques"])}' 
+                            for i in range(random.randint(2, 4))
+                        ]
+                    })
+                
+                # Build learning outcomes
+                learning_outcomes = [
+                    f'Demonstrate understanding of {skill.lower()}' 
+                    for skill in template['skills_covered'][:3]
+                ] + [
+                    f'Apply {skill.lower()} in workplace contexts' 
+                    for skill in template['skills_covered'][3:]
+                ]
+                
+                # Build compressed content
+                compressed_content = {
+                    'key_competencies': template['skills_covered'],
+                    'curriculum_structure': [
+                        {
+                            'module': i+1,
+                            'title': random.choice([
+                                'Foundations and Principles',
+                                'Core Concepts',
+                                'Practical Applications',
+                                'Advanced Techniques',
+                                'Integration and Practice'
+                            ]),
+                            'duration_hours': random.randint(5, 15),
+                            'topics': random.sample([
+                                'Introduction to key concepts',
+                                'Theoretical frameworks',
+                                'Practical exercises',
+                                'Case study analysis',
+                                'Tools and techniques',
+                                'Industry best practices',
+                                'Real-world applications',
+                                'Problem-solving strategies'
+                            ], k=random.randint(3, 5))
+                        }
+                        for i in range(random.randint(3, 5))
+                    ],
+                    'resources': [
+                        'Online learning materials',
+                        'Video tutorials',
+                        'Practice exercises',
+                        'Case studies',
+                        'Assessment templates',
+                        'Reference guides'
+                    ]
+                }
+                
+                # Build assessment strategy
+                assessment_strategy = random.choice([
+                    'Competency-based assessment combining knowledge tests, practical demonstrations, and portfolio evidence.',
+                    'Project-based assessment with real-world application scenarios and workplace evidence.',
+                    'Continuous assessment through practical tasks, case studies, and reflective practice.',
+                    'Mixed assessment including written tasks, presentations, and workplace observations.'
+                ])
+                
+                # Build assessment tasks
+                assessment_tasks = [
+                    {
+                        'task_number': i+1,
+                        'task_type': random.choice(['Knowledge Test', 'Practical Task', 'Project', 'Case Study', 'Portfolio']),
+                        'title': f'Assessment Task {i+1}',
+                        'description': random.choice([
+                            'Complete a comprehensive knowledge assessment',
+                            'Demonstrate practical skills in workplace context',
+                            'Develop and present a project solution',
+                            'Analyze and respond to case study scenarios',
+                            'Compile portfolio of workplace evidence'
+                        ]),
+                        'weighting': random.choice([20, 25, 30, 35]),
+                        'elements_assessed': [unit['elements'][0] for unit in random.sample(source_units, k=min(2, len(source_units)))]
+                    }
+                    for i in range(random.randint(3, 5))
+                ]
+                
+                # Determine status (mostly published, some draft/in_review)
+                status_weights = [
+                    ('published', 0.6),
+                    ('approved', 0.2),
+                    ('in_review', 0.1),
+                    ('draft', 0.1),
+                ]
+                status = random.choices(
+                    [s[0] for s in status_weights],
+                    weights=[s[1] for s in status_weights]
+                )[0]
+                
+                days_ago = random.randint(7, 365)
+                created_at = timezone.now() - timedelta(days=days_ago)
+                published_at = None
+                if status == 'published':
+                    published_at = created_at + timedelta(days=random.randint(1, 14))
+                
+                # GPT generation details
+                gpt_generated = random.random() < 0.7  # 70% GPT generated
+                gpt_model = random.choice(['gpt-4', 'gpt-4-turbo', 'gpt-3.5-turbo']) if gpt_generated else ''
+                generation_time = random.uniform(15.5, 45.8) if gpt_generated else None
+                
+                credential = MicroCredential.objects.create(
+                    tenant=tenant,
+                    title=template['title'],
+                    code=template['code'],
+                    description=template['description'],
+                    duration_hours=template['duration_hours'],
+                    delivery_mode=template['delivery_mode'],
+                    target_audience=template['target_audience'],
+                    learning_outcomes=learning_outcomes,
+                    source_units=source_units,
+                    compressed_content=compressed_content,
+                    tags=template['skills_covered'][:3] + [template['delivery_mode'], template['aqf_level'].split()[0]],
+                    skills_covered=template['skills_covered'],
+                    industry_sectors=template['industry_sectors'],
+                    aqf_level=template['aqf_level'],
+                    assessment_strategy=assessment_strategy,
+                    assessment_tasks=assessment_tasks,
+                    price=template['price'],
+                    max_participants=random.choice([15, 20, 25, 30, None]),
+                    prerequisites=random.choice([
+                        '',
+                        'No formal prerequisites required',
+                        'Basic computer literacy recommended',
+                        'Relevant workplace experience preferred',
+                        '1-2 years industry experience recommended'
+                    ]),
+                    status=status,
+                    gpt_generated=gpt_generated,
+                    gpt_model_used=gpt_model,
+                    generation_time_seconds=generation_time,
+                    created_by=random.choice(users),
+                    created_at=created_at,
+                    published_at=published_at,
+                )
+                credentials.append(credential)
+        
+        return credentials
+
+    def create_micro_credential_versions(self, micro_credentials, users):
+        """Create version history for micro credentials"""
+        versions = []
+        
+        change_types = [
+            'Initial version created',
+            'Updated learning outcomes based on feedback',
+            'Revised assessment tasks for clarity',
+            'Added additional resources and materials',
+            'Updated duration and delivery mode',
+            'Refined target audience description',
+            'Enhanced content with industry examples',
+            'Updated compliance with latest standards',
+            'Restructured modules for better flow',
+            'Added prerequisite requirements',
+        ]
+        
+        for credential in micro_credentials:
+            # Create 1-3 versions per credential (some have history, some don't)
+            if random.random() < 0.6:  # 60% have version history
+                num_versions = random.randint(1, 3)
+                
+                for version_num in range(1, num_versions + 1):
+                    days_offset = (num_versions - version_num + 1) * random.randint(7, 30)
+                    version_date = credential.created_at + timedelta(days=days_offset)
+                    
+                    # Create snapshot of content at this version
+                    content_snapshot = {
+                        'title': credential.title,
+                        'code': credential.code,
+                        'description': credential.description,
+                        'duration_hours': credential.duration_hours,
+                        'delivery_mode': credential.delivery_mode,
+                        'learning_outcomes': credential.learning_outcomes,
+                        'source_units': credential.source_units,
+                        'assessment_tasks': credential.assessment_tasks,
+                        'status': 'draft' if version_num == 1 else random.choice(['in_review', 'approved']),
+                        'version_timestamp': version_date.isoformat(),
+                    }
+                    
+                    change_summary = random.choice(change_types) if version_num > 1 else 'Initial version created'
+                    
+                    version = MicroCredentialVersion.objects.create(
+                        micro_credential=credential,
+                        version_number=version_num,
+                        change_summary=change_summary,
+                        content_snapshot=content_snapshot,
+                        created_by=random.choice(users),
+                        created_at=version_date,
+                    )
+                    versions.append(version)
+        
+        return versions
+
+    def create_micro_credential_enrollments(self, micro_credentials):
+        """Create student enrollments in micro credentials"""
+        enrollments = []
+        
+        # Sample student names and emails
+        student_data = [
+            ('Alex Thompson', 'alex.thompson@example.com'),
+            ('Sarah Johnson', 'sarah.j@example.com'),
+            ('Michael Chen', 'michael.chen@example.com'),
+            ('Emma Wilson', 'emma.wilson@example.com'),
+            ('James Brown', 'james.brown@example.com'),
+            ('Olivia Martinez', 'olivia.m@example.com'),
+            ('Daniel Lee', 'daniel.lee@example.com'),
+            ('Sophia Garcia', 'sophia.garcia@example.com'),
+            ('William Davis', 'william.d@example.com'),
+            ('Isabella Rodriguez', 'isabella.r@example.com'),
+            ('Benjamin Moore', 'ben.moore@example.com'),
+            ('Mia Taylor', 'mia.taylor@example.com'),
+            ('Lucas Anderson', 'lucas.a@example.com'),
+            ('Charlotte White', 'charlotte.w@example.com'),
+            ('Henry Thomas', 'henry.thomas@example.com'),
+            ('Amelia Harris', 'amelia.harris@example.com'),
+            ('Alexander Martin', 'alex.martin@example.com'),
+            ('Emily Clark', 'emily.clark@example.com'),
+            ('Jack Lewis', 'jack.lewis@example.com'),
+            ('Lily Walker', 'lily.walker@example.com'),
+        ]
+        
+        # Only create enrollments for published credentials
+        published_credentials = [c for c in micro_credentials if c.status == 'published']
+        
+        for credential in published_credentials:
+            # Create 3-8 enrollments per published credential
+            num_enrollments = random.randint(3, 8)
+            
+            # Ensure we don't exceed max_participants if set
+            if credential.max_participants:
+                num_enrollments = min(num_enrollments, credential.max_participants)
+            
+            selected_students = random.sample(student_data, k=min(num_enrollments, len(student_data)))
+            
+            for student_name, student_email in selected_students:
+                # Determine enrollment status
+                days_enrolled = random.randint(1, 180)
+                enrolled_at = timezone.now() - timedelta(days=days_enrolled)
+                
+                if days_enrolled < 7:
+                    status = 'enrolled'
+                    started_at = None
+                    completed_at = None
+                    withdrawn_at = None
+                elif days_enrolled < 30:
+                    status = random.choice(['enrolled', 'in_progress', 'in_progress'])
+                    started_at = enrolled_at + timedelta(days=random.randint(1, 5))
+                    completed_at = None
+                    withdrawn_at = None
+                elif days_enrolled < credential.duration_hours * 2:
+                    status = random.choice(['in_progress', 'in_progress', 'completed', 'withdrawn'])
+                    started_at = enrolled_at + timedelta(days=random.randint(1, 5))
+                    if status == 'completed':
+                        completed_at = started_at + timedelta(days=random.randint(credential.duration_hours, credential.duration_hours * 2))
+                        withdrawn_at = None
+                    elif status == 'withdrawn':
+                        withdrawn_at = started_at + timedelta(days=random.randint(7, 30))
+                        completed_at = None
+                    else:
+                        completed_at = None
+                        withdrawn_at = None
+                else:
+                    status = random.choice(['completed', 'completed', 'completed', 'withdrawn'])
+                    started_at = enrolled_at + timedelta(days=random.randint(1, 5))
+                    if status == 'completed':
+                        completed_at = started_at + timedelta(days=random.randint(credential.duration_hours, credential.duration_hours * 3))
+                        withdrawn_at = None
+                    else:
+                        withdrawn_at = started_at + timedelta(days=random.randint(14, 60))
+                        completed_at = None
+                
+                # Build progress data
+                progress_data = {}
+                if status in ['in_progress', 'completed']:
+                    total_outcomes = len(credential.learning_outcomes)
+                    total_assessments = len(credential.assessment_tasks)
+                    
+                    if status == 'completed':
+                        completed_outcomes = total_outcomes
+                        completed_assessments = total_assessments
+                        overall_progress = 100
+                    else:
+                        completed_outcomes = random.randint(1, total_outcomes - 1)
+                        completed_assessments = random.randint(0, total_assessments - 1)
+                        overall_progress = random.randint(25, 85)
+                    
+                    progress_data = {
+                        'overall_progress': overall_progress,
+                        'learning_outcomes': {
+                            'total': total_outcomes,
+                            'completed': completed_outcomes,
+                            'progress_percentage': round((completed_outcomes / total_outcomes) * 100, 1)
+                        },
+                        'assessment_tasks': {
+                            'total': total_assessments,
+                            'completed': completed_assessments,
+                            'progress_percentage': round((completed_assessments / total_assessments) * 100, 1) if total_assessments > 0 else 0
+                        },
+                        'modules_completed': random.randint(1, len(credential.compressed_content.get('curriculum_structure', []))),
+                        'hours_logged': random.randint(5, credential.duration_hours) if status == 'in_progress' else credential.duration_hours,
+                        'last_activity': (timezone.now() - timedelta(days=random.randint(1, 14))).isoformat(),
+                    }
+                
+                enrollment = MicroCredentialEnrollment.objects.create(
+                    micro_credential=credential,
+                    student_name=student_name,
+                    student_email=student_email,
+                    student_id=f'STU{random.randint(1000, 9999)}',
+                    status=status,
+                    enrolled_at=enrolled_at,
+                    started_at=started_at,
+                    completed_at=completed_at,
+                    withdrawn_at=withdrawn_at,
+                    progress_data=progress_data,
+                )
+                enrollments.append(enrollment)
+        
+        return enrollments
