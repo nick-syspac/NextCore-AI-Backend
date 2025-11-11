@@ -116,6 +116,13 @@ from study_coach.models import (
     CoachingInsight,
     CoachConfiguration,
 )
+from trainer_diary.models import (
+    DiaryEntry,
+    AudioRecording,
+    DailySummary,
+    EvidenceDocument,
+    TranscriptionJob,
+)
 from tas.models import TAS, TASTemplate, TASConversionSession
 from policy_comparator.models import (
     Policy, ASQAStandard, ASQAClause, 
@@ -495,6 +502,22 @@ class Command(BaseCommand):
         coaching_insights = self.create_coaching_insights(tenants, chat_sessions)
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(coaching_insights)} coaching insights'))
         
+        # Trainer Diary
+        diary_entries = self.create_diary_entries(tenants, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(diary_entries)} diary entries'))
+        
+        audio_recordings = self.create_audio_recordings(diary_entries)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(audio_recordings)} audio recordings'))
+        
+        transcription_jobs = self.create_transcription_jobs(audio_recordings)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(transcription_jobs)} transcription jobs'))
+        
+        evidence_documents = self.create_evidence_documents(diary_entries, users)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(evidence_documents)} evidence documents'))
+        
+        daily_summaries = self.create_daily_summaries(tenants, diary_entries)
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(daily_summaries)} daily summaries'))
+        
         self.stdout.write(self.style.SUCCESS('\n✅ Test data population complete!'))
         self.stdout.write('\nTest Credentials:')
         self.stdout.write('  Admin: admin / admin123')
@@ -817,6 +840,32 @@ class Command(BaseCommand):
         
         try:
             KnowledgeDocument.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        # Trainer Diary
+        try:
+            TranscriptionJob.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            EvidenceDocument.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            AudioRecording.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            DailySummary.objects.all().delete()
+        except ProgrammingError:
+            pass
+        
+        try:
+            DiaryEntry.objects.all().delete()
         except ProgrammingError:
             pass
         
@@ -10469,3 +10518,487 @@ Currency Score: {recent_scan.currency_score:.1f}/100
                 insights.append(insight)
         
         return insights
+    
+    def create_diary_entries(self, tenants, users):
+        """Create trainer diary entries for teaching sessions"""
+        entries = []
+        
+        trainer_names = [
+            'John Mitchell', 'Sarah Parker', 'Michael Chen', 'Emily Roberts',
+            'David Thompson', 'Lisa Anderson', 'James Wilson', 'Rachel Green'
+        ]
+        
+        courses = [
+            ('Certificate IV in Business', 'BSB40120', 'BSBWHS413'),
+            ('Diploma of Information Technology', 'ICT50220', 'ICTICT523'),
+            ('Certificate III in Hospitality', 'SIT30622', 'SITH022'),
+            ('Certificate IV in Accounting', 'FNS40222', 'FNSACC422'),
+            ('Diploma of Leadership', 'BSB50420', 'BSBLDR523'),
+            ('Certificate III in Individual Support', 'CHC33021', 'CHCCCS023'),
+            ('Certificate IV in Design', 'CUA40720', 'CUADES421'),
+            ('Diploma of Project Management', 'BSB50820', 'BSBPM523'),
+        ]
+        
+        delivery_modes = ['face_to_face', 'online_live', 'blended', 'workplace']
+        
+        for tenant in tenants:
+            # Create 10-15 diary entries per tenant
+            num_entries = random.randint(10, 15)
+            
+            for _ in range(num_entries):
+                trainer_id = f"TRAIN{random.randint(1000, 9999)}"
+                trainer_name = random.choice(trainer_names)
+                
+                course_name, course_code, unit_code = random.choice(courses)
+                delivery_mode = random.choice(delivery_modes)
+                
+                # Session date (last 30 days)
+                session_date = (timezone.now() - timedelta(days=random.randint(0, 30))).date()
+                
+                # Session times
+                start_hour = random.randint(8, 16)
+                session_time_start = timezone.now().replace(hour=start_hour, minute=random.choice([0, 30]), second=0).time()
+                duration = random.choice([60, 90, 120, 180, 240])
+                session_duration_minutes = duration
+                session_time_end = (timezone.now().replace(hour=start_hour, minute=random.choice([0, 30]), second=0) + timedelta(minutes=duration)).time()
+                
+                # Student count
+                student_count = random.randint(8, 25)
+                
+                # Generate realistic content
+                topics = [
+                    'Core concepts and foundational principles',
+                    'Practical skills development and application',
+                    'Workplace scenarios and case studies',
+                    'Assessment preparation and review',
+                    'Group activities and collaborative learning',
+                    'Industry standards and compliance requirements',
+                ]
+                
+                # Raw transcript (simulated)
+                raw_transcript = f"Session started at {session_time_start.strftime('%H:%M')}. Today we covered {random.choice(topics).lower()}. Students were engaged and participated in group discussions. We reviewed key learning outcomes and practiced practical skills. Several questions were raised about workplace application. Session concluded with assignment briefing."
+                
+                # Manual notes
+                manual_notes = f"Class of {student_count} students. Good engagement overall. {random.choice(['Some students needed additional support.', 'All students on track.', 'Excellent participation from most students.'])}"
+                
+                # AI-generated summary
+                session_summary = f"Productive {duration}-minute session covering {random.choice(topics).lower()}. Students demonstrated good understanding of key concepts. Practical activities were completed successfully. Follow-up required for {random.randint(2, 5)} students needing additional support."
+                
+                # Key topics
+                key_topics_covered = random.sample([
+                    'Safety procedures', 'Quality standards', 'Industry regulations',
+                    'Practical skills', 'Theory application', 'Workplace requirements',
+                    'Assessment criteria', 'Evidence collection', 'Documentation',
+                ], random.randint(3, 5))
+                
+                # Student engagement
+                engagement_level = random.choice(['high', 'medium', 'varied'])
+                student_engagement_notes = {
+                    'high': 'Excellent engagement throughout. Active participation in discussions and practical activities. Questions indicated good understanding.',
+                    'medium': 'Generally engaged but some students distracted. Most participated in activities. Need to monitor attention levels.',
+                    'varied': 'Mixed engagement levels. Some students very active, others quiet. May need different approaches for different learners.',
+                }[engagement_level]
+                
+                # Challenges
+                challenges_encountered = ''
+                if random.random() > 0.6:
+                    challenges = [
+                        'Technical issues with equipment delayed start',
+                        'Some students struggling with complex concepts',
+                        'Time management - didn\'t cover all planned content',
+                        'Group dynamics - needed to reassign groups',
+                        'Student absences affected group activities',
+                    ]
+                    challenges_encountered = random.choice(challenges)
+                
+                # Follow-up actions
+                follow_up_actions = []
+                if random.random() > 0.4:
+                    actions = [
+                        {'action': 'Review assessment requirements with struggling students', 'priority': 'high'},
+                        {'action': 'Prepare additional resources for next session', 'priority': 'medium'},
+                        {'action': 'Follow up with absent students', 'priority': 'high'},
+                        {'action': 'Update session plan based on student feedback', 'priority': 'low'},
+                    ]
+                    follow_up_actions = random.sample(actions, random.randint(1, 3))
+                
+                # Learning outcomes
+                learning_outcomes_addressed = [
+                    f"{unit_code}.{i}" for i in range(1, random.randint(3, 6))
+                ]
+                
+                # Assessment activities
+                assessment_activities = ''
+                if random.random() > 0.5:
+                    activities = [
+                        'Practical demonstration assessed for competency',
+                        'Written assessment completed and collected',
+                        'Group project progress reviewed',
+                        'Observation checklist completed for practical tasks',
+                    ]
+                    assessment_activities = random.choice(activities)
+                
+                # Resources used
+                resources_used = random.sample([
+                    'Course textbook chapters 1-3',
+                    'Online learning modules',
+                    'Industry case studies',
+                    'Equipment and tools for practical work',
+                    'Assessment templates',
+                    'Video demonstrations',
+                ], random.randint(2, 4))
+                
+                # Evidence attachments
+                evidence_attachments = []
+                if random.random() > 0.5:
+                    evidence_attachments = [
+                        f"/evidence/session_{session_date.strftime('%Y%m%d')}_{random.randint(1000, 9999)}.pdf",
+                        f"/photos/practical_demo_{random.randint(1000, 9999)}.jpg",
+                    ]
+                
+                # AI metadata
+                transcription_model = random.choice(['whisper-1', 'google-stt', 'azure-stt']) if raw_transcript else ''
+                summarization_model = random.choice(['gpt-4', 'gpt-4-turbo', 'claude-3-sonnet'])
+                transcription_duration = random.uniform(0.5, 2.5) if raw_transcript else None
+                summarization_tokens = random.randint(300, 800)
+                
+                # Status
+                entry_status = random.choices(
+                    ['draft', 'transcribing', 'summarizing', 'complete', 'archived'],
+                    weights=[0.10, 0.05, 0.05, 0.75, 0.05],
+                    k=1
+                )[0]
+                
+                is_pinned = random.random() < 0.15
+                is_shared = random.random() < 0.30
+                
+                entry = DiaryEntry.objects.create(
+                    tenant=tenant.slug,
+                    trainer_id=trainer_id,
+                    trainer_name=trainer_name,
+                    session_date=session_date,
+                    session_time_start=session_time_start,
+                    session_time_end=session_time_end,
+                    session_duration_minutes=session_duration_minutes,
+                    course_name=course_name,
+                    course_code=course_code,
+                    unit_of_competency=unit_code,
+                    student_count=student_count,
+                    delivery_mode=delivery_mode,
+                    raw_transcript=raw_transcript,
+                    manual_notes=manual_notes,
+                    session_summary=session_summary,
+                    key_topics_covered=key_topics_covered,
+                    student_engagement_notes=student_engagement_notes,
+                    challenges_encountered=challenges_encountered,
+                    follow_up_actions=follow_up_actions,
+                    learning_outcomes_addressed=learning_outcomes_addressed,
+                    assessment_activities=assessment_activities,
+                    resources_used=resources_used,
+                    evidence_attachments=evidence_attachments,
+                    transcription_model=transcription_model,
+                    summarization_model=summarization_model,
+                    transcription_duration_seconds=transcription_duration,
+                    summarization_tokens=summarization_tokens,
+                    entry_status=entry_status,
+                    is_pinned=is_pinned,
+                    is_shared=is_shared,
+                )
+                entries.append(entry)
+        
+        return entries
+    
+    def create_audio_recordings(self, diary_entries):
+        """Create audio recordings for diary entries"""
+        recordings = []
+        
+        # Only create recordings for some entries (not all sessions are recorded)
+        entries_to_record = random.sample(list(diary_entries), int(len(list(diary_entries)) * 0.6))
+        
+        for entry in entries_to_record:
+            # Some entries might have multiple recordings (different parts of session)
+            num_recordings = random.choices([1, 2, 3], weights=[0.7, 0.25, 0.05], k=1)[0]
+            
+            for part in range(num_recordings):
+                recording_filename = f"{entry.course_code}_{entry.session_date.strftime('%Y%m%d')}_{entry.trainer_id}_part{part+1}.mp3"
+                recording_file_path = f"/recordings/{entry.trainer_id}/{entry.session_date.strftime('%Y/%m')}/{recording_filename}"
+                
+                # File size (5-50 MB)
+                recording_file_size_mb = random.uniform(5.0, 50.0)
+                
+                # Duration (15-60 minutes per part)
+                recording_duration_seconds = random.uniform(900, 3600)
+                
+                # Format
+                recording_format = random.choice(['mp3', 'wav', 'm4a'])
+                
+                # Transcript if complete
+                transcript_text = ''
+                transcript_confidence = None
+                processing_status = random.choices(
+                    ['uploaded', 'queued', 'processing', 'completed', 'failed'],
+                    weights=[0.05, 0.05, 0.10, 0.75, 0.05],
+                    k=1
+                )[0]
+                
+                if processing_status == 'completed':
+                    transcript_text = entry.raw_transcript if part == 0 else f"Continuation of session. {entry.raw_transcript[:100]}..."
+                    transcript_confidence = random.uniform(0.85, 0.98)
+                
+                error_message = ''
+                if processing_status == 'failed':
+                    error_message = random.choice([
+                        'Audio quality too poor for transcription',
+                        'Transcription service timeout',
+                        'Unsupported audio format',
+                        'File corruption detected',
+                    ])
+                
+                processed_at = None
+                if processing_status in ['completed', 'failed']:
+                    processed_at = entry.created_at + timedelta(minutes=random.randint(5, 60))
+                
+                recording = AudioRecording.objects.create(
+                    diary_entry=entry,
+                    recording_filename=recording_filename,
+                    recording_file_path=recording_file_path,
+                    recording_file_size_mb=round(recording_file_size_mb, 2),
+                    recording_duration_seconds=round(recording_duration_seconds, 1),
+                    recording_format=recording_format,
+                    transcript_text=transcript_text,
+                    transcript_confidence=round(transcript_confidence, 3) if transcript_confidence else None,
+                    transcript_language='en',
+                    processing_status=processing_status,
+                    error_message=error_message,
+                    processed_at=processed_at,
+                )
+                recordings.append(recording)
+        
+        return recordings
+    
+    def create_transcription_jobs(self, audio_recordings):
+        """Create transcription jobs for audio recordings"""
+        jobs = []
+        
+        for recording in audio_recordings:
+            # Only create jobs for recordings that need processing
+            if recording.processing_status in ['queued', 'processing', 'completed', 'failed']:
+                transcription_engine = random.choice(['whisper', 'google_stt', 'azure_stt'])
+                
+                job_status_map = {
+                    'queued': 'pending',
+                    'processing': 'processing',
+                    'completed': 'completed',
+                    'failed': 'failed',
+                }
+                job_status = job_status_map.get(recording.processing_status, 'pending')
+                
+                # Processing results
+                transcript_result = recording.transcript_text if job_status == 'completed' else ''
+                confidence_score = recording.transcript_confidence if job_status == 'completed' else None
+                processing_time = random.uniform(recording.recording_duration_seconds * 0.1, recording.recording_duration_seconds * 0.3) if job_status == 'completed' else None
+                
+                error_message = recording.error_message if job_status == 'failed' else ''
+                retry_count = random.randint(0, 2) if job_status == 'failed' else 0
+                
+                # Timestamps
+                created_at = recording.uploaded_at
+                started_at = None
+                completed_at = None
+                
+                if job_status in ['processing', 'completed', 'failed']:
+                    started_at = created_at + timedelta(minutes=random.randint(1, 10))
+                
+                if job_status in ['completed', 'failed']:
+                    completed_at = recording.processed_at
+                
+                job = TranscriptionJob.objects.create(
+                    audio_recording=recording,
+                    job_status=job_status,
+                    transcription_engine=transcription_engine,
+                    language='en',
+                    enable_speaker_diarization=random.choice([True, False]),
+                    enable_punctuation=True,
+                    transcript_result=transcript_result,
+                    confidence_score=confidence_score,
+                    processing_time_seconds=round(processing_time, 2) if processing_time else None,
+                    error_message=error_message,
+                    retry_count=retry_count,
+                    max_retries=3,
+                    created_at=created_at,
+                    started_at=started_at,
+                    completed_at=completed_at,
+                )
+                jobs.append(job)
+        
+        return jobs
+    
+    def create_evidence_documents(self, diary_entries, users):
+        """Create evidence documents from diary entries"""
+        documents = []
+        
+        document_types = [
+            'session_plan', 'attendance_record', 'teaching_evidence',
+            'assessment_record', 'student_feedback', 'professional_reflection'
+        ]
+        
+        for entry in diary_entries:
+            # Only create documents for completed entries
+            if entry.entry_status != 'complete':
+                continue
+            
+            # Create 1-3 evidence documents per entry
+            num_docs = random.randint(1, 3)
+            
+            for _ in range(num_docs):
+                doc_type = random.choice(document_types)
+                
+                # Generate document title and content based on type
+                if doc_type == 'session_plan':
+                    title = f"Session Plan - {entry.course_name} - {entry.session_date.strftime('%d %B %Y')}"
+                    content = f"# Session Plan\n\n**Course:** {entry.course_name} ({entry.course_code})\n**Unit:** {entry.unit_of_competency}\n**Date:** {entry.session_date}\n**Duration:** {entry.session_duration_minutes} minutes\n\n## Learning Outcomes\n" + "\n".join(f"- {lo}" for lo in entry.learning_outcomes_addressed) + f"\n\n## Session Summary\n{entry.session_summary}\n\n## Key Topics\n" + "\n".join(f"- {topic}" for topic in entry.key_topics_covered)
+                
+                elif doc_type == 'attendance_record':
+                    title = f"Attendance Record - {entry.course_code} - {entry.session_date.strftime('%Y-%m-%d')}"
+                    content = f"# Attendance Record\n\n**Course:** {entry.course_name}\n**Date:** {entry.session_date}\n**Students Present:** {entry.student_count}\n**Delivery Mode:** {entry.delivery_mode.replace('_', ' ').title()}\n\nAll students marked present and participated in session activities."
+                
+                elif doc_type == 'teaching_evidence':
+                    title = f"Teaching Evidence - {entry.unit_of_competency} - {entry.session_date.strftime('%Y-%m-%d')}"
+                    content = f"# Teaching Evidence\n\n**Unit:** {entry.unit_of_competency}\n**Session Date:** {entry.session_date}\n\n## Evidence of Teaching\n{entry.session_summary}\n\n## Student Engagement\n{entry.student_engagement_notes}\n\n## Resources Used\n" + "\n".join(f"- {res}" for res in entry.resources_used)
+                
+                elif doc_type == 'assessment_record':
+                    title = f"Assessment Record - {entry.course_code} - {entry.session_date.strftime('%Y-%m-%d')}"
+                    content = f"# Assessment Record\n\n**Course:** {entry.course_code}\n**Assessment Activities:** {entry.assessment_activities or 'Formative assessment conducted'}\n\n## Learning Outcomes Assessed\n" + "\n".join(f"- {lo}" for lo in entry.learning_outcomes_addressed) + "\n\n## Results Summary\nStudents demonstrated competency in key areas. Individual feedback provided."
+                
+                elif doc_type == 'student_feedback':
+                    title = f"Student Feedback Summary - {entry.session_date.strftime('%Y-%m-%d')}"
+                    content = f"# Student Feedback Summary\n\n**Session:** {entry.course_name}\n**Date:** {entry.session_date}\n\n## Engagement Level\n{entry.student_engagement_notes}\n\n## Student Comments\nStudents found the session valuable and practical. Requested more hands-on activities in future sessions."
+                
+                else:  # professional_reflection
+                    title = f"Professional Reflection - {entry.session_date.strftime('%B %Y')}"
+                    content = f"# Professional Reflection\n\n**Date:** {entry.session_date}\n**Course:** {entry.course_name}\n\n## Session Reflection\n{entry.session_summary}\n\n## Challenges\n{entry.challenges_encountered or 'No significant challenges encountered'}\n\n## Professional Development\nContinuing to develop skills in student engagement and differentiated learning strategies."
+                
+                # Document format
+                doc_format = random.choice(['markdown', 'html', 'pdf'])
+                
+                # File storage
+                file_path = f"/evidence/{entry.trainer_id}/{entry.session_date.strftime('%Y/%m')}/{doc_type}_{entry.entry_number}.{doc_format}"
+                file_size_kb = random.uniform(50, 500)
+                
+                # Generation metadata
+                generated_by = f"{entry.trainer_name}"
+                generation_method = random.choice(['auto_ai', 'template', 'manual'])
+                
+                # Compliance
+                meets_compliance = random.random() > 0.05
+                compliance_notes = '' if meets_compliance else 'Requires additional detail for full compliance'
+                
+                doc = EvidenceDocument.objects.create(
+                    diary_entry=entry,
+                    document_type=doc_type,
+                    document_title=title,
+                    document_content=content,
+                    document_format=doc_format,
+                    file_path=file_path,
+                    file_size_kb=round(file_size_kb, 2),
+                    generated_by=generated_by,
+                    generation_method=generation_method,
+                    meets_compliance_standards=meets_compliance,
+                    compliance_notes=compliance_notes,
+                )
+                documents.append(doc)
+        
+        return documents
+    
+    def create_daily_summaries(self, tenants, diary_entries):
+        """Create daily summaries aggregating diary entries"""
+        summaries = []
+        
+        for tenant in tenants:
+            tenant_entries = [e for e in diary_entries if e.tenant == tenant.slug]
+            
+            if not tenant_entries:
+                continue
+            
+            # Group entries by trainer and date
+            trainer_dates = {}
+            for entry in tenant_entries:
+                key = (entry.trainer_id, entry.trainer_name, entry.session_date)
+                if key not in trainer_dates:
+                    trainer_dates[key] = []
+                trainer_dates[key].append(entry)
+            
+            # Create summaries for dates with multiple sessions
+            for (trainer_id, trainer_name, summary_date), entries in trainer_dates.items():
+                if len(entries) < 2:  # Only create summary if 2+ sessions
+                    continue
+                
+                # Calculate statistics
+                total_sessions = len(entries)
+                total_teaching_hours = sum(e.session_duration_minutes for e in entries) / 60.0
+                total_students = sum(e.student_count for e in entries)
+                courses_taught = list(set(f"{e.course_code}: {e.course_name}" for e in entries))
+                
+                # Aggregated content
+                all_topics = []
+                all_challenges = []
+                all_actions = []
+                
+                for entry in entries:
+                    all_topics.extend(entry.key_topics_covered)
+                    if entry.challenges_encountered:
+                        all_challenges.append(entry.challenges_encountered)
+                    all_actions.extend(entry.follow_up_actions)
+                
+                # Daily highlights
+                daily_highlights = f"Completed {total_sessions} teaching sessions covering {len(courses_taught)} different courses. Total teaching time: {total_teaching_hours:.1f} hours. Engaged with {total_students} students across various delivery modes."
+                
+                # Overall engagement
+                overall_engagement = "Students generally engaged and responsive. Mix of practical and theory-based activities. Good participation in group work and discussions."
+                
+                # Key achievements
+                key_achievements = [
+                    {'achievement': f'Delivered {total_sessions} sessions successfully'},
+                    {'achievement': f'Covered {len(set(all_topics))} different topics'},
+                ]
+                if total_students > 40:
+                    key_achievements.append({'achievement': f'High student engagement across {total_students} learners'})
+                
+                # Challenges summary
+                challenges_summary = '\n'.join(set(all_challenges)) if all_challenges else 'No significant challenges encountered'
+                
+                # Action items pending
+                action_items = []
+                for entry in entries:
+                    for action in entry.follow_up_actions:
+                        if action not in action_items:
+                            action_items.append(action)
+                action_items = action_items[:10]  # Limit to top 10
+                
+                # Diary entries included
+                diary_entries_included = [e.entry_number for e in entries]
+                
+                # Evidence documents
+                evidence_docs_count = sum(e.evidence_docs.count() for e in entries)
+                
+                summary = DailySummary.objects.create(
+                    tenant=tenant.slug,
+                    trainer_id=trainer_id,
+                    trainer_name=trainer_name,
+                    summary_date=summary_date,
+                    total_sessions=total_sessions,
+                    total_teaching_hours=round(total_teaching_hours, 1),
+                    total_students=total_students,
+                    courses_taught=courses_taught,
+                    daily_highlights=daily_highlights,
+                    overall_student_engagement=overall_engagement,
+                    key_achievements=key_achievements,
+                    challenges_summary=challenges_summary,
+                    action_items_pending=action_items,
+                    diary_entries_included=diary_entries_included,
+                    evidence_documents_created=evidence_docs_count,
+                    generated_by_model=random.choice(['gpt-4', 'gpt-4-turbo']),
+                )
+                summaries.append(summary)
+        
+        return summaries
