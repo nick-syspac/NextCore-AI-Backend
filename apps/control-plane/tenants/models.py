@@ -29,6 +29,16 @@ class SubscriptionTier(models.TextChoices):
     ENTERPRISE = "enterprise", "Enterprise"
 
 
+class BusinessStructure(models.TextChoices):
+    """Business structure choices."""
+
+    SOLE_TRADER = "sole_trader", "Sole Trader"
+    PARTNERSHIP = "partnership", "Partnership"
+    COMPANY = "company", "Company (Pty Ltd)"
+    TRUST = "trust", "Trust"
+    INCORPORATED_ASSOCIATION = "incorporated_association", "Incorporated Association"
+
+
 class Tenant(models.Model):
     """
     Represents a tenant in the multi-tenant system.
@@ -61,6 +71,42 @@ class Tenant(models.Model):
     contact_email = models.EmailField(validators=[EmailValidator()])
     contact_name = models.CharField(max_length=255)
     contact_phone = models.CharField(max_length=50, blank=True)
+
+    # Legal Business Information
+    registered_business_name = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="ASIC-registered business name"
+    )
+    trading_name = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Trading name (if different from registered name)"
+    )
+    abn = models.CharField(
+        max_length=11,
+        blank=True,
+        help_text="Australian Business Number (11 digits)"
+    )
+    acn = models.CharField(
+        max_length=9,
+        blank=True,
+        help_text="Australian Company Number (9 digits, required for companies)"
+    )
+    business_structure = models.CharField(
+        max_length=30,
+        choices=BusinessStructure.choices,
+        blank=True,
+        help_text="Legal structure of the business"
+    )
+    registered_address = models.TextField(
+        blank=True,
+        help_text="Registered business address"
+    )
+    postal_address = models.TextField(
+        blank=True,
+        help_text="Postal address (if different from registered address)"
+    )
 
     # Billing
     billing_email = models.EmailField(blank=True)
