@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
+    "drf_spectacular",
     "corsheaders",
     "django_filters",
     # Project apps
@@ -207,6 +208,33 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "EXCEPTION_HANDLER": "control_plane.exceptions.custom_exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# API Documentation Configuration
+SPECTACULAR_SETTINGS = {
+    "TITLE": "NextCore AI Cloud - Control Plane API",
+    "DESCRIPTION": "REST API for RTO Comply AI Backend - Comprehensive compliance and education management platform",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "CONTACT": {
+        "name": "NextCore AI Support",
+        "email": "support@nextcore.ai",
+    },
+    "LICENSE": {
+        "name": "Proprietary",
+    },
+    "TAGS": [
+        {"name": "Authentication", "description": "User authentication and token management"},
+        {"name": "Tenants", "description": "Multi-tenant organization management"},
+        {"name": "Users", "description": "User management and profiles"},
+        {"name": "TAS", "description": "Training and Assessment Strategy management"},
+        {"name": "Policies", "description": "Policy management and comparison"},
+        {"name": "Audit", "description": "Audit logging and verification"},
+        {"name": "Integrations", "description": "Third-party integrations"},
+    ],
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": r"/api/",
 }
 
 # Celery Configuration
