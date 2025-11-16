@@ -42,7 +42,7 @@ services:
       retries: 3
 
   control-plane:
-    image: nextcore-ai-backend/control-plane:${IMAGE_TAG:-dev}
+    image: rtocomply-ai-backend/control-plane:${IMAGE_TAG:-dev}
     build:
       context: ./apps/control-plane
       dockerfile: Dockerfile
@@ -74,7 +74,7 @@ services:
       start_period: 40s
 
   worker:
-    image: nextcore-ai-backend/worker:${IMAGE_TAG:-dev}
+    image: rtocomply-ai-backend/worker:${IMAGE_TAG:-dev}
     build:
       context: ./apps/worker
       dockerfile: Dockerfile
@@ -104,7 +104,7 @@ services:
       start_period: 40s
 
   ai-gateway:
-    image: nextcore-ai-backend/ai-gateway:${IMAGE_TAG:-dev}
+    image: rtocomply-ai-backend/ai-gateway:${IMAGE_TAG:-dev}
     build:
       context: ./apps/ai-gateway
       dockerfile: Dockerfile

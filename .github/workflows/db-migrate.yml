@@ -9,7 +9,7 @@ on:
         options: [dev, staging, prod]
 jobs:
   migrate:
-    runs-on: [self-hosted, nextcore]
+    runs-on: [self-hosted, rtocomply]
     environment: ${{ inputs.environment }}
     permissions:
       id-token: write

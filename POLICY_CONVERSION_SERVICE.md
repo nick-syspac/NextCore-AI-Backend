@@ -382,7 +382,7 @@ coverage_percentage = (quality_areas_covered / 4) * 100
 
 1. **Database Migration**
    ```bash
-   cd /home/syspac/work/NextCore-AI-Backend/apps/control-plane
+   cd /home/syspac/work/rtocomply-ai-backend/apps/control-plane
    python manage.py makemigrations policy_comparator
    python manage.py migrate policy_comparator
    ```
@@ -567,4 +567,4 @@ curl https://api.eduai.example.com/api/tenants/example-rto/policies/conversion-s
 
 **Last Updated:** November 7, 2025  
 **Version:** 1.0  
-**Author:** NextCore AI - EduAI Compliance Suite Team
+**Author:** RTOComply AI - EduAI Compliance Suite Team

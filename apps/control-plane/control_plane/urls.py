@@ -24,7 +24,7 @@ def api_root(request):
     """API root endpoint with available endpoints."""
     return JsonResponse(
         {
-            "service": "NextCore AI Cloud - Control Plane",
+            "service": "RTOComply AI Cloud - Control Plane",
             "version": "1.0.0",
             "status": "operational",
             "endpoints": {

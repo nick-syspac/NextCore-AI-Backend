@@ -24,7 +24,7 @@ class BaseConnector:
         """Get HTTP headers for API requests"""
         return {
             "Content-Type": "application/json",
-            "User-Agent": "NextCore-AI-Cloud/1.0",
+            "User-Agent": "RTOComply-AI-Cloud/1.0",
         }
 
     def test_connection(self) -> tuple[bool, str]:

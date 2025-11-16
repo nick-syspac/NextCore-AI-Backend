@@ -1,9 +1,9 @@
 #!/bin/bash
-# Quick start script for NextCore AI Cloud web portal
+# Quick start script for RTOComply AI Cloud web portal
 
 set -e
 
-echo "🚀 Starting NextCore AI Cloud Web Portal Setup"
+echo "🚀 Starting RTOComply AI Cloud Web Portal Setup"
 echo "=============================================="
 echo ""
 
@@ -43,7 +43,7 @@ if curl -s http://localhost:8000/ > /dev/null 2>&1; then
 else
     echo "⚠️  Backend is not responding on http://localhost:8000"
     echo "   Make sure Docker services are running:"
-    echo "   cd /home/nick/work/NextCore-AI-Cloud && docker-compose up -d"
+    echo "   cd /home/syspac/work/rtocomply-ai-backend && docker compose up -d"
 fi
 echo ""
 

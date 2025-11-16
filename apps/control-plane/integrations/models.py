@@ -142,7 +142,7 @@ class IntegrationLog(models.Model):
 
 class IntegrationMapping(models.Model):
     """
-    Field mappings between NextCore and external systems
+    Field mappings between RTOComply and external systems
     """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

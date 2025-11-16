@@ -6,7 +6,7 @@
 
 ## Overview
 
-The Standards for Registered Training Organisations (RTOs) 2025 came into effect on July 1, 2025, replacing the 2015 standards with an outcome-focused framework. This document summarizes all updates made to the NextCore AI Backend system to support the new standards structure.
+The Standards for Registered Training Organisations (RTOs) 2025 came into effect on July 1, 2025, replacing the 2015 standards with an outcome-focused framework. This document summarizes all updates made to the RTOComply AI Backend system to support the new standards structure.
 
 ## Key Changes in 2025 Standards
 
@@ -247,4 +247,4 @@ GET /api/asqa-standards/?quality_area=1
 
 **Document Version:** 1.0  
 **Last Updated:** November 7, 2025  
-**Author:** NextCore AI Backend Team
+**Author:** RTOComply AI Backend Team

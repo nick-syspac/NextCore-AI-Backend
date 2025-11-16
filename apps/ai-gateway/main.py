@@ -70,7 +70,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 
 
 app = FastAPI(
-    title="NextCore AI Gateway",
+    title="RTOComply AI Gateway",
     description="AI model routing and metering gateway",
     version="1.0.0",
     lifespan=lifespan,
@@ -401,7 +401,7 @@ async def chat_completions(
 async def root():
     """Root endpoint."""
     return {
-        "service": "NextCore AI Gateway",
+        "service": "RTOComply AI Gateway",
         "version": "1.0.0",
         "endpoints": {
             "health": "/health",

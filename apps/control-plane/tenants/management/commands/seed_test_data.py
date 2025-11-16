@@ -6131,7 +6131,7 @@ Currency Score: {recent_scan.currency_score:.1f}/100
                     token_expires_at=token_expires_at,
                     api_base_url=config_data['api_base_url'],
                     api_key=api_key,
-                    webhook_url=f"https://nextcore.example.com/webhooks/{integration_type}/{tenant.id}" if integration_type in ['stripe', 'xero'] else '',
+                    webhook_url=f"https://rtocomply.example.com/webhooks/{integration_type}/{tenant.id}" if integration_type in ['stripe', 'xero'] else '',
                     webhook_secret=f"whsec_{random.randint(10**20, 10**21)}" if integration_type in ['stripe', 'xero'] else '',
                     auto_sync_enabled=(status == 'active' and config_data['sync_interval'] > 0),
                     sync_interval_minutes=config_data['sync_interval'],

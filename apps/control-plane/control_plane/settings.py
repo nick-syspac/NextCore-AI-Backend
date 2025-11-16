@@ -213,13 +213,13 @@ REST_FRAMEWORK = {
 
 # API Documentation Configuration
 SPECTACULAR_SETTINGS = {
-    "TITLE": "NextCore AI Cloud - Control Plane API",
+    "TITLE": "RTOComply AI Cloud - Control Plane API",
     "DESCRIPTION": "REST API for RTO Comply AI Backend - Comprehensive compliance and education management platform",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "CONTACT": {
-        "name": "NextCore AI Support",
-        "email": "support@nextcore.ai",
+        "name": "RTOComply AI Support",
+        "email": "support@rtocomply.ai",
     },
     "LICENSE": {
         "name": "Proprietary",
@@ -322,7 +322,7 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
-        "KEY_PREFIX": "nextcore",
+        "KEY_PREFIX": "rtocomply",
         "TIMEOUT": 300,
     }
 }

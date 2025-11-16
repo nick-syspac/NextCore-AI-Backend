@@ -1,4 +1,4 @@
-# Quick Start Guide - NextCore AI Cloud
+# Quick Start Guide - RTOComply AI Cloud
 
 ## 🚀 Get Started in 5 Minutes
 
@@ -11,8 +11,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/nick-syspac/NextCore-AI-Cloud.git
-cd NextCore-AI-Cloud
+git clone https://github.com/nick-syspac/RTOComply-AI-Backend.git
+cd RTOComply-AI-Backend
 
 # Copy environment file
 cp .env.example .env

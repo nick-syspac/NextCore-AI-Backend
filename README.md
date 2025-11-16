@@ -1,8 +1,8 @@
-# NextCore AI Backend
+# RTOComply AI Backend
 
-Production-ready backend services for the NextCore AI RTO SaaS platform.
+Production-ready backend services for the RTOComply AI RTO SaaS platform.
 
-[![CI Status](https://github.com/nick-syspac/NextCore-AI-Backend/workflows/CI%20(Python)/badge.svg)](https://github.com/nick-syspac/NextCore-AI-Backend/actions)
+[![CI Status](https://github.com/nick-syspac/RTOComply-AI-Backend/workflows/CI%20(Python)/badge.svg)](https://github.com/nick-syspac/RTOComply-AI-Backend/actions)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ## 🏗️ Architecture
@@ -26,8 +26,8 @@ This repository contains three main services:
 
 ```bash
 # Clone repository
-git clone https://github.com/nick-syspac/NextCore-AI-Backend.git
-cd NextCore-AI-Backend
+git clone https://github.com/nick-syspac/RTOComply-AI-Backend.git
+cd RTOComply-AI-Backend
 
 # Configure environment
 cp .env.example .env
@@ -53,7 +53,7 @@ make createsuperuser
 ## 📁 Project Structure
 
 ```
-NextCore-AI-Backend/
+RTOComply-AI-Backend/
 ├── apps/
 │   ├── control-plane/          # Django REST API
 │   │   ├── adaptive_pathway/   # Adaptive learning pathways
@@ -231,7 +231,7 @@ terraform apply
 
 ## 🔗 Related Repositories
 
-- **Frontend**: [NextCore-AI-Portal](https://github.com/nick-syspac/NextCore-AI-Portal) - Next.js web portal
+- **Frontend**: [RTOComply-AI-Portal](https://github.com/nick-syspac/RTOComply-AI-Portal) - Next.js web portal
 
 ## 📚 Documentation
 
