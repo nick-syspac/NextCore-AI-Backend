@@ -22,7 +22,7 @@ class ASQAStandardModelTest(TestCase):
         )
 
     def test_standard_creation(self):
-        self.assertEqual(str(self.standard), "1.1 - Training and assessment")
+        self.assertEqual(str(self.standard), "1.1 - Training and assessment (2015)")
         self.assertTrue(self.standard.is_active)
 
 
