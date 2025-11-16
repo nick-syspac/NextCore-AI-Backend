@@ -48,12 +48,19 @@ jobs:
       
       - name: Stop existing containers
         run: |
-          docker compose down || true
+          # Stop and remove containers, networks, volumes
+          docker compose down --remove-orphans || true
+          
+          # Kill any process using port 8000
+          sudo lsof -ti:8000 | xargs -r sudo kill -9 || true
+          
+          # Wait a moment for ports to be released
+          sleep 2
         continue-on-error: true
       
       - name: Deploy with docker-compose
         run: |
-          docker compose up -d
+          docker compose up -d --force-recreate --remove-orphans
       
       - name: Wait for services to be healthy
         run: |
