@@ -122,6 +122,7 @@ class TenantCreateSerializer(serializers.ModelSerializer):
             "abn",
             "acn",
             "business_structure",
+            "gst_registered",
             "registered_address",
             "postal_address",
             "billing_email",

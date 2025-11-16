@@ -99,6 +99,10 @@ class Tenant(models.Model):
         blank=True,
         help_text="Legal structure of the business"
     )
+    gst_registered = models.BooleanField(
+        default=False,
+        help_text="Is the business registered for GST?"
+    )
     registered_address = models.TextField(
         blank=True,
         help_text="Registered business address"

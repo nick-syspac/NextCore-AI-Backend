@@ -30,6 +30,7 @@ class TenantAdmin(admin.ModelAdmin):
                     "abn",
                     "acn",
                     "business_structure",
+                    "gst_registered",
                     "registered_address",
                     "postal_address",
                 ]
