@@ -8,8 +8,7 @@ on:
   pull_request:
 jobs:
   test:
-    runs-on: 
-      [self-hosted, nextcore]
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: ['3.12', '3.13']
