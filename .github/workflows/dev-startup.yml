@@ -1,0 +1,143 @@
+name: Dev Startup
+
+on:
+  workflow_dispatch:
+    inputs:
+      rebuild_images:
+        description: 'Rebuild Docker images before starting'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  startup:
+    runs-on: [self-hosted, nextcore]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Build Docker images
+        if: ${{ inputs.rebuild_images }}
+        run: |
+          echo "Building Docker images..."
+          
+          docker build \
+            -t rtocomply-ai-backend/control-plane:dev \
+            -f apps/control-plane/Dockerfile \
+            apps/control-plane
+          
+          docker build \
+            -t rtocomply-ai-backend/ai-gateway:dev \
+            -f apps/ai-gateway/Dockerfile \
+            apps/ai-gateway
+          
+          docker build \
+            -t rtocomply-ai-backend/worker:dev \
+            -f apps/worker/Dockerfile \
+            apps/worker
+      
+      - name: Stop existing containers
+        run: |
+          echo "Stopping existing containers..."
+          docker compose down --remove-orphans || true
+          
+          # Kill any process using required ports
+          sudo lsof -ti:8000 | xargs -r sudo kill -9 || true
+          sudo lsof -ti:8080 | xargs -r sudo kill -9 || true
+          
+          # Wait for ports to be released
+          sleep 2
+        continue-on-error: true
+      
+      - name: Start Docker containers
+        run: |
+          echo "Starting all Docker containers..."
+          docker compose up -d
+      
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for services to start..."
+          sleep 10
+          
+          # Check database
+          echo "Checking database..."
+          docker compose exec -T db pg_isready -U postgres || echo "⚠️  Database not ready"
+          
+          # Check Redis
+          echo "Checking Redis..."
+          docker compose exec -T redis redis-cli ping || echo "⚠️  Redis not ready"
+          
+          # Check MinIO
+          echo "Checking MinIO..."
+          curl -sf http://localhost:9000/minio/health/live > /dev/null 2>&1 && echo "✅ MinIO is healthy" || echo "⚠️  MinIO not ready"
+          
+          # Wait for control-plane to be responsive
+          echo "Checking Control Plane..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+              echo "✅ Control Plane is healthy"
+              break
+            fi
+            echo "Waiting for Control Plane... ($i/30)"
+            sleep 2
+          done
+          
+          # Wait for ai-gateway to be responsive
+          echo "Checking AI Gateway..."
+          for i in {1..30}; do
+            if curl -sf http://localhost:8080/health > /dev/null 2>&1; then
+              echo "✅ AI Gateway is healthy"
+              break
+            fi
+            echo "Waiting for AI Gateway... ($i/30)"
+            sleep 2
+          done
+      
+      - name: Show running containers
+        run: |
+          echo "═══════════════════════════════════════"
+          echo "         🚀 Running Containers"
+          echo "═══════════════════════════════════════"
+          docker compose ps
+          echo ""
+          
+          echo "═══════════════════════════════════════"
+          echo "          📡 Service URLs"
+          echo "═══════════════════════════════════════"
+          echo "🌐 Control Plane:    http://localhost:8000"
+          echo "🤖 AI Gateway:       http://localhost:8080"
+          echo "🗄️  PostgreSQL:       localhost:5432"
+          echo "⚡ Redis:            localhost:6379"
+          echo "📦 MinIO Console:    http://localhost:9001"
+          echo "📦 MinIO API:        http://localhost:9000"
+          echo "═══════════════════════════════════════"
+      
+      - name: Show recent logs
+        if: always()
+        run: |
+          echo "═══════════════════════════════════════"
+          echo "     📋 Control Plane Logs (last 50)"
+          echo "═══════════════════════════════════════"
+          docker compose logs --tail=50 control-plane
+          
+          echo ""
+          echo "═══════════════════════════════════════"
+          echo "      🤖 AI Gateway Logs (last 50)"
+          echo "═══════════════════════════════════════"
+          docker compose logs --tail=50 ai-gateway
+          
+          echo ""
+          echo "═══════════════════════════════════════"
+          echo "       👷 Worker Logs (last 50)"
+          echo "═══════════════════════════════════════"
+          docker compose logs --tail=50 worker
+      
+      - name: Startup summary
+        if: success()
+        run: |
+          echo "✅ All services started successfully!"
+          echo "📅 Started at: $(date)"
+          echo ""
+          echo "To view logs: docker compose logs -f [service-name]"
+          echo "To stop: docker compose down"
