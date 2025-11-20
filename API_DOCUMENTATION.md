@@ -1,5 +1,9 @@
 # API Documentation
 
+> [!IMPORTANT]
+> **Full API Reference**: For a complete list of all available endpoints, parameters, and schemas, please refer to [API_REFERENCE.md](API_REFERENCE.md).
+
+
 ## Base URLs
 
 - **Control Plane**: `http://localhost:8000` (dev) / `https://api.yourcompany.com` (prod)
