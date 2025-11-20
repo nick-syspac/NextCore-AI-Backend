@@ -9,7 +9,7 @@ on:
         options: [dev, staging, prod]
 jobs:
   migrate:
-    runs-on: [self-hosted, rtocomply]
+    runs-on: [self-hosted, backend]
     environment: ${{ inputs.environment }}
     permissions:
       id-token: write

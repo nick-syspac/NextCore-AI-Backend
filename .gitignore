@@ -25,3 +25,6 @@ crash.log
 apps/control-plane/venv/*
 
 *.gz
+
+actions-runner/*
+

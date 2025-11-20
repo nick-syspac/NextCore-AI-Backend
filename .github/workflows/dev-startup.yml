@@ -11,7 +11,7 @@ on:
 
 jobs:
   startup:
-    runs-on: [self-hosted, nextcore]
+    runs-on: [self-hosted, backend]
     
     steps:
       - name: Checkout code

@@ -4,7 +4,7 @@ on:
     branches: [ main ]
 jobs:
   release:
-    runs-on: [self-hosted, nextcore]
+    runs-on: [self-hosted, backend]
     permissions:
       contents: write       # Required to push tags and update releases
       issues: write         # Required to comment on issues
