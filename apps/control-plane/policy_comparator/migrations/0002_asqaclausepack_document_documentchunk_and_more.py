@@ -142,7 +142,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='asqastandard',
             name='version',
-            field=models.CharField(choices=[('2015', 'Standards for RTOs 2015'), ('2025', 'Standards for RTOs 2025')], default='2025', max_length=20),
+            field=models.CharField(choices=[('2015', 'Standards for RTOs 2015'), ('2025', 'Standards for RTOs 2025')], default='2015', max_length=20),
         ),
         migrations.AlterUniqueTogether(
             name='asqastandard',
