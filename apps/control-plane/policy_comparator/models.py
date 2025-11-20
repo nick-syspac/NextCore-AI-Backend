@@ -205,7 +205,7 @@ class ASQAStandard(models.Model):
     ]
 
     standard_number = models.CharField(
-        max_length=20, db_index=True, help_text="e.g., Standard 1.1 (2015) or QA1.1 (2025)"
+        max_length=20, db_index=True, help_text="Enter the standard number only (e.g., '1.1' or 'QA1.1'), without any year suffix."
     )
     title = models.CharField(max_length=300)
     description = models.TextField()
