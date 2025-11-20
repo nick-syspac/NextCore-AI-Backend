@@ -237,7 +237,7 @@ class ASQAStandard(models.Model):
     # Metadata
     is_active = models.BooleanField(default=True)
     effective_date = models.DateField(null=True, blank=True)
-    version = models.CharField(max_length=20, choices=VERSIONS, default="2025")
+    version = models.CharField(max_length=20, choices=VERSIONS, default="2015")
     
     # Official ASQA links
     asqa_url = models.URLField(
