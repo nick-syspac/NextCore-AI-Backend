@@ -566,7 +566,7 @@ class PolicyConversionService:
                 (rf'\bStandard\s+{re.escape(std_2015)}\b', f'Standard {replacement_text}'),
                 (rf'\bClause\s+{re.escape(std_2015)}\b', f'Standard {replacement_text}'),
                 (rf'\bSection\s+{re.escape(std_2015)}\b', f'Standard {replacement_text}'),
-                (rf'\b{re.escape(std_2015)}\b(?!\.\d)', replacement_text),  # Bare number
+                (rf'(?<!\d\.)\b{re.escape(std_2015)}\b(?!\.\d)', replacement_text),  # Bare number
             ]
             
             for pattern, replacement in patterns:
