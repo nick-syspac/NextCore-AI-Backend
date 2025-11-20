@@ -4,15 +4,26 @@ URL configuration for control plane application.
 
 from django.contrib import admin
 from django.urls import path, include
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 from rest_framework.authtoken.views import obtain_auth_token
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
+import os
+
+
+def serve_favicon(request):
+    """Serve the favicon.ico file."""
+    favicon_path = os.path.join(settings.STATIC_ROOT, 'favicon.ico')
+    if os.path.exists(favicon_path):
+        return FileResponse(open(favicon_path, 'rb'), content_type='image/x-icon')
+    from django.http import HttpResponseNotFound
+    return HttpResponseNotFound()
 
 
 def health(_):
@@ -84,6 +95,8 @@ urlpatterns = [
         "api/tenants/<slug:tenant_slug>/micro-credentials/",
         include("micro_credential.urls"),
     ),
+    # Favicon
+    path("favicon.ico", serve_favicon),
 ]
 
 # WhiteNoise handles static files automatically, no need for manual serving
