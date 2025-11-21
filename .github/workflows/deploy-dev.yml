@@ -59,6 +59,10 @@ jobs:
         continue-on-error: true
       
       - name: Deploy with docker-compose
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           docker compose up -d --force-recreate --remove-orphans
       
