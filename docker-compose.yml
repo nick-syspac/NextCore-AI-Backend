@@ -1,4 +1,3 @@
-version: '3.9'
 services:
   db:
     image: postgres:16
@@ -68,8 +67,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./apps/control-plane:/app
+    # Note: Volume mount removed for deployment to avoid overwriting installed packages
+    # For local development with hot-reload, uncomment the line below:
+    # volumes:
+    #   - ./apps/control-plane:/app
     command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     healthcheck:
       test: [ "CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost', 8000); conn.request('GET', '/health'); r = conn.getresponse(); exit(0 if r.status == 200 else 1)" ]
@@ -101,9 +102,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    volumes:
-      - ./apps/worker:/app
-      - ./apps/control-plane:/control-plane
+    # Note: Volume mounts removed for deployment to avoid overwriting installed packages
+    # For local development with hot-reload, uncomment the lines below:
+    # volumes:
+    #   - ./apps/worker:/app
+    #   - ./apps/control-plane:/control-plane
     healthcheck:
       test: [ "CMD-SHELL", "celery -A worker inspect ping || exit 1" ]
       interval: 30s
@@ -123,8 +126,10 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    volumes:
-      - ./apps/ai-gateway:/app
+    # Note: Volume mount removed for deployment to avoid overwriting installed packages
+    # For local development with hot-reload, uncomment the line below:
+    # volumes:
+    #   - ./apps/ai-gateway:/app
     healthcheck:
       test: [ "CMD", "python", "-c", "import http.client; conn = http.client.HTTPConnection('localhost', 8080); conn.request('GET', '/health'); r = conn.getresponse(); exit(0 if r.status == 200 else 1)" ]
       interval: 30s

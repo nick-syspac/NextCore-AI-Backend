@@ -30,24 +30,24 @@ jobs:
       - name: Build control-plane image
         run: |
           docker build \
-            -t nextcore-ai-backend/control-plane:dev \
-            -t nextcore-ai-backend/control-plane:${{ github.sha }} \
+            -t rtocomply-ai-backend/control-plane:dev \
+            -t rtocomply-ai-backend/control-plane:${{ github.sha }} \
             -f apps/control-plane/Dockerfile \
             apps/control-plane
       
       - name: Build ai-gateway image
         run: |
           docker build \
-            -t nextcore-ai-backend/ai-gateway:dev \
-            -t nextcore-ai-backend/ai-gateway:${{ github.sha }} \
+            -t rtocomply-ai-backend/ai-gateway:dev \
+            -t rtocomply-ai-backend/ai-gateway:${{ github.sha }} \
             -f apps/ai-gateway/Dockerfile \
             apps/ai-gateway
       
       - name: Build worker image
         run: |
           docker build \
-            -t nextcore-ai-backend/worker:dev \
-            -t nextcore-ai-backend/worker:${{ github.sha }} \
+            -t rtocomply-ai-backend/worker:dev \
+            -t rtocomply-ai-backend/worker:${{ github.sha }} \
             -f apps/worker/Dockerfile \
             apps/worker
       
