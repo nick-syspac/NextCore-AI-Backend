@@ -93,6 +93,9 @@ services:
       - DB_PASSWORD=postgres
       - DJANGO_SECRET_KEY=dev-secret-key-change-in-production
       - DJANGO_DEBUG=True
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
     depends_on:
       db:
         condition: service_healthy
