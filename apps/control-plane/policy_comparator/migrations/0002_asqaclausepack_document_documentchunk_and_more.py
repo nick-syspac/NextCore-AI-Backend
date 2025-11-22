@@ -6,6 +6,24 @@ from django.conf import settings
 from django.db import migrations, models
 
 
+def preserve_existing_2015_standards(apps, schema_editor):
+    """
+    Data migration to preserve existing ASQAStandard records as 2015 version
+    before changing the default to 2025 for new records.
+    """
+    ASQAStandard = apps.get_model('policy_comparator', 'ASQAStandard')
+    # All existing records should remain as 2015 since that was the original default
+    # This ensures we don't accidentally change existing 2015 standards to 2025
+    ASQAStandard.objects.filter(version='2015').update(version='2015')
+
+
+def reverse_preserve_2015_standards(apps, schema_editor):
+    """
+    Reverse data migration - no action needed as we're just preserving existing data.
+    """
+    pass
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -139,6 +157,8 @@ class Migration(migrations.Migration):
             name='standard_type',
             field=models.CharField(choices=[('training_assessment', 'Training and Assessment'), ('trainer_assessor', 'Trainer and Assessor'), ('educational_support', 'Educational and Support Services'), ('certification', 'Certification'), ('engagement_employer', 'Engagement with Employers'), ('complaints_appeals', 'Complaints and Appeals'), ('governance', 'Governance and Administration'), ('financial', 'Financial Management'), ('qa1_training_assessment', 'Quality Area 1 - Training and Assessment'), ('qa2_student_support', 'Quality Area 2 - VET Student Support'), ('qa3_workforce', 'Quality Area 3 - VET Workforce'), ('qa4_governance', 'Quality Area 4 - Governance'), ('compliance_information', 'Compliance - Information and Transparency'), ('compliance_integrity', 'Compliance - Integrity of NRT Products'), ('compliance_accountability', 'Compliance - Accountability'), ('compliance_fit_proper', 'Compliance - Fit and Proper Person'), ('credential_policy', 'Credential Policy')], max_length=50),
         ),
+        # Data migration to preserve existing 2015 standards before changing default to 2025
+        migrations.RunPython(preserve_existing_2015_standards, reverse_preserve_2015_standards),
         migrations.AlterField(
             model_name='asqastandard',
             name='version',
