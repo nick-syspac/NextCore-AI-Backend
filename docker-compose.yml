@@ -102,11 +102,11 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    # Note: Volume mounts removed for deployment to avoid overwriting installed packages
-    # For local development with hot-reload, uncomment the lines below:
-    # volumes:
-    #   - ./apps/worker:/app
-    #   - ./apps/control-plane:/control-plane
+    volumes:
+      # Control-plane mount is required for Django settings access
+      - ./apps/control-plane:/control-plane
+      # Worker code mount can be commented out for deployment:
+      # - ./apps/worker:/app
     healthcheck:
       test: [ "CMD-SHELL", "celery -A worker inspect ping || exit 1" ]
       interval: 30s

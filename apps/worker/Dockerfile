@@ -44,11 +44,14 @@ RUN useradd -m -u 1000 appuser && \
 # Copy Python dependencies from builder
 COPY --from=builder --chown=appuser:appuser /root/.local /home/appuser/.local
 
-# Copy application code
+# Copy worker application code
 COPY --chown=appuser:appuser . .
 
 # Switch to non-root user
 USER appuser
+
+# The control-plane code needs to be accessible for Django settings
+# This will be mounted or copied at runtime via docker-compose
 
 # Run Celery worker
 CMD ["celery", "-A", "worker", "worker", "--loglevel=info", "--concurrency=4"]
