@@ -1,5 +1,12 @@
 from django.contrib import admin
-from .models import UserInvitation, EmailVerification
+from .models import UserInvitation, EmailVerification, UserProfile
+
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "supabase_user_id", "created_at", "updated_at")
+    search_fields = ("user__username", "user__email", "supabase_user_id")
+    readonly_fields = ("created_at", "updated_at")
 
 
 @admin.register(UserInvitation)

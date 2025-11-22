@@ -7,7 +7,11 @@ from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-from .models import UserInvitation, EmailVerification
+from .models import UserInvitation, EmailVerification, UserProfile
+from .supabase_service import supabase_service
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -60,12 +64,20 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop("password_confirm")
         invitation_token = validated_data.pop("invitation_token", None)
 
+        # Extract data for user creation
+        username = validated_data["username"]
+        email = validated_data["email"]
+        password = validated_data["password"]
+        first_name = validated_data.get("first_name", "")
+        last_name = validated_data.get("last_name", "")
+
+        # Create Django user
         user = User.objects.create_user(
-            username=validated_data["username"],
-            email=validated_data["email"],
-            password=validated_data["password"],
-            first_name=validated_data.get("first_name", ""),
-            last_name=validated_data.get("last_name", ""),
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
         )
 
         # Create auth token
@@ -73,6 +85,34 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
         # Create email verification
         EmailVerification.objects.create(user=user)
+
+        # Create user profile
+        profile = UserProfile.objects.create(user=user)
+
+        # Create Supabase user
+        try:
+            supabase_user = supabase_service.create_user(
+                email=email,
+                password=password,
+                user_metadata={
+                    "username": username,
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "django_user_id": str(user.id),
+                },
+            )
+
+            if supabase_user:
+                # Store Supabase user ID in profile
+                profile.supabase_user_id = supabase_user.id
+                profile.save()
+                logger.info(f"Created Supabase user for {email} with ID {supabase_user.id}")
+            else:
+                logger.warning(f"Failed to create Supabase user for {email}, continuing with Django-only user")
+
+        except Exception as e:
+            logger.error(f"Exception creating Supabase user for {email}: {e}")
+            # Continue with Django user even if Supabase creation fails
 
         # Handle invitation if provided
         if invitation_token:

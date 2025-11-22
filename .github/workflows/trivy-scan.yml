@@ -6,7 +6,7 @@ on:
     branches: [main]
 jobs:
   scan:
-    runs-on: [self-hosted, backend]
+    runs-on: [self-hosted, nextcore]
     # Only run if the build workflow succeeded
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:

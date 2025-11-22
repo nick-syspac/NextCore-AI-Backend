@@ -10,6 +10,29 @@ from django.utils import timezone
 from tenants.models import Tenant
 
 
+class UserProfile(models.Model):
+    """Extended user profile with Supabase integration."""
+
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="profile", primary_key=True
+    )
+    supabase_user_id = models.UUIDField(
+        null=True,
+        blank=True,
+        unique=True,
+        db_index=True,
+        help_text="Supabase Auth user ID",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "user_profiles"
+
+    def __str__(self):
+        return f"Profile for {self.user.username}"
+
+
 class UserInvitation(models.Model):
     """Model for tenant user invitations."""
 
