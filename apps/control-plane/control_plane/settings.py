@@ -181,10 +181,20 @@ CORS_ALLOWED_ORIGINS = os.getenv(
 CORS_ALLOW_CREDENTIALS = True
 
 # Supabase Configuration
+# Get these from your Supabase project settings > API
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")  # Public anon key
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")  # For admin operations
+
+# JWT Secret for verifying Supabase tokens
+# Found in: Project Settings > API > JWT Settings > JWT Secret
 SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
-SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
+
+# JWT Algorithm (usually HS256 for Supabase)
+SUPABASE_JWT_ALGORITHM = os.getenv("SUPABASE_JWT_ALGORITHM", "HS256")
+
+# Legacy keys (for backward compatibility)
+SUPABASE_KEY = SUPABASE_ANON_KEY  # Alias for anon key
 
 # REST Framework Configuration
 REST_FRAMEWORK = {

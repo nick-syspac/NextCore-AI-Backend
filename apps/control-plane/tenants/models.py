@@ -160,9 +160,10 @@ class Tenant(models.Model):
 
 class TenantUser(models.Model):
     """
-    Maps users to tenants with role-based access.
+    Maps users to tenants with role-based access (TenantMembership).
 
     A user can belong to multiple tenants with different roles.
+    Supports both legacy Django User and new UserAccount models.
     """
 
     class Role(models.TextChoices):
@@ -171,22 +172,63 @@ class TenantUser(models.Model):
         MEMBER = "member", "Member"
         VIEWER = "viewer", "Viewer"
 
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        INVITED = "invited", "Invited"
+        PENDING = "pending", "Pending"
+        SUSPENDED = "suspended", "Suspended"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="users")
+    
+    # Support both legacy Django User and new UserAccount
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="tenant_memberships"
+        User, 
+        on_delete=models.CASCADE, 
+        related_name="tenant_memberships",
+        null=True,
+        blank=True,
     )
+    user_account = models.ForeignKey(
+        'users.UserAccount',
+        on_delete=models.CASCADE,
+        related_name="tenant_memberships",
+        null=True,
+        blank=True,
+    )
+    
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.MEMBER)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.ACTIVE,
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = [["tenant", "user"]]
+        unique_together = [["tenant", "user"], ["tenant", "user_account"]]
         ordering = ["tenant", "role"]
+        indexes = [
+            models.Index(fields=["tenant", "status"]),
+            models.Index(fields=["user_account", "status"]),
+        ]
 
     def __str__(self):
-        return f"{self.user.username} - {self.tenant.name} ({self.role})"
+        if self.user_account:
+            return f"{self.user_account.primary_email} - {self.tenant.name} ({self.role})"
+        elif self.user:
+            return f"{self.user.username} - {self.tenant.name} ({self.role})"
+        return f"TenantUser {self.id}"
+
+    def get_email(self):
+        """Get the email for this membership."""
+        if self.user_account:
+            return self.user_account.primary_email
+        elif self.user:
+            return self.user.email
+        return None
 
 
 class TenantQuota(models.Model):
