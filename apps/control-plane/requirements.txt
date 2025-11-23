@@ -20,7 +20,7 @@ beautifulsoup4==4.12.3
 requests==2.32.4
 urllib3==2.5.0
 lxml==5.3.0
-# Supabase client library (can be removed if only using JWT verification)
-# supabase==2.4.0
+# Supabase client library for user management integration
+supabase==2.4.0
 # JWT library for Supabase token verification
 PyJWT==2.9.0
