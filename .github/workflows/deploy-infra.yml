@@ -9,7 +9,7 @@ on:
         options: [dev, staging, prod]
 jobs:
   terraform:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rtocomply]
     environment: ${{ inputs.environment }}
     permissions:
       id-token: write

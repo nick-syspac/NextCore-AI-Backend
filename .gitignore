@@ -22,3 +22,9 @@ crash.log
 .coverage
 .idea/
 .vscode/
+apps/control-plane/venv/*
+
+*.gz
+
+actions-runner/*
+

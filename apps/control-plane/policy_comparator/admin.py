@@ -5,6 +5,7 @@ from .models import (
     Policy,
     ComparisonResult,
     ComparisonSession,
+    PolicyConversionSession,
 )
 
 
@@ -223,3 +224,98 @@ class ComparisonSessionAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+
+@admin.register(PolicyConversionSession)
+class PolicyConversionSessionAdmin(admin.ModelAdmin):
+    list_display = [
+        "session_name",
+        "source_policy",
+        "tenant",
+        "status",
+        "progress_percentage",
+        "quality_score",
+        "requires_human_review",
+        "created_at",
+        "completed_at",
+    ]
+    list_filter = ["status", "tenant", "ai_model", "requires_human_review", "created_at"]
+    search_fields = ["session_name", "source_policy__policy_number", "source_policy__title"]
+    readonly_fields = [
+        "created_by",
+        "created_at",
+        "started_at",
+        "completed_at",
+        "processing_time_seconds",
+    ]
+    date_hierarchy = "created_at"
+
+    fieldsets = (
+        (
+            "Session Information",
+            {
+                "fields": (
+                    "tenant",
+                    "session_name",
+                    "source_policy",
+                    "target_policy",
+                    "status",
+                    "progress_percentage",
+                )
+            },
+        ),
+        (
+            "AI Configuration",
+            {"fields": ("ai_model",)},
+        ),
+        (
+            "Conversion Results",
+            {
+                "fields": (
+                    "standards_mapping",
+                    "source_analysis",
+                    "conversion_changes",
+                    "compliance_report",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Quality Assessment",
+            {
+                "fields": (
+                    "quality_score",
+                    "requires_human_review",
+                )
+            },
+        ),
+        (
+            "Performance Metrics",
+            {
+                "fields": (
+                    "processing_time_seconds",
+                    "ai_tokens_used",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Error Handling",
+            {
+                "fields": ("error_message",),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Audit",
+            {
+                "fields": ("created_by", "created_at", "started_at", "completed_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)

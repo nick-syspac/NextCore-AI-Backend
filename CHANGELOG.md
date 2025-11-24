@@ -1,3 +1,4 @@
+# [1.1.0](https://github.com/nick-syspac/RTOComply-AI-Backend/compare/v1.0.10...v1.1.0) (2025-11-02)
 # [2.0.0](https://github.com/nick-syspac/NextCore-AI-Backend/compare/v1.1.0...v2.0.0) (2025-11-04)
 
 
@@ -165,7 +166,7 @@ Benefits:
 
 # Changelog
 
-All notable changes to the NextCore AI Cloud project.
+All notable changes to the RTOComply AI Cloud project.
 
 ## [2.0.0] - 2025-10-09
 

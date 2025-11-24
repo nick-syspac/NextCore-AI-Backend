@@ -4,8 +4,26 @@ URL configuration for control plane application.
 
 from django.contrib import admin
 from django.urls import path, include
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse
+from django.conf import settings
+from django.conf.urls.static import static
+from django.views.generic import RedirectView
 from rest_framework.authtoken.views import obtain_auth_token
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
+import os
+
+
+def serve_favicon(request):
+    """Serve the favicon.ico file."""
+    favicon_path = os.path.join(settings.STATIC_ROOT, 'favicon.ico')
+    if os.path.exists(favicon_path):
+        return FileResponse(open(favicon_path, 'rb'), content_type='image/x-icon')
+    from django.http import HttpResponseNotFound
+    return HttpResponseNotFound()
 
 
 def health(_):
@@ -17,7 +35,7 @@ def api_root(request):
     """API root endpoint with available endpoints."""
     return JsonResponse(
         {
-            "service": "NextCore AI Cloud - Control Plane",
+            "service": "RTOComply AI Cloud - Control Plane",
             "version": "1.0.0",
             "status": "operational",
             "endpoints": {
@@ -34,7 +52,12 @@ def api_root(request):
                     "tas": f"{request.scheme}://{request.get_host()}/api/tenants/{{tenant_slug}}/tas/",
                 },
             },
-            "documentation": "See API_DOCUMENTATION.md for complete API reference",
+            "documentation": {
+                "swagger": f"{request.scheme}://{request.get_host()}/api/schema/swagger-ui/",
+                "redoc": f"{request.scheme}://{request.get_host()}/api/schema/redoc/",
+                "openapi_schema": f"{request.scheme}://{request.get_host()}/api/schema/",
+                "markdown": "See API_DOCUMENTATION.md for complete API reference",
+            },
         }
     )
 
@@ -46,6 +69,18 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # Health check
     path("health", health),
+    # API Documentation
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    path(
+        "api/schema/swagger-ui/",
+        SpectacularSwaggerView.as_view(url_name="schema"),
+        name="swagger-ui",
+    ),
+    path(
+        "api/schema/redoc/",
+        SpectacularRedocView.as_view(url_name="schema"),
+        name="redoc",
+    ),
     # Authentication
     path("api/auth/token/", obtain_auth_token, name="api-token-auth"),
     # API endpoints
@@ -60,4 +95,8 @@ urlpatterns = [
         "api/tenants/<slug:tenant_slug>/micro-credentials/",
         include("micro_credential.urls"),
     ),
+    # Favicon
+    path("favicon.ico", serve_favicon),
 ]
+
+# WhiteNoise handles static files automatically, no need for manual serving

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Models - Policy Conversion | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="../TAS_Generator/css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">📄 Policy Conversion</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Data Models & Structure</h1>
+            <p>Database architecture for policy conversion from 2015 to 2025 Standards</p>
+        </div>
+    </section>
+
+    <div class="main-content">
+        <main class="content">
+            <section id="overview">
+                <h2>Architecture Overview</h2>
+                <div class="card">
+                    <pre><code>┌─────────────┐                  ┌────────────────────────────┐
+│   Tenant    │──────────────────│ PolicyConversionSession    │
+└─────────────┘                  └────────────────────────────┘
+                                              │
+                                              │ source_policy (FK)
+                                              │
+                                              ↓
+                                     ┌────────────────┐
+                                     │     Policy     │◄──────────┐
+                                     │  (2015/2025)   │           │
+                                     └────────────────┘           │
+                                              ↑                   │
+                                              │ target_policy (FK)│
+                                              │ (created)         │
+                                              └───────────────────┘</code></pre>
+                </div>
+            </section>
+
+            <section id="policy-conversion-session">
+                <h2>PolicyConversionSession Model</h2>
+                
+                <div class="card">
+                    <h3>Model Definition</h3>
+                    <pre><code>class PolicyConversionSession(models.Model):
+    """
+    Track policy conversions from 2015 to 2025 ASQA Standards
+    Similar to TASConversionSession but for policy documents
+    """
+    
+    tenant = ForeignKey(Tenant)
+    
+    # Policy References
+    source_policy = ForeignKey(Policy, help_text="Original 2015 policy")
+    target_policy = ForeignKey(Policy, null=True, help_text="New 2025 policy")
+    
+    # Session Info
+    session_name = CharField(max_length=300)
+    status = CharField(choices=STATUS_CHOICES, default="pending")
+    progress_percentage = IntegerField(default=0)
+    
+    # AI Configuration
+    ai_model = CharField(default="gpt-4o")
+    
+    # Conversion Data (JSON)
+    standards_mapping = JSONField(default=dict)
+    conversion_changes = JSONField(default=list)
+    compliance_report = JSONField(default=dict)
+    source_analysis = JSONField(default=dict)
+    
+    # Quality Metrics
+    quality_score = FloatField(null=True)  # 0-100
+    requires_human_review = BooleanField(default=False)
+    
+    # Performance
+    processing_time_seconds = FloatField(default=0.0)
+    ai_tokens_used = IntegerField(default=0)
+    
+    # Error Handling
+    error_message = TextField()
+    
+    # Audit
+    created_by = ForeignKey(User)
+    created_at = DateTimeField(auto_now_add=True)
+    started_at = DateTimeField(null=True)
+    completed_at = DateTimeField(null=True)</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Status Workflow</h3>
+                    <pre><code>pending (0%)
+    ↓
+analyzing (15%)  - Analyze source policy
+    ↓
+mapping (30%)    - Map 2015 → 2025 standards
+    ↓
+converting (60%) - Transform policy content
+    ↓
+validating (85%) - Check 2025 compliance
+    ↓
+completed (100%) - Target policy created</code></pre>
+                </div>
+            </section>
+
+            <section id="json-structures">
+                <h2>JSON Field Structures</h2>
+                
+                <div class="card">
+                    <h3>standards_mapping</h3>
+                    <pre><code>{
+  "1.1": {
+    "source": "Standard 1.1 - Training and assessment",
+    "targets": ["QA1.1", "QA1.2"],
+    "mapping_type": "split",
+    "confidence": 0.95
+  },
+  "1.2": {
+    "source": "Standard 1.2 - Trainer credentials",
+    "targets": ["QA3.2"],
+    "mapping_type": "direct",
+    "confidence": 0.98
+  }
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>conversion_changes</h3>
+                    <pre><code>[
+  {
+    "section": "Assessment Principles",
+    "change_type": "standard_reference",
+    "old": "complies with Standard 1.1",
+    "new": "aligns with QA1.2 (Assessment)",
+    "rationale": "Assessment now has dedicated standard in 2025",
+    "confidence": 0.95
+  },
+  {
+    "section": "Trainer Requirements",
+    "change_type": "terminology",
+    "old": "maintain currency",
+    "new": "demonstrate ongoing professional development",
+    "rationale": "Updated terminology for 2025 Standards",
+    "confidence": 0.90
+  }
+]</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>compliance_report</h3>
+                    <pre><code>{
+  "overall_compliance": "high",
+  "compliance_score": 88.5,
+  "standards_covered": 8,
+  "standards_missing": ["QA4.3"],
+  "gaps": [
+    {
+      "standard": "QA4.3",
+      "issue": "Continuous improvement process not explicit",
+      "severity": "medium",
+      "recommendation": "Add section on policy review cycles"
+    }
+  ]
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>source_analysis</h3>
+                    <pre><code>{
+  "policy_structure": {
+    "total_sections": 8,
+    "sections_with_2015_refs": 6,
+    "complexity": "medium"
+  },
+  "standards_referenced": ["1.1", "1.2", "1.8", "5.1"],
+  "estimated_changes": 28,
+  "conversion_complexity": "medium"
+}</code></pre>
+                </div>
+            </section>
+
+            <section id="policy-model">
+                <h2>Policy Model Integration</h2>
+                
+                <div class="card">
+                    <h3>Policy Model Fields</h3>
+                    <pre><code>class Policy(models.Model):
+    tenant = ForeignKey(Tenant)
+    
+    # Identity
+    policy_number = CharField(max_length=50)
+    title = CharField(max_length=300)
+    description = TextField()
+    policy_type = CharField(choices=POLICY_TYPES)
+    
+    # Content
+    content = TextField()  # Full policy text
+    version = CharField(max_length=20)
+    
+    # Status
+    status = CharField(choices=STATUS_CHOICES)
+    
+    # Compliance
+    compliance_score = FloatField(null=True)
+    last_compared_at = DateTimeField(null=True)
+    
+    # Relationships
+    conversion_sessions_as_source → [PolicyConversionSession]
+    conversion_sessions_as_target → [PolicyConversionSession]</code></pre>
+                </div>
+            </section>
+
+            <section id="queries">
+                <h2>Common Queries</h2>
+                
+                <div class="card">
+                    <pre><code># Get all conversions for a policy
+policy = Policy.objects.get(policy_number='POL-001')
+conversions = policy.conversion_sessions_as_source.all()
+
+# Find completed high-quality conversions
+quality_conversions = PolicyConversionSession.objects.filter(
+    status='completed',
+    quality_score__gte=85
+).select_related('source_policy', 'target_policy')
+
+# Get policies created from conversions
+converted_policies = Policy.objects.filter(
+    conversion_sessions_as_target__status='completed'
+).distinct()
+
+# Get conversions needing review
+review_needed = PolicyConversionSession.objects.filter(
+    status='completed',
+    requires_human_review=True
+)
+
+# Performance analytics
+from django.db.models import Avg, Sum
+stats = PolicyConversionSession.objects.filter(
+    status='completed'
+).aggregate(
+    avg_time=Avg('processing_time_seconds'),
+    avg_quality=Avg('quality_score'),
+    total_tokens=Sum('ai_tokens_used')
+)</code></pre>
+                </div>
+            </section>
+
+            <section id="comparison">
+                <h2>Comparison with TASConversionSession</h2>
+                
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Aspect</th>
+                                <th>TASConversionSession</th>
+                                <th>PolicyConversionSession</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Document Type</td>
+                                <td>TAS (multi-section)</td>
+                                <td>Policy (single document)</td>
+                            </tr>
+                            <tr>
+                                <td>Complexity</td>
+                                <td>High (12+ sections)</td>
+                                <td>Medium (single policy)</td>
+                            </tr>
+                            <tr>
+                                <td>Typical Size</td>
+                                <td>5,000-15,000 words</td>
+                                <td>500-3,000 words</td>
+                            </tr>
+                            <tr>
+                                <td>Processing Time</td>
+                                <td>5-15 minutes</td>
+                                <td>1-5 minutes</td>
+                            </tr>
+                            <tr>
+                                <td>Token Usage</td>
+                                <td>20,000-50,000</td>
+                                <td>5,000-15,000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - Policy Conversion</p>
+        </div>
+    </footer>
+</body>
+</html>

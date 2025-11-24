@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started - TAS Generator | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">📚 TAS Generator</a>
+            <ul class="navbar-nav">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="getting-started.html" class="nav-link">Getting Started</a></li>
+                <li><a href="api-reference.html" class="nav-link">API Reference</a></li>
+                <li><a href="ai-features.html" class="nav-link">AI Features</a></li>
+                <li><a href="examples.html" class="nav-link">Examples</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Getting Started with TAS Generator</h1>
+            <p>Step-by-step guide to creating your first Training and Assessment Strategy</p>
+        </div>
+    </section>
+
+    <div class="main-content">
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#prerequisites">Prerequisites</a></li>
+                <li><a href="#authentication">Authentication</a></li>
+                <li><a href="#first-tas">Create First TAS</a></li>
+                <li><a href="#templates">Working with Templates</a></li>
+                <li><a href="#ai-features">Using AI Features</a></li>
+                <li><a href="#editing">Editing & Refinement</a></li>
+                <li><a href="#compliance">Compliance Checking</a></li>
+                <li><a href="#export">Export & Finalize</a></li>
+            </ul>
+        </aside>
+
+        <main class="content">
+            <section id="prerequisites">
+                <h2>Prerequisites</h2>
+                
+                <div class="card">
+                    <h3>What You'll Need</h3>
+                    <ul>
+                        <li><strong>API Access:</strong> Valid tenant credentials and API endpoint</li>
+                        <li><strong>Authentication:</strong> API key or OAuth token</li>
+                        <li><strong>Qualification Information:</strong> Training.gov.au code for the qualification</li>
+                        <li><strong>Context Data:</strong> Delivery mode, duration, target audience details</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>System Requirements</h3>
+                    <ul>
+                        <li>HTTP client (cURL, Postman, or programming language with HTTP library)</li>
+                        <li>JSON parsing capability</li>
+                        <li>Modern web browser for documentation</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="authentication">
+                <h2>Authentication</h2>
+                
+                <div class="card">
+                    <h3>API Authentication</h3>
+                    <p>All API requests require authentication via bearer token:</p>
+                    
+                    <pre><code>Authorization: Bearer YOUR_API_TOKEN</code></pre>
+                    
+                    <h4>Getting Your Token</h4>
+                    <pre><code>POST /api/auth/token/
+Content-Type: application/json
+
+{
+  "username": "your_username",
+  "password": "your_password"
+}
+
+Response:
+{
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc..."
+}</code></pre>
+
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Security Note:</strong> Store your API tokens securely. Never commit them to version control or expose them in client-side code.
+                    </div>
+                </div>
+            </section>
+
+            <section id="first-tas">
+                <h2>Create Your First TAS</h2>
+                
+                <div class="card">
+                    <h3>Step 1: List Available Qualifications</h3>
+                    <p>First, retrieve the list of qualifications you can create TAS documents for:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/qualifications/</code>
+                    </div>
+                    
+                    <pre><code>curl -X GET \
+  'https://api.yourorg.com/api/tenants/your-tenant/tas/qualifications/' \
+  -H 'Authorization: Bearer YOUR_TOKEN'
+
+Response:
+{
+  "qualifications": [
+    {
+      "code": "BSB50120",
+      "title": "Diploma of Business",
+      "aqf_level": "AQF_5",
+      "training_package": "BSB - Business Services",
+      "release": "2.0",
+      "units_count": 12
+    },
+    {
+      "code": "ICT40120",
+      "title": "Certificate IV in Information Technology",
+      "aqf_level": "AQF_4",
+      "training_package": "ICT - Information and Communications Technology",
+      "release": "2.1",
+      "units_count": 12
+    }
+  ]
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Step 2: Get Units for Qualification</h3>
+                    <p>Retrieve detailed unit information for your chosen qualification:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/units/?qual_code={code}</code>
+                    </div>
+                    
+                    <pre><code>curl -X GET \
+  'https://api.yourorg.com/api/tenants/your-tenant/tas/units/?qual_code=BSB50120' \
+  -H 'Authorization: Bearer YOUR_TOKEN'
+
+Response:
+{
+  "qualification": "BSB50120",
+  "core_units": [
+    {
+      "code": "BSBCRT511",
+      "title": "Develop critical thinking in others",
+      "type": "core"
+    },
+    {
+      "code": "BSBFIN501",
+      "title": "Manage budgets and financial plans",
+      "type": "core"
+    }
+  ],
+  "elective_units": [
+    {
+      "code": "BSBHRM522",
+      "title": "Manage employee and industrial relations",
+      "type": "elective"
+    }
+  ]
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Step 3: Generate TAS Document</h3>
+                    <p>Create a complete TAS document with AI-powered generation:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/generate/</code>
+                    </div>
+                    
+                    <pre><code>curl -X POST \
+  'https://api.yourorg.com/api/tenants/your-tenant/tas/generate/' \
+  -H 'Authorization: Bearer YOUR_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "code": "BSB50120",
+  "qualification_name": "Diploma of Business",
+  "aqf_level": "AQF_5",
+  "training_package": "BSB - Business Services",
+  "delivery_mode": "blended",
+  "duration_weeks": 52,
+  "target_audience": "working professionals, career changers",
+  "units_of_competency": [
+    "BSBCRT511",
+    "BSBFIN501",
+    "BSBOPS502"
+  ],
+  "assessment_methods": [
+    "Written assessments",
+    "Practical demonstrations",
+    "Projects",
+    "Portfolio of evidence"
+  ],
+  "use_gpt4": true,
+  "additional_context": "Focus on practical workplace application"
+}'
+
+Response:
+{
+  "id": 42,
+  "title": "BSB50120 - Diploma of Business",
+  "code": "BSB50120",
+  "status": "generating",
+  "message": "TAS generation started successfully",
+  "estimated_time": "2-3 minutes"
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Step 4: Check Generation Status</h3>
+                    <p>Poll the API to check when generation is complete:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/{id}/</code>
+                    </div>
+                    
+                    <pre><code>curl -X GET \
+  'https://api.yourorg.com/api/tenants/your-tenant/tas/42/' \
+  -H 'Authorization: Bearer YOUR_TOKEN'
+
+Response (when complete):
+{
+  "id": 42,
+  "title": "BSB50120 - Diploma of Business",
+  "code": "BSB50120",
+  "status": "review",
+  "sections": [
+    {
+      "key": "qualification_overview",
+      "title": "Qualification Overview",
+      "content": "<h2>Qualification Overview</h2><p>The Diploma of Business...",
+      "tokens": 450
+    },
+    {
+      "key": "target_group",
+      "title": "Target Group",
+      "content": "<h2>Target Group</h2><p>This qualification is designed for...",
+      "tokens": 380
+    }
+  ],
+  "created_at": "2024-11-06T10:30:00Z",
+  "updated_at": "2024-11-06T10:33:00Z"
+}</code></pre>
+                </div>
+            </section>
+
+            <section id="templates">
+                <h2>Working with Templates</h2>
+                
+                <div class="card">
+                    <h3>What are TAS Templates?</h3>
+                    <p>Templates define the structure, sections, and AI prompts used for TAS generation. They can be customized for different:</p>
+                    <ul>
+                        <li>AQF Levels (Certificate I-IV, Diploma, Advanced Diploma)</li>
+                        <li>Training packages</li>
+                        <li>Delivery modes</li>
+                        <li>Organizational preferences</li>
+                    </ul>
+                </div>
+
+                <div class="card">
+                    <h3>List Available Templates</h3>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-get">GET</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/templates/</code>
+                    </div>
+                    
+                    <pre><code>Response:
+[
+  {
+    "id": 5,
+    "name": "Certificate III Standard Template",
+    "template_code": "CERT3_STANDARD",
+    "aqf_level": "AQF_3",
+    "is_active": true,
+    "sections_count": 10
+  },
+  {
+    "id": 6,
+    "name": "Diploma Business Template",
+    "template_code": "DIPLOMA_BUS",
+    "aqf_level": "AQF_5",
+    "is_active": true,
+    "sections_count": 12
+  }
+]</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Create Custom Template</h3>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/templates/</code>
+                    </div>
+                    
+                    <pre><code>{
+  "name": "Custom Certificate IV Template",
+  "template_code": "CERT4_CUSTOM",
+  "aqf_level": "AQF_4",
+  "description": "Customized template for Certificate IV programs",
+  "default_sections": [
+    "qualification_overview",
+    "target_group",
+    "entry_requirements",
+    "learning_outcomes"
+  ],
+  "gpt_prompts": {
+    "qualification_overview": {
+      "temperature": 0.7,
+      "max_tokens": 1000,
+      "system_message": "You are an expert in Australian VET..."
+    }
+  }
+}</code></pre>
+                </div>
+            </section>
+
+            <section id="ai-features">
+                <h2>Using AI Features</h2>
+                
+                <div class="card">
+                    <h3>AI-Powered Enhancements</h3>
+                    <p>The TAS Generator includes 9 major AI feature areas. Here are the most commonly used:</p>
+                </div>
+
+                <div class="card">
+                    <h4>1. Enrich TGA Snapshot</h4>
+                    <p>Automatically enhance Training.gov.au data with learning outcomes and assessment hints:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/{id}/ai/enrich-tga/</code>
+                    </div>
+                    
+                    <pre><code>{
+  "unit_code": "BSBWHS411",
+  "tga_data": {
+    "title": "Implement and monitor WHS policies",
+    "elements": [...],
+    "performance_criteria": [...]
+  }
+}
+
+Response:
+{
+  "learning_outcomes": [
+    "Implement WHS consultation processes",
+    "Monitor WHS performance indicators"
+  ],
+  "assessment_hints": [
+    "Practical demonstration of consultation",
+    "Case study analysis"
+  ],
+  "industry_contexts": ["Construction", "Manufacturing"],
+  "delivery_notes": "Focus on practical application"
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h4>2. Recommend Electives</h4>
+                    <p>Get AI-powered elective recommendations based on job outcomes:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/{id}/ai/recommend-electives/</code>
+                    </div>
+                    
+                    <pre><code>{
+  "qualification_code": "BSB50120",
+  "job_outcomes": ["Business Manager", "Operations Coordinator"],
+  "available_electives": [...]
+}
+
+Response:
+[
+  {
+    "unit_code": "BSBOPS502",
+    "relevance_score": 0.95,
+    "rationale": "Critical for Business Manager role",
+    "skills_developed": ["Operational planning", "Resource allocation"]
+  }
+]</code></pre>
+                </div>
+
+                <div class="card">
+                    <h4>3. Generate Assessment Blueprint</h4>
+                    <p>Create comprehensive assessment plans for units:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/{id}/ai/assessment-blueprint/</code>
+                    </div>
+                    
+                    <pre><code>{
+  "unit_code": "BSBWHS411",
+  "elements": [...],
+  "delivery_mode": "workplace",
+  "industry_context": "construction"
+}
+
+Response:
+{
+  "assessment_tasks": [
+    {
+      "task_number": 1,
+      "name": "WHS Implementation Project",
+      "elements_assessed": ["Element 1", "Element 2"],
+      "instrument_type": "project"
+    }
+  ]
+}</code></pre>
+                </div>
+            </section>
+
+            <section id="editing">
+                <h2>Editing & Refinement</h2>
+                
+                <div class="card">
+                    <h3>Update TAS Content</h3>
+                    <p>Modify generated content as needed:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-patch">PATCH</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/{id}/</code>
+                    </div>
+                    
+                    <pre><code>{
+  "sections": [
+    {
+      "key": "qualification_overview",
+      "content": "<h2>Updated Overview</h2><p>Modified content...</p>"
+    }
+  ],
+  "status": "review"
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Regenerate Specific Section</h3>
+                    <p>If you're not happy with a section, regenerate it:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/{id}/regenerate_section/</code>
+                    </div>
+                    
+                    <pre><code>{
+  "section_key": "learning_resources"
+}
+
+Response:
+{
+  "section_key": "learning_resources",
+  "content": "<h2>Learning Resources</h2><p>Regenerated content...</p>",
+  "tokens_used": 420
+}</code></pre>
+                </div>
+            </section>
+
+            <section id="compliance">
+                <h2>Compliance Checking</h2>
+                
+                <div class="card">
+                    <h3>Run Compliance Validation</h3>
+                    <p>Check your TAS against ASQA Standards:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/{id}/ai/check-compliance/</code>
+                    </div>
+                    
+                    <pre><code>{
+  "tas_content": {...},
+  "target_clauses": ["1.1", "1.2", "1.3", "1.8"]
+}
+
+Response:
+{
+  "overall_score": 0.85,
+  "clause_scores": {
+    "1.1": {
+      "score": 0.90,
+      "status": "compliant",
+      "evidence": ["Section 2.1", "Section 3.4"],
+      "gaps": []
+    },
+    "1.2": {
+      "score": 0.75,
+      "status": "partial",
+      "gaps": ["Missing delivery strategy detail"]
+    }
+  },
+  "recommendations": [
+    "Add more detail to assessment validation process",
+    "Include specific trainer requirements for each unit"
+  ]
+}</code></pre>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>✅ Best Practice:</strong> Run compliance checks before finalizing your TAS to ensure all ASQA requirements are met.
+                </div>
+            </section>
+
+            <section id="export">
+                <h2>Export & Finalize</h2>
+                
+                <div class="card">
+                    <h3>Export to PDF</h3>
+                    <p>Generate a professional PDF document:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/{id}/export/pdf/</code>
+                    </div>
+                    
+                    <pre><code>{
+  "include_cover_page": true,
+  "include_toc": true,
+  "branding": {
+    "logo_url": "https://yourorg.com/logo.png",
+    "primary_color": "#2563eb"
+  }
+}
+
+Response:
+{
+  "download_url": "https://api.yourorg.com/downloads/tas-42.pdf",
+  "expires_at": "2024-11-07T10:30:00Z"
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Approve and Version</h3>
+                    <p>Mark TAS as approved and create a version snapshot:</p>
+                    
+                    <div class="endpoint">
+                        <span class="endpoint-method method-post">POST</span>
+                        <code class="endpoint-path">/api/tenants/{tenant_slug}/tas/{id}/approve/</code>
+                    </div>
+                    
+                    <pre><code>{
+  "status": "approved",
+  "approved_by": "Jane Smith",
+  "approval_date": "2024-11-06",
+  "notes": "Approved for 2025 delivery"
+}
+
+Response:
+{
+  "id": 42,
+  "status": "approved",
+  "version": 1,
+  "is_current_version": true,
+  "approved_at": "2024-11-06T10:30:00Z"
+}</code></pre>
+                </div>
+            </section>
+
+            <div class="alert alert-info">
+                <strong>🎉 Congratulations!</strong> You've completed the getting started guide. Next steps:
+                <ul>
+                    <li>📖 <a href="api-reference.html">Explore the complete API Reference</a></li>
+                    <li>🤖 <a href="ai-features.html">Learn about advanced AI Features</a></li>
+                    <li>💼 <a href="examples.html">View real-world Examples</a></li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - TAS Generator Documentation</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

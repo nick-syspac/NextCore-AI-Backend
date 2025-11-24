@@ -21,6 +21,21 @@ class TenantAdmin(admin.ModelAdmin):
             "Contact Information",
             {"fields": ["contact_name", "contact_email", "contact_phone"]},
         ),
+        (
+            "Legal Business Information",
+            {
+                "fields": [
+                    "registered_business_name",
+                    "trading_name",
+                    "abn",
+                    "acn",
+                    "business_structure",
+                    "gst_registered",
+                    "registered_address",
+                    "postal_address",
+                ]
+            },
+        ),
         ("Billing", {"fields": ["billing_email", "stripe_customer_id"]}),
         (
             "Metadata",

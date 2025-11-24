@@ -1,5 +1,6 @@
 Django==5.1.13
 djangorestframework==3.15.2
+drf-spectacular==0.29.0
 psycopg[binary]==3.2.3
 pgvector==0.3.5
 django-tenants==3.7.0
@@ -10,6 +11,7 @@ django-redis==5.4.0
 django-cors-headers==4.5.0
 django-filter==24.3
 python-json-logger==3.1.0
+whitenoise==6.8.2
 gunicorn==23.0.0
 sentry-sdk==2.16.0
 pydantic==2.9.2
@@ -17,4 +19,8 @@ pydantic-settings==2.5.2
 beautifulsoup4==4.12.3
 requests==2.32.4
 urllib3==2.5.0
-lxml==5.1.0
+lxml==5.3.0
+# Supabase client library for user management integration
+supabase==2.4.0
+# JWT library for Supabase token verification
+PyJWT==2.9.0

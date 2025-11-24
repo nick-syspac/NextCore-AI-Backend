@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Models - TAS Conversion | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="../TAS_Generator/css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">📋 TAS Conversion</a>
+            <ul class="navbar-nav">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="installation-setup.html" class="nav-link">Installation</a></li>
+                <li><a href="models-structure.html" class="nav-link active">Data Models</a></li>
+                <li><a href="conversion-service.html" class="nav-link">Conversion Service</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Data Models & Structure</h1>
+            <p>Understanding the database architecture that powers TAS conversion from 2015 to 2025 Standards</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#overview">Architecture Overview</a></li>
+                <li><a href="#conversion-session">TASConversionSession Model</a></li>
+                <li><a href="#status-workflow">Status Workflow</a></li>
+                <li><a href="#json-structures">JSON Field Structures</a></li>
+                <li><a href="#relationships">Model Relationships</a></li>
+                <li><a href="#standards-models">Standards Models</a></li>
+                <li><a href="#queries">Common Queries</a></li>
+                <li><a href="#admin">Admin Interface</a></li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content">
+            <!-- Overview Section -->
+            <section id="overview">
+                <h2>Architecture Overview</h2>
+                
+                <div class="card">
+                    <h3>Entity Relationship Diagram</h3>
+                    <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                   TAS Conversion System                      │
+└─────────────────────────────────────────────────────────────┘
+
+    ┌─────────────┐                  ┌──────────────────────┐
+    │   Tenant    │──────────────────│ TASConversionSession │
+    └─────────────┘                  └──────────────────────┘
+                                              │
+                                              │ source_tas (FK)
+                                              │
+                                              ↓
+                                     ┌────────────────┐
+                                     │      TAS       │◄───────────┐
+                                     │   (2015/2025)  │            │
+                                     └────────────────┘            │
+                                              ↑                    │
+                                              │ target_tas (FK)    │
+                                              │ (created)          │
+                                              └────────────────────┘
+
+    ┌──────────────┐         ┌──────────────┐
+    │ ASQAStandard │         │  ASQAClause  │
+    │   (2015)     │────────▶│   (2015)     │
+    └──────────────┘         └──────────────┘
+          │                           │
+          │                           │
+          ↓                           ↓
+    Standards Mapping (JSON in TASConversionSession)
+          ↓                           ↓
+    ┌──────────────┐         ┌──────────────┐
+    │ ASQAStandard │         │  ASQAClause  │
+    │   (2025)     │────────▶│   (2025)     │
+    └──────────────┘         └──────────────┘</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Core Tables</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Table</th>
+                                <th>Purpose</th>
+                                <th>Key Fields</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>tas_conversion_sessions</code></td>
+                                <td>Track conversion process and results</td>
+                                <td>source_tas, target_tas, status, standards_mapping</td>
+                            </tr>
+                            <tr>
+                                <td><code>tas_documents</code></td>
+                                <td>Store TAS content (both versions)</td>
+                                <td>code, sections, content, metadata</td>
+                            </tr>
+                            <tr>
+                                <td><code>asqa_standards</code></td>
+                                <td>ASQA Standards (2015 & 2025)</td>
+                                <td>standard_number, version, quality_area</td>
+                            </tr>
+                            <tr>
+                                <td><code>asqa_clauses</code></td>
+                                <td>Detailed clause content</td>
+                                <td>clause_number, description, embedding</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- TASConversionSession Model Section -->
+            <section id="conversion-session">
+                <h2>TASConversionSession Model</h2>
+                
+                <div class="card">
+                    <h3>Model Definition</h3>
+                    <pre><code>class TASConversionSession(models.Model):
+    """
+    Track TAS conversions from Standards for RTOs 2015 to 2025
+    Uses AI to intelligently map content and update compliance references
+    """
+    
+    # Core References
+    tenant = ForeignKey(Tenant)
+    source_tas = ForeignKey(TAS, help_text="Original TAS using 2015 Standards")
+    target_tas = ForeignKey(TAS, null=True, help_text="New TAS using 2025 Standards")
+    
+    # Session Info
+    session_name = CharField(max_length=200)
+    status = CharField(choices=STATUS_CHOICES, default="pending")
+    progress_percentage = IntegerField(default=0)
+    current_step = CharField(max_length=200)
+    
+    # AI Configuration
+    ai_model = CharField(default="gpt-4o")
+    
+    # Conversion Data (JSON)
+    standards_mapping = JSONField(default=dict)      # 2015 → 2025 mappings
+    source_analysis = JSONField(default=dict)        # AI analysis results
+    conversion_changes = JSONField(default=list)     # Detailed changes
+    compliance_report = JSONField(default=dict)      # Validation results
+    
+    # Summary Stats
+    sections_converted = IntegerField(default=0)
+    standards_updated = IntegerField(default=0)
+    quality_score = FloatField(null=True)            # 0-100
+    
+    # User Options
+    conversion_options = JSONField(default=dict)
+    
+    # Performance
+    processing_time_seconds = FloatField(default=0.0)
+    ai_tokens_used = IntegerField(default=0)
+    ai_cost_estimate = DecimalField(max_digits=10, decimal_places=4)
+    
+    # Error Handling
+    error_message = TextField()
+    error_details = JSONField(default=dict)
+    
+    # Review Workflow
+    requires_human_review = BooleanField(default=True)
+    review_notes = TextField()
+    reviewed_by = ForeignKey(User, null=True)
+    reviewed_at = DateTimeField(null=True)
+    
+    # Audit Trail
+    created_by = ForeignKey(User)
+    created_at = DateTimeField(auto_now_add=True)
+    started_at = DateTimeField(null=True)
+    completed_at = DateTimeField(null=True)
+    updated_at = DateTimeField(auto_now=True)</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Field Groups</h3>
+                    
+                    <h4>1. Session Management</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>session_name</code></td>
+                                <td>varchar(200)</td>
+                                <td>Human-readable name for the conversion</td>
+                            </tr>
+                            <tr>
+                                <td><code>status</code></td>
+                                <td>varchar(20)</td>
+                                <td>Current conversion status (see workflow)</td>
+                            </tr>
+                            <tr>
+                                <td><code>progress_percentage</code></td>
+                                <td>integer</td>
+                                <td>0-100 progress indicator</td>
+                            </tr>
+                            <tr>
+                                <td><code>current_step</code></td>
+                                <td>varchar(200)</td>
+                                <td>Description of current operation</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>2. AI Configuration</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Values</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>ai_model</code></td>
+                                <td>gpt-4o, gpt-4, claude-3-opus</td>
+                                <td>AI model used for conversion</td>
+                            </tr>
+                            <tr>
+                                <td><code>ai_tokens_used</code></td>
+                                <td>integer</td>
+                                <td>Total tokens consumed</td>
+                            </tr>
+                            <tr>
+                                <td><code>ai_cost_estimate</code></td>
+                                <td>decimal(10,4)</td>
+                                <td>Estimated cost in USD</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h4>3. Conversion Results</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>sections_converted</code></td>
+                                <td>integer</td>
+                                <td>Number of sections processed</td>
+                            </tr>
+                            <tr>
+                                <td><code>standards_updated</code></td>
+                                <td>integer</td>
+                                <td>Number of standard references updated</td>
+                            </tr>
+                            <tr>
+                                <td><code>quality_score</code></td>
+                                <td>float</td>
+                                <td>AI-assessed quality (0-100)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Status Workflow Section -->
+            <section id="status-workflow">
+                <h2>Status Workflow</h2>
+                
+                <div class="card">
+                    <h3>Conversion Status States</h3>
+                    <pre><code>┌──────────┐
+│ pending  │  Initial state, ready to start
+└─────┬────┘
+      │
+      ↓
+┌──────────┐
+│analyzing │  AI analyzing source TAS structure
+└─────┬────┘  - Identifies sections
+      │       - Extracts 2015 standard references
+      │       - Assesses complexity
+      ↓
+┌──────────┐
+│ mapping  │  Creating 2015 → 2025 mappings
+└─────┬────┘  - Maps each 2015 clause to 2025 standards
+      │       - Identifies split/merge scenarios
+      │       - Generates transformation rules
+      ↓
+┌────────────┐
+│ converting │  Transforming content
+└─────┬──────┘  - Updates standard references
+      │         - Revises terminology
+      │         - Adds explanatory notes
+      ↓
+┌────────────┐
+│ validating │  Checking 2025 compliance
+└─────┬──────┘  - Verifies all 2025 standards addressed
+      │         - Checks for gaps
+      │         - Calculates quality score
+      ↓
+┌───────────┐
+│ completed │  Conversion successful
+└───────────┘  - Target TAS created
+               - Ready for review
+
+      OR
+      ↓
+┌──────────┐
+│  failed  │  Error occurred
+└──────────┘  - Error details captured
+               - Can be retried</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Status Methods</h3>
+                    <pre><code># Progress calculation
+session.calculate_progress()
+# Returns: 0 (pending), 15 (analyzing), 30 (mapping), 
+#          60 (converting), 85 (validating), 100 (completed)
+
+# Mark transitions
+session.mark_as_started()        # Sets started_at
+session.mark_as_completed()      # Sets completed_at, calculates time
+session.mark_as_failed(error)    # Captures error details
+
+# Check status
+if session.status == 'completed' and session.quality_score >= 85:
+    print("High-quality conversion completed")
+elif session.requires_human_review:
+    print("Manual review required")</code></pre>
+                </div>
+            </section>
+
+            <!-- JSON Structures Section -->
+            <section id="json-structures">
+                <h2>JSON Field Structures</h2>
+                
+                <div class="card">
+                    <h3>1. standards_mapping</h3>
+                    <p>Maps 2015 standards to 2025 equivalents:</p>
+                    <pre><code>{
+  "1.1": {
+    "source_standard": "1.1",
+    "source_title": "Training and assessment",
+    "target_standards": ["QA1.1", "QA1.2"],
+    "mapping_type": "split",
+    "confidence": 0.95,
+    "transformation_rules": [
+      "Split training and assessment into separate sections",
+      "Update terminology: 'training package' → 'industry requirements'",
+      "Add outcome-focused language"
+    ],
+    "notes": "2015 Standard 1.1 covers both training and assessment. Split into QA1.1 (Training) and QA1.2 (Assessment)"
+  },
+  "1.2": {
+    "source_standard": "1.2",
+    "source_title": "Trainer and assessor competency",
+    "target_standards": ["QA3.2"],
+    "mapping_type": "direct",
+    "confidence": 0.98,
+    "transformation_rules": [
+      "Emphasize demonstrated competency",
+      "Add professional development requirements"
+    ]
+  }
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>2. source_analysis</h3>
+                    <p>AI analysis of source TAS:</p>
+                    <pre><code>{
+  "document_structure": {
+    "total_sections": 12,
+    "sections_with_2015_refs": 8,
+    "identified_sections": [
+      {
+        "name": "Training Delivery",
+        "standards_referenced": ["1.1", "1.8"],
+        "complexity": "medium",
+        "word_count": 450
+      }
+    ]
+  },
+  "standards_usage": {
+    "1.1": {"mentions": 5, "sections": ["Training Delivery", "Assessment"]},
+    "1.2": {"mentions": 3, "sections": ["Trainer Credentials"]},
+    "1.8": {"mentions": 4, "sections": ["Resources"]}
+  },
+  "conversion_complexity": "medium",
+  "estimated_changes": 45,
+  "recommended_model": "gpt-4o"
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>3. conversion_changes</h3>
+                    <p>Detailed list of all changes made:</p>
+                    <pre><code>[
+  {
+    "section": "Training Delivery",
+    "change_type": "standard_reference",
+    "old_content": "complies with Standard 1.1",
+    "new_content": "aligns with QA1.1 (Training) and QA1.2 (Assessment)",
+    "rationale": "2015 Standard 1.1 split into separate training and assessment standards in 2025",
+    "confidence": 0.95,
+    "requires_review": false
+  },
+  {
+    "section": "Trainer Credentials",
+    "change_type": "terminology_update",
+    "old_content": "trainers must maintain currency",
+    "new_content": "trainers must demonstrate ongoing professional development",
+    "rationale": "Updated terminology to match 2025 Standards language",
+    "confidence": 0.90,
+    "requires_review": false
+  },
+  {
+    "section": "Assessment",
+    "change_type": "content_addition",
+    "old_content": null,
+    "new_content": "Assessment practices focus on authentic outcomes that reflect industry practice",
+    "rationale": "Added outcome-focused language required by 2025 Standards",
+    "confidence": 0.85,
+    "requires_review": true
+  }
+]</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>4. compliance_report</h3>
+                    <p>2025 Standards compliance validation:</p>
+                    <pre><code>{
+  "overall_compliance": "high",
+  "compliance_score": 92.5,
+  "standards_coverage": {
+    "total_2025_standards": 11,
+    "standards_addressed": 10,
+    "missing_standards": ["QA4.3"],
+    "adequately_covered": 9
+  },
+  "gaps_identified": [
+    {
+      "standard": "QA4.3",
+      "title": "Continuous Improvement",
+      "issue": "No explicit continuous improvement process described",
+      "severity": "medium",
+      "recommendation": "Add section describing CI framework and review cycles"
+    }
+  ],
+  "quality_indicators": {
+    "outcome_focus": 0.90,
+    "industry_currency": 0.95,
+    "terminology_consistency": 0.88,
+    "structural_coherence": 0.93
+  },
+  "validation_date": "2025-11-15T10:30:00Z",
+  "validator": "gpt-4o"
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>5. conversion_options</h3>
+                    <p>User preferences for conversion:</p>
+                    <pre><code>{
+  "preserve_formatting": true,
+  "update_terminology": true,
+  "add_explanatory_notes": true,
+  "verbose_mode": false,
+  "auto_fix_gaps": true,
+  "quality_threshold": 85.0,
+  "review_requirements": {
+    "low_confidence_changes": true,
+    "new_content_additions": true,
+    "structural_modifications": false
+  }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Model Relationships Section -->
+            <section id="relationships">
+                <h2>Model Relationships</h2>
+                
+                <div class="card">
+                    <h3>Relationship Diagram</h3>
+                    <pre><code># TASConversionSession relationships:
+
+# 1. Source TAS (many-to-one)
+session.source_tas → TAS (2015-based)
+TAS.conversion_sessions_as_source → [TASConversionSession, ...]
+
+# 2. Target TAS (one-to-one, created during conversion)
+session.target_tas → TAS (2025-based)
+TAS.conversion_sessions_as_target → [TASConversionSession]
+
+# 3. Tenant (many-to-one)
+session.tenant → Tenant
+Tenant.tas_conversion_sessions → [TASConversionSession, ...]
+
+# 4. Users (many-to-one)
+session.created_by → User
+session.reviewed_by → User</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Querying Relationships</h3>
+                    <pre><code># Get all conversions for a TAS
+tas = TAS.objects.get(code='BSB50120')
+conversions = tas.conversion_sessions_as_source.all()
+
+# Get conversions by tenant
+tenant_sessions = TASConversionSession.objects.filter(
+    tenant=tenant
+).select_related('source_tas', 'target_tas')
+
+# Find successful high-quality conversions
+quality_conversions = TASConversionSession.objects.filter(
+    status='completed',
+    quality_score__gte=85
+).prefetch_related('source_tas', 'target_tas')
+
+# Get all 2025 TAS documents created from conversions
+converted_tas = TAS.objects.filter(
+    conversion_sessions_as_target__isnull=False,
+    conversion_sessions_as_target__status='completed'
+).distinct()</code></pre>
+                </div>
+            </section>
+
+            <!-- Standards Models Section -->
+            <section id="standards-models">
+                <h2>Standards Models (Policy Comparator)</h2>
+                
+                <div class="card">
+                    <h3>ASQAStandard Model</h3>
+                    <pre><code>class ASQAStandard(models.Model):
+    """
+    ASQA Standards for RTOs (2015 and 2025 versions)
+    """
+    standard_number = CharField(max_length=20)  # "1.1" or "QA1.1"
+    title = CharField(max_length=500)
+    description = TextField()
+    version = CharField(choices=[('2015', '2015'), ('2025', '2025')])
+    
+    # 2025-specific fields
+    quality_area = IntegerField(null=True)      # 1, 2, 3, or 4
+    standard_category = CharField(              # "outcome", "compliance", "credential"
+        max_length=50,
+        null=True
+    )
+    
+    # Relationships
+    clauses → ASQAClause (one-to-many)</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>2015 vs 2025 Standards Structure</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>2015 Standards</th>
+                                <th>2025 Standards</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>8 Standards (1.1 - 8.6)</td>
+                                <td>4 Quality Areas + Compliance + Credential Policy</td>
+                            </tr>
+                            <tr>
+                                <td>~40 clauses</td>
+                                <td>25+ standards with detailed criteria</td>
+                            </tr>
+                            <tr>
+                                <td>Process-focused</td>
+                                <td>Outcome-focused</td>
+                            </tr>
+                            <tr>
+                                <td>Linear structure</td>
+                                <td>Quality Area grouping</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>Querying Standards</h3>
+                    <pre><code># Get all 2025 standards
+standards_2025 = ASQAStandard.objects.filter(version='2025')
+
+# Get Quality Area 1 standards
+qa1_standards = ASQAStandard.objects.filter(
+    version='2025',
+    quality_area=1,
+    standard_category='outcome'
+)
+
+# Compare versions
+std_2015 = ASQAStandard.objects.get(version='2015', standard_number='1.1')
+# Find 2025 equivalent (from mapping)
+std_2025 = ASQAStandard.objects.filter(
+    version='2025',
+    standard_number__in=['QA1.1', 'QA1.2']
+)</code></pre>
+                </div>
+            </section>
+
+            <!-- Common Queries Section -->
+            <section id="queries">
+                <h2>Common Database Queries</h2>
+                
+                <div class="card">
+                    <h3>Conversion Session Queries</h3>
+                    <pre><code># 1. Active conversions
+active_sessions = TASConversionSession.objects.filter(
+    status__in=['analyzing', 'mapping', 'converting', 'validating']
+).select_related('source_tas', 'tenant')
+
+# 2. Failed conversions needing retry
+failed_sessions = TASConversionSession.objects.filter(
+    status='failed',
+    created_at__gte=timezone.now() - timedelta(days=7)
+).order_by('-created_at')
+
+# 3. High-quality completed conversions
+quality_sessions = TASConversionSession.objects.filter(
+    status='completed',
+    quality_score__gte=85,
+    requires_human_review=False
+)
+
+# 4. Conversions needing review
+review_needed = TASConversionSession.objects.filter(
+    status='completed',
+    requires_human_review=True,
+    reviewed_at__isnull=True
+).select_related('source_tas', 'created_by')
+
+# 5. Cost analysis
+from django.db.models import Sum, Avg
+cost_stats = TASConversionSession.objects.filter(
+    status='completed'
+).aggregate(
+    total_cost=Sum('ai_cost_estimate'),
+    avg_cost=Avg('ai_cost_estimate'),
+    total_tokens=Sum('ai_tokens_used')
+)
+
+# 6. Performance metrics
+perf_stats = TASConversionSession.objects.filter(
+    status='completed'
+).aggregate(
+    avg_time=Avg('processing_time_seconds'),
+    avg_quality=Avg('quality_score')
+)</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Conversion Analytics</h3>
+                    <pre><code># Get conversion success rate by qualification
+from django.db.models import Count, Q
+
+success_by_qual = TASConversionSession.objects.values(
+    'source_tas__qualification_name'
+).annotate(
+    total=Count('id'),
+    completed=Count('id', filter=Q(status='completed')),
+    failed=Count('id', filter=Q(status='failed')),
+    avg_quality=Avg('quality_score')
+).order_by('-total')
+
+# Find most common issues
+issue_analysis = TASConversionSession.objects.filter(
+    status='failed'
+).values('error_message').annotate(
+    count=Count('id')
+).order_by('-count')[:10]
+
+# Quality distribution
+quality_distribution = TASConversionSession.objects.filter(
+    status='completed',
+    quality_score__isnull=False
+).extra(
+    select={
+        'quality_bucket': "CASE "
+        "WHEN quality_score >= 90 THEN 'Excellent' "
+        "WHEN quality_score >= 80 THEN 'Good' "
+        "WHEN quality_score >= 70 THEN 'Fair' "
+        "ELSE 'Poor' END"
+    }
+).values('quality_bucket').annotate(count=Count('id'))</code></pre>
+                </div>
+            </section>
+
+            <!-- Admin Interface Section -->
+            <section id="admin">
+                <h2>Django Admin Configuration</h2>
+                
+                <div class="card">
+                    <h3>TASConversionSessionAdmin</h3>
+                    <pre><code>@admin.register(TASConversionSession)
+class TASConversionSessionAdmin(admin.ModelAdmin):
+    list_display = [
+        'session_name',
+        'source_tas',
+        'status',
+        'progress_percentage',
+        'quality_score',
+        'created_at',
+        'completed_at'
+    ]
+    
+    list_filter = [
+        'status',
+        'tenant',
+        'ai_model',
+        'requires_human_review',
+        'created_at'
+    ]
+    
+    search_fields = [
+        'session_name',
+        'source_tas__code',
+        'source_tas__title'
+    ]
+    
+    fieldsets = [
+        ('Session Information', {
+            'fields': ('session_name', 'tenant', 'status', 'progress_percentage')
+        }),
+        ('TAS Documents', {
+            'fields': ('source_tas', 'target_tas')
+        }),
+        ('AI Configuration', {
+            'fields': ('ai_model', 'conversion_options')
+        }),
+        ('Conversion Results', {
+            'fields': (
+                'standards_mapping',
+                'source_analysis',
+                'conversion_changes',
+                'compliance_report'
+            )
+        }),
+        ('Quality Metrics', {
+            'fields': (
+                'sections_converted',
+                'standards_updated',
+                'quality_score'
+            )
+        }),
+        ('Performance', {
+            'fields': (
+                'processing_time_seconds',
+                'ai_tokens_used',
+                'ai_cost_estimate'
+            )
+        })
+    ]</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Custom Admin Actions</h3>
+                    <pre><code># Add to TASConversionSessionAdmin
+
+actions = ['retry_failed_conversions', 'export_conversion_report']
+
+def retry_failed_conversions(self, request, queryset):
+    """Retry failed conversion sessions"""
+    failed_sessions = queryset.filter(status='failed')
+    count = 0
+    for session in failed_sessions:
+        session.status = 'pending'
+        session.error_message = ''
+        session.error_details = {}
+        session.save()
+        count += 1
+    self.message_user(request, f"Queued {count} sessions for retry")
+
+def export_conversion_report(self, request, queryset):
+    """Export detailed conversion report as JSON"""
+    import json
+    from django.http import HttpResponse
+    
+    data = []
+    for session in queryset:
+        data.append({
+            'session_name': session.session_name,
+            'source_tas': session.source_tas.code,
+            'status': session.status,
+            'quality_score': session.quality_score,
+            'standards_mapping': session.standards_mapping,
+            'conversion_changes': session.conversion_changes
+        })
+    
+    response = HttpResponse(json.dumps(data, indent=2), content_type='application/json')
+    response['Content-Disposition'] = 'attachment; filename="conversion_report.json"'
+    return response</code></pre>
+                </div>
+            </section>
+
+            <!-- Next Steps -->
+            <section id="next-steps">
+                <h2>Next Steps</h2>
+                
+                <div class="card">
+                    <h3>Learn More</h3>
+                    <ul>
+                        <li>📝 <a href="conversion-service.html">Conversion Service Implementation</a></li>
+                        <li>🗺️ <a href="standards-mapping.html">Standards Mapping Logic</a></li>
+                        <li>✅ <a href="validation-service.html">Compliance Validation</a></li>
+                        <li>💡 <a href="examples.html">Conversion Examples</a></li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - TAS Conversion Documentation</p>
+            <p>Version 1.0.0 | Last Updated: November 2025</p>
+        </div>
+    </footer>
+
+    <script src="../TAS_Generator/js/app.js"></script>
+</body>
+</html>

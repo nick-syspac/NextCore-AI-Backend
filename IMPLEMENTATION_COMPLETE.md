@@ -399,5 +399,5 @@ The TAS AI Integration is **fully implemented and tested** at the architecture l
 **Status:** Phase 1 Complete ✅  
 **Next Phase:** OpenAI Integration (2-4 weeks)  
 **Timeline:** January 2025  
-**Team:** NextCore AI Cloud  
+**Team:** RTOComply AI Cloud  
 **Version:** 1.0

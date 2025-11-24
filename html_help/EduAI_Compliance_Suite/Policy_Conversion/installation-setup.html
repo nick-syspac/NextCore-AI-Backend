@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Installation & Setup - Policy Conversion | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="../TAS_Generator/css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">📄 Policy Conversion</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Installation & Setup</h1>
+            <p>AI-powered policy conversion from 2015 to 2025 ASQA Standards</p>
+        </div>
+    </section>
+
+    <div class="main-content">
+        <main class="content">
+            <section id="prerequisites">
+                <h2>Prerequisites</h2>
+                <div class="card">
+                    <p>Policy Conversion requires both Policy Comparator and TAS Conversion modules:</p>
+                    <table>
+                        <thead><tr><th>Component</th><th>Purpose</th></tr></thead>
+                        <tbody>
+                            <tr><td>Policy Comparator</td><td>ASQA Standards data & comparison engine</td></tr>
+                            <tr><td>TAS Conversion</td><td>Standards mapping logic & AI services</td></tr>
+                            <tr><td>GPT-4o or Claude-3-Opus</td><td>Policy content transformation</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="installation">
+                <h2>Installation</h2>
+                
+                <div class="card">
+                    <h3>1. Verify Dependencies</h3>
+                    <pre><code>python manage.py shell
+
+>>> from policy_comparator.models import Policy, PolicyConversionSession
+>>> from policy_comparator.models import ASQAStandard
+>>> 
+>>> # Check both versions of standards exist
+>>> print(f"2015 Standards: {ASQAStandard.objects.filter(version='2015').count()}")
+>>> print(f"2025 Standards: {ASQAStandard.objects.filter(version='2025').count()}")</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>2. Environment Configuration</h3>
+                    <pre><code># Add to .env
+
+# Policy Conversion Settings
+POLICY_CONVERSION_AI_MODEL=gpt-4o
+POLICY_CONVERSION_TEMPERATURE=0.3
+POLICY_CONVERSION_MAX_TOKENS=4000
+
+# Quality Thresholds
+MIN_POLICY_QUALITY_SCORE=75.0
+REQUIRE_POLICY_REVIEW_THRESHOLD=85.0
+
+# Cost Controls
+MAX_TOKENS_PER_POLICY_CONVERSION=30000
+ENABLE_POLICY_CONVERSION_COST_TRACKING=true</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>3. Run Migrations</h3>
+                    <pre><code>python manage.py showmigrations policy_comparator
+
+# Should show PolicyConversionSession migration
+# If missing, create:
+python manage.py makemigrations policy_comparator
+python manage.py migrate policy_comparator</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>4. Load Standards Mapping</h3>
+                    <pre><code># Same mapping data used by TAS Conversion
+python manage.py shell
+
+>>> from django.core.cache import cache
+>>> mappings = cache.get('standards_mappings_2015_to_2025')
+>>> if not mappings:
+...     # Load from file
+...     import json
+...     with open('db/seeds/standards_mapping_2015_to_2025.json') as f:
+...         mappings = json.load(f)
+...     cache.set('standards_mappings_2015_to_2025', mappings, timeout=None)
+>>> print(f"Loaded {len(mappings['mappings'])} mappings")</code></pre>
+                </div>
+            </section>
+
+            <section id="testing">
+                <h2>Testing</h2>
+                <div class="card">
+                    <h3>Test Policy Conversion</h3>
+                    <pre><code>from policy_comparator.models import Policy, PolicyConversionSession
+from policy_comparator.services.policy_conversion_service import PolicyConversionService
+
+# Get test policy (2015-based)
+policy_2015 = Policy.objects.filter(
+    tenant=tenant,
+    status='approved'
+).first()
+
+# Create conversion service
+service = PolicyConversionService()
+
+# Create conversion session
+session = service.create_conversion_session(
+    source_policy=policy_2015,
+    session_name=f"Convert {policy_2015.title} to 2025",
+    user=user,
+    options={'preserve_structure': True}
+)
+
+# Execute conversion
+result = service.execute_conversion(session)
+
+print(f"Status: {result.status}")
+print(f"Quality Score: {result.quality_score}")
+print(f"Sections Converted: {result.sections_converted}")</code></pre>
+                </div>
+            </section>
+
+            <section id="api">
+                <h2>API Endpoints</h2>
+                <div class="card">
+                    <table>
+                        <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td>POST</td><td>/api/tenants/{tenant}/policies/{id}/convert/</td><td>Convert policy</td></tr>
+                            <tr><td>GET</td><td>/api/tenants/{tenant}/policy-conversion-sessions/</td><td>List sessions</td></tr>
+                            <tr><td>GET</td><td>/api/tenants/{tenant}/policy-conversion-sessions/{id}/</td><td>Session details</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="admin">
+                <h2>Admin Access</h2>
+                <div class="card">
+                    <ol>
+                        <li>Go to <code>http://localhost:8000/admin/</code></li>
+                        <li>Navigate to: <strong>Policy Comparator → Policy Conversion Sessions</strong></li>
+                        <li>View conversion history, status, and quality scores</li>
+                        <li>Review converted policies before approval</li>
+                    </ol>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - Policy Conversion</p>
+        </div>
+    </footer>
+</body>
+</html>

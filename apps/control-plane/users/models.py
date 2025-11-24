@@ -10,6 +10,85 @@ from django.utils import timezone
 from tenants.models import Tenant
 
 
+class UserAccount(models.Model):
+    """
+    Application user account linked to Supabase Auth.
+    
+    This is the main user identity in the application, keyed by Supabase user ID.
+    Stores application-specific user information while Supabase manages authentication.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    supabase_user_id = models.UUIDField(
+        unique=True,
+        db_index=True,
+        help_text="Supabase Auth user ID (auth.users.id)",
+    )
+    primary_email = models.EmailField(
+        unique=True,
+        db_index=True,
+        help_text="Primary email address from Supabase Auth",
+    )
+    full_name = models.CharField(max_length=255, blank=True)
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether the user account is active",
+    )
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Additional user metadata (preferences, settings, etc.)",
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_login_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "user_accounts"
+        indexes = [
+            models.Index(fields=["supabase_user_id"]),
+            models.Index(fields=["primary_email"]),
+            models.Index(fields=["is_active"]),
+        ]
+
+    def __str__(self):
+        return f"{self.full_name or self.primary_email} ({self.supabase_user_id})"
+
+    def update_last_login(self):
+        """Update the last login timestamp."""
+        self.last_login_at = timezone.now()
+        self.save(update_fields=["last_login_at"])
+
+
+class UserProfile(models.Model):
+    """
+    DEPRECATED: Legacy user profile model.
+    
+    This model is kept for backward compatibility with existing Django User references.
+    New code should use UserAccount instead.
+    """
+
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name="profile", primary_key=True
+    )
+    supabase_user_id = models.UUIDField(
+        null=True,
+        blank=True,
+        unique=True,
+        db_index=True,
+        help_text="Supabase Auth user ID",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "user_profiles"
+
+    def __str__(self):
+        return f"Profile for {self.user.username}"
+
+
 class UserInvitation(models.Model):
     """Model for tenant user invitations."""
 
@@ -43,12 +122,21 @@ class UserInvitation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
     accepted_at = models.DateTimeField(null=True, blank=True)
+    # Updated to reference new UserAccount model
+    accepted_by_account = models.ForeignKey(
+        'UserAccount',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="accepted_invitations",
+    )
+    # Keep legacy field for backward compatibility
     accepted_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="accepted_invitations",
+        related_name="legacy_accepted_invitations",
     )
 
     message = models.TextField(

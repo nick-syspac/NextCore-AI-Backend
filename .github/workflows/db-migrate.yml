@@ -3,12 +3,13 @@ on:
   workflow_dispatch:
     inputs:
       environment:
+        description: 'Environment to run migrations'
         required: true
         type: choice
         options: [dev, staging, prod]
 jobs:
   migrate:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, backend]
     environment: ${{ inputs.environment }}
     permissions:
       id-token: write

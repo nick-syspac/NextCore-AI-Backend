@@ -1,0 +1,388 @@
+{
+  "asqa_standards_2025": {
+    "metadata": {
+      "version": "2025",
+      "effective_date": "2025-07-01",
+      "source": "https://www.asqa.gov.au/rtos/2025-standards-rtos",
+      "legislation_outcome": "https://www.legislation.gov.au/F2025L00354/asmade/text",
+      "legislation_compliance": "https://www.legislation.gov.au/F2025L00355/asmade/text",
+      "description": "Standards for Registered Training Organisations (RTOs) 2025 - Outcome-focused standards effective from 1 July 2025"
+    },
+    
+    "outcome_standards": {
+      "quality_area_1": {
+        "title": "Quality Area 1 - Training and Assessment",
+        "description": "Outcome-focused requirements for quality training and assessment delivery",
+        "standards": [
+          {
+            "standard_number": "QA1.1",
+            "title": "Training",
+            "description": "Training is delivered in accordance with the requirements of training products and is designed to develop the skills and knowledge specified in the training product",
+            "standard_type": "qa1_training_assessment",
+            "standard_category": "outcome",
+            "quality_area": 1,
+            "asqa_url": "https://www.asqa.gov.au/rtos/2025-standards-rtos/practice-guides/practice-guide-training",
+            "requirements": [
+              "Training is systematically developed, delivered and continuously improved",
+              "Training reflects current industry practices and meets learner needs",
+              "Training strategies are appropriate for the training product and learner cohort",
+              "Training delivery is flexible and responsive to learner progress",
+              "Training incorporates appropriate use of technology and resources"
+            ],
+            "keywords": ["training delivery", "industry currency", "training strategies", "learner needs", "continuous improvement", "quality training", "training design"]
+          },
+          {
+            "standard_number": "QA1.2",
+            "title": "Assessment",
+            "description": "Assessment is conducted in accordance with the principles of assessment and rules of evidence",
+            "standard_type": "qa1_training_assessment",
+            "standard_category": "outcome",
+            "quality_area": 1,
+            "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/practice-guide-assessment",
+            "requirements": [
+              "Assessment is valid, reliable, fair and flexible",
+              "Assessment is conducted in accordance with rules of evidence (validity, sufficiency, authenticity, currency)",
+              "Assessment decisions are made by competent assessors",
+              "Assessment processes ensure integrity and quality outcomes",
+              "Assessment tools are validated regularly"
+            ],
+            "keywords": ["assessment", "principles of assessment", "rules of evidence", "valid", "reliable", "fair", "flexible", "sufficient", "authentic", "current", "competent assessor", "validation"]
+          },
+          {
+            "standard_number": "QA1.3",
+            "title": "Recognition of Prior Learning and Credit Transfer",
+            "description": "RTOs acknowledge and give credit for skills and knowledge learners already have",
+            "standard_type": "qa1_training_assessment",
+            "standard_category": "outcome",
+            "quality_area": 1,
+            "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/practice-guide-recognition-prior-learning-and-credit-transfer",
+            "requirements": [
+              "RPL processes are clearly documented and accessible",
+              "Credit transfer is provided for equivalent units",
+              "RPL and credit transfer information is provided to learners",
+              "RPL assessment meets the principles of assessment and rules of evidence",
+              "Decisions on RPL and credit transfer are timely and evidence-based"
+            ],
+            "keywords": ["RPL", "recognition of prior learning", "credit transfer", "equivalent units", "prior skills", "prior knowledge", "learner credit"]
+          },
+          {
+            "standard_number": "QA1.4",
+            "title": "Facilities, Resources and Equipment",
+            "description": "Training and assessment is delivered with appropriate facilities, resources and equipment",
+            "standard_type": "qa1_training_assessment",
+            "standard_category": "outcome",
+            "quality_area": 1,
+            "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/practice-guide-facilities-resources-and-equipment",
+            "requirements": [
+              "Facilities are fit for purpose and meet regulatory requirements",
+              "Resources reflect current industry practices and training product requirements",
+              "Equipment is appropriate, well-maintained and safe to use",
+              "Learning resources are accessible to all learners",
+              "Physical and digital resources support quality training outcomes"
+            ],
+            "keywords": ["facilities", "resources", "equipment", "learning materials", "training materials", "industry-standard", "accessible", "fit for purpose", "safe", "maintained"]
+          }
+        ]
+      },
+      
+      "quality_area_2": {
+        "title": "Quality Area 2 - VET Student Support",
+        "description": "Outcome-focused requirements for student information, support and wellbeing",
+        "standards": [
+          {
+            "standard_number": "QA2.1",
+            "title": "Information",
+            "description": "Learners are provided with accurate and accessible information about training, assessment and support services",
+            "standard_type": "qa2_student_support",
+            "standard_category": "outcome",
+            "quality_area": 2,
+            "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/practice-guide-information",
+            "requirements": [
+              "Pre-enrolment information is accurate and comprehensive",
+              "Information about training products, costs and outcomes is clear",
+              "Information is provided in formats accessible to all learners",
+              "Learners understand their rights and responsibilities",
+              "Changes to information are communicated promptly"
+            ],
+            "keywords": ["information", "pre-enrolment", "course information", "fees", "costs", "learner rights", "learner responsibilities", "accurate", "accessible", "transparent"]
+          },
+          {
+            "standard_number": "QA2.2",
+            "title": "Training Support",
+            "description": "Learners receive appropriate training support to achieve their learning outcomes",
+            "standard_type": "qa2_student_support",
+            "standard_category": "outcome",
+            "quality_area": 2,
+            "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/practice-guide-training-support",
+            "requirements": [
+              "Support needs are identified before or during training",
+              "Appropriate support services are provided or referred",
+              "Support is responsive to individual learner needs",
+              "Language, literacy and numeracy support is available",
+              "Support facilitates successful training completion"
+            ],
+            "keywords": ["training support", "learner support", "support services", "LLN", "language literacy numeracy", "learning support", "additional support", "reasonable adjustment"]
+          },
+          {
+            "standard_number": "QA2.3",
+            "title": "Diversity and Inclusion",
+            "description": "Training and assessment is inclusive and responsive to learner diversity",
+            "standard_type": "qa2_student_support",
+            "standard_category": "outcome",
+            "quality_area": 2,
+            "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/practice-guide-diversity-and-inclusion",
+            "requirements": [
+              "Training environment is inclusive and respectful",
+              "Diversity is valued and discrimination prevented",
+              "Reasonable adjustments are made for learners with disability",
+              "Cultural safety is maintained for Aboriginal and Torres Strait Islander learners",
+              "Equity principles are embedded in all practices"
+            ],
+            "keywords": ["diversity", "inclusion", "equity", "reasonable adjustment", "disability", "cultural safety", "Aboriginal", "Torres Strait Islander", "discrimination", "harassment"]
+          },
+          {
+            "standard_number": "QA2.4",
+            "title": "Wellbeing",
+            "description": "Learner health, safety and wellbeing is prioritized throughout training delivery",
+            "standard_type": "qa2_student_support",
+            "standard_category": "outcome",
+            "quality_area": 2,
+            "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/practice-guide-wellbeing",
+            "requirements": [
+              "Safe training environments are provided and maintained",
+              "Health and safety risks are identified and mitigated",
+              "Wellbeing support is available to learners",
+              "Critical incidents are managed appropriately",
+              "Work health and safety legislation is complied with"
+            ],
+            "keywords": ["wellbeing", "health and safety", "WHS", "safe environment", "risk management", "critical incident", "learner safety", "duty of care"]
+          },
+          {
+            "standard_number": "QA2.5",
+            "title": "Feedback, Complaints and Appeals",
+            "description": "Effective systems are in place for learner feedback, complaints and appeals",
+            "standard_type": "qa2_student_support",
+            "standard_category": "outcome",
+            "quality_area": 2,
+            "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/practice-guide-feedback-complaints-and-appeals",
+            "requirements": [
+              "Feedback mechanisms are accessible and effective",
+              "Complaints process is fair, transparent and timely",
+              "Appeals process provides independent review of assessment decisions",
+              "Learners can raise concerns without fear of reprisal",
+              "Feedback and complaints inform continuous improvement"
+            ],
+            "keywords": ["feedback", "complaints", "appeals", "grievance", "dispute resolution", "independent review", "fair process", "transparent", "confidential", "no victimisation"]
+          }
+        ]
+      },
+      
+      "quality_area_3": {
+        "title": "Quality Area 3 - VET Workforce",
+        "description": "Outcome-focused requirements for trainer and assessor competence and workforce management",
+        "standards": [
+          {
+            "standard_number": "QA3.1",
+            "title": "VET Workforce Management",
+            "description": "The VET workforce is appropriately qualified, inducted, supported and developed",
+            "standard_type": "qa3_workforce",
+            "standard_category": "outcome",
+            "quality_area": 3,
+            "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/practice-guide-vet-workforce-management",
+            "requirements": [
+              "Workforce planning ensures adequate qualified staff",
+              "Induction programs prepare staff for their roles",
+              "Professional development maintains currency and competence",
+              "Performance management supports quality outcomes",
+              "Industry engagement maintains workforce currency"
+            ],
+            "keywords": ["workforce management", "professional development", "induction", "performance management", "industry engagement", "staff development", "workforce planning"]
+          },
+          {
+            "standard_number": "QA3.2",
+            "title": "Trainer and Assessor Competencies",
+            "description": "Trainers and assessors hold required credentials and maintain vocational competence",
+            "standard_type": "qa3_workforce",
+            "standard_category": "outcome",
+            "quality_area": 3,
+            "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/practice-guide-trainer-and-assessor-competencies",
+            "requirements": [
+              "Trainers and assessors hold credentials specified in the Credential Policy",
+              "Vocational competence is maintained through industry engagement",
+              "Training and assessment skills are current and effective",
+              "Credentials are verified and records maintained",
+              "Professional development addresses identified needs"
+            ],
+            "keywords": ["trainer competency", "assessor competency", "credentials", "vocational competence", "industry currency", "TAE qualification", "relevant experience", "professional development"]
+          }
+        ]
+      },
+      
+      "quality_area_4": {
+        "title": "Quality Area 4 - Governance",
+        "description": "Outcome-focused requirements for leadership, risk management and continuous improvement",
+        "standards": [
+          {
+            "standard_number": "QA4.1",
+            "title": "Leadership and Accountability",
+            "description": "Effective governance and leadership drive quality training outcomes",
+            "standard_type": "qa4_governance",
+            "standard_category": "outcome",
+            "quality_area": 4,
+            "asqa_url": "https://www.asqa.gov.au/rtos/2025-standards-rtos/practice-guides/practice-guide-leadership-and-accountability",
+            "requirements": [
+              "Governance structures support quality outcomes",
+              "Roles and responsibilities are clearly defined",
+              "Decision-making processes are transparent and accountable",
+              "Resources are allocated to support quality training",
+              "Leadership demonstrates commitment to compliance and quality"
+            ],
+            "keywords": ["governance", "leadership", "accountability", "responsibility", "decision-making", "organizational structure", "management", "commitment to quality"]
+          },
+          {
+            "standard_number": "QA4.2",
+            "title": "Risk Management",
+            "description": "Risks to quality training outcomes are identified and effectively managed",
+            "standard_type": "qa4_governance",
+            "standard_category": "outcome",
+            "quality_area": 4,
+            "asqa_url": "https://www.asqa.gov.au/rtos/2025-standards-rtos/practice-guides/practice-guide-risk-management",
+            "requirements": [
+              "Risk management framework is implemented",
+              "Risks to training quality and compliance are identified",
+              "Risk mitigation strategies are effective",
+              "Risk monitoring and review is ongoing",
+              "Third party arrangements are effectively managed"
+            ],
+            "keywords": ["risk management", "risk assessment", "risk mitigation", "third party", "partnerships", "monitoring", "quality assurance", "compliance risk"]
+          },
+          {
+            "standard_number": "QA4.3",
+            "title": "Continuous Improvement",
+            "description": "Systematic monitoring and evaluation drive continuous improvement",
+            "standard_type": "qa4_governance",
+            "standard_category": "outcome",
+            "quality_area": 4,
+            "asqa_url": "https://www.asqa.gov.au/rtos/2025-standards-rtos/practice-guides/practice-guide-continuous-improvement",
+            "requirements": [
+              "Quality indicators are monitored and analyzed",
+              "Data informs improvement actions",
+              "Improvement strategies are implemented and evaluated",
+              "Stakeholder feedback drives improvements",
+              "Continuous improvement is embedded in organizational culture"
+            ],
+            "keywords": ["continuous improvement", "quality improvement", "monitoring", "evaluation", "data analysis", "improvement actions", "quality indicators", "feedback loop"]
+          }
+        ]
+      }
+    },
+    
+    "compliance_requirements": [
+      {
+        "standard_number": "C1",
+        "title": "Information and Transparency",
+        "description": "RTOs provide accurate, accessible and timely information about their operations",
+        "standard_type": "compliance_information",
+        "standard_category": "compliance",
+        "quality_area": null,
+        "asqa_url": "https://www.asqa.gov.au/rtos/2025-standards-rtos/practice-guides/practice-guide-information-and-transparency",
+        "requirements": [
+          "Marketing and advertising is ethical and accurate",
+          "Information on training.gov.au is current and accurate",
+          "Required information is published on RTO website",
+          "Changes to registration are notified promptly",
+          "Third party arrangements are disclosed"
+        ],
+        "keywords": ["information", "transparency", "marketing", "advertising", "training.gov.au", "website", "disclosure", "notification", "accurate information"]
+      },
+      {
+        "standard_number": "C2",
+        "title": "Integrity of Nationally Recognised Training Products",
+        "description": "RTOs maintain the integrity of nationally recognised training and only issue AQF certification when requirements are met",
+        "standard_type": "compliance_integrity",
+        "standard_category": "compliance",
+        "quality_area": null,
+        "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/integrity-nationally-recognised-training-products",
+        "requirements": [
+          "Training and assessment meets requirements of training products",
+          "Certifications are issued only when all requirements are met",
+          "Training product codes and titles are used correctly",
+          "Units of competency are not modified",
+          "Packaging rules for qualifications are followed"
+        ],
+        "keywords": ["integrity", "nationally recognised training", "NRT", "AQF certification", "training products", "units of competency", "qualifications", "packaging rules", "issue certificates"]
+      },
+      {
+        "standard_number": "C3",
+        "title": "Accountability",
+        "description": "RTOs maintain accurate records and comply with reporting requirements",
+        "standard_type": "compliance_accountability",
+        "standard_category": "compliance",
+        "quality_area": null,
+        "asqa_url": "https://www.asqa.gov.au/rtos/2025-standards-rtos/practice-guides/practice-guide-accountability",
+        "requirements": [
+          "Student records are accurate, secure and accessible",
+          "Reporting obligations are met (AVETMISS, USI, etc.)",
+          "Records are retained for required periods",
+          "Evidence of training and assessment is maintained",
+          "Cooperation with regulatory activities"
+        ],
+        "keywords": ["accountability", "records", "record keeping", "AVETMISS", "USI", "unique student identifier", "reporting", "data security", "privacy", "cooperation", "regulatory compliance"]
+      },
+      {
+        "standard_number": "C4",
+        "title": "Fit and Proper Person Requirements",
+        "description": "RTOs ensure key personnel meet fit and proper person requirements",
+        "standard_type": "compliance_fit_proper",
+        "standard_category": "compliance",
+        "quality_area": null,
+        "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/practice-guide-fit-and-proper-person-requirements",
+        "requirements": [
+          "Chief executive and high managerial agents meet fit and proper person requirements",
+          "Background checks are conducted",
+          "Disqualifying factors are identified and addressed",
+          "Changes to key personnel are notified",
+          "Records of fit and proper person checks are maintained"
+        ],
+        "keywords": ["fit and proper person", "chief executive", "high managerial agent", "background check", "criminal history", "disqualification", "key personnel", "integrity"]
+      }
+    ],
+    
+    "credential_policy": [
+      {
+        "standard_number": "CP1",
+        "title": "Trainer and Assessor Credentials",
+        "description": "Trainers and assessors hold credentials specified in the Credential Policy",
+        "standard_type": "credential_policy",
+        "standard_category": "credential",
+        "quality_area": null,
+        "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/practice-guide-credential-policy",
+        "requirements": [
+          "Trainers hold TAE qualification or equivalent",
+          "Trainers hold vocational competence in area of training",
+          "Assessors hold TAE assessment credentials",
+          "Assessors hold vocational competence in area of assessment",
+          "Currency of credentials is maintained",
+          "Credential requirements apply to all delivery modes"
+        ],
+        "keywords": ["credential policy", "trainer credentials", "assessor credentials", "TAE", "TAE40116", "vocational competence", "relevant qualification", "industry experience", "current skills"]
+      },
+      {
+        "standard_number": "CP2",
+        "title": "Validation Credentials",
+        "description": "Personnel undertaking validation hold appropriate credentials",
+        "standard_type": "credential_policy",
+        "standard_category": "credential",
+        "quality_area": null,
+        "asqa_url": "https://www.asqa.gov.au/how-we-regulate/revised-standards-rtos/practice-guides/practice-guide-credential-policy",
+        "requirements": [
+          "Validation is conducted by qualified personnel",
+          "Personnel undertaking validation hold vocational competence",
+          "Personnel undertaking validation have assessment expertise",
+          "Independent validation involves external personnel where required"
+        ],
+        "keywords": ["validation", "validation credentials", "vocational competence", "assessment expertise", "independent validation", "moderation"]
+      }
+    ]
+  }
+}

@@ -29,6 +29,16 @@ class SubscriptionTier(models.TextChoices):
     ENTERPRISE = "enterprise", "Enterprise"
 
 
+class BusinessStructure(models.TextChoices):
+    """Business structure choices."""
+
+    SOLE_TRADER = "sole_trader", "Sole Trader"
+    PARTNERSHIP = "partnership", "Partnership"
+    COMPANY = "company", "Company (Pty Ltd)"
+    TRUST = "trust", "Trust"
+    INCORPORATED_ASSOCIATION = "incorporated_association", "Incorporated Association"
+
+
 class Tenant(models.Model):
     """
     Represents a tenant in the multi-tenant system.
@@ -61,6 +71,46 @@ class Tenant(models.Model):
     contact_email = models.EmailField(validators=[EmailValidator()])
     contact_name = models.CharField(max_length=255)
     contact_phone = models.CharField(max_length=50, blank=True)
+
+    # Legal Business Information
+    registered_business_name = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="ASIC-registered business name"
+    )
+    trading_name = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Trading name (if different from registered name)"
+    )
+    abn = models.CharField(
+        max_length=11,
+        blank=True,
+        help_text="Australian Business Number (11 digits)"
+    )
+    acn = models.CharField(
+        max_length=9,
+        blank=True,
+        help_text="Australian Company Number (9 digits, required for companies)"
+    )
+    business_structure = models.CharField(
+        max_length=30,
+        choices=BusinessStructure.choices,
+        blank=True,
+        help_text="Legal structure of the business"
+    )
+    gst_registered = models.BooleanField(
+        default=False,
+        help_text="Is the business registered for GST?"
+    )
+    registered_address = models.TextField(
+        blank=True,
+        help_text="Registered business address"
+    )
+    postal_address = models.TextField(
+        blank=True,
+        help_text="Postal address (if different from registered address)"
+    )
 
     # Billing
     billing_email = models.EmailField(blank=True)
@@ -110,9 +160,10 @@ class Tenant(models.Model):
 
 class TenantUser(models.Model):
     """
-    Maps users to tenants with role-based access.
+    Maps users to tenants with role-based access (TenantMembership).
 
     A user can belong to multiple tenants with different roles.
+    Supports both legacy Django User and new UserAccount models.
     """
 
     class Role(models.TextChoices):
@@ -121,22 +172,63 @@ class TenantUser(models.Model):
         MEMBER = "member", "Member"
         VIEWER = "viewer", "Viewer"
 
+    class Status(models.TextChoices):
+        ACTIVE = "active", "Active"
+        INVITED = "invited", "Invited"
+        PENDING = "pending", "Pending"
+        SUSPENDED = "suspended", "Suspended"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, related_name="users")
+    
+    # Support both legacy Django User and new UserAccount
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="tenant_memberships"
+        User, 
+        on_delete=models.CASCADE, 
+        related_name="tenant_memberships",
+        null=True,
+        blank=True,
     )
+    user_account = models.ForeignKey(
+        'users.UserAccount',
+        on_delete=models.CASCADE,
+        related_name="tenant_memberships",
+        null=True,
+        blank=True,
+    )
+    
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.MEMBER)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.ACTIVE,
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = [["tenant", "user"]]
+        unique_together = [["tenant", "user"], ["tenant", "user_account"]]
         ordering = ["tenant", "role"]
+        indexes = [
+            models.Index(fields=["tenant", "status"]),
+            models.Index(fields=["user_account", "status"]),
+        ]
 
     def __str__(self):
-        return f"{self.user.username} - {self.tenant.name} ({self.role})"
+        if self.user_account:
+            return f"{self.user_account.primary_email} - {self.tenant.name} ({self.role})"
+        elif self.user:
+            return f"{self.user.username} - {self.tenant.name} ({self.role})"
+        return f"TenantUser {self.id}"
+
+    def get_email(self):
+        """Get the email for this membership."""
+        if self.user_account:
+            return self.user_account.primary_email
+        elif self.user:
+            return self.user.email
+        return None
 
 
 class TenantQuota(models.Model):

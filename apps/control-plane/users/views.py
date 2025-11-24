@@ -74,7 +74,7 @@ class UserRegistrationView(generics.CreateAPIView):
         verification_url = f"{settings.FRONTEND_URL}/verify-email/{verification.token}"
 
         send_mail(
-            subject="Verify your email - NextCore AI Cloud",
+            subject="Verify your email - RTOComply AI Cloud",
             message=f"Hi {user.first_name or user.username},\n\n"
             f"Please verify your email by clicking this link:\n{verification_url}\n\n"
             f"This link will expire in 24 hours.\n\n"
@@ -189,7 +189,7 @@ def resend_verification_email(request):
         # Send email
         verification_url = f"{settings.FRONTEND_URL}/verify-email/{verification.token}"
         send_mail(
-            subject="Verify your email - NextCore AI Cloud",
+            subject="Verify your email - RTOComply AI Cloud",
             message=f"Hi {user.first_name or user.username},\n\n"
             f"Please verify your email by clicking this link:\n{verification_url}\n\n"
             f"This link will expire in 24 hours.",
@@ -270,7 +270,7 @@ class UserInvitationListCreateView(generics.ListCreateAPIView):
         invitation_url = f"{settings.FRONTEND_URL}/accept-invitation/{invitation.token}"
 
         send_mail(
-            subject=f"Invitation to join {invitation.tenant.name} - NextCore AI Cloud",
+            subject=f"Invitation to join {invitation.tenant.name} - RTOComply AI Cloud",
             message=f"Hi,\n\n"
             f"{invitation.invited_by.get_full_name() or invitation.invited_by.username} "
             f"has invited you to join {invitation.tenant.name} as a {invitation.role}.\n\n"

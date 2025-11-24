@@ -3109,3 +3109,179 @@ class TASViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    @action(detail=True, methods=["post"], url_path="convert-to-2025")
+    def convert_to_2025_standards(self, request, pk=None, tenant_slug=None):
+        """
+        Convert TAS from Standards for RTOs 2015 to Standards for RTOs 2025
+        
+        POST /api/tenants/{tenant_slug}/tas/{id}/convert-to-2025/
+        Body: {
+            "session_name": "Optional session name",
+            "ai_model": "gpt-4o",  // optional, defaults to gpt-4o
+            "options": {
+                "preserve_formatting": true,
+                "update_terminology": true,
+                "add_conversion_notes": true,
+                "use_ai": true
+            }
+        }
+        
+        Returns: {
+            "session_id": 123,
+            "status": "pending",
+            "message": "Conversion session created successfully"
+        }
+        """
+        try:
+            from .models import TASConversionSession
+            from .conversion_service import TASConversionService
+            
+            tas = self.get_object()
+            tenant = request.tenant
+            user = request.user
+            
+            # Get request parameters
+            session_name = request.data.get("session_name")
+            ai_model = request.data.get("ai_model", "gpt-4o")
+            options = request.data.get("options", {})
+            
+            # Create conversion service
+            service = TASConversionService()
+            
+            # Create conversion session
+            session = service.create_conversion_session(
+                source_tas=tas,
+                tenant=tenant,
+                user=user,
+                session_name=session_name,
+                ai_model=ai_model,
+                options=options,
+            )
+            
+            # Execute conversion in background (or synchronously for now)
+            try:
+                session = service.execute_conversion(session)
+                
+                return Response({
+                    "session_id": session.id,
+                    "status": session.status,
+                    "message": "Conversion completed successfully",
+                    "target_tas_id": session.target_tas.id if session.target_tas else None,
+                    "summary": service.get_conversion_summary(session),
+                }, status=status.HTTP_200_OK)
+                
+            except Exception as conversion_error:
+                logger.error(f"Conversion execution failed: {conversion_error}")
+                return Response({
+                    "session_id": session.id,
+                    "status": "failed",
+                    "error": str(conversion_error),
+                    "message": "Conversion failed. See error details.",
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        except Exception as e:
+            logger.error(f"Conversion initialization error: {e}")
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=["get"], url_path="conversion-sessions")
+    def list_conversion_sessions(self, request, tenant_slug=None):
+        """
+        List all TAS conversion sessions for the tenant
+        
+        GET /api/tenants/{tenant_slug}/tas/conversion-sessions/
+        
+        Query params:
+        - status: Filter by status (pending, analyzing, completed, failed, etc.)
+        - limit: Number of results (default 20)
+        """
+        try:
+            from .models import TASConversionSession
+            
+            tenant = request.tenant
+            queryset = TASConversionSession.objects.filter(tenant=tenant)
+            
+            # Filter by status if provided
+            status_filter = request.query_params.get("status")
+            if status_filter:
+                queryset = queryset.filter(status=status_filter)
+            
+            # Limit results
+            limit = int(request.query_params.get("limit", 20))
+            sessions = queryset[:limit]
+            
+            # Serialize results
+            results = []
+            for session in sessions:
+                results.append({
+                    "id": session.id,
+                    "session_name": session.session_name,
+                    "status": session.status,
+                    "progress_percentage": session.progress_percentage,
+                    "source_tas": {
+                        "id": session.source_tas.id,
+                        "title": session.source_tas.title,
+                    },
+                    "target_tas": {
+                        "id": session.target_tas.id,
+                        "title": session.target_tas.title,
+                    } if session.target_tas else None,
+                    "quality_score": session.quality_score,
+                    "created_at": session.created_at,
+                    "completed_at": session.completed_at,
+                })
+            
+            return Response({
+                "count": queryset.count(),
+                "results": results,
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Error listing conversion sessions: {e}")
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=["get"], url_path="conversion-sessions/(?P<session_id>[^/.]+)")
+    def get_conversion_session(self, request, session_id=None, tenant_slug=None):
+        """
+        Get detailed information about a specific conversion session
+        
+        GET /api/tenants/{tenant_slug}/tas/conversion-sessions/{session_id}/
+        """
+        try:
+            from .models import TASConversionSession
+            from .conversion_service import TASConversionService
+            
+            tenant = request.tenant
+            session = TASConversionSession.objects.get(
+                id=session_id,
+                tenant=tenant
+            )
+            
+            # Generate comprehensive summary
+            service = TASConversionService()
+            summary = service.get_conversion_summary(session)
+            
+            # Add detailed change log
+            summary["conversion_changes"] = session.conversion_changes
+            summary["source_analysis"] = session.source_analysis
+            summary["error_message"] = session.error_message if session.status == "failed" else None
+            
+            return Response(summary, status=status.HTTP_200_OK)
+            
+        except TASConversionSession.DoesNotExist:
+            return Response(
+                {"error": "Conversion session not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            logger.error(f"Error retrieving conversion session: {e}")
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

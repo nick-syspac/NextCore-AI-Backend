@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
+    "drf_spectacular",
     "corsheaders",
     "django_filters",
     # Project apps
@@ -56,6 +57,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Add WhiteNoise right after SecurityMiddleware
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -122,8 +124,19 @@ TIME_ZONE = "Australia/Brisbane"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+# Static files (CSS, JavaScript, Images)
+STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# WhiteNoise configuration for efficient static file serving
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -167,9 +180,26 @@ CORS_ALLOWED_ORIGINS = os.getenv(
 ).split(",")
 CORS_ALLOW_CREDENTIALS = True
 
+# Supabase Configuration
+# Get these from your Supabase project settings > API
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")  # Public anon key
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")  # For admin operations
+
+# JWT Secret for verifying Supabase tokens
+# Found in: Project Settings > API > JWT Settings > JWT Secret
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
+
+# JWT Algorithm (usually HS256 for Supabase)
+SUPABASE_JWT_ALGORITHM = os.getenv("SUPABASE_JWT_ALGORITHM", "HS256")
+
+# Legacy keys (for backward compatibility)
+SUPABASE_KEY = SUPABASE_ANON_KEY  # Alias for anon key
+
 # REST Framework Configuration
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "users.authentication.SupabaseAuthentication",
         "rest_framework.authentication.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
@@ -195,6 +225,33 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "EXCEPTION_HANDLER": "control_plane.exceptions.custom_exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# API Documentation Configuration
+SPECTACULAR_SETTINGS = {
+    "TITLE": "RTOComply AI Cloud - Control Plane API",
+    "DESCRIPTION": "REST API for RTO Comply AI Backend - Comprehensive compliance and education management platform",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "CONTACT": {
+        "name": "RTOComply AI Support",
+        "email": "support@rtocomply.ai",
+    },
+    "LICENSE": {
+        "name": "Proprietary",
+    },
+    "TAGS": [
+        {"name": "Authentication", "description": "User authentication and token management"},
+        {"name": "Tenants", "description": "Multi-tenant organization management"},
+        {"name": "Users", "description": "User management and profiles"},
+        {"name": "TAS", "description": "Training and Assessment Strategy management"},
+        {"name": "Policies", "description": "Policy management and comparison"},
+        {"name": "Audit", "description": "Audit logging and verification"},
+        {"name": "Integrations", "description": "Third-party integrations"},
+    ],
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": r"/api/",
 }
 
 # Celery Configuration
@@ -282,7 +339,7 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
-        "KEY_PREFIX": "nextcore",
+        "KEY_PREFIX": "rtocomply",
         "TIMEOUT": 300,
     }
 }

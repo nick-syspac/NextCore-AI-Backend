@@ -1,0 +1,139 @@
+name: Deploy to Dev
+
+on:
+  push:
+    branches: [ develop ]
+    paths:
+      - 'apps/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/deploy-dev.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, backend]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set environment variables
+        run: |
+          echo "COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          
+          # Create .env file for docker-compose
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+          echo "SUPABASE_JWT_SECRET=${{ secrets.SUPABASE_JWT_SECRET }}" >> .env
+          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env
+      
+      - name: Build control-plane image
+        run: |
+          docker build \
+            -t rtocomply-ai-backend/control-plane:dev \
+            -t rtocomply-ai-backend/control-plane:${{ github.sha }} \
+            -f apps/control-plane/Dockerfile \
+            apps/control-plane
+      
+      - name: Build ai-gateway image
+        run: |
+          docker build \
+            -t rtocomply-ai-backend/ai-gateway:dev \
+            -t rtocomply-ai-backend/ai-gateway:${{ github.sha }} \
+            -f apps/ai-gateway/Dockerfile \
+            apps/ai-gateway
+      
+      - name: Build worker image
+        run: |
+          docker build \
+            -t rtocomply-ai-backend/worker:dev \
+            -t rtocomply-ai-backend/worker:${{ github.sha }} \
+            -f apps/worker/Dockerfile \
+            apps/worker
+      
+      - name: Stop existing containers
+        run: |
+          # Stop and remove containers, networks, volumes
+          docker compose down --remove-orphans || true
+          
+          # Kill any process using port 8000
+          sudo lsof -ti:8000 | xargs -r sudo kill -9 || true
+          
+          # Wait a moment for ports to be released
+          sleep 2
+        continue-on-error: true
+      
+      - name: Deploy with docker-compose
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          docker compose up -d --force-recreate --remove-orphans
+      
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for services to start..."
+          sleep 10
+          
+          # Check database
+          docker compose exec -T db pg_isready -U postgres || echo "Database not ready"
+          
+          # Check Redis
+          docker compose exec -T redis redis-cli ping || echo "Redis not ready"
+          
+          # Wait for control-plane to be responsive
+          for i in {1..30}; do
+            if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+              echo "Control plane is healthy"
+              break
+            fi
+            echo "Waiting for control-plane... ($i/30)"
+            sleep 2
+          done
+          
+          # Wait for ai-gateway to be responsive
+          for i in {1..30}; do
+            if curl -sf http://localhost:8080/health > /dev/null 2>&1; then
+              echo "AI Gateway is healthy"
+              break
+            fi
+            echo "Waiting for ai-gateway... ($i/30)"
+            sleep 2
+          done
+      
+      - name: Show running containers
+        run: |
+          echo "=== Running Containers ==="
+          docker compose ps
+          
+          echo ""
+          echo "=== Service URLs ==="
+          echo "Control Plane: http://localhost:8000"
+          echo "AI Gateway: http://localhost:8080"
+          echo "PostgreSQL: localhost:5432"
+          echo "Redis: localhost:6379"
+          echo "MinIO Console: http://localhost:9001"
+          echo "MinIO API: http://localhost:9000"
+      
+      - name: Show recent logs
+        if: always()
+        run: |
+          echo "=== Control Plane Logs ==="
+          docker compose logs --tail=50 control-plane
+          
+          echo ""
+          echo "=== AI Gateway Logs ==="
+          docker compose logs --tail=50 ai-gateway
+          
+          echo ""
+          echo "=== Worker Logs ==="
+          docker compose logs --tail=50 worker
+      
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "✅ Deployment successful!"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${GITHUB_REF#refs/heads/}"
+          echo "Deployed at: $(date)"

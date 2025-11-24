@@ -1229,3 +1229,185 @@ class QualificationCache(models.Model):
             "has_groupings": self.has_groupings,
             "groupings": self.groupings,
         }
+
+
+class TASConversionSession(models.Model):
+    """
+    Track TAS conversions from Standards for RTOs 2015 to Standards for RTOs 2025
+    Uses AI to intelligently map content and update compliance references
+    """
+
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("analyzing", "Analyzing 2015 TAS"),
+        ("mapping", "Mapping to 2025 Standards"),
+        ("converting", "Converting Content"),
+        ("validating", "Validating Compliance"),
+        ("completed", "Completed"),
+        ("failed", "Failed"),
+    ]
+
+    tenant = models.ForeignKey(
+        Tenant, on_delete=models.CASCADE, related_name="tas_conversion_sessions"
+    )
+    
+    # Source TAS (2015)
+    source_tas = models.ForeignKey(
+        TAS,
+        on_delete=models.CASCADE,
+        related_name="conversion_sessions_as_source",
+        help_text="Original TAS using 2015 Standards",
+    )
+    
+    # Target TAS (2025) - created during conversion
+    target_tas = models.ForeignKey(
+        TAS,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="conversion_sessions_as_target",
+        help_text="New TAS using 2025 Standards",
+    )
+    
+    # Session metadata
+    session_name = models.CharField(max_length=200)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    
+    # Conversion progress (0-100)
+    progress_percentage = models.IntegerField(default=0)
+    current_step = models.CharField(max_length=200, blank=True)
+    
+    # AI Model Configuration
+    ai_model = models.CharField(
+        max_length=50,
+        default="gpt-4o",
+        help_text="AI model used for conversion (gpt-4o, claude-3-opus, etc.)",
+    )
+    
+    # Conversion mapping results
+    standards_mapping = models.JSONField(
+        default=dict,
+        help_text="Mapping from 2015 clauses to 2025 Quality Areas: {2015_clause: [2025_standards]}",
+    )
+    
+    # Analysis results
+    source_analysis = models.JSONField(
+        default=dict,
+        help_text="AI analysis of source TAS: sections identified, standards referenced, etc.",
+    )
+    
+    # Conversion results
+    conversion_changes = models.JSONField(
+        default=list,
+        help_text="List of changes made: [{section, old_content, new_content, rationale}]",
+    )
+    
+    # Validation results
+    compliance_report = models.JSONField(
+        default=dict,
+        help_text="2025 Standards compliance check results",
+    )
+    
+    # Summary statistics
+    sections_converted = models.IntegerField(default=0)
+    standards_updated = models.IntegerField(default=0)
+    quality_score = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="AI-assessed quality score of conversion (0-100)",
+    )
+    
+    # User options
+    conversion_options = models.JSONField(
+        default=dict,
+        help_text="User preferences: {preserve_formatting, update_terminology, add_notes}",
+    )
+    
+    # Performance metrics
+    processing_time_seconds = models.FloatField(default=0.0)
+    ai_tokens_used = models.IntegerField(default=0)
+    ai_cost_estimate = models.DecimalField(
+        max_digits=10, decimal_places=4, default=0, help_text="Estimated cost in USD"
+    )
+    
+    # Error handling
+    error_message = models.TextField(blank=True)
+    error_details = models.JSONField(default=dict)
+    
+    # Review and approval
+    requires_human_review = models.BooleanField(
+        default=True, help_text="Flag sections that need human review"
+    )
+    review_notes = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tas_conversions_reviewed",
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Audit trail
+    created_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, related_name="tas_conversions_created"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "tas_conversion_sessions"
+        ordering = ["-created_at"]
+        verbose_name = "TAS Conversion Session"
+        verbose_name_plural = "TAS Conversion Sessions"
+        indexes = [
+            models.Index(fields=["tenant", "status"]),
+            models.Index(fields=["source_tas"]),
+            models.Index(fields=["created_at"]),
+        ]
+
+    def __str__(self):
+        return f"{self.session_name} - {self.get_status_display()}"
+
+    def calculate_progress(self):
+        """Calculate overall progress percentage based on status"""
+        progress_map = {
+            "pending": 0,
+            "analyzing": 15,
+            "mapping": 30,
+            "converting": 60,
+            "validating": 85,
+            "completed": 100,
+            "failed": 0,
+        }
+        self.progress_percentage = progress_map.get(self.status, 0)
+        return self.progress_percentage
+
+    def mark_as_started(self):
+        """Mark session as started"""
+        if not self.started_at:
+            self.started_at = timezone.now()
+            self.save(update_fields=["started_at"])
+
+    def mark_as_completed(self):
+        """Mark session as completed and calculate metrics"""
+        self.status = "completed"
+        self.completed_at = timezone.now()
+        self.progress_percentage = 100
+        
+        if self.started_at:
+            self.processing_time_seconds = (
+                self.completed_at - self.started_at
+            ).total_seconds()
+        
+        self.save(update_fields=["status", "completed_at", "progress_percentage", "processing_time_seconds"])
+
+    def mark_as_failed(self, error_message: str, error_details: dict = None):
+        """Mark session as failed with error information"""
+        self.status = "failed"
+        self.error_message = error_message
+        self.error_details = error_details or {}
+        self.completed_at = timezone.now()
+        self.save(update_fields=["status", "error_message", "error_details", "completed_at"])

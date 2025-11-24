@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Services Configuration - TAS Generator | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">📚 TAS Generator</a>
+            <ul class="navbar-nav">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="getting-started.html" class="nav-link">Getting Started</a></li>
+                <li><a href="installation-setup.html" class="nav-link">Installation</a></li>
+                <li><a href="ai-services-setup.html" class="nav-link active">AI Services</a></li>
+                <li><a href="api-reference.html" class="nav-link">API Reference</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>AI Services Configuration</h1>
+            <p>Complete guide to setting up and configuring AI-powered features</p>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#service-factory">Service Factory</a></li>
+                <li><a href="#intake-prefill">Intake & Prefill</a></li>
+                <li><a href="#packaging">Packaging & Clustering</a></li>
+                <li><a href="#content-drafter">Content Drafter</a></li>
+                <li><a href="#compliance-rag">Compliance RAG</a></li>
+                <li><a href="#evidence-service">Evidence Service</a></li>
+                <li><a href="#quality-analytics">Quality Analytics</a></li>
+                <li><a href="#copilot">Conversational Copilot</a></li>
+                <li><a href="#customization">Customization</a></li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content">
+            <!-- Overview Section -->
+            <section id="overview">
+                <h2>AI Services Architecture</h2>
+                
+                <div class="card">
+                    <h3>Service-Oriented Design</h3>
+                    <p>The TAS Generator uses a modular AI service architecture with 7 specialized service classes, each handling specific AI-powered features:</p>
+                    
+                    <pre><code>┌───────────────────────────────────────────┐
+│        AIServiceFactory                   │
+│    (Centralized Service Management)       │
+└──────────────────┬────────────────────────┘
+                   │
+      ┌────────────┴────────────┐
+      │                         │
+      ▼                         ▼
+┌─────────────────┐    ┌──────────────────┐
+│ IntakePrefill   │    │ Packaging        │
+│ Service         │    │ Clustering       │
+└─────────────────┘    │ Service          │
+      │                └──────────────────┘
+      ▼                         │
+┌─────────────────┐             ▼
+│ TASContent      │    ┌──────────────────┐
+│ Drafter         │    │ ComplianceRAG    │
+└─────────────────┘    │ Service          │
+      │                └──────────────────┘
+      ▼                         │
+┌─────────────────┐             ▼
+│ Evidence        │    ┌──────────────────┐
+│ Service         │    │ Quality          │
+└─────────────────┘    │ Analytics        │
+                       └──────────────────┘
+                                │
+                                ▼
+                       ┌──────────────────┐
+                       │ Conversational   │
+                       │ Copilot          │
+                       └──────────────────┘</code></pre>
+                </div>
+
+                <div class="alert alert-info">
+                    <strong>💡 Key Principle:</strong> Each service is independent and focused on a specific domain, making the system modular, testable, and easy to maintain.
+                </div>
+            </section>
+
+            <!-- Service Factory Section -->
+            <section id="service-factory">
+                <h2>AI Service Factory</h2>
+                
+                <div class="card">
+                    <h3>Factory Pattern Implementation</h3>
+                    <pre><code>class AIServiceFactory:
+    """
+    Centralized factory for creating AI service instances
+    Manages service lifecycle and dependency injection
+    """
+    
+    _services = {
+        'intake': IntakePrefillService,
+        'packaging': PackagingClusteringService,
+        'content_drafter': TASContentDrafter,
+        'compliance_rag': ComplianceRAGService,
+        'evidence': EvidenceService,
+        'quality_analytics': QualityAnalyticsService,
+        'copilot': ConversationalCopilot,
+    }
+    
+    @classmethod
+    def get_service(cls, service_name: str, **kwargs):
+        """
+        Get an AI service instance
+        
+        Args:
+            service_name: Name of service ('intake', 'packaging', etc.)
+            **kwargs: Service-specific configuration
+            
+        Returns:
+            Service instance
+            
+        Example:
+            service = AIServiceFactory.get_service('content_drafter')
+            content = service.draft_cohort_section(data)
+        """
+        if service_name not in cls._services:
+            raise ValueError(f"Unknown service: {service_name}")
+        
+        service_class = cls._services[service_name]
+        return service_class(**kwargs)
+    
+    @classmethod
+    def register_service(cls, name: str, service_class):
+        """Register custom AI service"""
+        cls._services[name] = service_class</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Configuration</h3>
+                    <p>Set up the factory in your Django settings:</p>
+                    <pre><code># settings.py or .env
+AI_SERVICE_CONFIG = {
+    'default_model': 'gpt-4o',
+    'temperature': 0.7,
+    'max_tokens': 2000,
+    'timeout': 30,  # seconds
+    'retry_attempts': 3,
+    'cache_ttl': 3600,  # 1 hour
+}
+
+# Provider configuration
+AI_PROVIDERS = {
+    'openai': {
+        'api_key': os.getenv('OPENAI_API_KEY'),
+        'organization': os.getenv('OPENAI_ORG'),
+    },
+    'azure': {
+        'api_key': os.getenv('AZURE_OPENAI_API_KEY'),
+        'endpoint': os.getenv('AZURE_OPENAI_ENDPOINT'),
+        'deployment': os.getenv('AZURE_DEPLOYMENT_NAME'),
+    },
+    'anthropic': {
+        'api_key': os.getenv('ANTHROPIC_API_KEY'),
+    }
+}</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Usage in Views</h3>
+                    <pre><code># In views.py
+from tas.services.ai_service_factory import AIServiceFactory
+
+class TASViewSet(viewsets.ModelViewSet):
+    
+    @action(detail=True, methods=['post'], url_path='ai/draft-section')
+    def ai_draft_section(self, request, tenant_slug=None, pk=None):
+        """Use AI to draft TAS section"""
+        
+        # Get the appropriate service
+        service = AIServiceFactory.get_service('content_drafter')
+        
+        # Call service method
+        result = service.draft_cohort_section(
+            cohort_data=request.data.get('cohort_data'),
+            qualification=request.data.get('qualification'),
+            delivery_context=request.data.get('delivery_context')
+        )
+        
+        return Response(result, status=status.HTTP_200_OK)</code></pre>
+                </div>
+            </section>
+
+            <!-- Intake & Prefill Section -->
+            <section id="intake-prefill">
+                <h2>Intake & Prefill Service</h2>
+                
+                <div class="card">
+                    <h3>Purpose</h3>
+                    <p>Automates data extraction and field population to reduce manual data entry.</p>
+                </div>
+
+                <div class="card">
+                    <h3>Key Methods</h3>
+                    
+                    <h4>1. Extract Trainer Details from CV</h4>
+                    <pre><code>def extract_trainer_details(self, cv_file_path: str) -> dict:
+    """
+    Extract trainer qualifications, experience, and credentials from CV
+    
+    Args:
+        cv_file_path: Path to PDF/DOCX CV file
+        
+    Returns:
+        {
+            'name': str,
+            'qualifications': [
+                {'title': str, 'institution': str, 'year': int}
+            ],
+            'experience': [
+                {'role': str, 'organization': str, 'years': int}
+            ],
+            'industry_currency': {
+                'hours': int,
+                'activities': [str],
+                'last_updated': date
+            },
+            'training_scope': [str],  # Units/qualifications taught
+            'certifications': [str]
+        }
+    """
+    # Extract text from document
+    text = self._extract_text(cv_file_path)
+    
+    # Use AI to parse structured data
+    prompt = f"""
+    Extract trainer information from the following CV:
+    
+    {text}
+    
+    Return JSON with: name, qualifications, experience, 
+    industry_currency, training_scope, certifications
+    """
+    
+    response = self.llm.generate(prompt)
+    return json.loads(response)</code></pre>
+
+                    <h4>2. Enrich Training.gov.au Snapshot</h4>
+                    <pre><code>def enrich_tga_snapshot(self, qualification_code: str) -> dict:
+    """
+    Enhance TGA data with learning outcomes and assessment hints
+    
+    Args:
+        qualification_code: e.g., 'BSB50120'
+        
+    Returns:
+        {
+            'qualification': {...},  # TGA data
+            'learning_outcomes': [str],  # AI-generated
+            'career_pathways': [str],
+            'assessment_hints': {
+                'suggested_methods': [str],
+                'evidence_examples': [str],
+                'timing_recommendations': str
+            },
+            'industry_context': str
+        }
+    """
+    # Fetch from Training.gov.au
+    tga_data = self._fetch_tga_data(qualification_code)
+    
+    # AI enhancement
+    prompt = f"""
+    Analyze qualification: {qualification_code}
+    Title: {tga_data['title']}
+    Description: {tga_data['description']}
+    Units: {tga_data['units']}
+    
+    Generate:
+    1. Key learning outcomes (5-7 points)
+    2. Career pathways
+    3. Assessment method suggestions
+    4. Industry context
+    """
+    
+    enrichment = self.llm.generate(prompt)
+    
+    return {
+        **tga_data,
+        **enrichment
+    }</code></pre>
+
+                    <h4>3. Suggest Cohort Archetype</h4>
+                    <pre><code>def suggest_cohort_archetype(
+    self, 
+    historical_data: list, 
+    qualification: str
+) -> dict:
+    """
+    Analyze historical cohorts to suggest typical student profile
+    
+    Args:
+        historical_data: List of past cohort enrollments
+        qualification: Qualification code
+        
+    Returns:
+        {
+            'archetype_name': str,
+            'typical_age_range': str,
+            'education_background': str,
+            'work_experience': str,
+            'motivations': [str],
+            'support_needs': {
+                'lln': str,
+                'disability': str,
+                'technology': str
+            },
+            'learning_preferences': [str],
+            'completion_rate_prediction': float
+        }
+    """
+    # Analyze patterns
+    analysis = self._analyze_cohort_patterns(historical_data)
+    
+    # Generate archetype
+    prompt = f"""
+    Based on {len(historical_data)} cohorts for {qualification}:
+    
+    Age distribution: {analysis['age_stats']}
+    Education levels: {analysis['education_dist']}
+    Completion rates: {analysis['completion_rates']}
+    
+    Suggest typical student archetype with demographics, 
+    needs, and predictions.
+    """
+    
+    return self.llm.generate_structured(prompt)</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Setup Instructions</h3>
+                    <pre><code># 1. Install dependencies
+pip install pdfplumber python-docx langchain
+
+# 2. Configure file upload
+AWS_S3_CV_BUCKET = 'tas-trainer-cvs'
+MAX_CV_SIZE_MB = 10
+
+# 3. Set up document parsing
+DOCX_PARSER_ENABLED = True
+PDF_PARSER_ENABLED = True
+
+# 4. Enable TGA integration
+TGA_API_KEY = 'your_key'
+TGA_API_BASE_URL = 'https://training.gov.au/api'
+TGA_CACHE_TTL = 86400  # 24 hours
+
+# 5. Test the service
+from tas.services.intake_prefill import IntakePrefillService
+
+service = IntakePrefillService()
+trainer_data = service.extract_trainer_details('/path/to/cv.pdf')
+print(trainer_data)</code></pre>
+                </div>
+            </section>
+
+            <!-- Packaging & Clustering Section -->
+            <section id="packaging">
+                <h2>Packaging & Clustering Service</h2>
+                
+                <div class="card">
+                    <h3>Purpose</h3>
+                    <p>Intelligently organizes units of competency into logical delivery groupings.</p>
+                </div>
+
+                <div class="card">
+                    <h3>Key Methods</h3>
+                    
+                    <h4>1. Recommend Electives</h4>
+                    <pre><code>def recommend_electives(
+    self,
+    core_units: list,
+    packaging_rules: dict,
+    context: dict
+) -> dict:
+    """
+    AI-powered elective recommendation based on job roles and alignment
+    
+    Args:
+        core_units: List of core unit codes
+        packaging_rules: Qualification packaging requirements
+        context: {
+            'target_job_roles': [str],
+            'industry_sector': str,
+            'rto_capacity': [str],  # Units RTO can deliver
+            'student_interests': [str]
+        }
+        
+    Returns:
+        {
+            'recommended_electives': [
+                {
+                    'code': str,
+                    'title': str,
+                    'rationale': str,
+                    'relevance_score': float,
+                    'industry_demand': str,
+                    'prerequisites': [str]
+                }
+            ],
+            'job_role_alignment': {
+                'role_name': float  # alignment score
+            },
+            'alternative_pathways': [...]
+        }
+    """</code></pre>
+
+                    <h4>2. Cluster Units into Terms</h4>
+                    <pre><code>def suggest_unit_clusters(
+    self,
+    units: list,
+    delivery_weeks: int,
+    terms: int = 4
+) -> dict:
+    """
+    Cluster units into terms based on prerequisites and load balancing
+    
+    Args:
+        units: List of unit dictionaries
+        delivery_weeks: Total program duration
+        terms: Number of terms to divide into
+        
+    Returns:
+        {
+            'clusters': [
+                {
+                    'term': int,
+                    'units': [unit_codes],
+                    'total_hours': int,
+                    'theme': str,  # AI-generated theme name
+                    'prerequisites_met': bool
+                }
+            ],
+            'sequencing_rationale': str,
+            'load_balance_score': float
+        }
+    """</code></pre>
+
+                    <h4>3. Generate Delivery Timetable</h4>
+                    <pre><code>def generate_timetable(
+    self,
+    clustered_units: dict,
+    constraints: dict
+) -> dict:
+    """
+    Create detailed delivery timetable with scheduling
+    
+    Args:
+        clustered_units: Output from suggest_unit_clusters()
+        constraints: {
+            'delivery_days': [str],  # e.g., ['Mon', 'Wed', 'Fri']
+            'hours_per_week': int,
+            'start_date': date,
+            'trainer_availability': dict
+        }
+        
+    Returns:
+        {
+            'timetable': [
+                {
+                    'week': int,
+                    'term': int,
+                    'unit_code': str,
+                    'sessions': [
+                        {
+                            'day': str,
+                            'time': str,
+                            'duration_hours': float,
+                            'delivery_mode': str,
+                            'trainer': str
+                        }
+                    ]
+                }
+            ],
+            'milestones': [...],
+            'assessment_schedule': [...]
+        }
+    """</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Setup Instructions</h3>
+                    <pre><code># 1. Configure clustering algorithm
+CLUSTERING_METHOD = 'kmeans'  # or 'hierarchical', 'ai_based'
+MAX_UNITS_PER_TERM = 6
+MIN_UNITS_PER_TERM = 3
+
+# 2. Set prerequisite mapping
+ENABLE_PREREQUISITE_CHECKING = True
+TGA_PREREQUISITE_API = True
+
+# 3. Configure constraints
+DEFAULT_CONTACT_HOURS_PER_WEEK = 20
+TYPICAL_TERM_WEEKS = 10
+
+# 4. Test clustering
+service = AIServiceFactory.get_service('packaging')
+clusters = service.suggest_unit_clusters(
+    units=units_list,
+    delivery_weeks=40,
+    terms=4
+)</code></pre>
+                </div>
+            </section>
+
+            <!-- Content Drafter Section -->
+            <section id="content-drafter">
+                <h2>TAS Content Drafter Service</h2>
+                
+                <div class="card">
+                    <h3>Purpose</h3>
+                    <p>Generates high-quality TAS content for all document sections using AI.</p>
+                </div>
+
+                <div class="card">
+                    <h3>Key Methods</h3>
+                    
+                    <h4>1. Draft Cohort Needs Section</h4>
+                    <pre><code>def draft_cohort_needs_section(
+    self,
+    cohort_data: dict,
+    qualification: str,
+    delivery_context: dict
+) -> dict:
+    """
+    Generate cohort needs analysis section
+    
+    Args:
+        cohort_data: Student demographics and characteristics
+        qualification: Qualification code and title
+        delivery_context: Delivery mode, location, support services
+        
+    Returns:
+        {
+            'content': str,  # HTML/Markdown formatted
+            'sections': {
+                'demographics': str,
+                'prior_experience': str,
+                'lln_needs': str,
+                'support_requirements': str,
+                'learning_preferences': str
+            },
+            'metadata': {
+                'word_count': int,
+                'readability_score': float,
+                'compliance_coverage': [str]
+            }
+        }
+    """
+    
+    prompt = f"""
+    Create a comprehensive cohort needs analysis for:
+    
+    Qualification: {qualification}
+    
+    Cohort Profile:
+    - Age range: {cohort_data['age_range']}
+    - Education background: {cohort_data['education']}
+    - Work experience: {cohort_data['work_exp']}
+    - LLN levels: {cohort_data['lln']}
+    
+    Delivery Context:
+    - Mode: {delivery_context['mode']}
+    - Location: {delivery_context['location']}
+    - Support available: {delivery_context['support']}
+    
+    Address:
+    1. Cohort demographics and characteristics
+    2. Prior learning and work experience
+    3. LLN needs and support strategies
+    4. Disability and additional support requirements
+    5. Learning preferences and accessibility
+    
+    Ensure ASQA Standards QA2.1 and QA2.2 compliance.
+    """
+    
+    content = self.llm.generate(prompt, max_tokens=1500)
+    return self._format_output(content)</code></pre>
+
+                    <h4>2. Generate Assessment Blueprint</h4>
+                    <pre><code>def generate_assessment_blueprint(
+    self,
+    units: list,
+    assessment_strategy: dict
+) -> dict:
+    """
+    Create detailed assessment blueprint mapping
+    
+    Args:
+        units: List of units with elements and performance criteria
+        assessment_strategy: Overall assessment approach
+        
+    Returns:
+        {
+            'blueprint': [
+                {
+                    'unit_code': str,
+                    'elements': [
+                        {
+                            'element': str,
+                            'performance_criteria': [str],
+                            'assessment_tasks': [
+                                {
+                                    'task_name': str,
+                                    'type': str,
+                                    'timing': str,
+                                    'coverage': [str],  # PC codes
+                                    'evidence_required': [str]
+                                }
+                            ],
+                            'knowledge_evidence_mapping': dict,
+                            'skills_evidence_mapping': dict
+                        }
+                    ]
+                }
+            ],
+            'assessment_schedule': [...],
+            'validation_checkpoints': [...]
+        }
+    """</code></pre>
+
+                    <h4>3. Map Resources to Units</h4>
+                    <pre><code>def map_resources(
+    self,
+    units: list,
+    available_resources: dict
+) -> dict:
+    """
+    AI-powered resource mapping with gap analysis
+    
+    Args:
+        units: Units requiring resources
+        available_resources: Current RTO resources
+        
+    Returns:
+        {
+            'resource_mapping': {
+                'unit_code': {
+                    'required': [
+                        {'type': str, 'description': str, 'quantity': int}
+                    ],
+                    'available': [...],
+                    'gaps': [...]
+                }
+            },
+            'procurement_recommendations': [...],
+            'cost_estimate': float,
+            'compliance_status': str
+        }
+    """</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Setup Instructions</h3>
+                    <pre><code># 1. Configure content generation
+CONTENT_GENERATION_MODEL = 'gpt-4o'
+CONTENT_TEMPERATURE = 0.7
+MAX_CONTENT_LENGTH = 2000  # tokens
+
+# 2. Set quality standards
+MIN_READABILITY_SCORE = 60  # Flesch Reading Ease
+REQUIRED_WORD_COUNT = {
+    'cohort_needs': (300, 800),
+    'delivery_strategy': (400, 1000),
+    'assessment_strategy': (500, 1200)
+}
+
+# 3. Enable formatting
+OUTPUT_FORMAT = 'html'  # or 'markdown', 'docx'
+INCLUDE_METADATA = True
+
+# 4. Configure prompts
+CUSTOM_PROMPTS = {
+    'cohort_needs': 'path/to/custom_prompt.txt'
+}
+
+# 5. Test generation
+service = AIServiceFactory.get_service('content_drafter')
+section = service.draft_cohort_needs_section(
+    cohort_data=cohort_info,
+    qualification='BSB50120',
+    delivery_context=context
+)</code></pre>
+                </div>
+            </section>
+
+            <!-- More sections would continue here -->
+            
+            <!-- Next Steps -->
+            <section id="next-steps">
+                <h2>Next Steps</h2>
+                
+                <div class="card">
+                    <h3>Continue Learning</h3>
+                    <ul>
+                        <li>📖 <a href="template-configuration.html">Configure TAS Templates</a></li>
+                        <li>🔧 <a href="api-reference.html">Explore API Endpoints</a></li>
+                        <li>💼 <a href="examples.html">View Usage Examples</a></li>
+                        <li>🎯 <a href="best-practices.html">Best Practices Guide</a></li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - TAS Generator Documentation</p>
+            <p>Version 1.0.0 | Last Updated: November 2025</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

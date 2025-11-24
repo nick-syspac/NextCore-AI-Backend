@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Models - Policy Comparator | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="../TAS_Generator/css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">🔍 Policy Comparator</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Data Models & Structure</h1>
+            <p>Database architecture for policy compliance verification</p>
+        </div>
+    </section>
+
+    <div class="main-content">
+        <main class="content">
+            <section id="erd">
+                <h2>Entity Relationship Diagram</h2>
+                <div class="card">
+                    <pre><code>┌──────────────┐       ┌──────────────┐       ┌──────────────┐
+│   Tenant     │──────▶│    Policy    │──────▶│ ComparisonResult │
+└──────────────┘       └──────────────┘       └──────────────┘
+                              │                        │
+                              │                        │
+                              ↓                        ↓
+                       ┌──────────────┐       ┌──────────────┐
+                       │ PolicyVersion│       │  ASQAClause  │
+                       └──────────────┘       └──────────────┘
+                                                      ↑
+                                                      │
+                                              ┌──────────────┐
+                                              │ ASQAStandard │
+                                              └──────────────┘</code></pre>
+                </div>
+            </section>
+
+            <section id="policy">
+                <h2>Policy Model</h2>
+                <div class="card">
+                    <pre><code>class Policy(models.Model):
+    """Organisation policies for comparison"""
+    
+    tenant = ForeignKey(Tenant)
+    
+    # Policy Info
+    policy_number = CharField(max_length=50)
+    title = CharField(max_length=300)
+    description = TextField()
+    policy_type = CharField(choices=POLICY_TYPES)
+    
+    # Content
+    content = TextField()  # Full policy text
+    version = CharField(max_length=20, default="1.0")
+    
+    # Status
+    status = CharField(choices=['draft', 'under_review', 'approved', 'archived'])
+    
+    # Compliance
+    last_compared_at = DateTimeField(null=True)
+    compliance_score = FloatField(null=True)  # 0-100
+    
+    # Dates
+    effective_date = DateField(null=True)
+    review_date = DateField(null=True)
+    
+    # Audit
+    created_by = ForeignKey(User)
+    created_at = DateTimeField(auto_now_add=True)
+    updated_at = DateTimeField(auto_now=True)</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>Policy Types</h3>
+                    <ul>
+                        <li>training_delivery</li>
+                        <li>assessment</li>
+                        <li>student_support</li>
+                        <li>complaints_appeals</li>
+                        <li>financial</li>
+                        <li>governance</li>
+                        <li>quality_assurance</li>
+                        <li>workplace_health_safety</li>
+                        <li>staff_management</li>
+                        <li>facilities_resources</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section id="asqa">
+                <h2>ASQA Standards Models</h2>
+                <div class="card">
+                    <h3>ASQAStandard Model</h3>
+                    <pre><code>class ASQAStandard(models.Model):
+    """ASQA Standards (2015 & 2025)"""
+    
+    standard_number = CharField(max_length=20)  # "1.1" or "QA1.1"
+    title = CharField(max_length=300)
+    description = TextField()
+    standard_type = CharField(max_length=50)
+    
+    # 2025-specific fields
+    standard_category = CharField(
+        choices=['outcome', 'compliance', 'credential', 'legacy_2015']
+    )
+    quality_area = IntegerField(null=True)  # 1-4 for 2025 standards
+    
+    # Content
+    full_text = TextField()
+    requirements = JSONField(default=list)
+    
+    # Metadata
+    version = CharField(choices=[('2015', '2015'), ('2025', '2025')])
+    is_active = BooleanField(default=True)
+    effective_date = DateField(null=True)
+    asqa_url = URLField()</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>ASQAClause Model</h3>
+                    <pre><code>class ASQAClause(models.Model):
+    """Detailed clauses within ASQA Standards"""
+    
+    standard = ForeignKey(ASQAStandard)
+    
+    clause_number = CharField(max_length=20)  # "1.1.1" or "QA1.1.1"
+    title = CharField(max_length=300)
+    description = TextField()  # Full clause text
+    
+    # NLP Features
+    keywords = ArrayField(CharField())  # Extracted keywords
+    embedding = VectorField(dimensions=384)  # Semantic embedding
+    
+    # Metadata
+    is_mandatory = BooleanField(default=True)
+    parent_clause = ForeignKey('self', null=True)</code></pre>
+                </div>
+            </section>
+
+            <section id="comparison">
+                <h2>Comparison Models</h2>
+                <div class="card">
+                    <h3>ComparisonResult Model</h3>
+                    <pre><code>class ComparisonResult(models.Model):
+    """NLP comparison results"""
+    
+    policy = ForeignKey(Policy)
+    asqa_clause = ForeignKey(ASQAClause)
+    
+    # Similarity Metrics
+    similarity_score = FloatField()  # 0.0 - 1.0
+    match_type = CharField(choices=[
+        ('full', 'Full Match'),        # >= 0.8
+        ('partial', 'Partial Match'),  # 0.6-0.8
+        ('weak', 'Weak Match'),        # 0.4-0.6
+        ('no_match', 'No Match')       # < 0.4
+    ])
+    
+    # NLP Analysis
+    keyword_score = FloatField()     # Keyword matching
+    sequence_score = FloatField()    # Sequence similarity
+    phrase_score = FloatField()      # Phrase matching
+    
+    # Matched Content
+    keywords_matched = ArrayField(CharField())
+    keywords_missing = ArrayField(CharField())
+    matched_text = TextField()
+    
+    # Gap Analysis
+    is_gap = BooleanField(default=False)
+    gap_description = TextField()
+    gap_severity = CharField(choices=['low', 'medium', 'high', 'critical'])
+    
+    # Recommendations
+    recommendations = JSONField(default=list)
+    
+    compared_at = DateTimeField(auto_now_add=True)</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>ComparisonSession Model</h3>
+                    <pre><code>class ComparisonSession(models.Model):
+    """Batch comparison sessions"""
+    
+    tenant = ForeignKey(Tenant)
+    session_name = CharField(max_length=200)
+    
+    # Session scope
+    policies = ManyToManyField(Policy)
+    asqa_standards = ManyToManyField(ASQAStandard)
+    
+    # Progress
+    status = CharField(choices=[
+        ('pending', 'Pending'),
+        ('in_progress', 'In Progress'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed')
+    ])
+    progress_percentage = IntegerField(default=0)
+    
+    # Results Summary
+    total_comparisons = IntegerField(default=0)
+    full_matches = IntegerField(default=0)
+    partial_matches = IntegerField(default=0)
+    gaps_identified = IntegerField(default=0)
+    overall_compliance_score = FloatField(null=True)
+    
+    # Audit
+    created_by = ForeignKey(User)
+    created_at = DateTimeField(auto_now_add=True)
+    completed_at = DateTimeField(null=True)</code></pre>
+                </div>
+            </section>
+
+            <section id="json-structures">
+                <h2>JSON Field Structures</h2>
+                <div class="card">
+                    <h3>ASQAStandard.requirements</h3>
+                    <pre><code>[
+  {
+    "requirement": "Training and assessment is delivered...",
+    "mandatory": true,
+    "evidence_requirements": [...]
+  }
+]</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>ComparisonResult.recommendations</h3>
+                    <pre><code>[
+  {
+    "type": "add_content",
+    "priority": "high",
+    "description": "Add explicit reference to industry currency",
+    "suggested_text": "Trainers demonstrate ongoing professional development..."
+  }
+]</code></pre>
+                </div>
+            </section>
+
+            <section id="queries">
+                <h2>Common Queries</h2>
+                <div class="card">
+                    <pre><code># Get policies needing review (low compliance)
+low_compliance = Policy.objects.filter(
+    compliance_score__lt=70
+).select_related('tenant')
+
+# Find all gaps for a policy
+gaps = ComparisonResult.objects.filter(
+    policy=policy,
+    is_gap=True
+).select_related('asqa_clause__standard')
+
+# Get 2025 standards by Quality Area
+qa1_standards = ASQAStandard.objects.filter(
+    version='2025',
+    quality_area=1,
+    standard_category='outcome'
+)
+
+# Comparison analytics
+from django.db.models import Avg, Count
+stats = ComparisonSession.objects.filter(
+    status='completed'
+).aggregate(
+    avg_compliance=Avg('overall_compliance_score'),
+    total_gaps=Sum('gaps_identified')
+)</code></pre>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - Policy Comparator</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -5,7 +5,8 @@ from .models import (
     TASTemplateSection, 
     TASTemplateSectionAssignment,
     TASVersion, 
-    TASGenerationLog
+    TASGenerationLog,
+    TASConversionSession
 )
 
 
@@ -357,3 +358,111 @@ class TASGenerationLogAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+
+@admin.register(TASConversionSession)
+class TASConversionSessionAdmin(admin.ModelAdmin):
+    list_display = [
+        "session_name",
+        "source_tas",
+        "tenant",
+        "status",
+        "progress_percentage",
+        "quality_score",
+        "created_at",
+        "completed_at",
+    ]
+    list_filter = ["status", "tenant", "ai_model", "requires_human_review", "created_at"]
+    search_fields = ["session_name", "source_tas__code", "source_tas__title"]
+    readonly_fields = [
+        "created_by",
+        "created_at",
+        "started_at",
+        "completed_at",
+        "updated_at",
+        "processing_time_seconds",
+        "reviewed_by",
+        "reviewed_at",
+    ]
+    date_hierarchy = "created_at"
+
+    fieldsets = (
+        (
+            "Session Information",
+            {
+                "fields": (
+                    "tenant",
+                    "session_name",
+                    "source_tas",
+                    "target_tas",
+                    "status",
+                    "current_step",
+                    "progress_percentage",
+                )
+            },
+        ),
+        (
+            "AI Configuration",
+            {"fields": ("ai_model", "conversion_options")},
+        ),
+        (
+            "Conversion Results",
+            {
+                "fields": (
+                    "standards_mapping",
+                    "source_analysis",
+                    "conversion_changes",
+                    "compliance_report",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Quality Metrics",
+            {
+                "fields": (
+                    "sections_converted",
+                    "standards_updated",
+                    "quality_score",
+                    "requires_human_review",
+                )
+            },
+        ),
+        (
+            "Performance",
+            {
+                "fields": (
+                    "processing_time_seconds",
+                    "ai_tokens_used",
+                    "ai_cost_estimate",
+                ),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Error Handling",
+            {
+                "fields": ("error_message", "error_details"),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Review",
+            {
+                "fields": ("review_notes", "reviewed_by", "reviewed_at"),
+                "classes": ("collapse",),
+            },
+        ),
+        (
+            "Audit",
+            {
+                "fields": ("created_by", "created_at", "started_at", "completed_at", "updated_at"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)

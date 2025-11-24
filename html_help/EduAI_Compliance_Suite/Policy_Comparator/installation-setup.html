@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Installation & Setup - Policy Comparator | EduAI Compliance Suite</title>
+    <link rel="stylesheet" href="../TAS_Generator/css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">🔍 Policy Comparator</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Installation & Setup</h1>
+            <p>Configure the NLP-powered policy compliance verification system</p>
+        </div>
+    </section>
+
+    <div class="main-content">
+        <main class="content">
+            <section id="prerequisites">
+                <h2>Prerequisites</h2>
+                <div class="card">
+                    <table>
+                        <thead><tr><th>Component</th><th>Version</th><th>Purpose</th></tr></thead>
+                        <tbody>
+                            <tr><td>Python</td><td>3.12+</td><td>Runtime</td></tr>
+                            <tr><td>PostgreSQL</td><td>16+ with pgvector</td><td>Database with embeddings</td></tr>
+                            <tr><td>NLP Libraries</td><td>spaCy, NLTK</td><td>Text analysis</td></tr>
+                            <tr><td>OpenAI API</td><td>GPT-4o</td><td>Semantic analysis</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="installation">
+                <h2>Installation Steps</h2>
+                <div class="card">
+                    <h3>1. Install Dependencies</h3>
+                    <pre><code>pip install spacy nltk scikit-learn pgvector psycopg2-binary
+
+# Download spaCy model
+python -m spacy download en_core_web_md
+
+# Download NLTK data
+python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>2. Configure pgvector Extension</h3>
+                    <pre><code>psql -U rto_user -d rto_tas_db
+
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Verify
+\dx vector
+
+\q</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>3. Environment Variables</h3>
+                    <pre><code># Add to .env
+
+# NLP Configuration
+NLP_MODEL=en_core_web_md
+SIMILARITY_THRESHOLD=0.6
+EMBEDDING_DIMENSIONS=384
+
+# Comparison Settings
+KEYWORD_WEIGHT=0.4
+SEQUENCE_WEIGHT=0.3
+PHRASE_WEIGHT=0.3
+
+# Match Thresholds
+FULL_MATCH_THRESHOLD=0.8
+PARTIAL_MATCH_THRESHOLD=0.6
+WEAK_MATCH_THRESHOLD=0.4
+
+# Performance
+BATCH_SIZE=10
+ENABLE_CACHING=true</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>4. Run Migrations</h3>
+                    <pre><code>python manage.py migrate policy_comparator
+
+# Check tables created
+psql -U rto_user -d rto_tas_db
+\dt *policy*
+\dt *asqa*
+\q</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>5. Load ASQA Standards Data</h3>
+                    <pre><code># Load both 2015 and 2025 standards
+python manage.py loaddata db/seeds/asqa_standards_2015.json
+python manage.py loaddata db/seeds/asqa_standards_2025.json
+
+# Verify loading
+python manage.py shell
+>>> from policy_comparator.models import ASQAStandard, ASQAClause
+>>> print(f"2015 Standards: {ASQAStandard.objects.filter(version='2015').count()}")
+>>> print(f"2025 Standards: {ASQAStandard.objects.filter(version='2025').count()}")
+>>> print(f"Total Clauses: {ASQAClause.objects.count()}")</code></pre>
+                </div>
+
+                <div class="card">
+                    <h3>6. Generate Embeddings</h3>
+                    <pre><code># Generate embeddings for all ASQA clauses
+python manage.py shell
+
+>>> from policy_comparator.services.nlp_service import NLPService
+>>> nlp = NLPService()
+>>> nlp.generate_clause_embeddings()
+# This will create embeddings for semantic search</code></pre>
+                </div>
+            </section>
+
+            <section id="testing">
+                <h2>Testing</h2>
+                <div class="card">
+                    <h3>Test Comparison</h3>
+                    <pre><code>from policy_comparator.models import Policy, ASQAClause
+from policy_comparator.services.comparison_service import ComparisonService
+
+# Create test policy
+policy = Policy.objects.create(
+    tenant=tenant,
+    policy_number="TEST-001",
+    title="Test Assessment Policy",
+    content="Our assessment practices are fair, flexible, and valid...",
+    policy_type="assessment"
+)
+
+# Get ASQA clause
+clause = ASQAClause.objects.filter(
+    standard__version='2025',
+    clause_number='QA1.2.1'
+).first()
+
+# Run comparison
+service = ComparisonService()
+result = service.compare_policy_to_clause(policy, clause)
+
+print(f"Similarity Score: {result.similarity_score}")
+print(f"Match Type: {result.match_type}")
+print(f"Keywords Matched: {result.keywords_matched}")</code></pre>
+                </div>
+            </section>
+
+            <section id="api">
+                <h2>API Endpoints</h2>
+                <div class="card">
+                    <table>
+                        <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+                        <tbody>
+                            <tr><td>POST</td><td>/api/tenants/{tenant}/policies/</td><td>Create policy</td></tr>
+                            <tr><td>POST</td><td>/api/tenants/{tenant}/policies/{id}/compare/</td><td>Compare policy</td></tr>
+                            <tr><td>GET</td><td>/api/tenants/{tenant}/comparison-sessions/</td><td>List sessions</td></tr>
+                            <tr><td>GET</td><td>/api/tenants/{tenant}/asqa-standards/</td><td>List standards</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 EduAI Compliance Suite - Policy Comparator</p>
+        </div>
+    </footer>
+</body>
+</html>
