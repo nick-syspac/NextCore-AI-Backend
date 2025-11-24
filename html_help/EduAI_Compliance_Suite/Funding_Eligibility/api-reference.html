@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funding Eligibility API Reference - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Funding Eligibility</a> /
+            <strong>API Reference</strong>
+        </div>
+
+        <h1>🔌 API Reference</h1>
+
+        <div class="intro-section">
+            <p>
+                Complete REST API documentation for the Funding Eligibility System covering 25+ endpoints 
+                for jurisdictions, rulesets, eligibility requests, decisions, overrides, evidence, and webhooks.
+            </p>
+        </div>
+
+        <h2>Base URL</h2>
+        <div class="code-block">
+            <pre><code>https://api.nextcore.ai/api/v1/funding_eligibility/</code></pre>
+        </div>
+
+        <h2>Authentication</h2>
+        <p>All endpoints require JWT authentication except jurisdictions (read-only public access).</p>
+        <div class="code-block">
+            <pre><code>Authorization: Bearer your_jwt_token</code></pre>
+        </div>
+
+        <h2>Endpoints Overview</h2>
+
+        <h3>1. Jurisdiction ViewSet</h3>
+        <p><strong>Public read-only access</strong> for browsing available jurisdictions.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td><code>/jurisdictions/</code></td>
+                    <td>List all active jurisdictions</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td><code>/jurisdictions/{code}/</code></td>
+                    <td>Get jurisdiction details</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>2. Ruleset ViewSet</h3>
+        <p>Manage versioned rulesets for eligibility evaluation.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td><code>/rulesets/</code></td>
+                    <td>List rulesets (filter by jurisdiction, status)</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td><code>/rulesets/</code></td>
+                    <td>Create new ruleset (draft status)</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td><code>/rulesets/{id}/</code></td>
+                    <td>Get ruleset details with artifacts</td>
+                </tr>
+                <tr>
+                    <td>PATCH</td>
+                    <td><code>/rulesets/{id}/</code></td>
+                    <td>Update draft ruleset (description, changelog)</td>
+                </tr>
+                <tr>
+                    <td>DELETE</td>
+                    <td><code>/rulesets/{id}/</code></td>
+                    <td>Delete draft ruleset</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td><code>/rulesets/{id}/activate/</code></td>
+                    <td>Activate ruleset (retires previous active)</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td><code>/rulesets/{id}/add_artifact/</code></td>
+                    <td>Add rule artifact (JSONLogic, Rego, Python)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3. Eligibility Request ViewSet</h3>
+        <p>Create and manage eligibility requests.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td><code>/requests/</code></td>
+                    <td>List requests (filter by status, jurisdiction, person)</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td><code>/requests/</code></td>
+                    <td>Create eligibility request</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td><code>/requests/{id}/</code></td>
+                    <td>Get request details with decision</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td><code>/requests/{id}/evaluate/</code></td>
+                    <td>Trigger eligibility evaluation</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td><code>/requests/{id}/check_eligibility/</code></td>
+                    <td><strong>Hard-block check</strong> (returns can_enrol)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="warning-box">
+            <h3>⚠️ Hard-Block Enforcement</h3>
+            <p>
+                <code>GET /requests/{id}/check_eligibility/</code> is the critical endpoint for enrolment blocking.
+            </p>
+            <ul>
+                <li><strong>200 OK:</strong> <code>can_enrol: true</code> → Allow enrolment</li>
+                <li><strong>403 Forbidden:</strong> <code>can_enrol: false</code> → Block enrolment</li>
+            </ul>
+        </div>
+
+        <h3>4. Decision Override ViewSet</h3>
+        <p>Create manual overrides for automated decisions.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td><code>/overrides/</code></td>
+                    <td>List overrides (filter by decision)</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td><code>/overrides/</code></td>
+                    <td>Create decision override</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td><code>/overrides/{id}/</code></td>
+                    <td>Get override details</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>5. Evidence Attachment ViewSet</h3>
+        <p>Upload and manage evidence documents.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td><code>/attachments/</code></td>
+                    <td>List attachments (filter by request, type)</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td><code>/attachments/</code></td>
+                    <td>Upload evidence (multipart/form-data)</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td><code>/attachments/{id}/</code></td>
+                    <td>Get attachment details</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td><code>/attachments/{id}/verify/</code></td>
+                    <td>Verify attachment (staff only)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>6. Webhook Endpoint ViewSet</h3>
+        <p>Configure webhooks for SMS/LMS integration.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td><code>/webhooks/</code></td>
+                    <td>List webhook endpoints</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td><code>/webhooks/</code></td>
+                    <td>Create webhook endpoint</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td><code>/webhooks/{id}/</code></td>
+                    <td>Get webhook details</td>
+                </tr>
+                <tr>
+                    <td>PATCH</td>
+                    <td><code>/webhooks/{id}/</code></td>
+                    <td>Update webhook configuration</td>
+                </tr>
+                <tr>
+                    <td>DELETE</td>
+                    <td><code>/webhooks/{id}/</code></td>
+                    <td>Delete webhook endpoint</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td><code>/webhooks/{id}/test/</code></td>
+                    <td>Send test webhook</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Example: Create Eligibility Request</h2>
+        <div class="code-block">
+            <pre><code>POST /api/v1/funding_eligibility/requests/
+Authorization: Bearer your_jwt_token
+Content-Type: application/json
+
+{
+  "person_id": "STU12345",
+  "course_id": "BSB50120",
+  "jurisdiction_code": "VIC",
+  "student_data": {
+    "usi": "N4KLP6G9TU",
+    "first_name": "Sarah",
+    "last_name": "Johnson",
+    "date_of_birth": "1995-03-15",
+    "citizenship": "Australian",
+    "residency_status": "Permanent",
+    "postcode": "3350",
+    "has_concession_card": true,
+    "concession_card_number": "HCC123456789"
+  },
+  "course_data": {
+    "code": "BSB50120",
+    "title": "Diploma of Business",
+    "level": "Diploma",
+    "nominal_hours": 600
+  }
+}
+
+Response 201 Created:
+{
+  "id": 789,
+  "person_id": "STU12345",
+  "course_id": "BSB50120",
+  "jurisdiction_code": "VIC",
+  "status": "pending",
+  "requested_at": "2025-11-04T10:00:00Z",
+  "input": {...}
+}</code></pre>
+        </div>
+
+        <h2>Example: Trigger Evaluation</h2>
+        <div class="code-block">
+            <pre><code>POST /api/v1/funding_eligibility/requests/789/evaluate/
+Authorization: Bearer your_jwt_token
+
+{
+  "ruleset_id": 45  // Optional: uses jurisdiction default if omitted
+}
+
+Response 202 Accepted:
+{
+  "request_id": 789,
+  "status": "evaluating",
+  "message": "Evaluation queued. Check back in a few seconds.",
+  "task_id": "abc123-def456"
+}</code></pre>
+        </div>
+
+        <h2>Example: Hard-Block Check</h2>
+        <div class="code-block">
+            <pre><code>GET /api/v1/funding_eligibility/requests/789/check_eligibility/
+Authorization: Bearer your_jwt_token
+
+// Eligible (200 OK)
+{
+  "can_enrol": true,
+  "outcome": "eligible",
+  "decision_id": 234,
+  "reasons": [
+    "Australian citizen - requirement met",
+    "Concession card verified (Health Care Card)",
+    "Age 30 years - meets minimum age 18"
+  ],
+  "message": "Student is eligible for VIC Skills First funding."
+}
+
+// Ineligible (403 Forbidden)
+{
+  "can_enrol": false,
+  "outcome": "ineligible",
+  "decision_id": 235,
+  "reasons": [
+    "Age 16 years - minimum age 18 not met",
+    "No concession card - required for under 18"
+  ],
+  "message": "Student does not meet VIC Skills First eligibility criteria.",
+  "override_required": true
+}</code></pre>
+        </div>
+
+        <h2>Example: Create Override</h2>
+        <div class="code-block">
+            <pre><code>POST /api/v1/funding_eligibility/overrides/
+Authorization: Bearer your_jwt_token
+
+{
+  "decision_id": 235,
+  "reason_code": "mature_age_exemption",
+  "justification": "Student is 17 years 11 months. Manager approved early enrolment under mature age policy clause 2.4.",
+  "final_outcome": "eligible",
+  "policy_version": "VIC-SF-2024 v2.1",
+  "evidence_refs": [456]  // Attachment IDs
+}
+
+Response 201 Created:
+{
+  "id": 78,
+  "decision_id": 235,
+  "reason_code": "mature_age_exemption",
+  "justification": "...",
+  "final_outcome": "eligible",
+  "approver": {
+    "id": 12,
+    "full_name": "Jane Smith",
+    "email": "jane.smith@rto.edu.au"
+  },
+  "approved_at": "2025-11-04T10:15:00Z"
+}</code></pre>
+        </div>
+
+        <h2>Filtering & Search</h2>
+
+        <h3>Filter Requests</h3>
+        <div class="code-block">
+            <pre><code>// By status
+GET /requests/?status=evaluated
+
+// By jurisdiction
+GET /requests/?jurisdiction_code=VIC
+
+// By person
+GET /requests/?person_id=STU12345
+
+// By date range
+GET /requests/?requested_at_after=2025-11-01&requested_at_before=2025-11-30
+
+// Combined filters
+GET /requests/?status=evaluated&jurisdiction_code=VIC&ordering=-requested_at</code></pre>
+        </div>
+
+        <h3>Filter Rulesets</h3>
+        <div class="code-block">
+            <pre><code>// Active rulesets only
+GET /rulesets/?status=active
+
+// By jurisdiction
+GET /rulesets/?jurisdiction_code=NSW
+
+// Latest version
+GET /rulesets/?jurisdiction_code=VIC&status=active&ordering=-created_at&limit=1</code></pre>
+        </div>
+
+        <h2>Pagination</h2>
+        <div class="code-block">
+            <pre><code>GET /requests/?page=2&page_size=20
+
+Response:
+{
+  "count": 150,
+  "next": "https://api.nextcore.ai/api/v1/funding_eligibility/requests/?page=3",
+  "previous": "https://api.nextcore.ai/api/v1/funding_eligibility/requests/?page=1",
+  "results": [...]
+}</code></pre>
+        </div>
+
+        <h2>Error Handling</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Status Code</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>200 OK</strong></td>
+                    <td>Request successful</td>
+                </tr>
+                <tr>
+                    <td><strong>201 Created</strong></td>
+                    <td>Resource created successfully</td>
+                </tr>
+                <tr>
+                    <td><strong>202 Accepted</strong></td>
+                    <td>Async task queued</td>
+                </tr>
+                <tr>
+                    <td><strong>400 Bad Request</strong></td>
+                    <td>Validation error or malformed request</td>
+                </tr>
+                <tr>
+                    <td><strong>401 Unauthorized</strong></td>
+                    <td>Missing or invalid authentication token</td>
+                </tr>
+                <tr>
+                    <td><strong>403 Forbidden</strong></td>
+                    <td>Insufficient permissions OR hard-block (can_enrol: false)</td>
+                </tr>
+                <tr>
+                    <td><strong>404 Not Found</strong></td>
+                    <td>Resource does not exist</td>
+                </tr>
+                <tr>
+                    <td><strong>429 Too Many Requests</strong></td>
+                    <td>Rate limit exceeded</td>
+                </tr>
+                <tr>
+                    <td><strong>500 Internal Server Error</strong></td>
+                    <td>Server error</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Error Response Format</h3>
+        <div class="code-block">
+            <pre><code>{
+  "error": "Validation failed",
+  "detail": {
+    "student_data": {
+      "usi": ["USI format invalid. Must be 10 alphanumeric characters."]
+    },
+    "jurisdiction_code": ["Invalid jurisdiction code. Must be one of: NSW, VIC, QLD, SA, WA, TAS, NT, ACT."]
+  }
+}</code></pre>
+        </div>
+
+        <div class="cta-section">
+            <h2>Next Steps</h2>
+            <p>Dive deeper into the rules engine to understand how eligibility evaluation works.</p>
+            <a href="rules-engine.html" class="btn btn-primary">Rules Engine Documentation →</a>
+        </div>
+    </div>
+</body>
+</html>

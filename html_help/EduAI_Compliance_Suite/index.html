@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduAI Compliance Suite - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            border-radius: 1rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .hero h1 {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 2rem;
+            margin-top: 1rem;
+            font-weight: 600;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .suite-overview {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 3rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .suite-overview h2 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .suite-overview p {
+            color: #64748b;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .component-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-top: 4px solid var(--primary-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .component-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.2);
+        }
+
+        .component-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 1rem;
+            color: white;
+        }
+
+        .component-card h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .component-card p {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        .component-card .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .component-card .tag {
+            background: #f1f5f9;
+            color: #475569;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .component-card a {
+            display: inline-block;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--primary-color);
+            border-radius: 0.5rem;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .component-card a:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .compliance-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 1rem;
+            padding: 3rem 2rem;
+            margin: 3rem 0;
+            border-left: 4px solid #0284c7;
+        }
+
+        .compliance-section h2 {
+            color: #0c4a6e;
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .label {
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .integration-section {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin: 3rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+        }
+
+        .integration-section h2 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .integration-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .integration-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 0.5rem;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .integration-item .icon {
+            font-size: 2rem;
+        }
+
+        .integration-item .name {
+            font-weight: 600;
+            color: #334155;
+        }
+
+        footer {
+            text-align: center;
+            color: #64748b;
+            padding: 2rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../index.html">Documentation Home</a> /
+            <strong>EduAI Compliance Suite</strong>
+        </div>
+
+        <div class="hero">
+            <h1>🎓 EduAI Compliance Suite</h1>
+            <p>
+                Comprehensive AI-powered compliance and operational excellence tools for Australian RTOs. 
+                Automate policy management, eligibility verification, continuous improvement, audit preparation, 
+                and training strategy delivery.
+            </p>
+            <div class="status-badge">Production Ready • ASQA Compliant</div>
+        </div>
+
+        <div class="suite-overview">
+            <h2>About the Suite</h2>
+            <p>
+                The <strong>EduAI Compliance Suite</strong> is an integrated collection of AI-powered tools designed specifically 
+                for Australian Registered Training Organisations (RTOs). Each component addresses critical compliance requirements 
+                while streamlining operational workflows and improving educational outcomes.
+            </p>
+            <p>
+                Built on NextCore AI's advanced language models and designed with deep understanding of ASQA Standards, 
+                the suite ensures your RTO maintains continuous compliance while delivering exceptional training and assessment services.
+            </p>
+            <p>
+                All components integrate seamlessly with your existing Student Management System (SMS) and Learning Management System (LMS), 
+                providing real-time compliance monitoring, automated workflows, and comprehensive audit trails.
+            </p>
+        </div>
+
+        <div class="compliance-section">
+            <h2>📊 Suite-Wide Compliance Metrics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="number">5</div>
+                    <div class="label">Core Components</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">100+</div>
+                    <div class="label">API Endpoints</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">8</div>
+                    <div class="label">ASQA Standards Covered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">100%</div>
+                    <div class="label">Audit Trail Coverage</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">50+</div>
+                    <div class="label">Data Models</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">24/7</div>
+                    <div class="label">AI Availability</div>
+                </div>
+            </div>
+        </div>
+
+        <h2>🔧 Suite Components</h2>
+        <div class="components-grid">
+            <div class="component-card">
+                <div class="component-icon">📋</div>
+                <h3>Policy Comparator</h3>
+                <p>
+                    AI-powered policy change detection and compliance impact analysis. Compare RTO policies against 
+                    ASQA standards, track legislative updates, and generate detailed impact reports with compliance recommendations.
+                </p>
+                <div class="tags">
+                    <span class="tag">Standards 1.1 - 1.3</span>
+                    <span class="tag">Change Detection</span>
+                    <span class="tag">Impact Analysis</span>
+                </div>
+                <a href="Policy_Comparator/index.html">Explore Policy Comparator →</a>
+            </div>
+
+            <div class="component-card">
+                <div class="component-icon">✅</div>
+                <h3>Funding Eligibility</h3>
+                <p>
+                    Deterministic funding eligibility verification with hard-block enforcement. Automated checks against 
+                    jurisdiction-specific rules (VIC Skills First, NSW Smart & Skilled, QLD Cert 3 Guarantee) with external 
+                    verification (USI, concession cards, visa status) and immutable audit trails.
+                </p>
+                <div class="tags">
+                    <span class="tag">8 Jurisdictions</span>
+                    <span class="tag">Hard-Block</span>
+                    <span class="tag">External Verification</span>
+                </div>
+                <a href="Funding_Eligibility/index.html">Explore Funding Eligibility →</a>
+            </div>
+
+            <div class="component-card">
+                <div class="component-icon">📊</div>
+                <h3>Continuous Improvement Register</h3>
+                <p>
+                    Comprehensive continuous improvement tracking aligned with ASQA Standard 1.8 and Clause 8.1. 
+                    Manage improvement cycles, track stakeholder feedback, monitor implementation progress, and 
+                    maintain evidence-based improvement history.
+                </p>
+                <div class="tags">
+                    <span class="tag">Standard 1.8</span>
+                    <span class="tag">Clause 8.1</span>
+                    <span class="tag">Evidence Tracking</span>
+                </div>
+                <a href="Continuous_Improvement_Register/index.html">Explore CIR →</a>
+            </div>
+
+            <div class="component-card">
+                <div class="component-icon">🔍</div>
+                <h3>Audit Assistant</h3>
+                <p>
+                    AI-powered audit preparation and readiness assessment tool. Automate evidence collection, identify 
+                    compliance gaps, generate audit responses, and maintain continuous readiness across all ASQA Standards 
+                    with intelligent recommendations and priority tracking.
+                </p>
+                <div class="tags">
+                    <span class="tag">All Standards</span>
+                    <span class="tag">Gap Analysis</span>
+                    <span class="tag">Evidence Collection</span>
+                </div>
+                <a href="Audit_Assistant/index.html">Explore Audit Assistant →</a>
+            </div>
+
+            <div class="component-card">
+                <div class="component-icon">📚</div>
+                <h3>Training & Assessment Strategy</h3>
+                <p>
+                    Complete TAS development, management, and AI-powered qualification mapping. Create compliant training 
+                    and assessment strategies, map learning resources to units, generate delivery schedules, and ensure 
+                    alignment with training package requirements.
+                </p>
+                <div class="tags">
+                    <span class="tag">Standard 1.1</span>
+                    <span class="tag">TAS Development</span>
+                    <span class="tag">Qualification Mapping</span>
+                </div>
+                <a href="Training_and_Assessment_Strategy/index.html">Explore TAS →</a>
+            </div>
+        </div>
+
+        <div class="integration-section">
+            <h2>🔗 Integration Capabilities</h2>
+            <p>All components integrate seamlessly with your existing systems:</p>
+            <div class="integration-grid">
+                <div class="integration-item">
+                    <div class="icon">🎯</div>
+                    <div class="name">Student Management Systems (SMS)</div>
+                </div>
+                <div class="integration-item">
+                    <div class="icon">📖</div>
+                    <div class="name">Learning Management Systems (LMS)</div>
+                </div>
+                <div class="integration-item">
+                    <div class="icon">💾</div>
+                    <div class="name">Document Management Systems</div>
+                </div>
+                <div class="integration-item">
+                    <div class="icon">🔔</div>
+                    <div class="name">Webhook Notifications</div>
+                </div>
+                <div class="integration-item">
+                    <div class="icon">🔐</div>
+                    <div class="name">SSO / SAML Authentication</div>
+                </div>
+                <div class="integration-item">
+                    <div class="icon">📊</div>
+                    <div class="name">Business Intelligence Tools</div>
+                </div>
+                <div class="integration-item">
+                    <div class="icon">☁️</div>
+                    <div class="name">Cloud Storage (S3, Azure)</div>
+                </div>
+                <div class="integration-item">
+                    <div class="icon">📧</div>
+                    <div class="name">Email & Communication Platforms</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="suite-overview">
+            <h2>🌟 Key Benefits</h2>
+            <ul style="color: #64748b; line-height: 2;">
+                <li><strong>Automated Compliance:</strong> Reduce manual compliance checking by 80%+ with AI-powered automation</li>
+                <li><strong>Audit Readiness:</strong> Maintain continuous audit readiness with real-time evidence collection and gap analysis</li>
+                <li><strong>Risk Mitigation:</strong> Identify and address compliance risks before they become audit findings</li>
+                <li><strong>Operational Efficiency:</strong> Streamline workflows across policy management, eligibility, and continuous improvement</li>
+                <li><strong>Data-Driven Decisions:</strong> Leverage comprehensive analytics and reporting for strategic planning</li>
+                <li><strong>Cost Savings:</strong> Reduce compliance overhead and avoid costly audit findings</li>
+                <li><strong>Scalability:</strong> Grow your RTO with confidence knowing compliance scales automatically</li>
+                <li><strong>Multi-Tenancy:</strong> Manage multiple RTOs or campus locations with complete data isolation</li>
+            </ul>
+        </div>
+
+        <div class="suite-overview">
+            <h2>📋 ASQA Standards Coverage</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ASQA Standard</th>
+                        <th>Components</th>
+                        <th>Coverage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Standard 1.1</strong> - Training and Assessment</td>
+                        <td>TAS, Audit Assistant</td>
+                        <td>✅ Complete</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standard 1.2</strong> - Training Package Requirements</td>
+                        <td>TAS, Policy Comparator</td>
+                        <td>✅ Complete</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standard 1.3</strong> - Trainer Qualifications</td>
+                        <td>Policy Comparator, Audit Assistant</td>
+                        <td>✅ Complete</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standard 1.5</strong> - Marketing & Recruitment</td>
+                        <td>Funding Eligibility, Audit Assistant</td>
+                        <td>✅ Complete</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standard 1.7</strong> - Legislative Requirements</td>
+                        <td>All Components</td>
+                        <td>✅ Complete</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standard 1.8</strong> - Continuous Improvement</td>
+                        <td>CIR, Audit Assistant</td>
+                        <td>✅ Complete</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standard 2.1</strong> - Governance & Administration</td>
+                        <td>All Components</td>
+                        <td>✅ Complete</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Standard 2.2</strong> - Financial Management</td>
+                        <td>Funding Eligibility, Audit Assistant</td>
+                        <td>✅ Complete</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="suite-overview">
+            <h2>🚀 Getting Started</h2>
+            <ol style="color: #64748b; line-height: 2;">
+                <li><strong>Choose a Component:</strong> Select the component that addresses your most pressing compliance need</li>
+                <li><strong>Review Documentation:</strong> Read the component's overview, quickstart guide, and API reference</li>
+                <li><strong>Configure Integration:</strong> Set up webhook endpoints and API credentials for your SMS/LMS</li>
+                <li><strong>Import Data:</strong> Load existing policies, student records, or qualification mappings</li>
+                <li><strong>Train Your Team:</strong> Review examples and best practices with your compliance team</li>
+                <li><strong>Go Live:</strong> Enable the component and start benefiting from automated compliance</li>
+            </ol>
+        </div>
+
+        <div class="compliance-section">
+            <h2>💡 Need Help?</h2>
+            <p style="color: #334155; line-height: 1.8;">
+                Each component includes comprehensive documentation with quickstart guides, API references, 
+                architecture diagrams, and real-world code examples. If you need additional support:
+            </p>
+            <ul style="color: #334155; line-height: 2; margin-top: 1rem;">
+                <li>📧 Email: <strong>support@nextcore.ai</strong></li>
+                <li>📞 Phone: <strong>1300 NEXTCORE</strong></li>
+                <li>💬 Live Chat: Available 24/7 in all component dashboards</li>
+                <li>📚 Knowledge Base: <strong>docs.nextcore.ai</strong></li>
+            </ul>
+        </div>
+
+        <footer>
+            <p>&copy; 2025 NextCore AI | EduAI Compliance Suite | Last Updated: November 4, 2025</p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflows - Policy Comparator Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Policy Comparator</a> /
+            <strong>Workflows</strong>
+        </div>
+
+        <h1>🔄 Common Workflows</h1>
+        <p class="lead">
+            Step-by-step guides for common Policy Comparator workflows, from seeding ASQA standards to 
+            batch compliance checking.
+        </p>
+
+        <div class="toc-box">
+            <h3>Workflows</h3>
+            <ul>
+                <li><a href="#workflow-1">Workflow 1: Seeding ASQA Standards</a></li>
+                <li><a href="#workflow-2">Workflow 2: Creating and Managing Policies</a></li>
+                <li><a href="#workflow-3">Workflow 3: Running Policy Comparison</a></li>
+                <li><a href="#workflow-4">Workflow 4: Analyzing Compliance Gaps</a></li>
+                <li><a href="#workflow-5">Workflow 5: Tracking Comparison History</a></li>
+                <li><a href="#workflow-6">Workflow 6: Batch Processing Multiple Policies</a></li>
+            </ul>
+        </div>
+
+        <h2 id="workflow-1">📚 Workflow 1: Seeding ASQA Standards</h2>
+        <p>
+            Before using Policy Comparator, you need to populate the ASQA standards database. This workflow 
+            shows how to seed all 8 ASQA standards with their clauses.
+        </p>
+
+        <h3>Step 1: Prepare Standards Data</h3>
+        <p>Create a Python script or Django management command to seed standards:</p>
+        <div class="code-block">
+            <code>
+# seed_asqa_standards.py
+from policy_comparator.models import ASQAStandard, ASQAClause
+
+def seed_standard_1():
+    """Seed Standard 1: Training and Assessment"""
+    standard = ASQAStandard.objects.create(
+        standard_number="1",
+        title="Training and Assessment",
+        description="Training and assessment delivered by RTO meets requirements",
+        standard_type="training_assessment",
+        full_text="""Standard 1 requires RTOs to ensure training and assessment 
+        meets the requirements of the relevant training package or VET accredited course.""",
+        requirements=[
+            "Develop training and assessment strategies",
+            "Ensure trainer/assessor competence",
+            "Validate assessment practices",
+            "Maintain assessment records"
+        ],
+        is_active=True,
+        version="2015"
+    )
+    
+    # Add clauses for Standard 1
+    clauses = [
+        {
+            "clause_number": "1.1",
+            "title": "Training and Assessment Strategies",
+            "clause_text": "The RTO's training and assessment strategies and practices...",
+            "keywords": ["training strategy", "assessment strategy", "TAS", "competency"],
+            "compliance_level": "critical"
+        },
+        {
+            "clause_number": "1.2",
+            "title": "Trainer and Assessor Competence",
+            "clause_text": "For the purpose of Clauses 1.13 to 1.16...",
+            "keywords": ["vocational competencies", "current industry skills"],
+            "compliance_level": "critical"
+        }
+        # Add more clauses...
+    ]
+    
+    for clause_data in clauses:
+        ASQAClause.objects.create(standard=standard, **clause_data)
+    
+    print(f"✅ Seeded {standard.standard_number} with {len(clauses)} clauses")
+
+# Repeat for Standards 2-8
+def seed_all_standards():
+    seed_standard_1()
+    # seed_standard_2()
+    # ... through seed_standard_8()
+    
+if __name__ == "__main__":
+    seed_all_standards()
+            </code>
+        </div>
+
+        <h3>Step 2: Run Seeding Script</h3>
+        <div class="code-block">
+            <code>
+cd apps/control-plane
+python seed_asqa_standards.py
+            </code>
+        </div>
+
+        <h3>Step 3: Verify Standards</h3>
+        <div class="code-block">
+            <code>
+from policy_comparator.models import ASQAStandard, ASQAClause
+
+# Check standards count
+standards_count = ASQAStandard.objects.count()
+print(f"Total standards: {standards_count}")
+
+# Check clauses count
+clauses_count = ASQAClause.objects.count()
+print(f"Total clauses: {clauses_count}")
+
+# List standards
+for standard in ASQAStandard.objects.all():
+    clause_count = standard.clauses.count()
+    print(f"{standard.standard_number}: {standard.title} ({clause_count} clauses)")
+            </code>
+        </div>
+
+        <h2 id="workflow-2">📝 Workflow 2: Creating and Managing Policies</h2>
+        <p>This workflow covers creating, updating, and managing RTO policies.</p>
+
+        <h3>Step 1: Create a New Policy</h3>
+        <div class="code-block">
+            <code>
+import requests
+
+url = "https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator/policies/"
+headers = {"Authorization": "Bearer YOUR_TOKEN"}
+
+policy_data = {
+    "policy_number": "COMP-001",
+    "title": "Complaints and Appeals Policy",
+    "description": "Policy for handling complaints and appeals",
+    "policy_type": "complaints_appeals",
+    "content": """
+    Complaints and Appeals Policy
+    
+    1. Purpose
+    Our RTO maintains a fair and transparent complaints and appeals process 
+    accessible to all students, staff, and stakeholders.
+    
+    2. Scope
+    This policy applies to all complaints and appeals related to:
+    - Assessment decisions
+    - Training delivery
+    - Administrative matters
+    - Staff conduct
+    
+    3. Principles
+    - Independence: Reviewers independent of original decision
+    - Accessibility: Written procedures provided to all students
+    - Timeliness: 60-day resolution timeframe
+    - Documentation: All complaints/appeals recorded
+    
+    4. Process
+    - Informal resolution attempts first
+    - Formal complaint lodgment
+    - Investigation and response
+    - Appeal process available
+    - External review options
+    
+    5. Records
+    All complaints and appeals recorded in student management system
+    with outcomes and actions taken.
+    """,
+    "version": "1.0",
+    "status": "draft",
+    "effective_date": "2025-12-01"
+}
+
+response = requests.post(url, json=policy_data, headers=headers)
+policy = response.json()
+print(f"✅ Created policy: {policy['id']} - {policy['title']}")
+            </code>
+        </div>
+
+        <h3>Step 2: Update Policy Status</h3>
+        <div class="code-block">
+            <code>
+# Update policy to approved status
+update_url = f"https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator/policies/{policy['id']}/"
+
+update_data = {
+    "status": "approved",
+    "effective_date": "2025-12-01"
+}
+
+response = requests.patch(update_url, json=update_data, headers=headers)
+print(f"✅ Policy status updated to: {response.json()['status']}")
+            </code>
+        </div>
+
+        <h3>Step 3: List Policies by Type</h3>
+        <div class="code-block">
+            <code>
+# Get all complaints/appeals policies
+list_url = f"https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator/policies/"
+params = {"policy_type": "complaints_appeals", "status": "approved"}
+
+response = requests.get(list_url, params=params, headers=headers)
+policies = response.json()['results']
+
+for policy in policies:
+    print(f"{policy['policy_number']}: {policy['title']}")
+    print(f"  Compliance Score: {policy['compliance_score']}%")
+    print(f"  Last Compared: {policy['last_compared_at']}")
+            </code>
+        </div>
+
+        <h2 id="workflow-3">🔍 Workflow 3: Running Policy Comparison</h2>
+        <p>Compare a policy against ASQA standards to identify compliance gaps.</p>
+
+        <h3>Step 1: Select Policy and Standards</h3>
+        <div class="code-block">
+            <code>
+# Get policy ID
+policy_id = 1
+
+# Optionally, get specific standard IDs to compare against
+# For Standard 6 (Complaints and Appeals)
+from policy_comparator.models import ASQAStandard
+standard_6 = ASQAStandard.objects.get(standard_number="6")
+standard_ids = [standard_6.id]
+
+# Or compare against all standards by omitting standard_ids
+            </code>
+        </div>
+
+        <h3>Step 2: Initiate Comparison</h3>
+        <div class="code-block">
+            <code>
+compare_url = f"https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator/policies/{policy_id}/compare/"
+
+comparison_request = {
+    "policy_id": policy_id,
+    "standard_ids": standard_ids,  # Or omit for all standards
+    "session_name": "Complaints Policy - Initial Review",
+    "use_nlp": True
+}
+
+response = requests.post(compare_url, json=comparison_request, headers=headers)
+result = response.json()
+
+print(f"✅ Comparison completed in {result['processing_time']:.2f}s")
+print(f"\n📊 Results:")
+print(f"  Total clauses checked: {result['results_summary']['total_checked']}")
+print(f"  Compliant: {result['results_summary']['compliant']}")
+print(f"  Partial matches: {result['results_summary']['partial_match']}")
+print(f"  Gaps: {result['results_summary']['gaps']}")
+print(f"  Compliance score: {result['results_summary']['compliance_score']}%")
+            </code>
+        </div>
+
+        <h3>Step 3: Review Detailed Results</h3>
+        <div class="code-block">
+            <code>
+results_url = f"https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator/policies/{policy_id}/results/"
+
+response = requests.get(results_url, headers=headers)
+detailed_results = response.json()
+
+# Group results by match type
+full_matches = [r for r in detailed_results if r['match_type'] == 'full']
+partial_matches = [r for r in detailed_results if r['match_type'] == 'partial']
+weak_matches = [r for r in detailed_results if r['match_type'] == 'weak']
+no_matches = [r for r in detailed_results if r['match_type'] == 'no_match']
+
+print(f"\n✅ Full Matches ({len(full_matches)}):")
+for result in full_matches:
+    clause = result['asqa_clause_details']
+    print(f"  • {clause['clause_number']}: {clause['title']}")
+    print(f"    Score: {result['similarity_score']:.3f}")
+
+print(f"\n⚠️  Partial Matches ({len(partial_matches)}):")
+for result in partial_matches:
+    clause = result['asqa_clause_details']
+    print(f"  • {clause['clause_number']}: {clause['title']}")
+    print(f"    Score: {result['similarity_score']:.3f}")
+    if result['recommendations']:
+        print(f"    Recommendations: {result['recommendations'][0]}")
+            </code>
+        </div>
+
+        <h2 id="workflow-4">📊 Workflow 4: Analyzing Compliance Gaps</h2>
+        <p>Perform detailed gap analysis with severity classification.</p>
+
+        <h3>Step 1: Request Gap Analysis</h3>
+        <div class="code-block">
+            <code>
+gap_url = f"https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator/policies/{policy_id}/gap_analysis/"
+
+response = requests.get(gap_url, headers=headers)
+gap_analysis = response.json()
+
+print(f"🎯 Gap Analysis for: {gap_analysis['policy']['title']}")
+print(f"\nSummary:")
+print(f"  Total gaps: {gap_analysis['summary']['total_gaps']}")
+print(f"  🔴 Critical: {gap_analysis['summary']['critical_gaps']}")
+print(f"  🟡 Moderate: {gap_analysis['summary']['moderate_gaps']}")
+print(f"  🟢 Minor: {gap_analysis['summary']['minor_gaps']}")
+print(f"  Overall compliance: {gap_analysis['summary']['compliance_score']}%")
+            </code>
+        </div>
+
+        <h3>Step 2: Address Critical Gaps</h3>
+        <div class="code-block">
+            <code>
+print(f"\n🔴 Critical Gaps Requiring Immediate Action:")
+for gap in gap_analysis['critical_gaps']:
+    clause = gap['clause']
+    print(f"\n  Clause {clause['clause_number']}: {clause['title']}")
+    print(f"  Compliance Level: {clause['compliance_level']}")
+    print(f"  Similarity Score: {gap['similarity_score']:.3f}")
+    print(f"  Gap Severity: {gap['gap_severity']}")
+    
+    print(f"\n  Missing Keywords:")
+    for keyword in gap['missing_keywords'][:5]:
+        print(f"    - {keyword}")
+    
+    print(f"\n  Recommendations:")
+    for rec in gap['recommendations']:
+        print(f"    • {rec}")
+    
+    print(f"\n  ⚡ Action: Update policy to include these requirements")
+            </code>
+        </div>
+
+        <h3>Step 3: Generate Action Plan</h3>
+        <div class="code-block">
+            <code>
+# Create action plan from gap analysis
+action_plan = {
+    "policy_id": policy_id,
+    "policy_title": gap_analysis['policy']['title'],
+    "analysis_date": "2025-11-04",
+    "priority_actions": []
+}
+
+# Critical gaps - Priority 1
+for gap in gap_analysis['critical_gaps']:
+    action_plan['priority_actions'].append({
+        "priority": "P1 - Critical",
+        "clause": gap['clause']['clause_number'],
+        "title": gap['clause']['title'],
+        "current_score": gap['similarity_score'],
+        "target_score": 0.8,
+        "actions": gap['recommendations'],
+        "due_date": "2025-11-30"
+    })
+
+# Moderate gaps - Priority 2
+for gap in gap_analysis['moderate_gaps']:
+    action_plan['priority_actions'].append({
+        "priority": "P2 - Moderate",
+        "clause": gap['clause']['clause_number'],
+        "title": gap['clause']['title'],
+        "current_score": gap['similarity_score'],
+        "target_score": 0.7,
+        "actions": gap['recommendations'],
+        "due_date": "2025-12-31"
+    })
+
+print(f"\n📋 Action Plan Created:")
+print(f"  Total actions: {len(action_plan['priority_actions'])}")
+            </code>
+        </div>
+
+        <h2 id="workflow-5">📈 Workflow 5: Tracking Comparison History</h2>
+        <p>Monitor policy compliance over time and track improvements.</p>
+
+        <h3>Step 1: Get Comparison History</h3>
+        <div class="code-block">
+            <code>
+history_url = f"https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator/policies/{policy_id}/comparison_history/"
+
+response = requests.get(history_url, headers=headers)
+sessions = response.json()
+
+print(f"📊 Comparison History for Policy {policy_id}")
+print(f"  Total sessions: {len(sessions)}\n")
+
+for session in sessions:
+    print(f"Session: {session['session_name']}")
+    print(f"  Date: {session['created_at']}")
+    print(f"  Status: {session['status']}")
+    print(f"  Compliance Score: {session['overall_compliance_score']}%")
+    print(f"  Clauses Checked: {session['total_clauses_checked']}")
+    print(f"  Gaps: {session['gap_count']}")
+    print()
+            </code>
+        </div>
+
+        <h3>Step 2: Calculate Improvement Trend</h3>
+        <div class="code-block">
+            <code>
+# Sort sessions by date
+sorted_sessions = sorted(sessions, key=lambda x: x['created_at'])
+
+if len(sorted_sessions) >= 2:
+    first_score = sorted_sessions[0]['overall_compliance_score']
+    latest_score = sorted_sessions[-1]['overall_compliance_score']
+    improvement = latest_score - first_score
+    
+    print(f"📈 Compliance Trend:")
+    print(f"  Initial Score: {first_score}%")
+    print(f"  Latest Score: {latest_score}%")
+    print(f"  Improvement: {'+' if improvement >= 0 else ''}{improvement:.1f}%")
+    
+    if improvement > 0:
+        print(f"  ✅ Policy compliance improving!")
+    elif improvement < 0:
+        print(f"  ⚠️  Policy compliance declining - review needed")
+    else:
+        print(f"  ➡️  No change in compliance score")
+            </code>
+        </div>
+
+        <h3>Step 3: Generate Compliance Report</h3>
+        <div class="code-block">
+            <code>
+import json
+from datetime import datetime
+
+compliance_report = {
+    "report_date": datetime.now().isoformat(),
+    "policy": {
+        "id": policy_id,
+        "number": "COMP-001",
+        "title": "Complaints and Appeals Policy"
+    },
+    "current_status": {
+        "compliance_score": latest_score,
+        "status": "compliant" if latest_score >= 80 else "needs_improvement",
+        "last_compared": sorted_sessions[-1]['created_at']
+    },
+    "historical_trend": {
+        "sessions_count": len(sessions),
+        "first_score": first_score,
+        "latest_score": latest_score,
+        "improvement": improvement
+    },
+    "recommendations": []
+}
+
+# Add recommendations based on score
+if latest_score < 80:
+    compliance_report['recommendations'].append(
+        "Policy requires updates to meet 80% compliance threshold"
+    )
+if improvement < 0:
+    compliance_report['recommendations'].append(
+        "Review recent policy changes - compliance has declined"
+    )
+
+# Save report
+with open(f"compliance_report_{policy_id}.json", "w") as f:
+    json.dump(compliance_report, f, indent=2)
+
+print(f"✅ Compliance report saved")
+            </code>
+        </div>
+
+        <h2 id="workflow-6">🔄 Workflow 6: Batch Processing Multiple Policies</h2>
+        <p>Run compliance checks across all policies for organization-wide assessment.</p>
+
+        <h3>Step 1: Get All Policies</h3>
+        <div class="code-block">
+            <code>
+policies_url = f"https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator/policies/"
+params = {"status": "approved", "page_size": 100}
+
+response = requests.get(policies_url, params=params, headers=headers)
+all_policies = response.json()['results']
+
+print(f"📋 Found {len(all_policies)} approved policies")
+            </code>
+        </div>
+
+        <h3>Step 2: Run Batch Comparisons</h3>
+        <div class="code-block">
+            <code>
+import time
+
+batch_results = []
+
+print(f"\n🔄 Starting batch comparison for {len(all_policies)} policies...")
+
+for i, policy in enumerate(all_policies, 1):
+    print(f"\n[{i}/{len(all_policies)}] Comparing: {policy['policy_number']}")
+    
+    compare_url = f"https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator/policies/{policy['id']}/compare/"
+    
+    comparison_request = {
+        "policy_id": policy['id'],
+        "session_name": f"Batch Compliance Check - {datetime.now().strftime('%Y-%m-%d')}",
+        "use_nlp": True
+    }
+    
+    try:
+        response = requests.post(compare_url, json=comparison_request, headers=headers)
+        result = response.json()
+        
+        batch_results.append({
+            "policy_id": policy['id'],
+            "policy_number": policy['policy_number'],
+            "policy_title": policy['title'],
+            "compliance_score": result['results_summary']['compliance_score'],
+            "gaps": result['results_summary']['gaps'],
+            "status": "completed"
+        })
+        
+        print(f"  ✅ Score: {result['results_summary']['compliance_score']}%")
+        
+        # Rate limiting - wait 1 second between requests
+        time.sleep(1)
+        
+    except Exception as e:
+        print(f"  ❌ Error: {str(e)}")
+        batch_results.append({
+            "policy_id": policy['id'],
+            "policy_number": policy['policy_number'],
+            "status": "failed",
+            "error": str(e)
+        })
+
+print(f"\n✅ Batch comparison completed")
+            </code>
+        </div>
+
+        <h3>Step 3: Analyze Organization-Wide Compliance</h3>
+        <div class="code-block">
+            <code>
+# Calculate organization-wide metrics
+successful_comparisons = [r for r in batch_results if r['status'] == 'completed']
+compliance_scores = [r['compliance_score'] for r in successful_comparisons]
+
+if compliance_scores:
+    avg_compliance = sum(compliance_scores) / len(compliance_scores)
+    min_compliance = min(compliance_scores)
+    max_compliance = max(compliance_scores)
+    
+    print(f"\n📊 Organization-Wide Compliance Metrics:")
+    print(f"  Policies Analyzed: {len(successful_comparisons)}")
+    print(f"  Average Compliance: {avg_compliance:.1f}%")
+    print(f"  Minimum Compliance: {min_compliance:.1f}%")
+    print(f"  Maximum Compliance: {max_compliance:.1f}%")
+    
+    # Identify policies needing attention
+    policies_need_work = [r for r in successful_comparisons if r['compliance_score'] < 80]
+    
+    print(f"\n⚠️  Policies Requiring Attention ({len(policies_need_work)}):")
+    for policy in sorted(policies_need_work, key=lambda x: x['compliance_score']):
+        print(f"  • {policy['policy_number']}: {policy['policy_title']}")
+        print(f"    Score: {policy['compliance_score']}% ({policy['gaps']} gaps)")
+            </code>
+        </div>
+
+        <h3>Step 4: Generate Executive Summary</h3>
+        <div class="code-block">
+            <code>
+executive_summary = {
+    "report_title": "RTO Compliance Assessment",
+    "report_date": datetime.now().strftime("%Y-%m-%d"),
+    "organization_metrics": {
+        "total_policies": len(all_policies),
+        "policies_analyzed": len(successful_comparisons),
+        "average_compliance": round(avg_compliance, 1),
+        "policies_compliant": len([r for r in successful_comparisons if r['compliance_score'] >= 80]),
+        "policies_need_attention": len(policies_need_work)
+    },
+    "compliance_distribution": {
+        "excellent": len([r for r in successful_comparisons if r['compliance_score'] >= 90]),
+        "good": len([r for r in successful_comparisons if 80 <= r['compliance_score'] < 90]),
+        "needs_improvement": len([r for r in successful_comparisons if 60 <= r['compliance_score'] < 80]),
+        "critical": len([r for r in successful_comparisons if r['compliance_score'] < 60])
+    },
+    "priority_policies": [
+        {
+            "policy_number": p['policy_number'],
+            "policy_title": p['policy_title'],
+            "compliance_score": p['compliance_score'],
+            "gaps": p['gaps']
+        }
+        for p in sorted(policies_need_work, key=lambda x: x['compliance_score'])[:5]
+    ]
+}
+
+print(f"\n📄 Executive Summary Generated")
+print(f"  Compliance Rating: {avg_compliance:.1f}%")
+print(f"  Status: {'✅ Compliant' if avg_compliance >= 80 else '⚠️ Needs Improvement'}")
+            </code>
+        </div>
+
+        <div class="success-box" style="margin-top: 3rem;">
+            <h4>✅ Workflow Best Practices</h4>
+            <ul>
+                <li><strong>Regular Comparisons:</strong> Run comparisons quarterly or after policy updates</li>
+                <li><strong>Track History:</strong> Monitor compliance trends over time</li>
+                <li><strong>Address Gaps Promptly:</strong> Prioritize critical gaps for immediate action</li>
+                <li><strong>Document Changes:</strong> Record policy updates and re-run comparisons</li>
+                <li><strong>Batch Processing:</strong> Use batch workflows for annual audits</li>
+            </ul>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="api-reference.html" class="btn btn-secondary">← API Reference</a>
+            <a href="examples.html" class="btn btn-primary">Examples →</a>
+        </div>
+    </div>
+</body>
+</html>

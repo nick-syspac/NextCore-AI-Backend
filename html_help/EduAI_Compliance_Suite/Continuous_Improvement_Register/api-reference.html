@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIR API Reference - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Continuous Improvement Register</a> /
+            <strong>API Reference</strong>
+        </div>
+
+        <h1>🔌 API Reference</h1>
+
+        <div class="intro-section">
+            <p>
+                Complete REST API documentation for the Continuous Improvement Register. All endpoints support 
+                JSON request/response format with JWT authentication and tenant scoping.
+            </p>
+        </div>
+
+        <h2>📡 Base URL</h2>
+        <div class="code-block">
+            <pre><code>https://api.nextcore.ai/api/v1/continuous_improvement/</code></pre>
+        </div>
+
+        <h2>🔐 Authentication</h2>
+        <p>All API requests require JWT token authentication:</p>
+        <div class="code-block">
+            <pre><code>Authorization: Bearer &lt;your_jwt_token&gt;</code></pre>
+        </div>
+
+        <h2>📋 ViewSets & Endpoints</h2>
+
+        <h3>1. ImprovementActionViewSet</h3>
+        <p><strong>Base Path:</strong> <code>/actions/</code></p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td>/actions/</td>
+                    <td>List all improvement actions (paginated, filterable)</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/actions/</td>
+                    <td>Create new improvement action</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/actions/{id}/</td>
+                    <td>Retrieve single action with full details</td>
+                </tr>
+                <tr>
+                    <td>PATCH</td>
+                    <td>/actions/{id}/</td>
+                    <td>Partial update of action</td>
+                </tr>
+                <tr>
+                    <td>DELETE</td>
+                    <td>/actions/{id}/</td>
+                    <td>Delete action (soft delete recommended)</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/actions/{id}/classify/</td>
+                    <td>AI classification (sync)</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/actions/{id}/ai_classify/</td>
+                    <td>AI classification (async with Celery)</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/actions/{id}/ai_summarize/</td>
+                    <td>AI summarization (async)</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/actions/dashboard_stats/</td>
+                    <td>Real-time dashboard statistics</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/actions/compliance_overview/</td>
+                    <td>Compliance metrics and status</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="code-block">
+            <h4>Example: Create Action</h4>
+            <pre><code>POST /api/v1/continuous_improvement/actions/
+Content-Type: application/json
+
+{
+  "title": "Improve assessment feedback turnaround",
+  "description": "Students report receiving feedback after 20+ days. Target 10 days.",
+  "source": "student_feedback",
+  "priority": "high",
+  "assigned_to_id": 15
+}
+
+Response (201 Created):
+{
+  "id": 123,
+  "action_number": "CIR-2025-0123",
+  "title": "Improve assessment feedback turnaround",
+  "status": "open",
+  "created_at": "2025-11-04T10:30:00Z"
+}</code></pre>
+        </div>
+
+        <h3>2. ActionStepViewSet</h3>
+        <p><strong>Base Path:</strong> <code>/steps/</code></p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td>/steps/</td>
+                    <td>List steps (filter by improvement_action_id)</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/steps/</td>
+                    <td>Create new step</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/steps/{id}/</td>
+                    <td>Retrieve step details</td>
+                </tr>
+                <tr>
+                    <td>PATCH</td>
+                    <td>/steps/{id}/</td>
+                    <td>Update step (status, progress, etc.)</td>
+                </tr>
+                <tr>
+                    <td>DELETE</td>
+                    <td>/steps/{id}/</td>
+                    <td>Delete step</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>3. CommentViewSet</h3>
+        <p><strong>Base Path:</strong> <code>/comments/</code></p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td>/comments/</td>
+                    <td>List comments (filter by improvement_action_id)</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/comments/</td>
+                    <td>Create comment (supports @mentions)</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/comments/{id}/</td>
+                    <td>Retrieve comment with nested replies</td>
+                </tr>
+                <tr>
+                    <td>PATCH</td>
+                    <td>/comments/{id}/</td>
+                    <td>Update comment body</td>
+                </tr>
+                <tr>
+                    <td>DELETE</td>
+                    <td>/comments/{id}/</td>
+                    <td>Delete comment</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>4. AttachmentViewSet</h3>
+        <p><strong>Base Path:</strong> <code>/attachments/</code></p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td>/attachments/</td>
+                    <td>List attachments</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/attachments/</td>
+                    <td>Upload file (multipart/form-data)</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/attachments/{id}/</td>
+                    <td>Retrieve attachment metadata</td>
+                </tr>
+                <tr>
+                    <td>DELETE</td>
+                    <td>/attachments/{id}/</td>
+                    <td>Delete attachment</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>5. VerificationViewSet</h3>
+        <p><strong>Base Path:</strong> <code>/verifications/</code></p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td>/verifications/</td>
+                    <td>List verifications</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/verifications/</td>
+                    <td>Create verification record</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/verifications/{id}/</td>
+                    <td>Retrieve verification details</td>
+                </tr>
+                <tr>
+                    <td>PATCH</td>
+                    <td>/verifications/{id}/</td>
+                    <td>Update verification</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>6. ClauseLinkViewSet</h3>
+        <p><strong>Base Path:</strong> <code>/clause-links/</code></p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td>/clause-links/</td>
+                    <td>List clause links</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/clause-links/</td>
+                    <td>Create manual clause link</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/clause-links/{id}/</td>
+                    <td>Retrieve link details</td>
+                </tr>
+                <tr>
+                    <td>DELETE</td>
+                    <td>/clause-links/{id}/</td>
+                    <td>Remove clause link</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/clause-links/by_clause/</td>
+                    <td>Get all actions for specific clause</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>7. SLAPolicyViewSet</h3>
+        <p><strong>Base Path:</strong> <code>/sla-policies/</code></p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td>/sla-policies/</td>
+                    <td>List SLA policies</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/sla-policies/</td>
+                    <td>Create SLA policy</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/sla-policies/{id}/</td>
+                    <td>Retrieve policy details</td>
+                </tr>
+                <tr>
+                    <td>PATCH</td>
+                    <td>/sla-policies/{id}/</td>
+                    <td>Update policy</td>
+                </tr>
+                <tr>
+                    <td>DELETE</td>
+                    <td>/sla-policies/{id}/</td>
+                    <td>Delete policy</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>8. KPISnapshotViewSet</h3>
+        <p><strong>Base Path:</strong> <code>/kpi-snapshots/</code></p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td>/kpi-snapshots/</td>
+                    <td>List historical KPI snapshots</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/kpi-snapshots/{id}/</td>
+                    <td>Retrieve specific snapshot</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/kpi-snapshots/compute/</td>
+                    <td>Trigger KPI computation (admin only)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>9. TaxonomyLabelViewSet</h3>
+        <p><strong>Base Path:</strong> <code>/taxonomy-labels/</code></p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td>/taxonomy-labels/</td>
+                    <td>List taxonomy labels</td>
+                </tr>
+                <tr>
+                    <td>POST</td>
+                    <td>/taxonomy-labels/</td>
+                    <td>Create custom label</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/taxonomy-labels/{id}/</td>
+                    <td>Retrieve label details</td>
+                </tr>
+                <tr>
+                    <td>PATCH</td>
+                    <td>/taxonomy-labels/{id}/</td>
+                    <td>Update label</td>
+                </tr>
+                <tr>
+                    <td>DELETE</td>
+                    <td>/taxonomy-labels/{id}/</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>10. AIRunViewSet (Read-Only)</h3>
+        <p><strong>Base Path:</strong> <code>/ai-runs/</code></p>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Endpoint</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td>/ai-runs/</td>
+                    <td>List AI operation logs</td>
+                </tr>
+                <tr>
+                    <td>GET</td>
+                    <td>/ai-runs/{id}/</td>
+                    <td>Retrieve AI run details</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>🔍 Filtering & Search</h2>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Status Filtering</h3>
+                <pre><code>GET /actions/?status=open,in_progress</code></pre>
+            </div>
+
+            <div class="feature-card">
+                <h3>Priority Filtering</h3>
+                <pre><code>GET /actions/?priority=critical,high</code></pre>
+            </div>
+
+            <div class="feature-card">
+                <h3>Text Search</h3>
+                <pre><code>GET /actions/?search=assessment</code></pre>
+            </div>
+
+            <div class="feature-card">
+                <h3>Date Ranges</h3>
+                <pre><code>GET /actions/?created_after=2025-01-01</code></pre>
+            </div>
+        </div>
+
+        <h2>📄 Pagination</h2>
+        <p>All list endpoints support pagination:</p>
+        <div class="code-block">
+            <pre><code>GET /actions/?page=1&page_size=50
+
+Response:
+{
+  "count": 150,
+  "next": "https://api.nextcore.ai/api/v1/continuous_improvement/actions/?page=2",
+  "previous": null,
+  "results": [...]
+}</code></pre>
+        </div>
+
+        <h2>⚠️ Error Handling</h2>
+        
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Status Code</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>200</td>
+                    <td>Success</td>
+                </tr>
+                <tr>
+                    <td>201</td>
+                    <td>Created</td>
+                </tr>
+                <tr>
+                    <td>400</td>
+                    <td>Bad Request (validation errors)</td>
+                </tr>
+                <tr>
+                    <td>401</td>
+                    <td>Unauthorized (invalid/missing token)</td>
+                </tr>
+                <tr>
+                    <td>403</td>
+                    <td>Forbidden (insufficient permissions)</td>
+                </tr>
+                <tr>
+                    <td>404</td>
+                    <td>Not Found</td>
+                </tr>
+                <tr>
+                    <td>429</td>
+                    <td>Too Many Requests (rate limit)</td>
+                </tr>
+                <tr>
+                    <td>500</td>
+                    <td>Internal Server Error</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="code-block">
+            <h4>Error Response Format</h4>
+            <pre><code>{
+  "error": "Validation failed",
+  "detail": {
+    "title": ["This field is required."],
+    "priority": ["Invalid choice: 'urgent'."]
+  }
+}</code></pre>
+        </div>
+
+        <div class="cta-section">
+            <h2>Next Steps</h2>
+            <p>Explore common workflows to see how these endpoints work together, or check out real-world examples.</p>
+            <a href="workflows.html" class="btn btn-primary">View Workflows →</a>
+            <a href="examples.html" class="btn btn-secondary">See Examples →</a>
+        </div>
+    </div>
+</body>
+</html>

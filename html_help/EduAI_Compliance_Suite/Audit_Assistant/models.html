@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Models - Audit Assistant Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Audit Assistant</a> /
+            <strong>Data Models</strong>
+        </div>
+
+        <h1>💾 Data Models Reference</h1>
+        <p class="lead">
+            Complete database schema for Audit Assistant with all models, fields, relationships, and constraints.
+        </p>
+
+        <div class="toc-box">
+            <h3>Models</h3>
+            <ul>
+                <li><a href="#evidence">Evidence Model</a></li>
+                <li><a href="#clause-evidence">ClauseEvidence Model</a></li>
+                <li><a href="#audit-report">AuditReport Model</a></li>
+                <li><a href="#audit-report-clause">AuditReportClause Model</a></li>
+                <li><a href="#relationships">Model Relationships</a></li>
+                <li><a href="#indexes">Database Indexes</a></li>
+            </ul>
+        </div>
+
+        <h2 id="evidence">Evidence Model</h2>
+        <p>
+            Core model for storing compliance evidence documents with NER processing metadata.
+        </p>
+
+        <h3>Fields</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Constraints</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>id</strong></td>
+                    <td>AutoField</td>
+                    <td>Primary key</td>
+                    <td>Auto-generated</td>
+                </tr>
+                <tr>
+                    <td><strong>tenant</strong></td>
+                    <td>ForeignKey</td>
+                    <td>Link to tenant (multi-tenancy)</td>
+                    <td>CASCADE, required</td>
+                </tr>
+                <tr>
+                    <td><strong>evidence_number</strong></td>
+                    <td>CharField(50)</td>
+                    <td>Unique evidence identifier</td>
+                    <td>Required</td>
+                </tr>
+                <tr>
+                    <td><strong>title</strong></td>
+                    <td>CharField(255)</td>
+                    <td>Evidence document title</td>
+                    <td>Required</td>
+                </tr>
+                <tr>
+                    <td><strong>description</strong></td>
+                    <td>TextField</td>
+                    <td>Detailed description</td>
+                    <td>Optional</td>
+                </tr>
+                <tr>
+                    <td><strong>evidence_type</strong></td>
+                    <td>CharField(50)</td>
+                    <td>Type of evidence</td>
+                    <td>Choices: policy, procedure, record, template, certificate, qualification, training_material, assessment, quality_assurance, financial, contract, correspondence, meeting_minutes, other</td>
+                </tr>
+                <tr>
+                    <td><strong>file</strong></td>
+                    <td>FileField</td>
+                    <td>Uploaded evidence file</td>
+                    <td>Validators: pdf, docx, doc, xlsx, xls, txt, jpg, jpeg, png</td>
+                </tr>
+                <tr>
+                    <td><strong>file_size</strong></td>
+                    <td>IntegerField</td>
+                    <td>File size in bytes</td>
+                    <td>Auto-populated</td>
+                </tr>
+                <tr>
+                    <td><strong>extracted_text</strong></td>
+                    <td>TextField</td>
+                    <td>Text extracted from file</td>
+                    <td>Auto-populated</td>
+                </tr>
+                <tr>
+                    <td><strong>ner_entities</strong></td>
+                    <td>JSONField</td>
+                    <td>Detected NER entities</td>
+                    <td>List of {entity, type, start, end, value}</td>
+                </tr>
+                <tr>
+                    <td><strong>ner_processed_at</strong></td>
+                    <td>DateTimeField</td>
+                    <td>When NER processing completed</td>
+                    <td>Null until processed</td>
+                </tr>
+                <tr>
+                    <td><strong>auto_tagged_clauses</strong></td>
+                    <td>ManyToManyField</td>
+                    <td>Auto-tagged ASQA clauses</td>
+                    <td>Through: ClauseEvidence</td>
+                </tr>
+                <tr>
+                    <td><strong>status</strong></td>
+                    <td>CharField(20)</td>
+                    <td>Processing status</td>
+                    <td>Choices: uploaded, processing, tagged, reviewed, approved, rejected</td>
+                </tr>
+                <tr>
+                    <td><strong>tags</strong></td>
+                    <td>JSONField</td>
+                    <td>Custom tags for categorization</td>
+                    <td>List of strings</td>
+                </tr>
+                <tr>
+                    <td><strong>evidence_date</strong></td>
+                    <td>DateField</td>
+                    <td>Date evidence was created/issued</td>
+                    <td>Required</td>
+                </tr>
+                <tr>
+                    <td><strong>uploaded_at</strong></td>
+                    <td>DateTimeField</td>
+                    <td>Upload timestamp</td>
+                    <td>Auto-generated</td>
+                </tr>
+                <tr>
+                    <td><strong>uploaded_by</strong></td>
+                    <td>ForeignKey(User)</td>
+                    <td>User who uploaded evidence</td>
+                    <td>SET_NULL</td>
+                </tr>
+                <tr>
+                    <td><strong>reviewed_at</strong></td>
+                    <td>DateTimeField</td>
+                    <td>When evidence was reviewed</td>
+                    <td>Null until reviewed</td>
+                </tr>
+                <tr>
+                    <td><strong>reviewed_by</strong></td>
+                    <td>ForeignKey(User)</td>
+                    <td>User who reviewed evidence</td>
+                    <td>SET_NULL</td>
+                </tr>
+                <tr>
+                    <td><strong>reviewer_notes</strong></td>
+                    <td>TextField</td>
+                    <td>Reviewer comments</td>
+                    <td>Optional</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Model Code</h3>
+        <div class="code-block">
+            <code>
+class Evidence(models.Model):
+    """Evidence documents uploaded for ASQA compliance audits"""
+    
+    EVIDENCE_TYPE_CHOICES = [
+        ("policy", "Policy Document"),
+        ("procedure", "Procedure"),
+        ("record", "Record/Log"),
+        ("template", "Template/Form"),
+        ("certificate", "Certificate"),
+        ("qualification", "Qualification Document"),
+        ("training_material", "Training Material"),
+        ("assessment", "Assessment Document"),
+        ("quality_assurance", "Quality Assurance Document"),
+        ("financial", "Financial Document"),
+        ("contract", "Contract/Agreement"),
+        ("correspondence", "Correspondence"),
+        ("meeting_minutes", "Meeting Minutes"),
+        ("other", "Other"),
+    ]
+    
+    STATUS_CHOICES = [
+        ("uploaded", "Uploaded"),
+        ("processing", "Processing NER"),
+        ("tagged", "Auto-Tagged"),
+        ("reviewed", "Reviewed"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+    
+    tenant = models.ForeignKey("tenants.Tenant", on_delete=models.CASCADE)
+    evidence_number = models.CharField(max_length=50)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    evidence_type = models.CharField(max_length=50, choices=EVIDENCE_TYPE_CHOICES)
+    file = models.FileField(upload_to=evidence_upload_path)
+    file_size = models.IntegerField(null=True, blank=True)
+    extracted_text = models.TextField(blank=True)
+    ner_entities = models.JSONField(default=list)
+    ner_processed_at = models.DateTimeField(null=True, blank=True)
+    auto_tagged_clauses = models.ManyToManyField(
+        "policy_comparator.ASQAClause",
+        through="ClauseEvidence"
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="uploaded")
+    tags = models.JSONField(default=list)
+    evidence_date = models.DateField()
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    reviewer_notes = models.TextField(blank=True)
+    
+    class Meta:
+        db_table = "evidence"
+        ordering = ["-uploaded_at"]
+        unique_together = [["tenant", "evidence_number"]]
+        indexes = [
+            models.Index(fields=["tenant", "status"]),
+            models.Index(fields=["evidence_type"]),
+            models.Index(fields=["evidence_date"]),
+        ]
+    
+    def save(self, *args, **kwargs):
+        if self.file and not self.file_size:
+            self.file_size = self.file.size
+        super().save(*args, **kwargs)
+            </code>
+        </div>
+
+        <h2 id="clause-evidence">ClauseEvidence Model</h2>
+        <p>
+            Many-to-many relationship between ASQA clauses and evidence documents with auto-tagging metadata.
+        </p>
+
+        <h3>Fields</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Constraints</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>id</strong></td>
+                    <td>AutoField</td>
+                    <td>Primary key</td>
+                    <td>Auto-generated</td>
+                </tr>
+                <tr>
+                    <td><strong>asqa_clause</strong></td>
+                    <td>ForeignKey</td>
+                    <td>Link to ASQA clause</td>
+                    <td>CASCADE, required</td>
+                </tr>
+                <tr>
+                    <td><strong>evidence</strong></td>
+                    <td>ForeignKey</td>
+                    <td>Link to evidence document</td>
+                    <td>CASCADE, required</td>
+                </tr>
+                <tr>
+                    <td><strong>mapping_type</strong></td>
+                    <td>CharField(20)</td>
+                    <td>How mapping was created</td>
+                    <td>Choices: auto_ner, auto_rule, manual, suggested</td>
+                </tr>
+                <tr>
+                    <td><strong>confidence_score</strong></td>
+                    <td>FloatField</td>
+                    <td>Auto-tagging confidence (0.0-1.0)</td>
+                    <td>Default: 0.0</td>
+                </tr>
+                <tr>
+                    <td><strong>matched_entities</strong></td>
+                    <td>JSONField</td>
+                    <td>NER entities that triggered mapping</td>
+                    <td>List of {entity, type}</td>
+                </tr>
+                <tr>
+                    <td><strong>matched_keywords</strong></td>
+                    <td>JSONField</td>
+                    <td>Keywords matched between clause and evidence</td>
+                    <td>List of strings</td>
+                </tr>
+                <tr>
+                    <td><strong>rule_name</strong></td>
+                    <td>CharField(100)</td>
+                    <td>Name of auto-tagging rule</td>
+                    <td>Optional</td>
+                </tr>
+                <tr>
+                    <td><strong>rule_metadata</strong></td>
+                    <td>JSONField</td>
+                    <td>Additional rule processing data</td>
+                    <td>Dict</td>
+                </tr>
+                <tr>
+                    <td><strong>is_verified</strong></td>
+                    <td>BooleanField</td>
+                    <td>Manually verified by reviewer</td>
+                    <td>Default: False</td>
+                </tr>
+                <tr>
+                    <td><strong>verified_by</strong></td>
+                    <td>ForeignKey(User)</td>
+                    <td>User who verified mapping</td>
+                    <td>SET_NULL</td>
+                </tr>
+                <tr>
+                    <td><strong>verified_at</strong></td>
+                    <td>DateTimeField</td>
+                    <td>When mapping was verified</td>
+                    <td>Null until verified</td>
+                </tr>
+                <tr>
+                    <td><strong>relevance_notes</strong></td>
+                    <td>TextField</td>
+                    <td>Notes on evidence relevance to clause</td>
+                    <td>Optional</td>
+                </tr>
+                <tr>
+                    <td><strong>created_at</strong></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                    <td>Auto-generated</td>
+                </tr>
+                <tr>
+                    <td><strong>updated_at</strong></td>
+                    <td>DateTimeField</td>
+                    <td>Last update timestamp</td>
+                    <td>Auto-updated</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Model Code</h3>
+        <div class="code-block">
+            <code>
+class ClauseEvidence(models.Model):
+    """Many-to-many relationship with auto-tagging metadata"""
+    
+    MAPPING_TYPE_CHOICES = [
+        ("auto_ner", "Auto-tagged (NER)"),
+        ("auto_rule", "Auto-tagged (Rule-based)"),
+        ("manual", "Manual Assignment"),
+        ("suggested", "Suggested Match"),
+    ]
+    
+    asqa_clause = models.ForeignKey("policy_comparator.ASQAClause", on_delete=models.CASCADE)
+    evidence = models.ForeignKey(Evidence, on_delete=models.CASCADE)
+    mapping_type = models.CharField(max_length=20, choices=MAPPING_TYPE_CHOICES)
+    confidence_score = models.FloatField(default=0.0)
+    matched_entities = models.JSONField(default=list)
+    matched_keywords = models.JSONField(default=list)
+    rule_name = models.CharField(max_length=100, blank=True)
+    rule_metadata = models.JSONField(default=dict)
+    is_verified = models.BooleanField(default=False)
+    verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    relevance_notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = "clause_evidence"
+        ordering = ["-confidence_score", "-created_at"]
+        unique_together = [["asqa_clause", "evidence"]]
+        indexes = [
+            models.Index(fields=["mapping_type"]),
+            models.Index(fields=["confidence_score"]),
+            models.Index(fields=["is_verified"]),
+        ]
+            </code>
+        </div>
+
+        <h2 id="audit-report">AuditReport Model</h2>
+        <p>
+            Comprehensive audit reports showing evidence coverage across ASQA standards.
+        </p>
+
+        <h3>Fields</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Constraints</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>id</strong></td>
+                    <td>AutoField</td>
+                    <td>Primary key</td>
+                    <td>Auto-generated</td>
+                </tr>
+                <tr>
+                    <td><strong>tenant</strong></td>
+                    <td>ForeignKey</td>
+                    <td>Link to tenant</td>
+                    <td>CASCADE, required</td>
+                </tr>
+                <tr>
+                    <td><strong>report_number</strong></td>
+                    <td>CharField(50)</td>
+                    <td>Unique report identifier</td>
+                    <td>Required</td>
+                </tr>
+                <tr>
+                    <td><strong>title</strong></td>
+                    <td>CharField(255)</td>
+                    <td>Report title</td>
+                    <td>Required</td>
+                </tr>
+                <tr>
+                    <td><strong>description</strong></td>
+                    <td>TextField</td>
+                    <td>Report description</td>
+                    <td>Optional</td>
+                </tr>
+                <tr>
+                    <td><strong>asqa_standards</strong></td>
+                    <td>ManyToManyField</td>
+                    <td>Standards included in audit</td>
+                    <td>Multiple selection</td>
+                </tr>
+                <tr>
+                    <td><strong>audit_period_start</strong></td>
+                    <td>DateField</td>
+                    <td>Start date of audit period</td>
+                    <td>Required</td>
+                </tr>
+                <tr>
+                    <td><strong>audit_period_end</strong></td>
+                    <td>DateField</td>
+                    <td>End date of audit period</td>
+                    <td>Required</td>
+                </tr>
+                <tr>
+                    <td><strong>status</strong></td>
+                    <td>CharField(20)</td>
+                    <td>Report status</td>
+                    <td>Choices: draft, in_progress, review, completed, submitted</td>
+                </tr>
+                <tr>
+                    <td><strong>total_clauses</strong></td>
+                    <td>IntegerField</td>
+                    <td>Total ASQA clauses in scope</td>
+                    <td>Auto-calculated</td>
+                </tr>
+                <tr>
+                    <td><strong>clauses_with_evidence</strong></td>
+                    <td>IntegerField</td>
+                    <td>Clauses with at least 1 evidence</td>
+                    <td>Auto-calculated</td>
+                </tr>
+                <tr>
+                    <td><strong>clauses_without_evidence</strong></td>
+                    <td>IntegerField</td>
+                    <td>Clauses with no evidence</td>
+                    <td>Auto-calculated</td>
+                </tr>
+                <tr>
+                    <td><strong>compliance_percentage</strong></td>
+                    <td>FloatField</td>
+                    <td>Overall compliance percentage</td>
+                    <td>Auto-calculated</td>
+                </tr>
+                <tr>
+                    <td><strong>critical_clauses_count</strong></td>
+                    <td>IntegerField</td>
+                    <td>Number of critical clauses</td>
+                    <td>Auto-calculated</td>
+                </tr>
+                <tr>
+                    <td><strong>critical_clauses_covered</strong></td>
+                    <td>IntegerField</td>
+                    <td>Critical clauses with evidence</td>
+                    <td>Auto-calculated</td>
+                </tr>
+                <tr>
+                    <td><strong>critical_compliance_percentage</strong></td>
+                    <td>FloatField</td>
+                    <td>Critical clause compliance %</td>
+                    <td>Auto-calculated</td>
+                </tr>
+                <tr>
+                    <td><strong>total_evidence_count</strong></td>
+                    <td>IntegerField</td>
+                    <td>Total evidence documents</td>
+                    <td>Auto-calculated</td>
+                </tr>
+                <tr>
+                    <td><strong>auto_tagged_count</strong></td>
+                    <td>IntegerField</td>
+                    <td>Evidence auto-tagged via NER</td>
+                    <td>Auto-calculated</td>
+                </tr>
+                <tr>
+                    <td><strong>manually_tagged_count</strong></td>
+                    <td>IntegerField</td>
+                    <td>Manually tagged evidence</td>
+                    <td>Auto-calculated</td>
+                </tr>
+                <tr>
+                    <td><strong>verified_evidence_count</strong></td>
+                    <td>IntegerField</td>
+                    <td>Verified evidence documents</td>
+                    <td>Auto-calculated</td>
+                </tr>
+                <tr>
+                    <td><strong>findings</strong></td>
+                    <td>JSONField</td>
+                    <td>Audit findings list</td>
+                    <td>List of {clause, finding, severity, recommendation}</td>
+                </tr>
+                <tr>
+                    <td><strong>recommendations</strong></td>
+                    <td>JSONField</td>
+                    <td>Overall recommendations</td>
+                    <td>List of strings</td>
+                </tr>
+                <tr>
+                    <td><strong>created_at</strong></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                    <td>Auto-generated</td>
+                </tr>
+                <tr>
+                    <td><strong>created_by</strong></td>
+                    <td>ForeignKey(User)</td>
+                    <td>User who created report</td>
+                    <td>SET_NULL</td>
+                </tr>
+                <tr>
+                    <td><strong>updated_at</strong></td>
+                    <td>DateTimeField</td>
+                    <td>Last update timestamp</td>
+                    <td>Auto-updated</td>
+                </tr>
+                <tr>
+                    <td><strong>completed_at</strong></td>
+                    <td>DateTimeField</td>
+                    <td>Completion timestamp</td>
+                    <td>Null until completed</td>
+                </tr>
+                <tr>
+                    <td><strong>submitted_at</strong></td>
+                    <td>DateTimeField</td>
+                    <td>Submission timestamp</td>
+                    <td>Null until submitted</td>
+                </tr>
+                <tr>
+                    <td><strong>submitted_by</strong></td>
+                    <td>ForeignKey(User)</td>
+                    <td>User who submitted report</td>
+                    <td>SET_NULL</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Model Code</h3>
+        <div class="code-block">
+            <code>
+class AuditReport(models.Model):
+    """Clause-by-clause audit reports"""
+    
+    STATUS_CHOICES = [
+        ("draft", "Draft"),
+        ("in_progress", "In Progress"),
+        ("review", "Under Review"),
+        ("completed", "Completed"),
+        ("submitted", "Submitted to ASQA"),
+    ]
+    
+    tenant = models.ForeignKey("tenants.Tenant", on_delete=models.CASCADE)
+    report_number = models.CharField(max_length=50)
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    asqa_standards = models.ManyToManyField("policy_comparator.ASQAStandard")
+    audit_period_start = models.DateField()
+    audit_period_end = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
+    
+    # Compliance metrics (auto-calculated)
+    total_clauses = models.IntegerField(default=0)
+    clauses_with_evidence = models.IntegerField(default=0)
+    clauses_without_evidence = models.IntegerField(default=0)
+    compliance_percentage = models.FloatField(default=0.0)
+    critical_clauses_count = models.IntegerField(default=0)
+    critical_clauses_covered = models.IntegerField(default=0)
+    critical_compliance_percentage = models.FloatField(default=0.0)
+    
+    # Evidence summary
+    total_evidence_count = models.IntegerField(default=0)
+    auto_tagged_count = models.IntegerField(default=0)
+    manually_tagged_count = models.IntegerField(default=0)
+    verified_evidence_count = models.IntegerField(default=0)
+    
+    # Report metadata
+    findings = models.JSONField(default=list)
+    recommendations = models.JSONField(default=list)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    submitted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        db_table = "audit_reports"
+        ordering = ["-created_at"]
+        unique_together = [["tenant", "report_number"]]
+        indexes = [
+            models.Index(fields=["tenant", "status"]),
+            models.Index(fields=["audit_period_start", "audit_period_end"]),
+            models.Index(fields=["compliance_percentage"]),
+        ]
+    
+    def calculate_metrics(self):
+        """Calculate all compliance metrics"""
+        # Implementation in views.py
+        pass
+            </code>
+        </div>
+
+        <h2 id="audit-report-clause">AuditReportClause Model</h2>
+        <p>
+            Individual clause entries in audit reports with evidence status and findings.
+        </p>
+
+        <h3>Fields</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th>Constraints</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>id</strong></td>
+                    <td>AutoField</td>
+                    <td>Primary key</td>
+                    <td>Auto-generated</td>
+                </tr>
+                <tr>
+                    <td><strong>audit_report</strong></td>
+                    <td>ForeignKey</td>
+                    <td>Link to parent audit report</td>
+                    <td>CASCADE, required</td>
+                </tr>
+                <tr>
+                    <td><strong>asqa_clause</strong></td>
+                    <td>ForeignKey</td>
+                    <td>Link to ASQA clause</td>
+                    <td>CASCADE, required</td>
+                </tr>
+                <tr>
+                    <td><strong>compliance_status</strong></td>
+                    <td>CharField(20)</td>
+                    <td>Clause compliance assessment</td>
+                    <td>Choices: compliant, partial, non_compliant, not_assessed</td>
+                </tr>
+                <tr>
+                    <td><strong>evidence_count</strong></td>
+                    <td>IntegerField</td>
+                    <td>Number of evidence items</td>
+                    <td>Auto-calculated</td>
+                </tr>
+                <tr>
+                    <td><strong>verified_evidence_count</strong></td>
+                    <td>IntegerField</td>
+                    <td>Number of verified evidence items</td>
+                    <td>Auto-calculated</td>
+                </tr>
+                <tr>
+                    <td><strong>finding</strong></td>
+                    <td>TextField</td>
+                    <td>Audit finding for this clause</td>
+                    <td>Optional</td>
+                </tr>
+                <tr>
+                    <td><strong>severity</strong></td>
+                    <td>CharField(20)</td>
+                    <td>Finding severity level</td>
+                    <td>Choices: critical, major, minor, observation</td>
+                </tr>
+                <tr>
+                    <td><strong>recommendation</strong></td>
+                    <td>TextField</td>
+                    <td>Recommended actions</td>
+                    <td>Optional</td>
+                </tr>
+                <tr>
+                    <td><strong>linked_evidence</strong></td>
+                    <td>ManyToManyField</td>
+                    <td>Evidence supporting this clause</td>
+                    <td>Multiple selection</td>
+                </tr>
+                <tr>
+                    <td><strong>assessed_by</strong></td>
+                    <td>ForeignKey(User)</td>
+                    <td>User who assessed clause</td>
+                    <td>SET_NULL</td>
+                </tr>
+                <tr>
+                    <td><strong>assessed_at</strong></td>
+                    <td>DateTimeField</td>
+                    <td>Assessment timestamp</td>
+                    <td>Null until assessed</td>
+                </tr>
+                <tr>
+                    <td><strong>notes</strong></td>
+                    <td>TextField</td>
+                    <td>Additional notes</td>
+                    <td>Optional</td>
+                </tr>
+                <tr>
+                    <td><strong>created_at</strong></td>
+                    <td>DateTimeField</td>
+                    <td>Creation timestamp</td>
+                    <td>Auto-generated</td>
+                </tr>
+                <tr>
+                    <td><strong>updated_at</strong></td>
+                    <td>DateTimeField</td>
+                    <td>Last update timestamp</td>
+                    <td>Auto-updated</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Model Code</h3>
+        <div class="code-block">
+            <code>
+class AuditReportClause(models.Model):
+    """Individual clause entries in audit report"""
+    
+    COMPLIANCE_STATUS_CHOICES = [
+        ("compliant", "Compliant"),
+        ("partial", "Partially Compliant"),
+        ("non_compliant", "Non-Compliant"),
+        ("not_assessed", "Not Assessed"),
+    ]
+    
+    audit_report = models.ForeignKey(AuditReport, on_delete=models.CASCADE, related_name="clause_entries")
+    asqa_clause = models.ForeignKey("policy_comparator.ASQAClause", on_delete=models.CASCADE)
+    compliance_status = models.CharField(max_length=20, choices=COMPLIANCE_STATUS_CHOICES, default="not_assessed")
+    evidence_count = models.IntegerField(default=0)
+    verified_evidence_count = models.IntegerField(default=0)
+    finding = models.TextField(blank=True)
+    severity = models.CharField(
+        max_length=20,
+        choices=[
+            ("critical", "Critical"),
+            ("major", "Major"),
+            ("minor", "Minor"),
+            ("observation", "Observation"),
+        ],
+        blank=True
+    )
+    recommendation = models.TextField(blank=True)
+    linked_evidence = models.ManyToManyField(Evidence, blank=True)
+    assessed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    assessed_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = "audit_report_clauses"
+        ordering = ["asqa_clause__clause_number"]
+        unique_together = [["audit_report", "asqa_clause"]]
+        indexes = [
+            models.Index(fields=["compliance_status"]),
+            models.Index(fields=["severity"]),
+        ]
+    
+    def update_evidence_counts(self):
+        """Update evidence counts and determine compliance status"""
+        # Implementation in models.py
+        pass
+            </code>
+        </div>
+
+        <h2 id="relationships">Model Relationships</h2>
+        <div class="code-block">
+            <code>
+Database Relationship Diagram:
+
+┌────────────────┐
+│    Tenant      │
+└────────┬───────┘
+         │ 1:N
+         │
+┌────────▼───────────────────┐         ┌──────────────────┐
+│       Evidence             │         │  ASQAStandard    │
+│  ──────────────────────    │         │ (Shared/External)│
+│  • tenant_id (FK)          │         └────────┬─────────┘
+│  • evidence_number         │                  │ 1:N
+│  • title, description      │                  │
+│  • file, file_size         │         ┌────────▼─────────┐
+│  • extracted_text          │         │   ASQAClause     │
+│  • ner_entities            │         │ (Shared/External)│
+│  • status, tags            │         └────────┬─────────┘
+│  • evidence_date           │                  │
+│  • uploaded_by (FK)        │                  │
+│  • reviewed_by (FK)        │                  │
+└────────┬───────────────────┘                  │
+         │                                       │
+         │ N:M through ClauseEvidence           │
+         │                                       │
+         └───────────────┬───────────────────────┘
+                         │
+              ┌──────────▼────────────┐
+              │   ClauseEvidence      │
+              │  ────────────────────  │
+              │  • asqa_clause_id (FK)│
+              │  • evidence_id (FK)   │
+              │  • mapping_type       │
+              │  • confidence_score   │
+              │  • matched_entities   │
+              │  • matched_keywords   │
+              │  • is_verified        │
+              │  • verified_by (FK)   │
+              └───────────────────────┘
+
+┌────────────────────────────┐
+│      AuditReport           │
+│  ────────────────────────  │
+│  • tenant_id (FK)          │
+│  • report_number           │
+│  • title, description      │
+│  • asqa_standards (M2M)    │
+│  • audit_period_start/end  │
+│  • status                  │
+│  • compliance metrics      │
+│  • evidence summary        │
+│  • created_by (FK)         │
+│  • submitted_by (FK)       │
+└────────┬───────────────────┘
+         │ 1:N
+         │
+┌────────▼───────────────────┐
+│   AuditReportClause        │
+│  ────────────────────────  │
+│  • audit_report_id (FK)    │
+│  • asqa_clause_id (FK)     │
+│  • compliance_status       │
+│  • evidence_count          │
+│  • verified_evidence_count │
+│  • finding, severity       │
+│  • recommendation          │
+│  • linked_evidence (M2M)   │
+│  • assessed_by (FK)        │
+└────────────────────────────┘
+            </code>
+        </div>
+
+        <h2 id="indexes">Database Indexes</h2>
+        <p>Optimized indexes for common query patterns:</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>Index Fields</th>
+                    <th>Purpose</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Evidence</td>
+                    <td>[tenant, status]</td>
+                    <td>Fast filtering by tenant and status</td>
+                </tr>
+                <tr>
+                    <td>Evidence</td>
+                    <td>[evidence_type]</td>
+                    <td>Filter by evidence type</td>
+                </tr>
+                <tr>
+                    <td>Evidence</td>
+                    <td>[evidence_date]</td>
+                    <td>Date range queries</td>
+                </tr>
+                <tr>
+                    <td>ClauseEvidence</td>
+                    <td>[mapping_type]</td>
+                    <td>Filter by auto-tag type</td>
+                </tr>
+                <tr>
+                    <td>ClauseEvidence</td>
+                    <td>[confidence_score]</td>
+                    <td>Sort by confidence</td>
+                </tr>
+                <tr>
+                    <td>ClauseEvidence</td>
+                    <td>[is_verified]</td>
+                    <td>Filter verified mappings</td>
+                </tr>
+                <tr>
+                    <td>AuditReport</td>
+                    <td>[tenant, status]</td>
+                    <td>Fast tenant + status filtering</td>
+                </tr>
+                <tr>
+                    <td>AuditReport</td>
+                    <td>[audit_period_start, audit_period_end]</td>
+                    <td>Date range queries</td>
+                </tr>
+                <tr>
+                    <td>AuditReport</td>
+                    <td>[compliance_percentage]</td>
+                    <td>Sort by compliance</td>
+                </tr>
+                <tr>
+                    <td>AuditReportClause</td>
+                    <td>[compliance_status]</td>
+                    <td>Filter by status</td>
+                </tr>
+                <tr>
+                    <td>AuditReportClause</td>
+                    <td>[severity]</td>
+                    <td>Filter by finding severity</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="success-box" style="margin-top: 3rem;">
+            <h3>💡 Database Design Highlights</h3>
+            <ul>
+                <li><strong>4 Core Models:</strong> Evidence, ClauseEvidence, AuditReport, AuditReportClause</li>
+                <li><strong>Multi-Tenancy:</strong> Tenant FK on Evidence and AuditReport for data isolation</li>
+                <li><strong>JSON Fields:</strong> Flexible storage for NER entities, tags, findings, metadata</li>
+                <li><strong>Auto-Calculation:</strong> Compliance metrics computed on-demand</li>
+                <li><strong>Audit Trail:</strong> Created/updated timestamps with user tracking</li>
+                <li><strong>Optimized Queries:</strong> Strategic indexes on frequently filtered fields</li>
+            </ul>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="architecture.html" class="btn btn-secondary">← Architecture</a>
+            <a href="api-reference.html" class="btn btn-primary">API Reference →</a>
+        </div>
+    </div>
+</body>
+</html>

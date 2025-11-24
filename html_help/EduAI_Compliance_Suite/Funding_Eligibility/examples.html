@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funding Eligibility Examples - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Funding Eligibility</a> /
+            <strong>Examples</strong>
+        </div>
+
+        <h1>💡 Code Examples</h1>
+
+        <div class="intro-section">
+            <p>
+                Real-world Python code examples for implementing funding eligibility checks across NSW, VIC, QLD 
+                jurisdictions with webhook integration and override workflows.
+            </p>
+        </div>
+
+        <h2>Example 1: Complete VIC Skills First Check</h2>
+        <div class="code-block">
+            <pre><code>import requests
+from datetime import datetime
+
+API_BASE = "https://api.nextcore.ai/api/v1/funding_eligibility"
+HEADERS = {
+    "Authorization": "Bearer your_jwt_token",
+    "Content-Type": "application/json"
+}
+
+def check_vic_skills_first_eligibility(student, course):
+    """
+    Complete eligibility check for VIC Skills First program
+    """
+    # Step 1: Create eligibility request
+    request_data = {
+        "person_id": student["student_id"],
+        "course_id": course["course_code"],
+        "jurisdiction_code": "VIC",
+        "student_data": {
+            "usi": student["usi"],
+            "first_name": student["first_name"],
+            "last_name": student["last_name"],
+            "date_of_birth": student["date_of_birth"],
+            "citizenship": student["citizenship"],
+            "residency_status": student["residency_status"],
+            "postcode": student["postcode"],
+            "has_concession_card": student.get("has_concession_card", False),
+            "concession_card_number": student.get("concession_card_number")
+        },
+        "course_data": {
+            "code": course["course_code"],
+            "title": course["title"],
+            "level": course["level"],
+            "nominal_hours": course["nominal_hours"]
+        }
+    }
+    
+    response = requests.post(
+        f"{API_BASE}/requests/",
+        json=request_data,
+        headers=HEADERS
+    )
+    
+    if response.status_code != 201:
+        return {
+            "error": "Failed to create request",
+            "details": response.json()
+        }
+    
+    request = response.json()
+    request_id = request["id"]
+    print(f"✓ Created eligibility request: {request_id}")
+    
+    # Step 2: Trigger evaluation
+    eval_response = requests.post(
+        f"{API_BASE}/requests/{request_id}/evaluate/",
+        headers=HEADERS
+    )
+    
+    if eval_response.status_code != 202:
+        return {
+            "error": "Failed to trigger evaluation",
+            "details": eval_response.json()
+        }
+    
+    print(f"✓ Evaluation queued (task: {eval_response.json()['task_id']})")
+    
+    # Step 3: Poll for completion (or use webhook)
+    import time
+    max_attempts = 10
+    for attempt in range(max_attempts):
+        time.sleep(2)  # Wait 2 seconds between checks
+        
+        status_response = requests.get(
+            f"{API_BASE}/requests/{request_id}/",
+            headers=HEADERS
+        )
+        
+        request_status = status_response.json()
+        
+        if request_status["status"] == "evaluated":
+            break
+    
+    # Step 4: Check hard-block status
+    check_response = requests.get(
+        f"{API_BASE}/requests/{request_id}/check_eligibility/",
+        headers=HEADERS
+    )
+    
+    eligibility = check_response.json()
+    
+    return {
+        "request_id": request_id,
+        "can_enrol": eligibility["can_enrol"],
+        "outcome": eligibility["outcome"],
+        "reasons": eligibility["reasons"],
+        "decision_id": eligibility.get("decision_id"),
+        "message": eligibility["message"]
+    }
+
+
+# Usage
+student = {
+    "student_id": "STU12345",
+    "usi": "N4KLP6G9TU",
+    "first_name": "Sarah",
+    "last_name": "Johnson",
+    "date_of_birth": "1995-03-15",
+    "citizenship": "Australian",
+    "residency_status": "Permanent",
+    "postcode": "3350",
+    "has_concession_card": True,
+    "concession_card_number": "HCC123456789"
+}
+
+course = {
+    "course_code": "BSB50120",
+    "title": "Diploma of Business",
+    "level": "Diploma",
+    "nominal_hours": 600
+}
+
+result = check_vic_skills_first_eligibility(student, course)
+
+if result["can_enrol"]:
+    print(f"✅ ELIGIBLE: {result['message']}")
+    print(f"Reasons: {', '.join(result['reasons'])}")
+else:
+    print(f"❌ INELIGIBLE: {result['message']}")
+    print(f"Reasons: {', '.join(result['reasons'])}")</code></pre>
+        </div>
+
+        <h2>Example 2: NSW Smart & Skilled Check</h2>
+        <div class="code-block">
+            <pre><code>def check_nsw_smart_skilled_eligibility(student, course):
+    """
+    NSW Smart & Skilled eligibility with priority area check
+    """
+    request_data = {
+        "person_id": student["student_id"],
+        "course_id": course["course_code"],
+        "jurisdiction_code": "NSW",
+        "student_data": {
+            "usi": student["usi"],
+            "first_name": student["first_name"],
+            "last_name": student["last_name"],
+            "date_of_birth": student["date_of_birth"],
+            "citizenship": student["citizenship"],
+            "postcode": student["postcode"],
+            "residency_start": student.get("residency_start"),
+            "has_concession_card": student.get("has_concession_card", False)
+        },
+        "course_data": {
+            "code": course["course_code"],
+            "title": course["title"],
+            "level": course["level"],
+            "is_priority_area": course.get("is_priority_area", False)
+        }
+    }
+    
+    # Create and evaluate
+    response = requests.post(
+        f"{API_BASE}/requests/",
+        json=request_data,
+        headers=HEADERS
+    )
+    request_id = response.json()["id"]
+    
+    # Trigger evaluation
+    requests.post(
+        f"{API_BASE}/requests/{request_id}/evaluate/",
+        headers=HEADERS
+    )
+    
+    # Wait for completion (in production, use webhooks)
+    import time
+    time.sleep(5)
+    
+    # Check eligibility
+    check_response = requests.get(
+        f"{API_BASE}/requests/{request_id}/check_eligibility/",
+        headers=HEADERS
+    )
+    
+    return check_response.json()
+
+
+# Usage
+nsw_student = {
+    "student_id": "STU67890",
+    "usi": "J8NMK2P5WX",
+    "first_name": "Michael",
+    "last_name": "Chen",
+    "date_of_birth": "2003-08-20",
+    "citizenship": "Permanent Resident",
+    "postcode": "2000",
+    "residency_start": "2023-01-15",
+    "has_concession_card": False
+}
+
+nsw_course = {
+    "course_code": "CHC33015",
+    "title": "Certificate III in Individual Support",
+    "level": "Certificate III",
+    "is_priority_area": True
+}
+
+nsw_result = check_nsw_smart_skilled_eligibility(nsw_student, nsw_course)
+print(f"NSW Eligibility: {nsw_result['can_enrol']}")</code></pre>
+        </div>
+
+        <h2>Example 3: QLD Certificate 3 Guarantee</h2>
+        <div class="code-block">
+            <pre><code>def check_qld_cert3_guarantee_eligibility(student, course):
+    """
+    QLD Certificate 3 Guarantee eligibility
+    """
+    # Check if student already has Cert III
+    if student.get("has_cert3", False):
+        return {
+            "can_enrol": False,
+            "outcome": "ineligible",
+            "reasons": ["Student already holds Certificate III qualification"],
+            "message": "Not eligible for Certificate 3 Guarantee (prior Cert III held)"
+        }
+    
+    request_data = {
+        "person_id": student["student_id"],
+        "course_id": course["course_code"],
+        "jurisdiction_code": "QLD",
+        "student_data": {
+            "usi": student["usi"],
+            "first_name": student["first_name"],
+            "last_name": student["last_name"],
+            "date_of_birth": student["date_of_birth"],
+            "citizenship": student["citizenship"],
+            "postcode": student["postcode"],
+            "has_cert3": student.get("has_cert3", False)
+        },
+        "course_data": {
+            "code": course["course_code"],
+            "title": course["title"],
+            "level": course["level"]
+        }
+    }
+    
+    response = requests.post(
+        f"{API_BASE}/requests/",
+        json=request_data,
+        headers=HEADERS
+    )
+    request_id = response.json()["id"]
+    
+    # Trigger evaluation
+    requests.post(
+        f"{API_BASE}/requests/{request_id}/evaluate/",
+        headers=HEADERS
+    )
+    
+    # Wait and check
+    import time
+    time.sleep(5)
+    
+    check_response = requests.get(
+        f"{API_BASE}/requests/{request_id}/check_eligibility/",
+        headers=HEADERS
+    )
+    
+    return check_response.json()
+
+
+# Usage
+qld_student = {
+    "student_id": "STU24680",
+    "usi": "R7QWE3T9YU",
+    "first_name": "Emma",
+    "last_name": "Wilson",
+    "date_of_birth": "2000-11-05",
+    "citizenship": "Australian",
+    "postcode": "4000",
+    "has_cert3": False
+}
+
+qld_course = {
+    "course_code": "SIT30816",
+    "title": "Certificate III in Commercial Cookery",
+    "level": "Certificate III"
+}
+
+qld_result = check_qld_cert3_guarantee_eligibility(qld_student, qld_course)
+print(f"QLD Eligibility: {qld_result['can_enrol']}")</code></pre>
+        </div>
+
+        <h2>Example 4: Override Workflow</h2>
+        <div class="code-block">
+            <pre><code>def request_eligibility_override(decision_id, reason_code, justification, evidence_ids):
+    """
+    Request manual override for ineligible decision
+    """
+    override_data = {
+        "decision_id": decision_id,
+        "reason_code": reason_code,
+        "justification": justification,
+        "final_outcome": "eligible",
+        "policy_version": "VIC-SF-2024 v2.1",
+        "evidence_refs": evidence_ids
+    }
+    
+    response = requests.post(
+        f"{API_BASE}/overrides/",
+        json=override_data,
+        headers=HEADERS
+    )
+    
+    if response.status_code == 201:
+        override = response.json()
+        print(f"✓ Override approved by {override['approver']['full_name']}")
+        return override
+    else:
+        print(f"✗ Override failed: {response.json()}")
+        return None
+
+
+# Usage: Student is 17 years 11 months (needs 18)
+# Decision ID 235 returned "ineligible" with age reason
+
+# Step 1: Upload evidence (manager approval letter)
+files = {"file": open("manager_approval_letter.pdf", "rb")}
+evidence_data = {
+    "request_id": 789,
+    "attachment_type": "other",
+    "description": "Manager approval for mature age exemption"
+}
+
+evidence_response = requests.post(
+    f"{API_BASE}/attachments/",
+    data=evidence_data,
+    files=files,
+    headers={"Authorization": HEADERS["Authorization"]}
+)
+evidence_id = evidence_response.json()["id"]
+
+# Step 2: Create override
+override = request_eligibility_override(
+    decision_id=235,
+    reason_code="mature_age_exemption",
+    justification="Student is 17 years 11 months. Manager approved early enrolment under mature age policy clause 2.4. Student demonstrates maturity and commitment.",
+    evidence_ids=[evidence_id]
+)
+
+# Step 3: Re-check eligibility
+check_response = requests.get(
+    f"{API_BASE}/requests/789/check_eligibility/",
+    headers=HEADERS
+)
+
+result = check_response.json()
+print(f"After override: can_enrol = {result['can_enrol']}")</code></pre>
+        </div>
+
+        <h2>Example 5: Webhook Integration</h2>
+        <div class="code-block">
+            <pre><code>import hmac
+import hashlib
+from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+# Your webhook secret (from WebhookEndpoint configuration)
+WEBHOOK_SECRET = "your_webhook_secret_here"
+
+@app.route("/webhooks/eligibility", methods=["POST"])
+def handle_eligibility_webhook():
+    """
+    SMS/LMS webhook handler for eligibility events
+    """
+    # Step 1: Verify HMAC signature
+    signature = request.headers.get("X-Webhook-Signature")
+    payload = request.get_data()
+    
+    expected_signature = hmac.new(
+        WEBHOOK_SECRET.encode(),
+        payload,
+        hashlib.sha256
+    ).hexdigest()
+    
+    if signature != expected_signature:
+        return jsonify({"error": "Invalid signature"}), 403
+    
+    # Step 2: Parse event
+    event = request.json
+    event_type = event["event_type"]
+    request_id = event["request_id"]
+    person_id = event["person_id"]
+    course_id = event["course_id"]
+    
+    print(f"Received event: {event_type} for {person_id}/{course_id}")
+    
+    # Step 3: Handle event
+    if event_type == "decision.finalized":
+        # Check hard-block status
+        check_response = requests.get(
+            f"{API_BASE}/requests/{request_id}/check_eligibility/",
+            headers=HEADERS
+        )
+        
+        eligibility = check_response.json()
+        
+        # Update SMS/LMS
+        if eligibility["can_enrol"]:
+            # Enable enrolment button
+            sms_update_student_enrolment_status(person_id, course_id, "eligible")
+            print(f"✓ Enabled enrolment for {person_id}/{course_id}")
+        else:
+            # Block enrolment
+            sms_update_student_enrolment_status(person_id, course_id, "ineligible")
+            sms_send_notification(person_id, eligibility["message"])
+            print(f"✗ Blocked enrolment for {person_id}/{course_id}")
+    
+    elif event_type == "override.approved":
+        # Override approved, re-enable enrolment
+        sms_update_student_enrolment_status(person_id, course_id, "eligible_override")
+        print(f"✓ Override approved for {person_id}/{course_id}")
+    
+    return jsonify({"status": "received"}), 200
+
+
+def sms_update_student_enrolment_status(person_id, course_id, status):
+    """Update enrolment status in SMS (placeholder)"""
+    # Your SMS integration code here
+    pass
+
+def sms_send_notification(person_id, message):
+    """Send notification to student (placeholder)"""
+    # Your notification code here
+    pass
+
+
+if __name__ == "__main__":
+    app.run(port=5000)</code></pre>
+        </div>
+
+        <h3>Configure Webhook Endpoint</h3>
+        <div class="code-block">
+            <pre><code># Configure webhook in eligibility system
+webhook_config = {
+    "name": "SMS Production Webhook",
+    "target": "sms",
+    "url": "https://sms.rto.edu.au/webhooks/eligibility",
+    "secret": "your_webhook_secret_here",
+    "events": ["decision.finalized", "override.approved"]
+}
+
+response = requests.post(
+    f"{API_BASE}/webhooks/",
+    json=webhook_config,
+    headers=HEADERS
+)
+
+webhook = response.json()
+print(f"Webhook configured: {webhook['id']}")</code></pre>
+        </div>
+
+        <h2>Example 6: Batch Processing</h2>
+        <div class="code-block">
+            <pre><code>import pandas as pd
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+def process_bulk_eligibility_checks(student_course_pairs, jurisdiction="VIC"):
+    """
+    Process eligibility checks in bulk with parallel execution
+    """
+    def check_single_eligibility(pair):
+        student, course = pair
+        
+        try:
+            # Create request
+            request_data = {
+                "person_id": student["student_id"],
+                "course_id": course["course_code"],
+                "jurisdiction_code": jurisdiction,
+                "student_data": student,
+                "course_data": course
+            }
+            
+            response = requests.post(
+                f"{API_BASE}/requests/",
+                json=request_data,
+                headers=HEADERS
+            )
+            
+            if response.status_code != 201:
+                return {
+                    "student_id": student["student_id"],
+                    "course_code": course["course_code"],
+                    "error": response.json()
+                }
+            
+            request_id = response.json()["id"]
+            
+            # Trigger evaluation
+            requests.post(
+                f"{API_BASE}/requests/{request_id}/evaluate/",
+                headers=HEADERS
+            )
+            
+            return {
+                "student_id": student["student_id"],
+                "course_code": course["course_code"],
+                "request_id": request_id,
+                "status": "queued"
+            }
+        
+        except Exception as e:
+            return {
+                "student_id": student["student_id"],
+                "course_code": course["course_code"],
+                "error": str(e)
+            }
+    
+    # Process in parallel (max 10 concurrent)
+    results = []
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(check_single_eligibility, pair) 
+                   for pair in student_course_pairs]
+        
+        for future in as_completed(futures):
+            results.append(future.result())
+    
+    return results
+
+
+# Usage: Process 50 students
+students_df = pd.read_csv("students.csv")
+courses_df = pd.read_csv("courses.csv")
+
+pairs = []
+for _, student_row in students_df.iterrows():
+    for _, course_row in courses_df.iterrows():
+        student = student_row.to_dict()
+        course = course_row.to_dict()
+        pairs.append((student, course))
+
+results = process_bulk_eligibility_checks(pairs[:50])
+
+# Analyze results
+successful = [r for r in results if "request_id" in r]
+errors = [r for r in results if "error" in r]
+
+print(f"Queued: {len(successful)}")
+print(f"Errors: {len(errors)}")</code></pre>
+        </div>
+
+        <div class="cta-section">
+            <h2>Next Steps</h2>
+            <p>Explore the product roadmap to see planned enhancements and future features.</p>
+            <a href="roadmap.html" class="btn btn-primary">View Roadmap →</a>
+        </div>
+    </div>
+</body>
+</html>

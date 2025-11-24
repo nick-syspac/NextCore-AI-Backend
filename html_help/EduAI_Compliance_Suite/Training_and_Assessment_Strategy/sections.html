@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAS Section Library - Documentation</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+    <style>
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .section-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .section-card:hover {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .section-code {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        
+        .content-type-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+        
+        .type-text { background: #e3f2fd; color: #1976d2; }
+        .type-rich-text { background: #f3e5f5; color: #7b1fa2; }
+        .type-table { background: #e8f5e9; color: #388e3c; }
+        .type-list { background: #fff3e0; color: #f57c00; }
+        .type-json { background: #fce4ec; color: #c2185b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="index.html">TAS Home</a>
+            <span>›</span>
+            <span>Section Library</span>
+        </div>
+
+        <a href="index.html" class="back-button">← Back to TAS Home</a>
+
+        <h1>📝 TAS Section Library</h1>
+        <p class="subtitle" style="font-size: 1.25rem; color: #64748b; margin-bottom: 2rem;">Reusable content blocks for TAS documents</p>
+
+        <section>
+            <h2>What are TAS Sections?</h2>
+            <p>TAS Sections are reusable content blocks that make up a Training and Assessment Strategy document. Think of them as building blocks that can be combined in different ways across multiple templates.</p>
+
+            <div class="alert alert-info">
+                <h4>🔄 Reusability is Key</h4>
+                <p>A single section (like "Entry Requirements") can be used in dozens of templates. This means:</p>
+                <ul>
+                    <li>Create once, use many times</li>
+                    <li>Update the section, and all templates can use the updated version</li>
+                    <li>Consistent content across your organization</li>
+                    <li>Less duplication, easier maintenance</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Section Fields</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>section_name</code></td>
+                        <td>String (200)</td>
+                        <td>Display name (e.g., "Qualification Overview")</td>
+                    </tr>
+                    <tr>
+                        <td><code>section_code</code></td>
+                        <td>String (50, unique)</td>
+                        <td>Unique identifier (e.g., "QUAL_OVERVIEW")</td>
+                    </tr>
+                    <tr>
+                        <td><code>description</code></td>
+                        <td>Text</td>
+                        <td>Help text explaining what this section is for</td>
+                    </tr>
+                    <tr>
+                        <td><code>content_type</code></td>
+                        <td>Choice</td>
+                        <td>text, rich_text, table, list, json</td>
+                    </tr>
+                    <tr>
+                        <td><code>default_content</code></td>
+                        <td>Text (optional)</td>
+                        <td>Example or placeholder content</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_editable</code></td>
+                        <td>Boolean</td>
+                        <td>Can users edit after generation?</td>
+                    </tr>
+                    <tr>
+                        <td><code>parent_section</code></td>
+                        <td>FK (optional)</td>
+                        <td>For nested/hierarchical sections</td>
+                    </tr>
+                    <tr>
+                        <td><code>gpt_prompt</code></td>
+                        <td>JSONField (optional)</td>
+                        <td>AI generation configuration</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_active</code></td>
+                        <td>Boolean</td>
+                        <td>Soft delete flag</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Content Types</h2>
+            <p>Each section has a content type that determines how content is structured and displayed:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Best For</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="content-type-badge type-text">text</span></td>
+                        <td>Plain text paragraphs</td>
+                        <td>Descriptions, overviews, narratives</td>
+                        <td>Qualification description, target audience</td>
+                    </tr>
+                    <tr>
+                        <td><span class="content-type-badge type-rich-text">rich_text</span></td>
+                        <td>Formatted text with HTML</td>
+                        <td>Complex content with headings, lists, bold/italic</td>
+                        <td>Assessment procedures, detailed instructions</td>
+                    </tr>
+                    <tr>
+                        <td><span class="content-type-badge type-table">table</span></td>
+                        <td>Structured tabular data</td>
+                        <td>Unit mappings, resource lists, schedules</td>
+                        <td>Assessment tools table, resource requirements</td>
+                    </tr>
+                    <tr>
+                        <td><span class="content-type-badge type-list">list</span></td>
+                        <td>Bulleted or numbered lists</td>
+                        <td>Requirements, deliverables, options</td>
+                        <td>Entry requirements, learning resources</td>
+                    </tr>
+                    <tr>
+                        <td><span class="content-type-badge type-json">json</span></td>
+                        <td>Structured JSON data</td>
+                        <td>Complex data structures, mappings</td>
+                        <td>Unit clustering, pathway maps</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Core TAS Sections</h2>
+            <p>These are the fundamental sections required for ASQA compliance:</p>
+
+            <div class="section-grid">
+                <div class="section-card">
+                    <div class="section-code">QUAL_OVERVIEW</div>
+                    <h4>Qualification Overview</h4>
+                    <p>Purpose, pathways, licensing requirements, career outcomes</p>
+                    <span class="content-type-badge type-rich-text">rich_text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">ENTRY_REQ</div>
+                    <h4>Entry Requirements</h4>
+                    <p>Pre-requisites, LLN requirements, work experience</p>
+                    <span class="content-type-badge type-list">list</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">ASMT_STRATEGY</div>
+                    <h4>Assessment Strategy</h4>
+                    <p>Assessment principles, methods, tools, validation</p>
+                    <span class="content-type-badge type-rich-text">rich_text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">DELIVERY_STRATEGY</div>
+                    <h4>Delivery Strategy</h4>
+                    <p>Modes, duration, sequencing, resources</p>
+                    <span class="content-type-badge type-rich-text">rich_text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">ASMT_TOOLS</div>
+                    <h4>Assessment Tools</h4>
+                    <p>List of assessment instruments and their purpose</p>
+                    <span class="content-type-badge type-table">table</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">RESOURCES</div>
+                    <h4>Resources</h4>
+                    <p>Physical, digital, human resources required</p>
+                    <span class="content-type-badge type-table">table</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">TRAINER_QUAL</div>
+                    <h4>Trainer Qualifications</h4>
+                    <p>Required trainer quals, industry currency</p>
+                    <span class="content-type-badge type-list">list</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">INDUSTRY_ENGAGE</div>
+                    <h4>Industry Engagement</h4>
+                    <p>Consultation, validation, workplace partnerships</p>
+                    <span class="content-type-badge type-text">text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">VALIDATION_PROC</div>
+                    <h4>Validation Procedures</h4>
+                    <p>Assessment validation processes and schedule</p>
+                    <span class="content-type-badge type-rich-text">rich_text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">MODERATION_PROC</div>
+                    <h4>Moderation Procedures</h4>
+                    <p>Assessment moderation and quality assurance</p>
+                    <span class="content-type-badge type-rich-text">rich_text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">RECOGNITION</div>
+                    <h4>Recognition</h4>
+                    <p>RPL, credit transfer, articulation pathways</p>
+                    <span class="content-type-badge type-text">text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">SUPPORT_SERVICES</div>
+                    <h4>Support Services</h4>
+                    <p>LLN support, disability support, counseling</p>
+                    <span class="content-type-badge type-list">list</span>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Assessment-Specific Sections</h2>
+
+            <div class="section-grid">
+                <div class="section-card">
+                    <div class="section-code">ASMT_PRINCIPLES</div>
+                    <h4>Assessment Principles</h4>
+                    <p>Validity, reliability, flexibility, fairness</p>
+                    <span class="content-type-badge type-rich-text">rich_text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">ASMT_RULES_EVIDENCE</div>
+                    <h4>Rules of Evidence</h4>
+                    <p>Validity, sufficiency, authenticity, currency</p>
+                    <span class="content-type-badge type-rich-text">rich_text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">ASMT_METHODS</div>
+                    <h4>Assessment Methods</h4>
+                    <p>Observation, questioning, projects, portfolios</p>
+                    <span class="content-type-badge type-table">table</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">REASONABLE_ADJ</div>
+                    <h4>Reasonable Adjustments</h4>
+                    <p>Accommodations for diverse learner needs</p>
+                    <span class="content-type-badge type-text">text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">ASMT_MAPPING</div>
+                    <h4>Assessment Mapping</h4>
+                    <p>Unit-to-tool-to-method mapping</p>
+                    <span class="content-type-badge type-table">table</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">ASMT_SCHEDULE</div>
+                    <h4>Assessment Schedule</h4>
+                    <p>When assessments occur during program</p>
+                    <span class="content-type-badge type-table">table</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">RESUBMISSION</div>
+                    <h4>Resubmission Policy</h4>
+                    <p>Procedures for reassessment and appeals</p>
+                    <span class="content-type-badge type-text">text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">ASSESSOR_REQ</div>
+                    <h4>Assessor Requirements</h4>
+                    <p>TAE quals, vocational competency, currency</p>
+                    <span class="content-type-badge type-list">list</span>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Delivery-Specific Sections</h2>
+
+            <div class="section-grid">
+                <div class="section-card">
+                    <div class="section-code">DELIVERY_MODES</div>
+                    <h4>Delivery Modes</h4>
+                    <p>Face-to-face, online, blended, workplace</p>
+                    <span class="content-type-badge type-list">list</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">UNIT_SEQUENCE</div>
+                    <h4>Unit Sequencing</h4>
+                    <p>Recommended order for delivering units</p>
+                    <span class="content-type-badge type-table">table</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">PROGRAM_DURATION</div>
+                    <h4>Program Duration</h4>
+                    <p>Nominal hours, weeks, flexible options</p>
+                    <span class="content-type-badge type-text">text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">CLASS_SIZE</div>
+                    <h4>Class Size</h4>
+                    <p>Maximum students per class/workshop</p>
+                    <span class="content-type-badge type-text">text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">LEARNING_RESOURCES</div>
+                    <h4>Learning Resources</h4>
+                    <p>Textbooks, workbooks, online materials</p>
+                    <span class="content-type-badge type-table">table</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">WORKPLACE_REQ</div>
+                    <h4>Workplace Requirements</h4>
+                    <p>Work placement hours, supervision, tasks</p>
+                    <span class="content-type-badge type-rich-text">rich_text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">TIMETABLE</div>
+                    <h4>Sample Timetable</h4>
+                    <p>Example weekly/term schedule</p>
+                    <span class="content-type-badge type-table">table</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">FACILITIES</div>
+                    <h4>Facilities</h4>
+                    <p>Training rooms, workshops, equipment</p>
+                    <span class="content-type-badge type-list">list</span>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Compliance & Quality Sections</h2>
+
+            <div class="section-grid">
+                <div class="section-card">
+                    <div class="section-code">ASQA_COMPLIANCE</div>
+                    <h4>ASQA Compliance</h4>
+                    <p>How strategy meets Standards 2015</p>
+                    <span class="content-type-badge type-table">table</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">QUALITY_ASSURANCE</div>
+                    <h4>Quality Assurance</h4>
+                    <p>QA processes, reviews, improvements</p>
+                    <span class="content-type-badge type-rich-text">rich_text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">CONTINUOUS_IMPROVE</div>
+                    <h4>Continuous Improvement</h4>
+                    <p>Feedback loops, data analysis, action plans</p>
+                    <span class="content-type-badge type-text">text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">RECORD_KEEPING</div>
+                    <h4>Record Keeping</h4>
+                    <p>What records, how long, where stored</p>
+                    <span class="content-type-badge type-list">list</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">VERSION_CONTROL</div>
+                    <h4>Version Control</h4>
+                    <p>Document versioning and change management</p>
+                    <span class="content-type-badge type-text">text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">REVIEW_SCHEDULE</div>
+                    <h4>Review Schedule</h4>
+                    <p>When TAS will be reviewed and by whom</p>
+                    <span class="content-type-badge type-table">table</span>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Trade & Technical Sections</h2>
+
+            <div class="section-grid">
+                <div class="section-card">
+                    <div class="section-code">WHS_PROCEDURES</div>
+                    <h4>WHS Procedures</h4>
+                    <p>Safety induction, risk assessments, incidents</p>
+                    <span class="content-type-badge type-rich-text">rich_text</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">TOOLS_EQUIPMENT</div>
+                    <h4>Tools & Equipment</h4>
+                    <p>Required tools, equipment lists, maintenance</p>
+                    <span class="content-type-badge type-table">table</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">MATERIALS_SUPPLIES</div>
+                    <h4>Materials & Supplies</h4>
+                    <p>Consumables needed for training</p>
+                    <span class="content-type-badge type-table">table</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">PPE_REQ</div>
+                    <h4>PPE Requirements</h4>
+                    <p>Personal protective equipment needed</p>
+                    <span class="content-type-badge type-list">list</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">WORKSHOP_RULES</div>
+                    <h4>Workshop Rules</h4>
+                    <p>Behavior expectations, safety protocols</p>
+                    <span class="content-type-badge type-list">list</span>
+                </div>
+
+                <div class="section-card">
+                    <div class="section-code">LOGBOOK_REQ</div>
+                    <h4>Logbook Requirements</h4>
+                    <p>Workplace logbook expectations</p>
+                    <span class="content-type-badge type-text">text</span>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Creating a Section</h2>
+
+            <h3>API Endpoint</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/api/tenants/{tenant}/tas/template-sections/</code>
+            </div>
+
+            <h3>Request Example</h3>
+            <pre><code>{
+  "section_name": "Qualification Overview",
+  "section_code": "QUAL_OVERVIEW",
+  "description": "Provides comprehensive overview of the qualification including purpose, pathways, licensing requirements, and career outcomes",
+  "content_type": "rich_text",
+  "is_editable": true,
+  "default_content": "<h3>Qualification Purpose</h3><p>[To be generated]</p>",
+  "gpt_prompt": {
+    "system_prompt": "You are an expert in Australian VET qualifications and ASQA compliance.",
+    "user_prompt_template": "Generate a comprehensive qualification overview for {qualification_code} - {qualification_title}. Include: purpose, licensing requirements, pathways, and career outcomes. Use Australian spelling.",
+    "temperature": 0.7,
+    "max_tokens": 1000,
+    "variables": ["qualification_code", "qualification_title"],
+    "validation_keywords": ["purpose", "pathways", "outcomes"]
+  }
+}</code></pre>
+
+            <h3>Response Example</h3>
+            <pre><code>{
+  "id": 15,
+  "tenant": "acme-rto",
+  "section_name": "Qualification Overview",
+  "section_code": "QUAL_OVERVIEW",
+  "description": "Provides comprehensive overview of the qualification...",
+  "content_type": "rich_text",
+  "default_content": "<h3>Qualification Purpose</h3><p>[To be generated]</p>",
+  "is_editable": true,
+  "parent_section": null,
+  "gpt_prompt": { ... },
+  "is_active": true,
+  "template_count": 0,
+  "created_at": "2024-01-20T10:30:00Z",
+  "updated_at": "2024-01-20T10:30:00Z"
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Hierarchical Sections</h2>
+            <p>Sections can have parent-child relationships for nested content:</p>
+
+            <h3>Example: Assessment Strategy (Parent)</h3>
+            <pre><code>{
+  "section_name": "Assessment Strategy",
+  "section_code": "ASMT_STRATEGY",
+  "content_type": "rich_text",
+  "parent_section": null
+}</code></pre>
+
+            <h3>Example: Assessment Principles (Child)</h3>
+            <pre><code>{
+  "section_name": "Assessment Principles",
+  "section_code": "ASMT_PRINCIPLES",
+  "content_type": "rich_text",
+  "parent_section": 15  // ID of ASMT_STRATEGY
+}</code></pre>
+
+            <div class="alert alert-info">
+                <h4>💡 When to Use Hierarchies</h4>
+                <p>Use parent-child sections when:</p>
+                <ul>
+                    <li>Content logically breaks into subcategories</li>
+                    <li>You want to generate sections separately but group in document</li>
+                    <li>Different templates need different subcomponents</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Duplicating a Section</h2>
+            <p>Create a copy of an existing section as a starting point:</p>
+
+            <h3>API Endpoint</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/api/tenants/{tenant}/tas/template-sections/{id}/duplicate/</code>
+            </div>
+
+            <h3>Request Example</h3>
+            <pre><code>{
+  "new_name": "Qualification Overview - Trade Focus",
+  "new_code": "QUAL_OVERVIEW_TRADE"
+}</code></pre>
+
+            <p>This creates an exact copy with a new name and code, including the GPT prompt configuration.</p>
+        </section>
+
+        <section>
+            <h2>Best Practices</h2>
+
+            <div class="card">
+                <h3>1. Use Clear, Consistent Section Codes</h3>
+                <ul>
+                    <li>Use UPPERCASE_WITH_UNDERSCORES format</li>
+                    <li>Keep codes short but meaningful (max 50 characters)</li>
+                    <li>Use consistent prefixes (ASMT_ for assessment, DELIVERY_ for delivery)</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>2. Choose the Right Content Type</h3>
+                <ul>
+                    <li><strong>Text:</strong> Simple paragraphs without formatting needs</li>
+                    <li><strong>Rich Text:</strong> When you need headings, lists, bold/italic</li>
+                    <li><strong>Table:</strong> Structured data with rows and columns</li>
+                    <li><strong>List:</strong> Simple bulleted or numbered lists</li>
+                    <li><strong>JSON:</strong> Complex structured data</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>3. Write Helpful Descriptions</h3>
+                <ul>
+                    <li>Explain what content should go in this section</li>
+                    <li>Include examples or guidelines</li>
+                    <li>Reference ASQA clauses if relevant</li>
+                    <li>Specify any mandatory inclusions</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>4. Configure GPT Prompts at Section Level</h3>
+                <ul>
+                    <li>Section-level prompts are more specific and reusable</li>
+                    <li>Template-level prompts override section-level when needed</li>
+                    <li>Include validation keywords to ensure quality</li>
+                    <li>Use appropriate temperature (0.5-0.7 for factual, 0.7-0.9 for creative)</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>5. Make Sections Truly Reusable</h3>
+                <ul>
+                    <li>Don't hardcode qualification-specific details</li>
+                    <li>Use variable placeholders instead</li>
+                    <li>Keep sections generic enough for multiple templates</li>
+                    <li>Use template-specific settings in templates, not sections</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Complete Section Library Reference</h2>
+            <p>For a comprehensive list of all 150+ possible sections organized by category, see the full section library documentation.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                <a href="assignments.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h4>Next: Assignments</h4>
+                    <p>Link sections to templates</p>
+                </a>
+                <a href="gpt-prompts.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h4>GPT Prompts</h4>
+                    <p>Configure AI generation</p>
+                </a>
+            </div>
+        </section>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid #e2e8f0; text-align: center; color: #64748b;">
+            <p><a href="index.html" style="color: var(--primary-color);">Back to TAS Home</a></p>
+        </footer>
+    </div>
+</body>
+</html>

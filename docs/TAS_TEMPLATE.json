@@ -1,0 +1,529 @@
+{
+    "template_name": "Certificate I - General Foundation Skills",
+    "template_code": "CERT1_GENERAL_001",
+    "aqf_level": "certificate_i",
+    "template_type": "general",
+    "description": "Foundation skills template for Certificate I qualifications focusing on basic skills, introductory knowledge, and workplace readiness",
+    "structure": {
+        "version": "1.0",
+        "document_type": "TAS",
+        "template_type": "general",
+        "aqf_level": "certificate_i",
+        "metadata": {
+            "author_guidelines": "Focus on basic foundational skills and knowledge. Emphasize simple, practical tasks with high support and supervision. Target learners with minimal or no prior experience. Use plain language and clear, step-by-step instructions.",
+            "review_frequency": "annually",
+            "compliance_framework": "ASQA Standards 2015",
+            "industry_focus": "Multi-sector introductory skills",
+            "typical_qualifications": [
+                "FSK10119",
+                "SIS10321",
+                "CHC10121"
+            ],
+            "learner_characteristics": "Entry-level learners, may have low LLN, require significant support and scaffolding"
+        },
+        "formatting": {
+            "font": "Arial",
+            "font_size": 12,
+            "line_spacing": 1.5,
+            "margins": {
+                "top": 2.5,
+                "bottom": 2.5,
+                "left": 2.5,
+                "right": 2.5
+            },
+            "page_numbering": true,
+            "header_footer": true,
+            "use_simple_language": true,
+            "include_diagrams": true,
+            "include_pictures": true
+        },
+        "validation_rules": {
+            "min_sections": 5,
+            "required_sections": [
+                "cohort_profile",
+                "delivery_model",
+                "assessment_overview",
+                "support_services",
+                "trainer_requirements"
+            ],
+            "max_length": 30000,
+            "min_length": 3000,
+            "lln_considerations": "mandatory",
+            "support_strategies": "mandatory"
+        },
+        "generation_settings": {
+            "gpt_model": "gpt-4",
+            "temperature": 0.6,
+            "max_tokens": 2000,
+            "include_examples": true,
+            "tone": "simple, clear, supportive",
+            "audience": "RTO staff working with entry-level learners",
+            "language_complexity": "plain_language_required"
+        },
+        "template_specific_settings": {
+            "emphasis_areas": [
+                "basic_foundational_skills",
+                "workplace_readiness",
+                "simple_practical_tasks",
+                "supervised_work",
+                "personal_development",
+                "communication_skills",
+                "following_instructions",
+                "workplace_safety_basics"
+            ],
+            "assessment_methods": [
+                "simple_practical_demonstrations",
+                "observation_checklists",
+                "verbal_questioning",
+                "show_and_tell",
+                "basic_written_responses",
+                "workplace_tasks_under_supervision",
+                "photo_evidence"
+            ],
+            "delivery_preferences": [
+                "face_to_face",
+                "highly_supported",
+                "small_group",
+                "one_on_one_where_needed",
+                "workplace_based_with_supervision"
+            ],
+            "typical_resources": [
+                "simple_learning_materials",
+                "visual_aids",
+                "demonstration_equipment",
+                "basic_workplace_tools",
+                "step_by_step_guides",
+                "picture_cards",
+                "video_demonstrations"
+            ],
+            "lln_support": {
+                "assessment_required": true,
+                "support_available": [
+                    "LLN_support_classes",
+                    "one_on_one_tutoring",
+                    "simplified_materials",
+                    "assistive_technology",
+                    "extended_time",
+                    "oral_assessments"
+                ],
+                "minimum_level": "ACSF_Level_1_or_2"
+            },
+            "learner_support": {
+                "high_level_support": true,
+                "scaffolding_strategies": [
+                    "modeling_and_demonstration",
+                    "repetition_and_practice",
+                    "immediate_feedback",
+                    "breaking_tasks_into_steps",
+                    "visual_supports"
+                ],
+                "wellbeing_support": [
+                    "youth_support_services",
+                    "counseling_referrals",
+                    "disability_support",
+                    "career_guidance"
+                ]
+            },
+            "industry_engagement": {
+                "frequency": "biannually",
+                "methods": [
+                    "employer_partnerships",
+                    "workplace_visits",
+                    "guest_speakers",
+                    "work_experience_opportunities"
+                ],
+                "focus": "simple_workplace_tasks_and_expectations"
+            },
+            "progression_pathways": {
+                "to_certificate_ii": "clearly_defined",
+                "to_employment": "supported_entry_level_roles",
+                "to_further_study": "identified_and_supported"
+            }
+        },
+        "compliance_mapping": {
+            "clause_1_1": [
+                "cohort_profile",
+                "delivery_model",
+                "assessment_overview"
+            ],
+            "clause_1_3": [
+                "lln_support",
+                "support_services"
+            ],
+            "clause_1_8": [
+                "assessment_overview",
+                "assessment_methods"
+            ],
+            "clause_1_13": [
+                "trainer_requirements"
+            ],
+            "clause_1_14": [
+                "trainer_requirements",
+                "industry_currency"
+            ],
+            "clause_2_2": [
+                "quality_assurance",
+                "continuous_improvement"
+            ]
+        },
+        "workflow": {
+            "approval_required": true,
+            "version_control": true,
+            "review_stages": [
+                "draft",
+                "review",
+                "approved",
+                "published"
+            ]
+        }
+    },
+    "default_sections": [
+        {
+            "section_code": "cohort_profile",
+            "section_name": "Cohort Profile and Entry Requirements",
+            "section_order": 1,
+            "is_required": true,
+            "content_type": "rich_text",
+            "description": "Profile of target learners including demographics, LLN levels, and entry requirements"
+        },
+        {
+            "section_code": "entry_requirements",
+            "section_name": "Entry Requirements and Pre-Training Review",
+            "section_order": 2,
+            "is_required": true,
+            "content_type": "rich_text",
+            "description": "Minimal entry requirements, pre-training review process, and USI collection"
+        },
+        {
+            "section_code": "lln_support",
+            "section_name": "Language, Literacy and Numeracy Support",
+            "section_order": 3,
+            "is_required": true,
+            "content_type": "rich_text",
+            "description": "LLN assessment process and available support strategies for Certificate I learners"
+        },
+        {
+            "section_code": "delivery_model",
+            "section_name": "Delivery Model and Schedule",
+            "section_order": 4,
+            "is_required": true,
+            "content_type": "rich_text",
+            "description": "Delivery methods, schedule, duration, and supervision requirements"
+        },
+        {
+            "section_code": "learning_resources",
+            "section_name": "Learning Resources and Materials",
+            "section_order": 5,
+            "is_required": true,
+            "content_type": "rich_text",
+            "description": "Simple learning materials, visual aids, and equipment required"
+        },
+        {
+            "section_code": "assessment_overview",
+            "section_name": "Assessment Strategy",
+            "section_order": 6,
+            "is_required": true,
+            "content_type": "rich_text",
+            "description": "Simple assessment methods appropriate for foundation skill levels"
+        },
+        {
+            "section_code": "assessment_methods",
+            "section_name": "Assessment Methods and Tools",
+            "section_order": 7,
+            "is_required": true,
+            "content_type": "table",
+            "description": "Specific assessment methods for each unit with reasonable adjustment options"
+        },
+        {
+            "section_code": "unit_clustering",
+            "section_name": "Unit Sequencing and Delivery",
+            "section_order": 8,
+            "is_required": true,
+            "content_type": "table",
+            "description": "Simple unit grouping and recommended teaching sequence"
+        },
+        {
+            "section_code": "support_services",
+            "section_name": "Student Support Services",
+            "section_order": 9,
+            "is_required": true,
+            "content_type": "rich_text",
+            "description": "Comprehensive support services available to Certificate I learners"
+        },
+        {
+            "section_code": "workplace_safety",
+            "section_name": "Workplace Health and Safety",
+            "section_order": 10,
+            "is_required": true,
+            "content_type": "rich_text",
+            "description": "Basic WHS induction and safety procedures for practical activities"
+        },
+        {
+            "section_code": "trainer_requirements",
+            "section_name": "Trainer and Assessor Requirements",
+            "section_order": 11,
+            "is_required": true,
+            "content_type": "rich_text",
+            "description": "Qualifications and skills required for trainers working with entry-level learners"
+        },
+        {
+            "section_code": "quality_assurance",
+            "section_name": "Quality Assurance and Continuous Improvement",
+            "section_order": 12,
+            "is_required": true,
+            "content_type": "rich_text",
+            "description": "Validation, moderation, and continuous improvement processes"
+        },
+        {
+            "section_code": "pathways",
+            "section_name": "Pathways and Progression",
+            "section_order": 13,
+            "is_required": false,
+            "content_type": "rich_text",
+            "description": "Articulation to Certificate II and employment pathways"
+        }
+    ],
+    "gpt_prompts": {
+        "section_prompts": {
+            "cohort_profile": {
+                "system_prompt": "You are an expert VET educator specializing in foundation skills and entry-level qualifications. You understand the unique needs of Certificate I learners including low LLN, limited work experience, and need for high support. Generate content that is practical, compassionate, and compliance-focused per ASQA Clauses 1.1-1.3.",
+                "user_prompt_template": "Create a comprehensive cohort profile for {qualification_code} - {qualification_title}, a Certificate I qualification in {industry_sector}.\n\nInclude:\n1. Target learner demographics (age range, educational background, work experience)\n2. Typical entry points (school leavers, mature age, unemployed, disability support)\n3. Language, Literacy and Numeracy (LLN) levels (typically ACSF Level 1-2)\n4. Barriers to learning that may be present\n5. Support needs (learning support, personal support, disability support)\n6. Cultural diversity considerations\n7. Employment goals and motivations\n\nRemember this is an ENTRY-LEVEL qualification. Learners may:\n- Have no prior work experience\n- Have low confidence and self-esteem\n- Require significant scaffolding and support\n- Have limited LLN skills\n- Be from disadvantaged backgrounds\n\nTone: Supportive, realistic, focused on enablement\nCompliance: Address ASQA Clause 1.3 (learner characteristics and support)",
+                "temperature": 0.7,
+                "max_tokens": 1500,
+                "variables": [
+                    "qualification_code",
+                    "qualification_title",
+                    "industry_sector"
+                ],
+                "validation_keywords": [
+                    "LLN",
+                    "support",
+                    "entry requirements",
+                    "demographics",
+                    "barriers",
+                    "ACSF"
+                ]
+            },
+            "lln_support": {
+                "system_prompt": "You are an expert in Language, Literacy and Numeracy (LLN) support for vocational learners. You understand the ACSF framework and strategies for supporting learners with low LLN skills. Generate practical, evidence-based LLN support strategies.",
+                "user_prompt_template": "Create a comprehensive LLN Support section for {qualification_code} - {qualification_title}.\n\nInclude:\n1. LLN assessment process (ACSF indicator tools, initial assessment)\n2. Expected LLN entry levels (typically ACSF Level 1-2)\n3. Target LLN exit levels (ACSF Level 2-3)\n4. Embedded LLN support strategies within training delivery\n5. Additional LLN support options (classes, tutoring, resources)\n6. Reasonable adjustments for low LLN learners\n7. Reading and writing support strategies\n8. Numeracy support strategies\n9. Digital literacy support (if applicable)\n10. Referral pathways for intensive LLN support\n\nFocus on PRACTICAL strategies trainers can use in the classroom.\n\nCompliance: Address ASQA Clause 1.3 and Clause 1.7 (LLN support)",
+                "temperature": 0.6,
+                "max_tokens": 2000,
+                "variables": [
+                    "qualification_code",
+                    "qualification_title"
+                ],
+                "validation_keywords": [
+                    "ACSF",
+                    "LLN assessment",
+                    "support strategies",
+                    "reasonable adjustments",
+                    "literacy",
+                    "numeracy"
+                ]
+            },
+            "delivery_model": {
+                "system_prompt": "You are an expert in vocational training delivery for entry-level learners. You understand that Certificate I delivery requires high supervision, small class sizes, repetition, and hands-on practical learning. Generate realistic, achievable delivery models.",
+                "user_prompt_template": "Create a detailed delivery model for {qualification_code} - {qualification_title}.\n\nThe qualification has:\n- {nominal_hours} nominal hours\n- {unit_count} units of competency\n- Certificate I AQF level (basic foundational skills)\n\nInclude:\n1. Delivery mode (recommend face-to-face with high supervision)\n2. Delivery schedule (weekly program, hours per week)\n3. Program duration (weeks/months)\n4. Class sizes (recommend small: 8-12 students maximum)\n5. Trainer-to-student ratio (recommend 1:10 or better)\n6. Learning environment (classroom, workshop, simulated workplace)\n7. Supervision requirements (close supervision for all practical tasks)\n8. Repetition and practice opportunities\n9. Work experience/workplace visits (if applicable)\n10. Flexible delivery options for disadvantaged learners\n11. Attendance requirements and support for irregular attendance\n\nRemember: Certificate I learners need HIGH SUPPORT, SMALL CLASSES, and REPEATED PRACTICE.\n\nCompliance: Address ASQA Clauses 1.1, 1.8 (training strategies and resources)",
+                "temperature": 0.6,
+                "max_tokens": 2000,
+                "variables": [
+                    "qualification_code",
+                    "qualification_title",
+                    "nominal_hours",
+                    "unit_count",
+                    "delivery_location"
+                ],
+                "validation_keywords": [
+                    "face-to-face",
+                    "supervision",
+                    "class size",
+                    "schedule",
+                    "duration",
+                    "support"
+                ]
+            },
+            "assessment_overview": {
+                "system_prompt": "You are an expert in vocational assessment for entry-level learners. You understand that Certificate I assessment must be SIMPLE, PRACTICAL, OBSERVABLE, and use MINIMAL written components. Assessment should build confidence, not create barriers. Generate inclusive, appropriate assessment strategies.",
+                "user_prompt_template": "Create a comprehensive assessment strategy for {qualification_code} - {qualification_title}.\n\nInclude:\n1. Assessment principles (validity, reliability, fairness, flexibility) - explain in simple terms\n2. Rules of evidence (validity, sufficiency, authenticity, currency) - Certificate I context\n3. Primary assessment methods:\n   - Practical demonstrations (preferred)\n   - Observation checklists (simple, clear)\n   - Verbal questioning (minimal writing)\n   - Show and tell / presentations\n   - Photo/video evidence\n   - Workplace tasks (under supervision)\n4. AVOID or MINIMIZE: Complex written assignments, essays, long reports\n5. Reasonable adjustments for:\n   - Low LLN learners (oral assessment, simplified language, extended time)\n   - Learners with disabilities\n   - CALD learners (interpreters, bilingual support)\n6. Assessment timing (regular, small chunks, immediate feedback)\n7. Reassessment policy (supportive, allows multiple attempts)\n8. Validation and moderation processes\n9. Feedback methods (simple, positive, constructive)\n\nKey principle: ASSESSMENT SHOULD BE SIMPLE AND CONFIDENCE-BUILDING.\n\nCompliance: Address ASQA Clause 1.8 (assessment systems and principles)",
+                "temperature": 0.5,
+                "max_tokens": 2500,
+                "variables": [
+                    "qualification_code",
+                    "qualification_title",
+                    "unit_count"
+                ],
+                "validation_keywords": [
+                    "practical demonstration",
+                    "observation",
+                    "verbal questioning",
+                    "reasonable adjustments",
+                    "validity",
+                    "simple"
+                ]
+            },
+            "assessment_methods": {
+                "system_prompt": "You are an expert in developing assessment tools for entry-level VET learners. Create a table mapping units to appropriate, simple assessment methods.",
+                "user_prompt_template": "Create an assessment methods table for {qualification_code} - {qualification_title}.\n\nFor each unit in:\n{unit_list}\n\nCreate a table with columns:\n1. Unit Code\n2. Unit Title\n3. Primary Assessment Method (choose from: Practical demonstration, Observation checklist, Verbal questioning, Show and tell, Photo evidence, Simple written task)\n4. Assessment Timing (e.g., Week 3, End of cluster)\n5. Reasonable Adjustment Options\n\nRemember: Certificate I = SIMPLE, PRACTICAL, OBSERVABLE assessment methods.\nMinimize written requirements. Focus on what learners can DO and SHOW.\n\nFormat as a clear table suitable for inclusion in a TAS document.",
+                "temperature": 0.6,
+                "max_tokens": 2000,
+                "variables": [
+                    "qualification_code",
+                    "qualification_title",
+                    "unit_list"
+                ],
+                "validation_keywords": [
+                    "practical",
+                    "observation",
+                    "demonstration",
+                    "unit code"
+                ]
+            },
+            "unit_clustering": {
+                "system_prompt": "You are an expert in pedagogical sequencing for foundation skills. Create simple, logical unit groupings that support learning progression from very basic to slightly more complex tasks.",
+                "user_prompt_template": "Create a unit clustering and sequencing strategy for {qualification_code} - {qualification_title}.\n\nUnits in this qualification:\n{unit_list}\n\nProvide:\n1. Recommended clusters (groups of 2-4 units that fit together)\n2. Simple rationale for each cluster (use plain language)\n3. Suggested teaching sequence (which cluster first, second, etc.)\n4. Approximate timeframes for each cluster\n5. Build from SIMPLE to MORE COMPLEX\n6. Identify foundation units that should be taught first\n7. Opportunities for integrated/holistic assessment across clusters\n\nRemember: Certificate I learners need:\n- Small chunks of learning\n- Clear progression\n- Repetition and practice\n- Frequent assessment (small and manageable)\n\nFormat as a clear table with: Cluster Number, Units, Rationale, Sequence Order, Timeframe",
+                "temperature": 0.6,
+                "max_tokens": 2000,
+                "variables": [
+                    "qualification_code",
+                    "qualification_title",
+                    "unit_list"
+                ],
+                "validation_keywords": [
+                    "cluster",
+                    "sequence",
+                    "progression",
+                    "timeframe",
+                    "simple to complex"
+                ]
+            },
+            "support_services": {
+                "system_prompt": "You are an expert in learner support services for disadvantaged and entry-level VET students. You understand the comprehensive support often needed for Certificate I learners to succeed. Generate practical, accessible support strategies.",
+                "user_prompt_template": "Create a comprehensive Student Support Services section for {qualification_code} - {qualification_title}.\n\nInclude:\n1. Learning support services:\n   - LLN tutoring and support\n   - One-on-one learning support\n   - Study skills workshops\n   - Assistive technology\n2. Personal/wellbeing support:\n   - Counseling services (internal or referral)\n   - Youth support workers\n   - Mental health support\n   - Financial assistance information\n3. Disability support:\n   - Disability support services\n   - Reasonable adjustments\n   - Assistive technology\n   - Modified assessment\n4. Career guidance:\n   - Career counseling\n   - Job readiness programs\n   - Resume writing assistance\n   - Interview preparation\n5. Practical support:\n   - Transport assistance information\n   - Childcare information\n   - Equipment loans\n   - Internet access\n6. Cultural support:\n   - CALD support\n   - Aboriginal and Torres Strait Islander support\n   - Interpreter services\n7. Referral pathways to external support agencies\n\nTone: Welcoming, non-judgmental, accessible\nCompliance: Address ASQA Clause 1.3 (learner support)",
+                "temperature": 0.6,
+                "max_tokens": 2000,
+                "variables": [
+                    "qualification_code",
+                    "qualification_title"
+                ],
+                "validation_keywords": [
+                    "LLN support",
+                    "counseling",
+                    "disability",
+                    "career guidance",
+                    "referral"
+                ]
+            },
+            "trainer_requirements": {
+                "system_prompt": "You are an expert in VET trainer requirements and working with disadvantaged learners. You understand that Certificate I trainers need special skills in engagement, motivation, patience, and trauma-informed practice. Generate realistic trainer requirements.",
+                "user_prompt_template": "Create a Trainer and Assessor Requirements section for {qualification_code} - {qualification_title} in {industry_sector}.\n\nInclude:\n1. Mandatory qualifications:\n   - TAE40116 Certificate IV in Training and Assessment (or equivalent)\n   - Vocational competency in the industry area\n2. Essential skills for working with Certificate I learners:\n   - High level of patience and empathy\n   - Ability to differentiate instruction\n   - Skills in supporting learners with low LLN\n   - Trauma-informed practice\n   - Positive behavior management\n   - Ability to build rapport and trust\n3. Industry experience and currency:\n   - Current industry knowledge and skills\n   - Understanding of entry-level job roles\n   - Industry networks for work experience/employment\n4. Professional development requirements:\n   - Annual training in working with disadvantaged learners\n   - LLN professional development\n   - Disability awareness training\n   - Cultural competency training\n5. Trainer-to-student ratios (recommended 1:10 or better)\n6. Support staff:\n   - Learning support officers\n   - Youth workers\n   - Disability support workers\n\nCompliance: Address ASQA Clauses 1.13-1.16 (trainer and assessor requirements)",
+                "temperature": 0.6,
+                "max_tokens": 1800,
+                "variables": [
+                    "qualification_code",
+                    "qualification_title",
+                    "industry_sector"
+                ],
+                "validation_keywords": [
+                    "TAE40116",
+                    "vocational competency",
+                    "patience",
+                    "empathy",
+                    "LLN",
+                    "disadvantaged learners"
+                ]
+            },
+            "quality_assurance": {
+                "system_prompt": "You are an expert in VET quality assurance and continuous improvement. Generate practical QA processes appropriate for Certificate I programs, focusing on learner outcomes and support effectiveness.",
+                "user_prompt_template": "Create a Quality Assurance and Continuous Improvement section for {qualification_code} - {qualification_title}.\n\nInclude:\n1. Assessment validation:\n   - Schedule (at least annually)\n   - Validation activities (pre-validation, post-validation)\n   - Industry involvement\n2. Moderation processes:\n   - Inter-assessor moderation\n   - Frequency and method\n3. Feedback mechanisms:\n   - Learner feedback (surveys, focus groups) - adapted for low LLN\n   - Trainer feedback\n   - Employer feedback (for work placements)\n   - Industry advisory input\n4. Data collection and analysis:\n   - Completion rates\n   - Learner satisfaction\n   - Employment outcomes\n   - Progression to Certificate II\n   - Support service utilization\n5. Continuous improvement cycle:\n   - Annual review of TAS\n   - Program improvements based on data\n   - Resource updates\n   - Trainer professional development\n6. Complaints and appeals process (accessible for learners with low LLN)\n7. Record keeping and compliance documentation\n\nCompliance: Address ASQA Clauses 1.8, 2.2 (continuous improvement)",
+                "temperature": 0.5,
+                "max_tokens": 2000,
+                "variables": [
+                    "qualification_code",
+                    "qualification_title"
+                ],
+                "validation_keywords": [
+                    "validation",
+                    "moderation",
+                    "feedback",
+                    "continuous improvement",
+                    "completion rates"
+                ]
+            },
+            "pathways": {
+                "system_prompt": "You are an expert in vocational pathways and career development for entry-level learners. Generate realistic, encouraging pathway information.",
+                "user_prompt_template": "Create a Pathways and Progression section for {qualification_code} - {qualification_title}.\n\nInclude:\n1. Progression to Certificate II:\n   - Which Certificate II qualifications are logical next steps\n   - Credit transfer or recognition opportunities\n   - Bridging support available\n2. Employment pathways:\n   - Entry-level job roles this qualification prepares for\n   - Typical job titles\n   - Supported employment opportunities\n   - Work experience and job placement support\n3. Further study options:\n   - Other related qualifications\n   - Prerequisite for other courses\n4. Support for transitions:\n   - Career counseling\n   - Resume and interview preparation\n   - Job search assistance\n   - Ongoing support after course completion\n5. Success stories (if available)\n\nTone: Positive, encouraging, realistic about entry-level nature of qualification",
+                "temperature": 0.7,
+                "max_tokens": 1500,
+                "variables": [
+                    "qualification_code",
+                    "qualification_title",
+                    "industry_sector"
+                ],
+                "validation_keywords": [
+                    "Certificate II",
+                    "employment",
+                    "progression",
+                    "pathways",
+                    "career"
+                ]
+            }
+        },
+        "global_context": {
+            "aqf_level_description": "Certificate I: Introductory skills and knowledge for initial participation in work, community involvement and/or further learning. Basic skills with limited breadth and depth. Work conducted under direct supervision.",
+            "typical_learners": "School leavers, young people at risk, unemployed adults, people with disabilities, CALD learners with low English, those re-entering education",
+            "typical_duration": "3-6 months full-time, 6-12 months part-time",
+            "asqa_clauses": {
+                "clause_1_1": "Strategies must be appropriate for entry-level learners with minimal experience",
+                "clause_1_3": "Must identify and support learner characteristics including low LLN",
+                "clause_1_8": "Assessment must be simple, practical, and accessible",
+                "clause_1_13": "Trainers must have patience and skills in working with disadvantaged learners",
+                "clause_2_2": "Monitor completion rates and learner support effectiveness"
+            },
+            "tone_guidelines": "Supportive, practical, accessible, trauma-informed, strength-based, non-judgmental",
+            "word_count_guidance": {
+                "cohort_profile": "800-1000 words",
+                "lln_support": "1000-1500 words",
+                "delivery_model": "1000-1200 words",
+                "assessment_overview": "1200-1500 words",
+                "support_services": "1000-1500 words",
+                "trainer_requirements": "800-1000 words"
+            },
+            "key_principles": [
+                "High support and supervision",
+                "Simple, practical learning",
+                "Small class sizes",
+                "Minimal written assessment",
+                "Strength-based approach",
+                "Trauma-informed practice",
+                "Celebrate small wins",
+                "Build confidence and self-esteem"
+            ]
+        },
+        "generation_settings": {
+            "model": "gpt-4",
+            "fallback_model": "gpt-4-turbo",
+            "enable_streaming": false,
+            "retry_attempts": 3,
+            "timeout_seconds": 120,
+            "response_format": "text",
+            "use_plain_language": true
+        }
+    },
+    "usage_instructions": {
+        "how_to_create_template": [
+            "1. Create new TASTemplate record",
+            "2. Set template_type='general', aqf_level='certificate_i'",
+            "3. Copy the 'structure' JSON into TASTemplate.structure field",
+            "4. Copy the 'gpt_prompts' JSON into TASTemplate.gpt_prompts field",
+            "5. Create TASTemplateSection records from 'default_sections' array",
+            "6. Link sections to template using TASTemplateSectionAssignment"
+        ],
+        "customization_tips": [
+            "Adjust section order based on RTO preferences",
+            "Add industry-specific sections as needed",
+            "Modify GPT prompts to match RTO language/style",
+            "Update validation keywords based on compliance requirements"
+        ]
+    }
+}

@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Section Assignments - TAS Documentation</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="index.html">TAS Home</a>
+            <span>›</span>
+            <span>Section Assignments</span>
+        </div>
+
+        <a href="index.html" class="back-button">← Back to TAS Home</a>
+
+        <h1>🔗 Section Assignments</h1>
+        <p class="subtitle" style="font-size: 1.25rem; color: #64748b; margin-bottom: 2rem;">Linking sections to templates with customization</p>
+
+        <section>
+            <h2>What are Section Assignments?</h2>
+            <p>Section Assignments are the connections between Templates and Sections. They implement the many-to-many relationship through a junction table called <code>TASTemplateSectionAssignment</code>.</p>
+
+            <div class="alert alert-info">
+                <h4>🔗 The Power of Many-to-Many</h4>
+                <p>This architecture allows incredible flexibility:</p>
+                <ul>
+                    <li><strong>One section</strong> can be used in <strong>many templates</strong></li>
+                    <li><strong>One template</strong> can have <strong>many sections</strong></li>
+                    <li>Each assignment can be <strong>customized per template</strong></li>
+                    <li>Section order, labels, requirements can differ between templates</li>
+                </ul>
+            </div>
+
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 0.75rem; margin: 2rem 0;">
+                <h3 style="color: white; margin-top: 0;">Example Scenario</h3>
+                <p>The section <code>ENTRY_REQUIREMENTS</code> is used in 50 different templates:</p>
+                <ul>
+                    <li>In a Certificate I template, it's labeled "What You Need to Start" and appears as section #2</li>
+                    <li>In a Certificate III template, it's labeled "Entry Requirements" and appears as section #3</li>
+                    <li>In a Diploma template, it's labeled "Admission Criteria" and appears as section #4</li>
+                    <li>In all templates, it uses the same core section definition but customized for context</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Assignment Fields</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>template</code></td>
+                        <td>FK (TASTemplate)</td>
+                        <td>Which template this section is assigned to</td>
+                    </tr>
+                    <tr>
+                        <td><code>section</code></td>
+                        <td>FK (TASTemplateSection)</td>
+                        <td>Which section is being assigned</td>
+                    </tr>
+                    <tr>
+                        <td><code>section_order</code></td>
+                        <td>Integer</td>
+                        <td>Display order within THIS template (1, 2, 3...)</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_required</code></td>
+                        <td>Boolean</td>
+                        <td>Whether this section is mandatory in THIS template</td>
+                    </tr>
+                    <tr>
+                        <td><code>custom_label</code></td>
+                        <td>String (optional)</td>
+                        <td>Override section_name for this specific template</td>
+                    </tr>
+                    <tr>
+                        <td><code>custom_description</code></td>
+                        <td>Text (optional)</td>
+                        <td>Override section description for this template</td>
+                    </tr>
+                    <tr>
+                        <td><code>created_at</code></td>
+                        <td>DateTime</td>
+                        <td>When this assignment was created</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>How Customization Works</h2>
+
+            <h3>Effective Label Resolution</h3>
+            <p>When displaying a section, the system uses this priority:</p>
+            <ol>
+                <li><strong>custom_label</strong> (if provided) - highest priority</li>
+                <li><strong>section.section_name</strong> (default from section definition)</li>
+            </ol>
+
+            <h3>Effective Description Resolution</h3>
+            <p>Similarly for descriptions:</p>
+            <ol>
+                <li><strong>custom_description</strong> (if provided) - highest priority</li>
+                <li><strong>section.description</strong> (default from section definition)</li>
+            </ol>
+
+            <h3>Visual Example</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Template</th>
+                        <th>Section Code</th>
+                        <th>Default Name</th>
+                        <th>Custom Label</th>
+                        <th>Displayed As</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Certificate I</td>
+                        <td>ENTRY_REQ</td>
+                        <td>Entry Requirements</td>
+                        <td>"What You Need"</td>
+                        <td><strong>"What You Need"</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Certificate III</td>
+                        <td>ENTRY_REQ</td>
+                        <td>Entry Requirements</td>
+                        <td><em>(none)</em></td>
+                        <td><strong>"Entry Requirements"</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Diploma</td>
+                        <td>ENTRY_REQ</td>
+                        <td>Entry Requirements</td>
+                        <td>"Admission Criteria"</td>
+                        <td><strong>"Admission Criteria"</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Creating Assignments</h2>
+
+            <h3>Method 1: Individual Assignment</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/api/tenants/{tenant}/tas/template-section-assignments/</code>
+            </div>
+
+            <h4>Request Example</h4>
+            <pre><code>{
+  "template": 5,
+  "section": 12,
+  "section_order": 3,
+  "is_required": true,
+  "custom_label": "What You Need to Start",
+  "custom_description": "Simple list of things you need before enrolling"
+}</code></pre>
+
+            <h4>Response Example</h4>
+            <pre><code>{
+  "id": 45,
+  "template": 5,
+  "section": 12,
+  "section_order": 3,
+  "is_required": true,
+  "custom_label": "What You Need to Start",
+  "custom_description": "Simple list of things you need before enrolling",
+  "created_at": "2024-01-20T10:30:00Z",
+  "section_details": {
+    "id": 12,
+    "section_name": "Entry Requirements",
+    "section_code": "ENTRY_REQ",
+    "content_type": "list"
+  },
+  "effective_label": "What You Need to Start",
+  "effective_description": "Simple list of things you need before enrolling"
+}</code></pre>
+
+            <h3>Method 2: Bulk Assignment (Recommended)</h3>
+            <p>When setting up a new template, use bulk assignment to add multiple sections at once:</p>
+
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/api/tenants/{tenant}/tas/template-section-assignments/bulk_assign/</code>
+            </div>
+
+            <h4>Request Example</h4>
+            <pre><code>{
+  "template_id": 5,
+  "assignments": [
+    {
+      "section_id": 10,
+      "section_order": 1,
+      "is_required": true,
+      "custom_label": "About This Qualification"
+    },
+    {
+      "section_id": 12,
+      "section_order": 2,
+      "is_required": true,
+      "custom_label": "What You Need to Start"
+    },
+    {
+      "section_id": 15,
+      "section_order": 3,
+      "is_required": true
+    },
+    {
+      "section_id": 18,
+      "section_order": 4,
+      "is_required": false,
+      "custom_label": "Optional: Work Experience"
+    }
+  ]
+}</code></pre>
+
+            <h4>Response Example</h4>
+            <pre><code>{
+  "message": "Successfully assigned 4 sections to template",
+  "assignments": [
+    {
+      "id": 45,
+      "section": 10,
+      "section_order": 1,
+      "effective_label": "About This Qualification"
+    },
+    {
+      "id": 46,
+      "section": 12,
+      "section_order": 2,
+      "effective_label": "What You Need to Start"
+    },
+    {
+      "id": 47,
+      "section": 15,
+      "section_order": 3,
+      "effective_label": "Assessment Strategy"
+    },
+    {
+      "id": 48,
+      "section": 18,
+      "section_order": 4,
+      "effective_label": "Optional: Work Experience"
+    }
+  ]
+}</code></pre>
+
+            <div class="alert alert-success">
+                <h4>✅ Bulk Assignment Benefits</h4>
+                <ul>
+                    <li>Single API call for multiple sections</li>
+                    <li>Atomic operation (all succeed or all fail)</li>
+                    <li>Faster template setup</li>
+                    <li>Easier to maintain correct section_order</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Retrieving Assignments</h2>
+
+            <h3>Get All Assignments for a Template</h3>
+            <div class="endpoint">
+                <span class="method method-get">GET</span>
+                <code>/api/tenants/{tenant}/tas/template-section-assignments/by_template/?template_id=5</code>
+            </div>
+
+            <h4>Response Example</h4>
+            <pre><code>[
+  {
+    "id": 45,
+    "template": 5,
+    "section": 10,
+    "section_order": 1,
+    "is_required": true,
+    "custom_label": "About This Qualification",
+    "custom_description": null,
+    "section_details": {
+      "id": 10,
+      "section_name": "Qualification Overview",
+      "section_code": "QUAL_OVERVIEW",
+      "content_type": "rich_text",
+      "description": "Comprehensive overview of the qualification"
+    },
+    "effective_label": "About This Qualification",
+    "effective_description": "Comprehensive overview of the qualification"
+  },
+  {
+    "id": 46,
+    "template": 5,
+    "section": 12,
+    "section_order": 2,
+    "is_required": true,
+    "custom_label": "What You Need to Start",
+    "custom_description": "Simple list of prerequisites",
+    "section_details": {
+      "id": 12,
+      "section_name": "Entry Requirements",
+      "section_code": "ENTRY_REQ",
+      "content_type": "list",
+      "description": "Prerequisites for enrollment"
+    },
+    "effective_label": "What You Need to Start",
+    "effective_description": "Simple list of prerequisites"
+  }
+]</code></pre>
+
+            <h3>Get Template with Embedded Assignments</h3>
+            <p>When you retrieve a template, it includes all section assignments:</p>
+
+            <div class="endpoint">
+                <span class="method method-get">GET</span>
+                <code>/api/tenants/{tenant}/tas/templates/5/</code>
+            </div>
+
+            <pre><code>{
+  "id": 5,
+  "template_name": "Certificate I Foundation Skills",
+  "template_code": "CERT_I_GENERAL_2024",
+  "template_type": "general",
+  "aqf_level": "certificate_i",
+  "structure": { ... },
+  "section_assignments": [
+    {
+      "id": 45,
+      "section_order": 1,
+      "is_required": true,
+      "effective_label": "About This Qualification",
+      "section_details": {
+        "section_code": "QUAL_OVERVIEW",
+        "content_type": "rich_text"
+      }
+    },
+    {
+      "id": 46,
+      "section_order": 2,
+      "is_required": true,
+      "effective_label": "What You Need to Start",
+      "section_details": {
+        "section_code": "ENTRY_REQ",
+        "content_type": "list"
+      }
+    }
+  ]
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Reordering Sections</h2>
+            <p>Change the display order of sections within a template:</p>
+
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/api/tenants/{tenant}/tas/template-section-assignments/reorder/</code>
+            </div>
+
+            <h3>Request Example</h3>
+            <pre><code>{
+  "template_id": 5,
+  "section_orders": [
+    {"assignment_id": 45, "new_order": 1},
+    {"assignment_id": 46, "new_order": 3},
+    {"assignment_id": 47, "new_order": 2},
+    {"assignment_id": 48, "new_order": 4}
+  ]
+}</code></pre>
+
+            <p>This changes the order from 1,2,3,4 to 1,3,2,4 (swapping sections 46 and 47).</p>
+
+            <h3>Response Example</h3>
+            <pre><code>{
+  "message": "Successfully reordered 4 sections",
+  "updated_assignments": [
+    {"id": 45, "section_order": 1},
+    {"id": 46, "section_order": 3},
+    {"id": 47, "section_order": 2},
+    {"id": 48, "section_order": 4}
+  ]
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Updating an Assignment</h2>
+
+            <div class="endpoint">
+                <span class="method method-patch">PATCH</span>
+                <code>/api/tenants/{tenant}/tas/template-section-assignments/{id}/</code>
+            </div>
+
+            <h3>Change Custom Label</h3>
+            <pre><code>{
+  "custom_label": "Prerequisites for Enrollment"
+}</code></pre>
+
+            <h3>Make Section Optional</h3>
+            <pre><code>{
+  "is_required": false
+}</code></pre>
+
+            <h3>Change Both</h3>
+            <pre><code>{
+  "custom_label": "Optional: Work Placement",
+  "is_required": false,
+  "custom_description": "Work placement hours can be completed during or after course"
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Deleting an Assignment</h2>
+            <p>Remove a section from a template without deleting the section itself:</p>
+
+            <div class="endpoint">
+                <span class="method method-delete">DELETE</span>
+                <code>/api/tenants/{tenant}/tas/template-section-assignments/{id}/</code>
+            </div>
+
+            <div class="alert alert-warning">
+                <h4>⚠️ Important</h4>
+                <p>Deleting an assignment only removes the section from THIS template. The section itself remains available for use in other templates.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>Common Workflows</h2>
+
+            <h3>Workflow 1: Setting Up a New Template</h3>
+            <ol>
+                <li><strong>Create the template</strong> with structure and settings</li>
+                <li><strong>Review section library</strong> to identify needed sections</li>
+                <li><strong>Bulk assign sections</strong> with appropriate ordering</li>
+                <li><strong>Customize labels</strong> for specific AQF level or industry</li>
+                <li><strong>Test generation</strong> with a sample qualification</li>
+            </ol>
+
+            <h3>Workflow 2: Cloning a Template with Modifications</h3>
+            <ol>
+                <li><strong>Duplicate existing template</strong> using /duplicate/ endpoint</li>
+                <li><strong>Review assigned sections</strong> (automatically copied)</li>
+                <li><strong>Add new sections</strong> specific to new template</li>
+                <li><strong>Remove unnecessary sections</strong></li>
+                <li><strong>Update custom labels</strong> for new context</li>
+                <li><strong>Reorder if needed</strong></li>
+            </ol>
+
+            <h3>Workflow 3: Template Maintenance</h3>
+            <ol>
+                <li><strong>Review template annually</strong> or when standards change</li>
+                <li><strong>Check assigned sections</strong> are still relevant</li>
+                <li><strong>Update custom descriptions</strong> to reflect current practices</li>
+                <li><strong>Add new ASQA-required sections</strong> if needed</li>
+                <li><strong>Test with recent qualification</strong> to verify output</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>Real-World Examples</h2>
+
+            <h3>Example 1: Same Section, Different Contexts</h3>
+            <p>The <code>SUPPORT_SERVICES</code> section used across three different templates:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Template</th>
+                        <th>Custom Label</th>
+                        <th>Custom Description</th>
+                        <th>Required</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Certificate I</td>
+                        <td>"Help Available"</td>
+                        <td>"We have lots of support to help you succeed"</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Certificate III</td>
+                        <td>"Student Support"</td>
+                        <td>"Support services available to all students"</td>
+                        <td>Yes</td>
+                    </tr>
+                    <tr>
+                        <td>Diploma</td>
+                        <td>"Support Services"</td>
+                        <td><em>(uses default)</em></td>
+                        <td>No</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Example 2: Building a Certificate III Trade Template</h3>
+            <pre><code>POST /api/tenants/acme-rto/tas/template-section-assignments/bulk_assign/
+{
+  "template_id": 8,
+  "assignments": [
+    {
+      "section_id": 10,
+      "section_order": 1,
+      "is_required": true,
+      "custom_label": "Qualification Overview"
+    },
+    {
+      "section_id": 12,
+      "section_order": 2,
+      "is_required": true,
+      "custom_label": "Entry Requirements"
+    },
+    {
+      "section_id": 25,
+      "section_order": 3,
+      "is_required": true,
+      "custom_label": "WHS Requirements",
+      "custom_description": "Safety is paramount in all trade activities"
+    },
+    {
+      "section_id": 30,
+      "section_order": 4,
+      "is_required": true,
+      "custom_label": "Tools and Equipment"
+    },
+    {
+      "section_id": 35,
+      "section_order": 5,
+      "is_required": true,
+      "custom_label": "Workplace Requirements",
+      "custom_description": "Minimum 240 hours workplace training required"
+    },
+    {
+      "section_id": 15,
+      "section_order": 6,
+      "is_required": true,
+      "custom_label": "Assessment Strategy"
+    },
+    {
+      "section_id": 18,
+      "section_order": 7,
+      "is_required": true,
+      "custom_label": "Delivery Strategy"
+    },
+    {
+      "section_id": 40,
+      "section_order": 8,
+      "is_required": false,
+      "custom_label": "Optional: Apprenticeship Pathway"
+    }
+  ]
+}</code></pre>
+
+            <h3>Example 3: Reordering After Compliance Review</h3>
+            <p>After an ASQA audit, you need to move WHS section earlier in the document:</p>
+
+            <pre><code>POST /api/tenants/acme-rto/tas/template-section-assignments/reorder/
+{
+  "template_id": 8,
+  "section_orders": [
+    {"assignment_id": 101, "new_order": 1},  // Qualification Overview (unchanged)
+    {"assignment_id": 103, "new_order": 2},  // WHS Requirements (moved up from 3)
+    {"assignment_id": 102, "new_order": 3},  // Entry Requirements (moved down to 3)
+    {"assignment_id": 104, "new_order": 4},  // Tools and Equipment (unchanged)
+    {"assignment_id": 105, "new_order": 5},  // Workplace Requirements (unchanged)
+    {"assignment_id": 106, "new_order": 6},  // Assessment Strategy (unchanged)
+    {"assignment_id": 107, "new_order": 7},  // Delivery Strategy (unchanged)
+    {"assignment_id": 108, "new_order": 8}   // Optional section (unchanged)
+  ]
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Best Practices</h2>
+
+            <div class="card">
+                <h3>1. Plan Section Order Logically</h3>
+                <ul>
+                    <li>Start with overview/introduction sections</li>
+                    <li>Group related sections together</li>
+                    <li>Place compliance sections prominently</li>
+                    <li>End with support services and contact information</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>2. Use Custom Labels Appropriately</h3>
+                <ul>
+                    <li>Use plain language for lower AQF levels</li>
+                    <li>Use professional language for higher AQF levels</li>
+                    <li>Be consistent within a template</li>
+                    <li>Don't override unless there's a good reason</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>3. Mark Sections Required Correctly</h3>
+                <ul>
+                    <li>ASQA-mandated sections should be required</li>
+                    <li>Industry-specific sections can be optional</li>
+                    <li>Context sections might be required in some templates, optional in others</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>4. Keep Descriptions Current</h3>
+                <ul>
+                    <li>Update custom descriptions when practices change</li>
+                    <li>Include specific guidance for content creators</li>
+                    <li>Reference current ASQA clauses</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h3>5. Test After Changes</h3>
+                <ul>
+                    <li>Generate sample content after adding sections</li>
+                    <li>Verify order makes sense in final document</li>
+                    <li>Check custom labels are appropriate</li>
+                    <li>Ensure all required sections are present</li>
+                </ul>
+            </div>
+        </section>
+
+        <section>
+            <h2>Troubleshooting</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Issue</th>
+                        <th>Cause</th>
+                        <th>Solution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Duplicate section_order</td>
+                        <td>Two assignments with same order number</td>
+                        <td>Use reorder endpoint to fix sequence</td>
+                    </tr>
+                    <tr>
+                        <td>Section not appearing</td>
+                        <td>is_required=false and not selected</td>
+                        <td>Either make required or select during generation</td>
+                    </tr>
+                    <tr>
+                        <td>Wrong label showing</td>
+                        <td>custom_label not set or cached</td>
+                        <td>Set custom_label explicitly or refresh cache</td>
+                    </tr>
+                    <tr>
+                        <td>Can't delete assignment</td>
+                        <td>Trying to delete required section</td>
+                        <td>Change is_required to false first</td>
+                    </tr>
+                    <tr>
+                        <td>Bulk assign fails</td>
+                        <td>One or more section_ids invalid</td>
+                        <td>Verify all section IDs exist for tenant</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>API Reference Summary</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Endpoint</th>
+                        <th>Method</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>/template-section-assignments/</code></td>
+                        <td><span class="method method-get">GET</span></td>
+                        <td>List all assignments</td>
+                    </tr>
+                    <tr>
+                        <td><code>/template-section-assignments/</code></td>
+                        <td><span class="method method-post">POST</span></td>
+                        <td>Create single assignment</td>
+                    </tr>
+                    <tr>
+                        <td><code>/template-section-assignments/{id}/</code></td>
+                        <td><span class="method method-get">GET</span></td>
+                        <td>Get assignment details</td>
+                    </tr>
+                    <tr>
+                        <td><code>/template-section-assignments/{id}/</code></td>
+                        <td><span class="method method-patch">PATCH</span></td>
+                        <td>Update assignment</td>
+                    </tr>
+                    <tr>
+                        <td><code>/template-section-assignments/{id}/</code></td>
+                        <td><span class="method method-delete">DELETE</span></td>
+                        <td>Remove section from template</td>
+                    </tr>
+                    <tr>
+                        <td><code>/template-section-assignments/by_template/</code></td>
+                        <td><span class="method method-get">GET</span></td>
+                        <td>Get all assignments for a template</td>
+                    </tr>
+                    <tr>
+                        <td><code>/template-section-assignments/bulk_assign/</code></td>
+                        <td><span class="method method-post">POST</span></td>
+                        <td>Assign multiple sections at once</td>
+                    </tr>
+                    <tr>
+                        <td><code>/template-section-assignments/reorder/</code></td>
+                        <td><span class="method method-post">POST</span></td>
+                        <td>Change section display order</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Next Steps</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                <a href="gpt-prompts.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>🤖 GPT Prompts</h3>
+                    <p>Configure AI content generation</p>
+                </a>
+                <a href="api-reference.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>⚡ API Reference</h3>
+                    <p>Complete API documentation</p>
+                </a>
+                <a href="examples.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>📚 Examples</h3>
+                    <p>Real-world usage examples</p>
+                </a>
+            </div>
+        </section>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid #e2e8f0; text-align: center; color: #64748b;">
+            <p><a href="index.html" style="color: var(--primary-color);">Back to TAS Home</a></p>
+        </footer>
+    </div>
+</body>
+</html>

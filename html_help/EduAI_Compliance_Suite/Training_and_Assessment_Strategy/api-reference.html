@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - TAS Documentation</title>
+    <link rel="stylesheet" href="../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="index.html">TAS Home</a>
+            <span>›</span>
+            <span>API Reference</span>
+        </div>
+
+        <a href="index.html" class="back-button">← Back to TAS Home</a>
+
+        <h1>⚡ API Reference</h1>
+        <p class="subtitle" style="font-size: 1.25rem; color: #64748b; margin-bottom: 2rem;">Complete API documentation for TAS system</p>
+
+        <section>
+            <h2>Base URL</h2>
+            <pre><code>https://api.nextcore.ai/api/tenants/{tenant}/tas/</code></pre>
+            <p>All TAS endpoints are tenant-scoped. Replace <code>{tenant}</code> with your RTO's tenant identifier.</p>
+
+            <div class="alert alert-info">
+                <h4>🔐 Authentication</h4>
+                <p>All API requests require authentication via Bearer token:</p>
+                <pre><code>Authorization: Bearer YOUR_ACCESS_TOKEN</code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h2>Templates API</h2>
+            <p>Manage TAS template configurations</p>
+
+            <h3>List Templates</h3>
+            <div class="endpoint">
+                <span class="method method-get">GET</span>
+                <code>/templates/</code>
+            </div>
+            <p>Retrieve all templates for your tenant.</p>
+
+            <h4>Query Parameters</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>template_type</code></td>
+                        <td>String</td>
+                        <td>Filter by type: general, trade, business, etc.</td>
+                    </tr>
+                    <tr>
+                        <td><code>aqf_level</code></td>
+                        <td>String</td>
+                        <td>Filter by AQF level</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_active</code></td>
+                        <td>Boolean</td>
+                        <td>Filter by active status</td>
+                    </tr>
+                    <tr>
+                        <td><code>search</code></td>
+                        <td>String</td>
+                        <td>Search in name, code, description</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4>Response</h4>
+            <pre><code>[
+  {
+    "id": 5,
+    "template_name": "Certificate III Business",
+    "template_code": "CERT_III_BUS_2024",
+    "template_type": "business",
+    "aqf_level": "certificate_iii",
+    "description": "For Certificate III business qualifications",
+    "structure": { ... },
+    "gpt_prompts": { ... },
+    "is_active": true,
+    "created_at": "2024-01-15T10:00:00Z",
+    "updated_at": "2024-01-15T10:00:00Z"
+  }
+]</code></pre>
+
+            <h3>Create Template</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/templates/</code>
+            </div>
+
+            <h4>Request Body</h4>
+            <pre><code>{
+  "template_name": "Certificate III Business",
+  "template_code": "CERT_III_BUS_2024",
+  "template_type": "business",
+  "aqf_level": "certificate_iii",
+  "description": "For Certificate III business qualifications",
+  "structure": {
+    "metadata": { ... },
+    "formatting": { ... },
+    "template_specific_settings": { ... },
+    "validation_rules": { ... }
+  },
+  "gpt_prompts": {},
+  "is_active": true
+}</code></pre>
+
+            <h3>Get Template</h3>
+            <div class="endpoint">
+                <span class="method method-get">GET</span>
+                <code>/templates/{id}/</code>
+            </div>
+            <p>Retrieve single template with all section assignments included.</p>
+
+            <h3>Update Template</h3>
+            <div class="endpoint">
+                <span class="method method-patch">PATCH</span>
+                <code>/templates/{id}/</code>
+            </div>
+
+            <h4>Request Body (partial update)</h4>
+            <pre><code>{
+  "description": "Updated description",
+  "is_active": false
+}</code></pre>
+
+            <div class="endpoint">
+                <span class="method method-put">PUT</span>
+                <code>/templates/{id}/</code>
+            </div>
+            <p>Full update - must include all fields.</p>
+
+            <h3>Delete Template</h3>
+            <div class="endpoint">
+                <span class="method method-delete">DELETE</span>
+                <code>/templates/{id}/</code>
+            </div>
+            <p>Soft delete - sets <code>is_active=false</code></p>
+
+            <h3>Duplicate Template</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/templates/{id}/duplicate/</code>
+            </div>
+
+            <h4>Request Body</h4>
+            <pre><code>{
+  "new_name": "Certificate III Business - Regional Campus",
+  "new_code": "CERT_III_BUS_REGIONAL_2024"
+}</code></pre>
+
+            <h4>Response</h4>
+            <pre><code>{
+  "id": 15,
+  "template_name": "Certificate III Business - Regional Campus",
+  "template_code": "CERT_III_BUS_REGIONAL_2024",
+  "template_type": "business",
+  "aqf_level": "certificate_iii",
+  "structure": { ... },
+  "section_assignments": [ ... ]
+}</code></pre>
+
+            <h3>Generate Section Content</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/templates/{id}/generate-section/</code>
+            </div>
+            <p>Generate AI content for a single section.</p>
+
+            <h4>Request Body</h4>
+            <pre><code>{
+  "section_code": "QUAL_OVERVIEW",
+  "context": {
+    "qualification_code": "BSB30120",
+    "qualification_title": "Certificate III in Business",
+    "target_audience": "school leavers, career changers",
+    "delivery_mode": "blended",
+    "duration": "52 weeks"
+  }
+}</code></pre>
+
+            <h4>Response</h4>
+            <pre><code>{
+  "section_code": "QUAL_OVERVIEW",
+  "content": "&lt;h3&gt;Qualification Purpose&lt;/h3&gt;&lt;p&gt;The Certificate III in Business...",
+  "metadata": {
+    "generated_at": "2024-01-20T14:30:00Z",
+    "tokens_used": 856,
+    "temperature": 0.7,
+    "validation_passed": true
+  }
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Template Sections API</h2>
+            <p>Manage reusable section definitions</p>
+
+            <h3>List Sections</h3>
+            <div class="endpoint">
+                <span class="method method-get">GET</span>
+                <code>/template-sections/</code>
+            </div>
+
+            <h4>Query Parameters</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>content_type</code></td>
+                        <td>String</td>
+                        <td>Filter by: text, rich_text, table, list, json</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_editable</code></td>
+                        <td>Boolean</td>
+                        <td>Filter by editable status</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_active</code></td>
+                        <td>Boolean</td>
+                        <td>Filter by active status</td>
+                    </tr>
+                    <tr>
+                        <td><code>search</code></td>
+                        <td>String</td>
+                        <td>Search in name, code, description</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Create Section</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/template-sections/</code>
+            </div>
+
+            <h4>Request Body</h4>
+            <pre><code>{
+  "section_name": "Qualification Overview",
+  "section_code": "QUAL_OVERVIEW",
+  "description": "Comprehensive overview of the qualification",
+  "content_type": "rich_text",
+  "default_content": "&lt;h3&gt;Qualification Purpose&lt;/h3&gt;",
+  "is_editable": true,
+  "parent_section": null,
+  "gpt_prompt": {
+    "system_prompt": "You are an expert...",
+    "user_prompt_template": "Generate...",
+    "temperature": 0.7,
+    "max_tokens": 1000,
+    "variables": ["qualification_code", "qualification_title"],
+    "validation_keywords": ["purpose", "pathways", "outcomes"]
+  }
+}</code></pre>
+
+            <h3>Get Section</h3>
+            <div class="endpoint">
+                <span class="method method-get">GET</span>
+                <code>/template-sections/{id}/</code>
+            </div>
+
+            <h4>Response</h4>
+            <pre><code>{
+  "id": 12,
+  "section_name": "Qualification Overview",
+  "section_code": "QUAL_OVERVIEW",
+  "description": "Comprehensive overview of the qualification",
+  "content_type": "rich_text",
+  "default_content": "&lt;h3&gt;Qualification Purpose&lt;/h3&gt;",
+  "is_editable": true,
+  "parent_section": null,
+  "gpt_prompt": { ... },
+  "is_active": true,
+  "template_count": 12,
+  "created_at": "2024-01-10T09:00:00Z",
+  "updated_at": "2024-01-10T09:00:00Z"
+}</code></pre>
+
+            <h3>Update Section</h3>
+            <div class="endpoint">
+                <span class="method method-patch">PATCH</span>
+                <code>/template-sections/{id}/</code>
+            </div>
+
+            <h3>Delete Section</h3>
+            <div class="endpoint">
+                <span class="method method-delete">DELETE</span>
+                <code>/template-sections/{id}/</code>
+            </div>
+            <p>Soft delete - sets <code>is_active=false</code></p>
+
+            <h3>Duplicate Section</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/template-sections/{id}/duplicate/</code>
+            </div>
+
+            <h4>Request Body</h4>
+            <pre><code>{
+  "new_name": "Qualification Overview - Trade Focus",
+  "new_code": "QUAL_OVERVIEW_TRADE"
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Section Assignments API</h2>
+            <p>Link sections to templates with customization</p>
+
+            <h3>List Assignments</h3>
+            <div class="endpoint">
+                <span class="method method-get">GET</span>
+                <code>/template-section-assignments/</code>
+            </div>
+
+            <h3>Get Assignments by Template</h3>
+            <div class="endpoint">
+                <span class="method method-get">GET</span>
+                <code>/template-section-assignments/by_template/?template_id={id}</code>
+            </div>
+
+            <h4>Response</h4>
+            <pre><code>[
+  {
+    "id": 45,
+    "template": 5,
+    "section": 12,
+    "section_order": 1,
+    "is_required": true,
+    "custom_label": "About This Qualification",
+    "custom_description": null,
+    "section_details": {
+      "id": 12,
+      "section_name": "Qualification Overview",
+      "section_code": "QUAL_OVERVIEW",
+      "content_type": "rich_text"
+    },
+    "effective_label": "About This Qualification",
+    "effective_description": "Comprehensive overview of the qualification"
+  }
+]</code></pre>
+
+            <h3>Create Assignment</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/template-section-assignments/</code>
+            </div>
+
+            <h4>Request Body</h4>
+            <pre><code>{
+  "template": 5,
+  "section": 12,
+  "section_order": 1,
+  "is_required": true,
+  "custom_label": "About This Qualification",
+  "custom_description": null
+}</code></pre>
+
+            <h3>Bulk Assign Sections</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/template-section-assignments/bulk_assign/</code>
+            </div>
+
+            <h4>Request Body</h4>
+            <pre><code>{
+  "template_id": 5,
+  "assignments": [
+    {
+      "section_id": 10,
+      "section_order": 1,
+      "is_required": true,
+      "custom_label": "About This Qualification"
+    },
+    {
+      "section_id": 12,
+      "section_order": 2,
+      "is_required": true
+    },
+    {
+      "section_id": 15,
+      "section_order": 3,
+      "is_required": true
+    }
+  ]
+}</code></pre>
+
+            <h4>Response</h4>
+            <pre><code>{
+  "message": "Successfully assigned 3 sections to template",
+  "assignments": [
+    {
+      "id": 45,
+      "section": 10,
+      "section_order": 1,
+      "effective_label": "About This Qualification"
+    },
+    {
+      "id": 46,
+      "section": 12,
+      "section_order": 2,
+      "effective_label": "Entry Requirements"
+    },
+    {
+      "id": 47,
+      "section": 15,
+      "section_order": 3,
+      "effective_label": "Assessment Strategy"
+    }
+  ]
+}</code></pre>
+
+            <h3>Reorder Sections</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/template-section-assignments/reorder/</code>
+            </div>
+
+            <h4>Request Body</h4>
+            <pre><code>{
+  "template_id": 5,
+  "section_orders": [
+    {"assignment_id": 45, "new_order": 1},
+    {"assignment_id": 46, "new_order": 3},
+    {"assignment_id": 47, "new_order": 2}
+  ]
+}</code></pre>
+
+            <h3>Update Assignment</h3>
+            <div class="endpoint">
+                <span class="method method-patch">PATCH</span>
+                <code>/template-section-assignments/{id}/</code>
+            </div>
+
+            <h4>Request Body</h4>
+            <pre><code>{
+  "custom_label": "Prerequisites for Enrollment",
+  "is_required": false
+}</code></pre>
+
+            <h3>Delete Assignment</h3>
+            <div class="endpoint">
+                <span class="method method-delete">DELETE</span>
+                <code>/template-section-assignments/{id}/</code>
+            </div>
+            <p>Removes section from template (does not delete the section itself).</p>
+        </section>
+
+        <section>
+            <h2>TAS Generation API</h2>
+            <p>Generate complete TAS documents</p>
+
+            <h3>List TAS Documents</h3>
+            <div class="endpoint">
+                <span class="method method-get">GET</span>
+                <code>/</code>
+            </div>
+
+            <h4>Query Parameters</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>template</code></td>
+                        <td>Integer</td>
+                        <td>Filter by template ID</td>
+                    </tr>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td>String</td>
+                        <td>Filter by: draft, generating, review, approved, published</td>
+                    </tr>
+                    <tr>
+                        <td><code>search</code></td>
+                        <td>String</td>
+                        <td>Search qualification code/title</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Generate Complete TAS</h3>
+            <div class="endpoint">
+                <span class="method method-post">POST</span>
+                <code>/generate/</code>
+            </div>
+
+            <h4>Request Body</h4>
+            <pre><code>{
+  "template_id": 5,
+  "qualification_code": "BSB30120",
+  "qualification_title": "Certificate III in Business",
+  "context": {
+    "target_audience": "school leavers, career changers",
+    "delivery_mode": "blended",
+    "duration": "52 weeks",
+    "campus": "Main Campus",
+    "units": [
+      "BSBWHS311",
+      "BSBCMM411",
+      "BSBTEC301"
+    ]
+  },
+  "section_codes": ["QUAL_OVERVIEW", "ENTRY_REQ", "ASMT_STRATEGY"]
+}</code></pre>
+
+            <h4>Response</h4>
+            <pre><code>{
+  "job_id": "abc123def456",
+  "message": "TAS generation started",
+  "status": "generating",
+  "estimated_completion": "2024-01-20T15:00:00Z"
+}</code></pre>
+
+            <h3>Check Generation Status</h3>
+            <div class="endpoint">
+                <span class="method method-get">GET</span>
+                <code>/generation-status/{job_id}/</code>
+            </div>
+
+            <h4>Response (In Progress)</h4>
+            <pre><code>{
+  "job_id": "abc123def456",
+  "status": "generating",
+  "progress": {
+    "total_sections": 8,
+    "completed_sections": 5,
+    "percentage": 62.5
+  },
+  "current_section": "ASMT_STRATEGY"
+}</code></pre>
+
+            <h4>Response (Completed)</h4>
+            <pre><code>{
+  "job_id": "abc123def456",
+  "status": "completed",
+  "tas_id": 123,
+  "progress": {
+    "total_sections": 8,
+    "completed_sections": 8,
+    "percentage": 100
+  }
+}</code></pre>
+
+            <h3>Get TAS Document</h3>
+            <div class="endpoint">
+                <span class="method method-get">GET</span>
+                <code>/{id}/</code>
+            </div>
+
+            <h4>Response</h4>
+            <pre><code>{
+  "id": 123,
+  "template": {
+    "id": 5,
+    "template_name": "Certificate III Business"
+  },
+  "qualification_code": "BSB30120",
+  "qualification_title": "Certificate III in Business",
+  "status": "review",
+  "content": {
+    "QUAL_OVERVIEW": "&lt;h3&gt;Qualification Purpose&lt;/h3&gt;&lt;p&gt;...",
+    "ENTRY_REQ": "&lt;ul&gt;&lt;li&gt;Year 10 or equivalent&lt;/li&gt;...",
+    "ASMT_STRATEGY": "&lt;h3&gt;Assessment Approach&lt;/h3&gt;..."
+  },
+  "version": 1,
+  "created_by": {
+    "id": 45,
+    "name": "Jane Smith"
+  },
+  "approved_by": null,
+  "approved_at": null,
+  "created_at": "2024-01-20T14:30:00Z",
+  "updated_at": "2024-01-20T14:45:00Z"
+}</code></pre>
+
+            <h3>Update TAS Document</h3>
+            <div class="endpoint">
+                <span class="method method-patch">PATCH</span>
+                <code>/{id}/</code>
+            </div>
+
+            <h4>Request Body</h4>
+            <pre><code>{
+  "status": "approved",
+  "content": {
+    "QUAL_OVERVIEW": "&lt;h3&gt;Updated content...&lt;/h3&gt;"
+  }
+}</code></pre>
+
+            <h3>Download TAS Document</h3>
+            <div class="endpoint">
+                <span class="method method-get">GET</span>
+                <code>/{id}/download/?format=pdf</code>
+            </div>
+
+            <h4>Query Parameters</h4>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Values</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>format</code></td>
+                        <td>pdf, docx, html</td>
+                        <td>Output format</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Delete TAS Document</h3>
+            <div class="endpoint">
+                <span class="method method-delete">DELETE</span>
+                <code>/{id}/</code>
+            </div>
+        </section>
+
+        <section>
+            <h2>Response Codes</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Status</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-success">200</span></td>
+                        <td>OK</td>
+                        <td>Request successful</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-success">201</span></td>
+                        <td>Created</td>
+                        <td>Resource created successfully</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-info">204</span></td>
+                        <td>No Content</td>
+                        <td>Successful deletion</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-warning">400</span></td>
+                        <td>Bad Request</td>
+                        <td>Invalid request data</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-warning">401</span></td>
+                        <td>Unauthorized</td>
+                        <td>Missing or invalid authentication</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-warning">403</span></td>
+                        <td>Forbidden</td>
+                        <td>Insufficient permissions</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-danger">404</span></td>
+                        <td>Not Found</td>
+                        <td>Resource not found</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-danger">409</span></td>
+                        <td>Conflict</td>
+                        <td>Duplicate code or constraint violation</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-danger">500</span></td>
+                        <td>Server Error</td>
+                        <td>Internal server error</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Error Response Format</h2>
+
+            <pre><code>{
+  "error": "Bad Request",
+  "message": "Template code already exists",
+  "details": {
+    "template_code": ["A template with this code already exists for this tenant"]
+  },
+  "timestamp": "2024-01-20T15:30:00Z",
+  "path": "/api/tenants/acme-rto/tas/templates/"
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Rate Limiting</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Endpoint Category</th>
+                        <th>Limit</th>
+                        <th>Window</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>CRUD operations</td>
+                        <td>1000 requests</td>
+                        <td>1 hour</td>
+                    </tr>
+                    <tr>
+                        <td>Generate section</td>
+                        <td>50 requests</td>
+                        <td>1 hour</td>
+                    </tr>
+                    <tr>
+                        <td>Generate complete TAS</td>
+                        <td>10 requests</td>
+                        <td>1 hour</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Rate Limit Headers</h3>
+            <pre><code>X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 847
+X-RateLimit-Reset: 1705759200</code></pre>
+
+            <h3>Rate Limit Exceeded Response</h3>
+            <pre><code>HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+
+{
+  "error": "Rate Limit Exceeded",
+  "message": "Too many requests. Please try again in 23 minutes.",
+  "retry_after": 1380
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Pagination</h2>
+            <p>List endpoints support pagination:</p>
+
+            <h3>Request</h3>
+            <pre><code>GET /templates/?page=2&page_size=20</code></pre>
+
+            <h3>Response</h3>
+            <pre><code>{
+  "count": 156,
+  "next": "https://api.nextcore.ai/api/tenants/acme-rto/tas/templates/?page=3&page_size=20",
+  "previous": "https://api.nextcore.ai/api/tenants/acme-rto/tas/templates/?page=1&page_size=20",
+  "results": [ ... ]
+}</code></pre>
+        </section>
+
+        <section>
+            <h2>Webhook Events</h2>
+            <p>Subscribe to webhook events for async operations:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Description</th>
+                        <th>Payload</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>tas.generation.started</code></td>
+                        <td>TAS generation started</td>
+                        <td><code>{ job_id, template_id, qualification_code }</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>tas.generation.completed</code></td>
+                        <td>TAS generation completed</td>
+                        <td><code>{ job_id, tas_id, duration_seconds }</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>tas.generation.failed</code></td>
+                        <td>TAS generation failed</td>
+                        <td><code>{ job_id, error, failed_section }</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>tas.approved</code></td>
+                        <td>TAS document approved</td>
+                        <td><code>{ tas_id, approved_by, approved_at }</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>SDK Examples</h2>
+
+            <h3>Python</h3>
+            <pre><code>from nextcore import NextCoreClient
+
+client = NextCoreClient(
+    tenant="acme-rto",
+    api_key="your_api_key"
+)
+
+# List templates
+templates = client.tas.templates.list(template_type="business")
+
+# Create section
+section = client.tas.sections.create(
+    section_name="Qualification Overview",
+    section_code="QUAL_OVERVIEW",
+    content_type="rich_text"
+)
+
+# Generate TAS
+job = client.tas.generate(
+    template_id=5,
+    qualification_code="BSB30120",
+    qualification_title="Certificate III in Business",
+    context={
+        "delivery_mode": "blended",
+        "duration": "52 weeks"
+    }
+)
+
+# Poll for completion
+tas = client.tas.wait_for_completion(job.job_id, timeout=300)</code></pre>
+
+            <h3>JavaScript/TypeScript</h3>
+            <pre><code>import { NextCoreClient } from '@nextcore/sdk';
+
+const client = new NextCoreClient({
+  tenant: 'acme-rto',
+  apiKey: 'your_api_key'
+});
+
+// List templates
+const templates = await client.tas.templates.list({
+  templateType: 'business'
+});
+
+// Create section
+const section = await client.tas.sections.create({
+  sectionName: 'Qualification Overview',
+  sectionCode: 'QUAL_OVERVIEW',
+  contentType: 'rich_text'
+});
+
+// Generate TAS
+const job = await client.tas.generate({
+  templateId: 5,
+  qualificationCode: 'BSB30120',
+  qualificationTitle: 'Certificate III in Business',
+  context: {
+    deliveryMode: 'blended',
+    duration: '52 weeks'
+  }
+});
+
+// Poll for completion
+const tas = await client.tas.waitForCompletion(job.jobId, { timeout: 300000 });</code></pre>
+        </section>
+
+        <section>
+            <h2>Next Steps</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+                <a href="examples.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>📚 Examples</h3>
+                    <p>Real-world usage examples</p>
+                </a>
+                <a href="quickstart.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>🚀 Quick Start</h3>
+                    <p>Get started quickly</p>
+                </a>
+                <a href="overview.html" class="card" style="text-decoration: none; color: inherit;">
+                    <h3>📖 Overview</h3>
+                    <p>Understand the system</p>
+                </a>
+            </div>
+        </section>
+
+        <footer style="margin-top: 4rem; padding-top: 2rem; border-top: 2px solid #e2e8f0; text-align: center; color: #64748b;">
+            <p><a href="index.html" style="color: var(--primary-color);">Back to TAS Home</a></p>
+        </footer>
+    </div>
+</body>
+</html>

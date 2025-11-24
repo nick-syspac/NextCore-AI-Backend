@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Models - Policy Comparator Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Policy Comparator</a> /
+            <strong>Data Models</strong>
+        </div>
+
+        <h1>🗃️ Data Models Reference</h1>
+        <p class="lead">
+            Complete reference for all Policy Comparator database models, including field definitions, 
+            relationships, indexes, and constraints.
+        </p>
+
+        <div class="toc-box">
+            <h3>Models Overview</h3>
+            <div class="grid-2">
+                <div>
+                    <h4>Foundation Phase (v0.1.0) ✅</h4>
+                    <ul>
+                        <li><a href="#asqa-standard">ASQAStandard</a></li>
+                        <li><a href="#asqa-clause">ASQAClause</a></li>
+                        <li><a href="#policy">Policy</a></li>
+                        <li><a href="#comparison-result">ComparisonResult</a></li>
+                        <li><a href="#comparison-session">ComparisonSession</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Planned Models (Phase 2+) 🚀</h4>
+                    <ul>
+                        <li><a href="#document">Document</a></li>
+                        <li><a href="#document-version">DocumentVersion</a></li>
+                        <li><a href="#document-chunk">DocumentChunk</a></li>
+                        <li><a href="#asqa-clause-pack">AsqaClausePack</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <h2>Foundation Phase Models</h2>
+
+        <h3 id="asqa-standard">📚 ASQAStandard</h3>
+        <p><strong>Purpose:</strong> Repository of ASQA standards (Standards for RTOs 2015)</p>
+        <p><strong>Database Table:</strong> <code>asqa_standards</code></p>
+
+        <h4>Fields</h4>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field Name</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td>AutoField</td>
+                        <td>Primary Key</td>
+                        <td>Auto-incrementing ID</td>
+                    </tr>
+                    <tr>
+                        <td><code>standard_number</code></td>
+                        <td>CharField(20)</td>
+                        <td>unique, indexed</td>
+                        <td>Standard identifier (e.g., "1.1", "2.1")</td>
+                    </tr>
+                    <tr>
+                        <td><code>title</code></td>
+                        <td>CharField(300)</td>
+                        <td>required</td>
+                        <td>Standard title</td>
+                    </tr>
+                    <tr>
+                        <td><code>description</code></td>
+                        <td>TextField</td>
+                        <td>required</td>
+                        <td>Standard description/overview</td>
+                    </tr>
+                    <tr>
+                        <td><code>standard_type</code></td>
+                        <td>CharField(50)</td>
+                        <td>choices</td>
+                        <td>Category (training_assessment, trainer_assessor, educational_support, certification, engagement_employer, complaints_appeals, governance, financial)</td>
+                    </tr>
+                    <tr>
+                        <td><code>full_text</code></td>
+                        <td>TextField</td>
+                        <td>required</td>
+                        <td>Complete text of the ASQA standard</td>
+                    </tr>
+                    <tr>
+                        <td><code>requirements</code></td>
+                        <td>JSONField</td>
+                        <td>default=[]</td>
+                        <td>List of specific requirements</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_active</code></td>
+                        <td>BooleanField</td>
+                        <td>default=True</td>
+                        <td>Whether standard is currently active</td>
+                    </tr>
+                    <tr>
+                        <td><code>effective_date</code></td>
+                        <td>DateField</td>
+                        <td>nullable</td>
+                        <td>When standard became effective</td>
+                    </tr>
+                    <tr>
+                        <td><code>version</code></td>
+                        <td>CharField(20)</td>
+                        <td>default="2015"</td>
+                        <td>Standard version</td>
+                    </tr>
+                    <tr>
+                        <td><code>created_at</code></td>
+                        <td>DateTimeField</td>
+                        <td>auto_now_add</td>
+                        <td>Record creation timestamp</td>
+                    </tr>
+                    <tr>
+                        <td><code>updated_at</code></td>
+                        <td>DateTimeField</td>
+                        <td>auto_now</td>
+                        <td>Last update timestamp</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>Relationships</h4>
+        <ul>
+            <li><strong>clauses:</strong> One-to-Many with ASQAClause (reverse relation)</li>
+        </ul>
+
+        <h4>Meta Options</h4>
+        <ul>
+            <li><strong>Ordering:</strong> <code>["standard_number"]</code></li>
+            <li><strong>Verbose Name:</strong> "ASQA Standard"</li>
+        </ul>
+
+        <h3 id="asqa-clause">📄 ASQAClause</h3>
+        <p><strong>Purpose:</strong> Individual clauses within ASQA standards for granular comparison</p>
+        <p><strong>Database Table:</strong> <code>asqa_clauses</code></p>
+
+        <h4>Fields</h4>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field Name</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td>AutoField</td>
+                        <td>Primary Key</td>
+                        <td>Auto-incrementing ID</td>
+                    </tr>
+                    <tr>
+                        <td><code>standard</code></td>
+                        <td>ForeignKey</td>
+                        <td>CASCADE, indexed</td>
+                        <td>Parent ASQAStandard</td>
+                    </tr>
+                    <tr>
+                        <td><code>clause_number</code></td>
+                        <td>CharField(20)</td>
+                        <td>required</td>
+                        <td>Clause identifier (e.g., "1.1", "1.2")</td>
+                    </tr>
+                    <tr>
+                        <td><code>title</code></td>
+                        <td>CharField(300)</td>
+                        <td>required</td>
+                        <td>Clause title</td>
+                    </tr>
+                    <tr>
+                        <td><code>clause_text</code></td>
+                        <td>TextField</td>
+                        <td>required</td>
+                        <td>Full text of the clause for NLP comparison</td>
+                    </tr>
+                    <tr>
+                        <td><code>evidence_required</code></td>
+                        <td>JSONField</td>
+                        <td>default=[]</td>
+                        <td>Types of evidence needed for compliance</td>
+                    </tr>
+                    <tr>
+                        <td><code>keywords</code></td>
+                        <td>JSONField</td>
+                        <td>default=[]</td>
+                        <td>Key terms for text similarity matching</td>
+                    </tr>
+                    <tr>
+                        <td><code>compliance_level</code></td>
+                        <td>CharField(20)</td>
+                        <td>choices</td>
+                        <td>critical, essential, or recommended</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_active</code></td>
+                        <td>BooleanField</td>
+                        <td>default=True</td>
+                        <td>Whether clause is currently active</td>
+                    </tr>
+                    <tr>
+                        <td><code>created_at</code></td>
+                        <td>DateTimeField</td>
+                        <td>auto_now_add</td>
+                        <td>Record creation timestamp</td>
+                    </tr>
+                    <tr>
+                        <td><code>updated_at</code></td>
+                        <td>DateTimeField</td>
+                        <td>auto_now</td>
+                        <td>Last update timestamp</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>Relationships</h4>
+        <ul>
+            <li><strong>standard:</strong> Many-to-One with ASQAStandard</li>
+            <li><strong>comparison_results:</strong> One-to-Many with ComparisonResult</li>
+        </ul>
+
+        <h4>Constraints</h4>
+        <ul>
+            <li><strong>Unique Together:</strong> <code>["standard", "clause_number"]</code></li>
+        </ul>
+
+        <h4>Indexes</h4>
+        <ul>
+            <li>Foreign key: <code>standard_id</code></li>
+            <li>Composite: <code>(standard, clause_number)</code></li>
+        </ul>
+
+        <h3 id="policy">📝 Policy</h3>
+        <p><strong>Purpose:</strong> Organisation policies to be compared against ASQA standards</p>
+        <p><strong>Database Table:</strong> <code>policies</code></p>
+
+        <h4>Fields</h4>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field Name</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td>AutoField</td>
+                        <td>Primary Key</td>
+                        <td>Auto-incrementing ID</td>
+                    </tr>
+                    <tr>
+                        <td><code>tenant</code></td>
+                        <td>ForeignKey</td>
+                        <td>CASCADE, indexed</td>
+                        <td>Multi-tenant isolation</td>
+                    </tr>
+                    <tr>
+                        <td><code>policy_number</code></td>
+                        <td>CharField(50)</td>
+                        <td>required</td>
+                        <td>Policy identifier (e.g., "TAS-001")</td>
+                    </tr>
+                    <tr>
+                        <td><code>title</code></td>
+                        <td>CharField(300)</td>
+                        <td>required</td>
+                        <td>Policy title</td>
+                    </tr>
+                    <tr>
+                        <td><code>description</code></td>
+                        <td>TextField</td>
+                        <td>blank=True</td>
+                        <td>Policy description/overview</td>
+                    </tr>
+                    <tr>
+                        <td><code>policy_type</code></td>
+                        <td>CharField(50)</td>
+                        <td>choices</td>
+                        <td>training_delivery, assessment, student_support, complaints_appeals, financial, governance, quality_assurance, workplace_health_safety, staff_management, facilities_resources</td>
+                    </tr>
+                    <tr>
+                        <td><code>content</code></td>
+                        <td>TextField</td>
+                        <td>required</td>
+                        <td>Full policy content for comparison</td>
+                    </tr>
+                    <tr>
+                        <td><code>version</code></td>
+                        <td>CharField(20)</td>
+                        <td>default="1.0"</td>
+                        <td>Policy version number</td>
+                    </tr>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td>CharField(20)</td>
+                        <td>choices, default="draft"</td>
+                        <td>draft, under_review, approved, archived</td>
+                    </tr>
+                    <tr>
+                        <td><code>effective_date</code></td>
+                        <td>DateField</td>
+                        <td>nullable</td>
+                        <td>When policy becomes effective</td>
+                    </tr>
+                    <tr>
+                        <td><code>review_date</code></td>
+                        <td>DateField</td>
+                        <td>nullable</td>
+                        <td>Next scheduled review date</td>
+                    </tr>
+                    <tr>
+                        <td><code>last_compared_at</code></td>
+                        <td>DateTimeField</td>
+                        <td>nullable</td>
+                        <td>Most recent comparison timestamp</td>
+                    </tr>
+                    <tr>
+                        <td><code>compliance_score</code></td>
+                        <td>FloatField</td>
+                        <td>nullable, 0-100</td>
+                        <td>Overall compliance score percentage</td>
+                    </tr>
+                    <tr>
+                        <td><code>file_path</code></td>
+                        <td>CharField(500)</td>
+                        <td>blank=True</td>
+                        <td>Path to uploaded policy document</td>
+                    </tr>
+                    <tr>
+                        <td><code>created_by</code></td>
+                        <td>ForeignKey(User)</td>
+                        <td>SET_NULL, nullable</td>
+                        <td>User who created policy</td>
+                    </tr>
+                    <tr>
+                        <td><code>created_at</code></td>
+                        <td>DateTimeField</td>
+                        <td>auto_now_add</td>
+                        <td>Record creation timestamp</td>
+                    </tr>
+                    <tr>
+                        <td><code>updated_at</code></td>
+                        <td>DateTimeField</td>
+                        <td>auto_now</td>
+                        <td>Last update timestamp</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>Relationships</h4>
+        <ul>
+            <li><strong>tenant:</strong> Many-to-One with Tenant</li>
+            <li><strong>created_by:</strong> Many-to-One with User</li>
+            <li><strong>comparison_results:</strong> One-to-Many with ComparisonResult</li>
+            <li><strong>comparison_sessions:</strong> One-to-Many with ComparisonSession</li>
+        </ul>
+
+        <h4>Constraints</h4>
+        <ul>
+            <li><strong>Unique Together:</strong> <code>["tenant", "policy_number"]</code></li>
+        </ul>
+
+        <h4>Indexes</h4>
+        <ul>
+            <li>Foreign key: <code>tenant_id</code></li>
+            <li>Composite: <code>(tenant, status)</code></li>
+            <li>Single: <code>policy_type</code></li>
+            <li>Single: <code>compliance_score</code></li>
+        </ul>
+
+        <h3 id="comparison-result">📊 ComparisonResult</h3>
+        <p><strong>Purpose:</strong> Detailed NLP-based comparison results for each policy-clause pair</p>
+        <p><strong>Database Table:</strong> <code>comparison_results</code></p>
+
+        <h4>Fields</h4>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field Name</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td>AutoField</td>
+                        <td>Primary Key</td>
+                        <td>Auto-incrementing ID</td>
+                    </tr>
+                    <tr>
+                        <td><code>policy</code></td>
+                        <td>ForeignKey</td>
+                        <td>CASCADE, indexed</td>
+                        <td>Policy being compared</td>
+                    </tr>
+                    <tr>
+                        <td><code>asqa_clause</code></td>
+                        <td>ForeignKey</td>
+                        <td>CASCADE, indexed</td>
+                        <td>ASQA clause being compared against</td>
+                    </tr>
+                    <tr>
+                        <td><code>similarity_score</code></td>
+                        <td>FloatField</td>
+                        <td>0.0-1.0</td>
+                        <td>NLP text similarity score</td>
+                    </tr>
+                    <tr>
+                        <td><code>match_type</code></td>
+                        <td>CharField(20)</td>
+                        <td>choices</td>
+                        <td>full, partial, weak, no_match (auto-set)</td>
+                    </tr>
+                    <tr>
+                        <td><code>matched_text</code></td>
+                        <td>TextField</td>
+                        <td>blank=True</td>
+                        <td>Relevant text excerpt from policy</td>
+                    </tr>
+                    <tr>
+                        <td><code>gap_description</code></td>
+                        <td>TextField</td>
+                        <td>blank=True</td>
+                        <td>Description of compliance gap</td>
+                    </tr>
+                    <tr>
+                        <td><code>recommendations</code></td>
+                        <td>JSONField</td>
+                        <td>default=[]</td>
+                        <td>Suggestions to improve compliance</td>
+                    </tr>
+                    <tr>
+                        <td><code>nlp_metadata</code></td>
+                        <td>JSONField</td>
+                        <td>default={}</td>
+                        <td>NLP processing metadata (keyword_score, sequence_score, phrase_score, method)</td>
+                    </tr>
+                    <tr>
+                        <td><code>keywords_matched</code></td>
+                        <td>JSONField</td>
+                        <td>default=[]</td>
+                        <td>Keywords found in policy</td>
+                    </tr>
+                    <tr>
+                        <td><code>keywords_missing</code></td>
+                        <td>JSONField</td>
+                        <td>default=[]</td>
+                        <td>Keywords missing from policy</td>
+                    </tr>
+                    <tr>
+                        <td><code>has_sufficient_evidence</code></td>
+                        <td>BooleanField</td>
+                        <td>default=False</td>
+                        <td>Whether evidence is sufficient</td>
+                    </tr>
+                    <tr>
+                        <td><code>evidence_notes</code></td>
+                        <td>TextField</td>
+                        <td>blank=True</td>
+                        <td>Notes about evidence sufficiency</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_compliant</code></td>
+                        <td>BooleanField</td>
+                        <td>default=False</td>
+                        <td>Meets ASQA requirements</td>
+                    </tr>
+                    <tr>
+                        <td><code>requires_action</code></td>
+                        <td>BooleanField</td>
+                        <td>default=False</td>
+                        <td>Action needed to achieve compliance</td>
+                    </tr>
+                    <tr>
+                        <td><code>comparison_date</code></td>
+                        <td>DateTimeField</td>
+                        <td>auto_now_add</td>
+                        <td>When comparison was performed</td>
+                    </tr>
+                    <tr>
+                        <td><code>reviewed_by</code></td>
+                        <td>ForeignKey(User)</td>
+                        <td>SET_NULL, nullable</td>
+                        <td>User who reviewed result</td>
+                    </tr>
+                    <tr>
+                        <td><code>reviewed_at</code></td>
+                        <td>DateTimeField</td>
+                        <td>nullable</td>
+                        <td>When result was reviewed</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>Relationships</h4>
+        <ul>
+            <li><strong>policy:</strong> Many-to-One with Policy</li>
+            <li><strong>asqa_clause:</strong> Many-to-One with ASQAClause</li>
+            <li><strong>reviewed_by:</strong> Many-to-One with User</li>
+        </ul>
+
+        <h4>Constraints</h4>
+        <ul>
+            <li><strong>Unique Together:</strong> <code>["policy", "asqa_clause"]</code></li>
+        </ul>
+
+        <h4>Indexes</h4>
+        <ul>
+            <li>Composite: <code>(policy, similarity_score)</code></li>
+            <li>Single: <code>is_compliant</code></li>
+            <li>Single: <code>requires_action</code></li>
+        </ul>
+
+        <h4>Auto-Save Logic</h4>
+        <div class="code-block">
+            <code>
+def save(self, *args, **kwargs):
+    # Auto-classify match type based on similarity score
+    if self.similarity_score >= 0.8:
+        self.match_type = "full"
+        self.is_compliant = True
+    elif self.similarity_score >= 0.6:
+        self.match_type = "partial"
+        self.requires_action = True
+    elif self.similarity_score >= 0.4:
+        self.match_type = "weak"
+        self.requires_action = True
+    else:
+        self.match_type = "no_match"
+        self.requires_action = True
+    
+    super().save(*args, **kwargs)
+            </code>
+        </div>
+
+        <h3 id="comparison-session">🔄 ComparisonSession</h3>
+        <p><strong>Purpose:</strong> Track batch comparison sessions for historical analysis</p>
+        <p><strong>Database Table:</strong> <code>comparison_sessions</code></p>
+
+        <h4>Fields</h4>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Field Name</th>
+                        <th>Type</th>
+                        <th>Constraints</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>id</code></td>
+                        <td>AutoField</td>
+                        <td>Primary Key</td>
+                        <td>Auto-incrementing ID</td>
+                    </tr>
+                    <tr>
+                        <td><code>tenant</code></td>
+                        <td>ForeignKey</td>
+                        <td>CASCADE, indexed</td>
+                        <td>Tenant isolation</td>
+                    </tr>
+                    <tr>
+                        <td><code>policy</code></td>
+                        <td>ForeignKey</td>
+                        <td>CASCADE, indexed</td>
+                        <td>Policy being compared</td>
+                    </tr>
+                    <tr>
+                        <td><code>session_name</code></td>
+                        <td>CharField(200)</td>
+                        <td>required</td>
+                        <td>User-defined session identifier</td>
+                    </tr>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td>CharField(20)</td>
+                        <td>choices, default="pending"</td>
+                        <td>pending, processing, completed, failed</td>
+                    </tr>
+                    <tr>
+                        <td><code>standards_compared</code></td>
+                        <td>JSONField</td>
+                        <td>default=[]</td>
+                        <td>List of ASQA standard IDs compared</td>
+                    </tr>
+                    <tr>
+                        <td><code>total_clauses_checked</code></td>
+                        <td>IntegerField</td>
+                        <td>default=0</td>
+                        <td>Number of clauses analyzed</td>
+                    </tr>
+                    <tr>
+                        <td><code>compliant_count</code></td>
+                        <td>IntegerField</td>
+                        <td>default=0</td>
+                        <td>Full matches count</td>
+                    </tr>
+                    <tr>
+                        <td><code>partial_match_count</code></td>
+                        <td>IntegerField</td>
+                        <td>default=0</td>
+                        <td>Partial matches count</td>
+                    </tr>
+                    <tr>
+                        <td><code>gap_count</code></td>
+                        <td>IntegerField</td>
+                        <td>default=0</td>
+                        <td>Weak/no matches count</td>
+                    </tr>
+                    <tr>
+                        <td><code>overall_compliance_score</code></td>
+                        <td>FloatField</td>
+                        <td>nullable, 0-100</td>
+                        <td>Weighted compliance score</td>
+                    </tr>
+                    <tr>
+                        <td><code>processing_time_seconds</code></td>
+                        <td>FloatField</td>
+                        <td>default=0.0</td>
+                        <td>Comparison execution time</td>
+                    </tr>
+                    <tr>
+                        <td><code>error_message</code></td>
+                        <td>TextField</td>
+                        <td>blank=True</td>
+                        <td>Error details if status=failed</td>
+                    </tr>
+                    <tr>
+                        <td><code>created_by</code></td>
+                        <td>ForeignKey(User)</td>
+                        <td>SET_NULL, nullable</td>
+                        <td>User who initiated session</td>
+                    </tr>
+                    <tr>
+                        <td><code>created_at</code></td>
+                        <td>DateTimeField</td>
+                        <td>auto_now_add</td>
+                        <td>Session start timestamp</td>
+                    </tr>
+                    <tr>
+                        <td><code>completed_at</code></td>
+                        <td>DateTimeField</td>
+                        <td>nullable</td>
+                        <td>Session completion timestamp</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>Relationships</h4>
+        <ul>
+            <li><strong>tenant:</strong> Many-to-One with Tenant</li>
+            <li><strong>policy:</strong> Many-to-One with Policy</li>
+            <li><strong>created_by:</strong> Many-to-One with User</li>
+        </ul>
+
+        <h4>Methods</h4>
+        <div class="code-block">
+            <code>
+def calculate_compliance_score(self):
+    """Calculate overall compliance score"""
+    if self.total_clauses_checked == 0:
+        return 0.0
+    
+    # Weight different match types
+    score = (
+        (self.compliant_count * 100) +      # Full: 100 points
+        (self.partial_match_count * 60) +   # Partial: 60 points
+        (self.gap_count * 0)                # Gap: 0 points
+    ) / self.total_clauses_checked
+    
+    self.overall_compliance_score = round(score, 2)
+    return self.overall_compliance_score
+            </code>
+        </div>
+
+        <h2>Planned Models (Phase 2+)</h2>
+
+        <h3 id="document">📄 Document</h3>
+        <p><strong>Purpose:</strong> Uploaded policy documents with versioning support (PDF/DOCX)</p>
+        <p><strong>Status:</strong> Planned for Phase 2</p>
+        <p><strong>Database Table:</strong> <code>policy_documents</code></p>
+
+        <div class="info-box">
+            <h4>Key Features</h4>
+            <ul>
+                <li>S3 storage for document files</li>
+                <li>SHA256 hash for deduplication</li>
+                <li>Multi-format support (PDF, DOCX, HTML, TXT)</li>
+                <li>Status tracking (pending, uploading, processing, ready, failed, archived)</li>
+                <li>Metadata: pages, word_count, language</li>
+            </ul>
+        </div>
+
+        <h3 id="document-version">📝 DocumentVersion</h3>
+        <p><strong>Purpose:</strong> Version history for documents</p>
+        <p><strong>Status:</strong> Planned for Phase 2</p>
+        <p><strong>Database Table:</strong> <code>document_versions</code></p>
+
+        <div class="info-box">
+            <h4>Key Features</h4>
+            <ul>
+                <li>Track document revisions over time</li>
+                <li>Maintain S3 URIs for each version</li>
+                <li>SHA256 hash per version for integrity</li>
+                <li>Sequential version numbering</li>
+            </ul>
+        </div>
+
+        <h3 id="document-chunk">🧩 DocumentChunk</h3>
+        <p><strong>Purpose:</strong> Text chunks from documents for embedding and comparison</p>
+        <p><strong>Status:</strong> Planned for Phase 2</p>
+        <p><strong>Database Table:</strong> <code>document_chunks</code></p>
+
+        <div class="info-box">
+            <h4>Key Features</h4>
+            <ul>
+                <li>Chunking strategy: 300-800 tokens with overlap</li>
+                <li>Section path tracking (heading hierarchy)</li>
+                <li>Page range tracking (page_from, page_to)</li>
+                <li>Token count for each chunk</li>
+                <li>Prepared for vector embeddings (Phase 3)</li>
+            </ul>
+        </div>
+
+        <h3 id="asqa-clause-pack">📦 AsqaClausePack</h3>
+        <p><strong>Purpose:</strong> Versioned packs of ASQA clauses (global or tenant-specific)</p>
+        <p><strong>Status:</strong> Planned for Phase 2</p>
+        <p><strong>Database Table:</strong> <code>asqa_clause_packs</code></p>
+
+        <div class="info-box">
+            <h4>Key Features</h4>
+            <ul>
+                <li>Versioned clause collections</li>
+                <li>Global packs (tenant=NULL) or tenant-specific</li>
+                <li>Status workflow: draft, review, published, archived</li>
+                <li>Enables custom clause sets per RTO</li>
+                <li>Published date tracking</li>
+            </ul>
+        </div>
+
+        <h2>Database Schema Diagram</h2>
+        <div class="code-block">
+            <code>
+┌─────────────────┐         ┌──────────────────┐
+│  ASQAStandard   │───1:M───│   ASQAClause     │
+│  (8 standards)  │         │  (50+ clauses)   │
+└─────────────────┘         └──────────────────┘
+                                      │
+                                      │ M:1
+                                      ↓
+┌─────────────────┐         ┌──────────────────┐
+│     Tenant      │───1:M───│  ComparisonResult│
+│  (multi-tenant) │         │  (NLP scores)    │
+└─────────────────┘         └──────────────────┘
+        │                             ↑
+        │ 1:M                         │ M:1
+        ↓                             │
+┌─────────────────┐                  │
+│     Policy      │──────────────────┘
+│  (RTO policies) │
+└─────────────────┘
+        │
+        │ 1:M
+        ↓
+┌─────────────────┐
+│ComparisonSession│
+│ (batch tracking)│
+└─────────────────┘
+            </code>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="architecture.html" class="btn btn-secondary">← Architecture</a>
+            <a href="api-reference.html" class="btn btn-primary">API Reference →</a>
+        </div>
+    </div>
+</body>
+</html>

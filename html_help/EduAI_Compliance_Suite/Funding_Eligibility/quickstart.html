@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funding Eligibility Quick Start - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Funding Eligibility</a> /
+            <strong>Quick Start</strong>
+        </div>
+
+        <h1>🚀 Quick Start Guide</h1>
+
+        <div class="intro-section">
+            <p>
+                Get started with the Funding Eligibility System in minutes. This guide walks through creating an eligibility 
+                request, triggering evaluation, and checking the hard-block status.
+            </p>
+        </div>
+
+        <h2>Step 1: Create Eligibility Request</h2>
+        <p>Submit student and course details for evaluation:</p>
+
+        <div class="code-block">
+            <pre><code>POST /api/v1/funding_eligibility/requests/
+Authorization: Bearer your_jwt_token
+Content-Type: application/json
+
+{
+  "person_id": "STU12345",
+  "course_id": "BSB50120",
+  "jurisdiction_code": "VIC",
+  "student_data": {
+    "usi": "N4KLP6G9TU",
+    "first_name": "Sarah",
+    "last_name": "Johnson",
+    "date_of_birth": "1995-03-15",
+    "citizenship": "Australian",
+    "residency_status": "Permanent",
+    "postcode": "3350",
+    "has_concession_card": true,
+    "concession_card_number": "HCC123456789"
+  },
+  "course_data": {
+    "code": "BSB50120",
+    "title": "Diploma of Business",
+    "level": "Diploma",
+    "nominal_hours": 600
+  }
+}</code></pre>
+        </div>
+
+        <h3>Response: Request Created</h3>
+        <div class="code-block">
+            <pre><code>{
+  "id": 789,
+  "request_number": "FE-2025-0789",
+  "person_id": "STU12345",
+  "course_id": "BSB50120",
+  "jurisdiction_code": "VIC",
+  "status": "pending",
+  "created_at": "2025-11-04T10:00:00Z",
+  "student_data": {...},
+  "course_data": {...}
+}</code></pre>
+        </div>
+
+        <h2>Step 2: External Lookups (Automatic)</h2>
+        <p>The system automatically queues external verification tasks:</p>
+
+        <div class="info-box">
+            <h3>Automatic Lookups Triggered</h3>
+            <ol>
+                <li><strong>USI Validation:</strong> Verify USI is valid and matches student details</li>
+                <li><strong>Postcode Lookup:</strong> Retrieve LGA, RAI (remoteness), SEIFA data</li>
+                <li><strong>Concession Verification:</strong> Check concession card validity and type</li>
+                <li><strong>Visa Check:</strong> (If applicable) Verify visa status and work rights</li>
+            </ol>
+            <p><strong>Duration:</strong> 2-5 seconds total (parallel execution)</p>
+        </div>
+
+        <div class="code-block">
+            <pre><code>// System logs (automatic)
+[10:00:00] Eligibility request 789 created
+[10:00:00] Queued external lookups: USI, Postcode, Concession
+[10:00:01] USI lookup completed (cached: false)
+[10:00:01] Postcode lookup completed (cached: true)
+[10:00:02] Concession lookup completed (cached: false)
+[10:00:02] All lookups completed for request 789</code></pre>
+        </div>
+
+        <h2>Step 3: Evaluate Eligibility</h2>
+        <p>Trigger rules engine evaluation:</p>
+
+        <div class="code-block">
+            <pre><code>POST /api/v1/funding_eligibility/requests/789/evaluate/
+Authorization: Bearer your_jwt_token
+
+// Optional: specify ruleset version
+{
+  "ruleset_id": 45  // Uses jurisdiction default if omitted
+}</code></pre>
+        </div>
+
+        <h3>Response: Evaluation Triggered</h3>
+        <div class="code-block">
+            <pre><code>{
+  "request_id": 789,
+  "status": "evaluating",
+  "message": "Evaluation queued. Check back in a few seconds.",
+  "task_id": "abc123-def456"
+}</code></pre>
+        </div>
+
+        <h3>Evaluation Result</h3>
+        <p>After 1-3 seconds, retrieve the decision:</p>
+
+        <div class="code-block">
+            <pre><code>GET /api/v1/funding_eligibility/requests/789/
+
+{
+  "id": 789,
+  "request_number": "FE-2025-0789",
+  "status": "evaluated",
+  "decision": {
+    "id": 234,
+    "outcome": "eligible",
+    "reasons": [
+      "Australian citizen - requirement met",
+      "Concession card verified (Health Care Card)",
+      "Age 30 years - meets minimum age 18",
+      "Course level Diploma - eligible for Skills First"
+    ],
+    "clause_refs": [
+      "VIC-SF-2024 Section 2.1 - Citizenship",
+      "VIC-SF-2024 Section 3.2 - Concession eligibility",
+      "VIC-SF-2024 Section 4.1 - Course levels"
+    ],
+    "explanation": "Student meets all VIC Skills First eligibility criteria.",
+    "can_enrol": true,
+    "evaluated_at": "2025-11-04T10:00:05Z",
+    "ruleset_version": "VIC 2024.2"
+  }
+}</code></pre>
+        </div>
+
+        <h2>Step 4: Hard-Block Check</h2>
+        <p>Before allowing enrolment, check hard-block status:</p>
+
+        <div class="code-block">
+            <pre><code>GET /api/v1/funding_eligibility/requests/789/check_eligibility/
+Authorization: Bearer your_jwt_token</code></pre>
+        </div>
+
+        <h3>✅ Eligible Response (200 OK)</h3>
+        <div class="code-block">
+            <pre><code>{
+  "can_enrol": true,
+  "outcome": "eligible",
+  "decision_id": 234,
+  "reasons": [
+    "Australian citizen - requirement met",
+    "Concession card verified (Health Care Card)",
+    "Age 30 years - meets minimum age 18"
+  ],
+  "message": "Student is eligible for VIC Skills First funding."
+}</code></pre>
+        </div>
+
+        <h3>❌ Ineligible Response (403 Forbidden)</h3>
+        <div class="code-block">
+            <pre><code>{
+  "can_enrol": false,
+  "outcome": "ineligible",
+  "decision_id": 235,
+  "reasons": [
+    "Age 16 years - minimum age 18 not met",
+    "No concession card - required for under 18"
+  ],
+  "message": "Student does not meet VIC Skills First eligibility criteria.",
+  "override_required": true
+}</code></pre>
+        </div>
+
+        <h2>Step 5: Upload Evidence (Optional)</h2>
+        <p>Attach supporting documents:</p>
+
+        <div class="code-block">
+            <pre><code>POST /api/v1/funding_eligibility/attachments/
+Authorization: Bearer your_jwt_token
+Content-Type: multipart/form-data
+
+request_id: 789
+attachment_type: concession_card
+file: [binary file data]
+description: "Health Care Card - expires 2026-12-31"</code></pre>
+        </div>
+
+        <h3>Response</h3>
+        <div class="code-block">
+            <pre><code>{
+  "id": 456,
+  "request_id": 789,
+  "attachment_type": "concession_card",
+  "filename": "hcc_scan.pdf",
+  "file_size": 245678,
+  "uploaded_at": "2025-11-04T10:05:00Z",
+  "verification_status": "pending",
+  "s3_key": "evidence/789/456/hcc_scan.pdf"
+}</code></pre>
+        </div>
+
+        <h2>Common Workflows</h2>
+
+        <h3>Workflow 1: Standard Eligibility Check</h3>
+        <div class="workflow-step">
+            <ol>
+                <li><strong>Student selects course</strong> in SMS/LMS</li>
+                <li><strong>SMS creates request:</strong> <code>POST /requests/</code></li>
+                <li><strong>System evaluates:</strong> Automatic lookups + rules engine</li>
+                <li><strong>SMS checks status:</strong> <code>GET /requests/{id}/check_eligibility/</code></li>
+                <li><strong>Enrolment decision:</strong> Allow or block based on <code>can_enrol</code></li>
+            </ol>
+        </div>
+
+        <h3>Workflow 2: Override Required</h3>
+        <div class="workflow-step">
+            <ol>
+                <li><strong>Decision:</strong> Ineligible (e.g., age 17, requires 18)</li>
+                <li><strong>Manager reviews:</strong> Special circumstance (mature age exemption)</li>
+                <li><strong>Evidence uploaded:</strong> Manager approval letter</li>
+                <li><strong>Override created:</strong> <code>POST /overrides/</code></li>
+                <li><strong>New check:</strong> <code>can_enrol: true</code> with override reference</li>
+            </ol>
+        </div>
+
+        <h3>Workflow 3: Bulk Verification</h3>
+        <div class="workflow-step">
+            <ol>
+                <li><strong>SMS sends batch:</strong> 50 eligibility requests</li>
+                <li><strong>System processes:</strong> Parallel evaluation</li>
+                <li><strong>Results aggregated:</strong> Eligible vs ineligible report</li>
+                <li><strong>Manual review:</strong> Handle ineligible cases</li>
+            </ol>
+        </div>
+
+        <h2>Best Practices</h2>
+
+        <div class="success-box">
+            <h3>✅ Request Creation</h3>
+            <ul>
+                <li>Always include complete student data (USI, DOB, postcode)</li>
+                <li>Validate USI format before submission (10 characters, alphanumeric)</li>
+                <li>Use correct jurisdiction code for course delivery location</li>
+                <li>Include concession card details if student has one</li>
+            </ul>
+        </div>
+
+        <div class="success-box">
+            <h3>✅ Hard-Block Integration</h3>
+            <ul>
+                <li>ALWAYS call <code>check_eligibility</code> before enrolment</li>
+                <li>Cache result for max 5 minutes (circumstances can change)</li>
+                <li>Display clear error messages when <code>can_enrol: false</code></li>
+                <li>Provide contact info for appeals/overrides</li>
+            </ul>
+        </div>
+
+        <div class="success-box">
+            <h3>✅ Evidence Management</h3>
+            <ul>
+                <li>Upload evidence within 7 days of decision for audit compliance</li>
+                <li>Use descriptive filenames (e.g., "hcc_sarah_johnson_2025.pdf")</li>
+                <li>Verify attachment type matches content</li>
+                <li>Keep original documents for 30 years</li>
+            </ul>
+        </div>
+
+        <h2>Troubleshooting</h2>
+
+        <div class="warning-box">
+            <h3>⚠️ Common Issues</h3>
+            
+            <h4>Issue: "USI validation failed"</h4>
+            <p><strong>Solution:</strong> Verify USI format (10 chars) and check against USI Registry manually</p>
+            
+            <h4>Issue: "Evaluation taking too long"</h4>
+            <p><strong>Solution:</strong> External lookups may be slow. Wait up to 30 seconds or check status async</p>
+            
+            <h4>Issue: "can_enrol: false but student claims eligibility"</h4>
+            <p><strong>Solution:</strong> Review decision reasons, check for manual override eligibility</p>
+            
+            <h4>Issue: "Concession card not found"</h4>
+            <p><strong>Solution:</strong> Verify card number, check expiry date, may need manual verification</p>
+        </div>
+
+        <div class="cta-section">
+            <h2>Next Steps</h2>
+            <p>Explore the system architecture to understand how evaluation works internally.</p>
+            <a href="architecture.html" class="btn btn-primary">View Architecture →</a>
+        </div>
+    </div>
+</body>
+</html>

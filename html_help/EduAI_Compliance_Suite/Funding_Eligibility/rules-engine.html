@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Funding Eligibility Rules Engine - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Funding Eligibility</a> /
+            <strong>Rules Engine</strong>
+        </div>
+
+        <h1>⚙️ Rules Engine</h1>
+
+        <div class="intro-section">
+            <p>
+                The Funding Eligibility Rules Engine evaluates complex eligibility criteria using JSONLogic expressions 
+                with support for external lookups, reference tables, and extensibility to OPA/Rego.
+            </p>
+        </div>
+
+        <h2>Architecture</h2>
+        <div class="code-block">
+            <pre><code>┌────────────────────────────────────────┐
+│         RulesEngine                    │
+│                                        │
+│  ┌──────────────────────────────────┐ │
+│  │   JSONLogicEvaluator             │ │
+│  │   • Parse rule expressions       │ │
+│  │   • Evaluate with context        │ │
+│  │   • Generate reasons             │ │
+│  └────────────┬─────────────────────┘ │
+│               │                        │
+│  ┌────────────▼─────────────────────┐ │
+│  │   EvaluationContext              │ │
+│  │   • Input data                   │ │
+│  │   • External lookups (cached)    │ │
+│  │   • Reference tables             │ │
+│  └──────────────────────────────────┘ │
+└────────────────────────────────────────┘</code></pre>
+        </div>
+
+        <h2>JSONLogic Operators</h2>
+
+        <h3>Comparison Operators</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Operator</th>
+                    <th>Description</th>
+                    <th>Example</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>==</code></td>
+                    <td>Equality</td>
+                    <td><code>{"==": [{"var": "age"}, 18]}</code></td>
+                </tr>
+                <tr>
+                    <td><code>!=</code></td>
+                    <td>Not equal</td>
+                    <td><code>{"!=": [{"var": "status"}, "expired"]}</code></td>
+                </tr>
+                <tr>
+                    <td><code>&gt;</code>, <code>&lt;</code></td>
+                    <td>Greater/less than</td>
+                    <td><code>{"&gt;": [{"var": "age"}, 18]}</code></td>
+                </tr>
+                <tr>
+                    <td><code>&gt;=</code>, <code>&lt;=</code></td>
+                    <td>Greater/less or equal</td>
+                    <td><code>{"&gt;=": [{"var": "income"}, 50000]}</code></td>
+                </tr>
+                <tr>
+                    <td><code>in</code></td>
+                    <td>Array membership</td>
+                    <td><code>{"in": [{"var": "citizenship"}, ["Australian", "NZ"]]}</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Logical Operators</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Operator</th>
+                    <th>Description</th>
+                    <th>Example</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>and</code></td>
+                    <td>Logical AND</td>
+                    <td><code>{"and": [condition1, condition2]}</code></td>
+                </tr>
+                <tr>
+                    <td><code>or</code></td>
+                    <td>Logical OR</td>
+                    <td><code>{"or": [condition1, condition2]}</code></td>
+                </tr>
+                <tr>
+                    <td><code>not</code></td>
+                    <td>Logical NOT</td>
+                    <td><code>{"not": {"var": "is_expired"}}</code></td>
+                </tr>
+                <tr>
+                    <td><code>if</code></td>
+                    <td>Conditional</td>
+                    <td><code>{"if": [condition, then, else]}</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Special Functions</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Function</th>
+                    <th>Description</th>
+                    <th>Example</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>var</code></td>
+                    <td>Access input variable</td>
+                    <td><code>{"var": "student.age"}</code></td>
+                </tr>
+                <tr>
+                    <td><code>lookup</code></td>
+                    <td>External lookup data</td>
+                    <td><code>{"lookup": ["postcode", "rai"]}</code></td>
+                </tr>
+                <tr>
+                    <td><code>reference</code></td>
+                    <td>Reference table data</td>
+                    <td><code>{"reference": ["vic.concessions", "HCC"]}</code></td>
+                </tr>
+                <tr>
+                    <td><code>date_diff</code></td>
+                    <td>Date difference (days)</td>
+                    <td><code>{"date_diff": [{"var": "dob"}, "now"]}</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Evaluation Context</h2>
+        <p>The context provides access to all data needed for evaluation:</p>
+
+        <div class="code-block">
+            <pre><code>context = {
+  // Input data from request
+  "student": {
+    "usi": "N4KLP6G9TU",
+    "first_name": "Sarah",
+    "last_name": "Johnson",
+    "date_of_birth": "1995-03-15",
+    "age": 30,
+    "citizenship": "Australian",
+    "postcode": "3350",
+    "has_concession_card": true,
+    "concession_card_number": "HCC123456789"
+  },
+  
+  "course": {
+    "code": "BSB50120",
+    "title": "Diploma of Business",
+    "level": "Diploma",
+    "nominal_hours": 600
+  },
+  
+  // External lookups (cached)
+  "lookups": {
+    "usi": {
+      "valid": true,
+      "name_match": true
+    },
+    "postcode": {
+      "lga": "Ballarat",
+      "rai": 2.5,  // Remote Area Index
+      "seifa": 980  // Socio-Economic Index
+    },
+    "concession": {
+      "valid": true,
+      "type": "HCC",
+      "expiry": "2026-12-31"
+    }
+  },
+  
+  // Reference tables
+  "references": {
+    "vic.concessions": {
+      "HCC": {"fee_exemption": true, "priority": true},
+      "PCC": {"fee_exemption": true, "priority": true}
+    },
+    "vic.course_levels": ["Certificate III", "Certificate IV", "Diploma"]
+  }
+}</code></pre>
+        </div>
+
+        <h2>Example Rules</h2>
+
+        <h3>Example 1: VIC Skills First Eligibility</h3>
+        <div class="code-block">
+            <pre><code>{
+  "and": [
+    {
+      "comment": "Age requirement: 18 or older",
+      ">=": [{"var": "student.age"}, 18]
+    },
+    {
+      "comment": "Citizenship: Australian, NZ, or Permanent Resident",
+      "in": [
+        {"var": "student.citizenship"},
+        ["Australian", "NZ", "Permanent Resident"]
+      ]
+    },
+    {
+      "comment": "Concession OR regional location",
+      "or": [
+        {"lookup": ["concession", "valid"]},
+        {">=": [{"lookup": ["postcode", "rai"]}, 2.0]}
+      ]
+    },
+    {
+      "comment": "Course level: Cert III, Cert IV, or Diploma",
+      "in": [
+        {"var": "course.level"},
+        {"reference": ["vic.course_levels"]}
+      ]
+    }
+  ]
+}</code></pre>
+        </div>
+
+        <h3>Example 2: NSW Smart & Skilled</h3>
+        <div class="code-block">
+            <pre><code>{
+  "and": [
+    {
+      "comment": "Age: 15 or older",
+      ">=": [{"var": "student.age"}, 15]
+    },
+    {
+      "comment": "Residency: 6 months minimum",
+      ">=": [
+        {"date_diff": [{"var": "student.residency_start"}, "now"]},
+        180
+      ]
+    },
+    {
+      "comment": "Priority area OR concession card",
+      "or": [
+        {"in": [{"var": "course.code"}, {"reference": ["nsw.priority_courses"]}]},
+        {"lookup": ["concession", "valid"]}
+      ]
+    }
+  ]
+}</code></pre>
+        </div>
+
+        <h3>Example 3: QLD Certificate 3 Guarantee</h3>
+        <div class="code-block">
+            <pre><code>{
+  "and": [
+    {
+      "comment": "Age: 15-64 years",
+      ">=": [{"var": "student.age"}, 15]
+    },
+    {
+      "<=": [{"var": "student.age"}, 64]
+    },
+    {
+      "comment": "No previous Certificate III",
+      "==": [{"var": "student.has_cert3"}, false]
+    },
+    {
+      "comment": "QLD resident",
+      "==": [{"lookup": ["postcode", "state"]}, "QLD"]
+    },
+    {
+      "comment": "Eligible qualification",
+      "in": [
+        {"var": "course.code"},
+        {"reference": ["qld.eligible_qualifications"]}
+      ]
+    }
+  ]
+}</code></pre>
+        </div>
+
+        <h2>Evaluation Process</h2>
+
+        <div class="code-block">
+            <pre><code>class RulesEngine:
+    def evaluate(self, context, ruleset):
+        """
+        Evaluate ruleset against context.
+        
+        Returns:
+            EvaluationResult with outcome, reasons, clauses
+        """
+        # Load artifacts
+        artifacts = ruleset.artifacts.all()
+        
+        # Evaluate each artifact
+        results = []
+        for artifact in artifacts:
+            if artifact.type == "jsonlogic":
+                result = self._evaluate_jsonlogic(artifact.blob, context)
+            elif artifact.type == "rego":
+                result = self._evaluate_rego(artifact.blob, context)
+            elif artifact.type == "python":
+                result = self._evaluate_python(artifact.blob, context)
+            
+            results.append(result)
+        
+        # Aggregate results
+        outcome = self._aggregate_outcome(results)
+        reasons = self._extract_reasons(results)
+        clause_refs = self._extract_clauses(results)
+        
+        return EvaluationResult(
+            outcome=outcome,
+            reasons=reasons,
+            clause_refs=clause_refs,
+            decision_data=results
+        )
+    
+    def _evaluate_jsonlogic(self, rule_json, context):
+        """Evaluate JSONLogic expression"""
+        rule = json.loads(rule_json)
+        evaluator = JSONLogicEvaluator(context)
+        return evaluator.evaluate(rule)
+    
+    def _aggregate_outcome(self, results):
+        """Determine final outcome from artifact results"""
+        if all(r.get("eligible") for r in results):
+            return "eligible"
+        elif any(r.get("requires_review") for r in results):
+            return "review"
+        else:
+            return "ineligible"</code></pre>
+        </div>
+
+        <h2>Reference Tables</h2>
+        <p>Reference tables provide static data for rule evaluation:</p>
+
+        <h3>Example: VIC Concession Types</h3>
+        <div class="code-block">
+            <pre><code>{
+  "namespace": "vic.concessions",
+  "version": "2024.1",
+  "data": {
+    "HCC": {
+      "name": "Health Care Card",
+      "fee_exemption": true,
+      "income_test": true,
+      "priority": true
+    },
+    "PCC": {
+      "name": "Pensioner Concession Card",
+      "fee_exemption": true,
+      "income_test": false,
+      "priority": true
+    },
+    "CSHC": {
+      "name": "Commonwealth Seniors Health Card",
+      "fee_exemption": false,
+      "income_test": true,
+      "priority": false
+    }
+  }
+}</code></pre>
+        </div>
+
+        <h3>Example: NSW Priority Courses</h3>
+        <div class="code-block">
+            <pre><code>{
+  "namespace": "nsw.priority_courses",
+  "version": "2024.2",
+  "data": [
+    "CHC33015",  // Certificate III in Individual Support
+    "SIT30816",  // Certificate III in Commercial Cookery
+    "ICT40120",  // Certificate IV in Information Technology
+    "BSB50120"   // Diploma of Business
+  ]
+}</code></pre>
+        </div>
+
+        <h2>Extending the Rules Engine</h2>
+
+        <h3>OPA/Rego Support (Planned)</h3>
+        <div class="code-block">
+            <pre><code># VIC Skills First - Rego example
+package vic.eligibility
+
+import future.keywords
+
+default allow = false
+
+allow {
+    input.student.age >= 18
+    input.student.citizenship in ["Australian", "NZ", "Permanent Resident"]
+    has_concession_or_regional
+    eligible_course_level
+}
+
+has_concession_or_regional {
+    input.lookups.concession.valid == true
+}
+
+has_concession_or_regional {
+    input.lookups.postcode.rai >= 2.0
+}
+
+eligible_course_level {
+    input.course.level in ["Certificate III", "Certificate IV", "Diploma"]
+}</code></pre>
+        </div>
+
+        <h3>Custom Python Evaluators</h3>
+        <div class="code-block">
+            <pre><code>def evaluate_complex_income_test(context):
+    """
+    Complex income test with household size adjustment
+    """
+    student = context["student"]
+    lookups = context["lookups"]
+    
+    # Base income threshold
+    threshold = 50000
+    
+    # Adjust for household size
+    household_size = student.get("household_size", 1)
+    adjusted_threshold = threshold + ((household_size - 1) * 10000)
+    
+    # Get income from declaration
+    annual_income = student.get("annual_income", 0)
+    
+    # Check against threshold
+    if annual_income <= adjusted_threshold:
+        return {
+            "eligible": True,
+            "reason": f"Income ${annual_income} below threshold ${adjusted_threshold}"
+        }
+    else:
+        return {
+            "eligible": False,
+            "reason": f"Income ${annual_income} exceeds threshold ${adjusted_threshold}"
+        }</code></pre>
+        </div>
+
+        <h2>Best Practices</h2>
+
+        <div class="success-box">
+            <h3>✅ Rule Development</h3>
+            <ul>
+                <li>Add <code>"comment"</code> fields to explain each condition</li>
+                <li>Break complex rules into multiple artifacts</li>
+                <li>Version reference tables separately from rules</li>
+                <li>Test rules with diverse scenarios before activation</li>
+                <li>Document changelog for each version</li>
+            </ul>
+        </div>
+
+        <div class="success-box">
+            <h3>✅ Performance</h3>
+            <ul>
+                <li>Cache external lookups aggressively (7-90 days)</li>
+                <li>Use reference tables for static data (avoid repeated lookups)</li>
+                <li>Optimize rule order (fail fast on common ineligibility)</li>
+                <li>Limit artifact count (3-5 per ruleset)</li>
+            </ul>
+        </div>
+
+        <div class="cta-section">
+            <h2>Next Steps</h2>
+            <p>See real-world code examples for implementing eligibility checks in your application.</p>
+            <a href="examples.html" class="btn btn-primary">View Examples →</a>
+        </div>
+    </div>
+</body>
+</html>

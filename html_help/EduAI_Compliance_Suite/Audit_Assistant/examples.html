@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Examples - Audit Assistant Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Audit Assistant</a> /
+            <strong>Examples</strong>
+        </div>
+
+        <h1>💻 Real-World Code Examples</h1>
+        <p class="lead">
+            Practical code examples for common Audit Assistant use cases with realistic data and complete implementations.
+        </p>
+
+        <div class="toc-box">
+            <h3>Examples</h3>
+            <ul>
+                <li><a href="#initial-registration">Initial ASQA Registration</a></li>
+                <li><a href="#gap-analysis">Comprehensive Gap Analysis</a></li>
+                <li><a href="#batch-processing">Batch Evidence Processing</a></li>
+                <li><a href="#policy-integration">Policy Comparator Integration</a></li>
+                <li><a href="#automated-reporting">Automated Quarterly Reporting</a></li>
+                <li><a href="#django-integration">Django Backend Integration</a></li>
+            </ul>
+        </div>
+
+        <h2 id="initial-registration">Example 1: Initial ASQA Registration Preparation</h2>
+        <p>
+            Complete workflow for preparing evidence for initial RTO registration with ASQA.
+        </p>
+
+        <h3>Scenario</h3>
+        <p>
+            New RTO "Excel Training Institute" preparing for initial registration. Need to upload 30+ evidence documents 
+            covering all 8 ASQA standards and generate comprehensive audit report.
+        </p>
+
+        <h3>Complete Implementation</h3>
+        <div class="code-block">
+            <code>
+import requests
+import time
+from pathlib import Path
+from datetime import datetime, timedelta
+
+class AuditAssistantClient:
+    """Client for Audit Assistant API"""
+    
+    def __init__(self, base_url, tenant_id, jwt_token):
+        self.base_url = f"{base_url}/api/v1/tenants/{tenant_id}/audit-assistant"
+        self.headers = {"Authorization": f"Bearer {jwt_token}"}
+    
+    def upload_evidence(self, file_path, evidence_data):
+        """Upload evidence document"""
+        with open(file_path, 'rb') as f:
+            files = {'file': f}
+            response = requests.post(
+                f"{self.base_url}/evidence/upload/",
+                headers=self.headers,
+                files=files,
+                data=evidence_data
+            )
+        return response.json()
+    
+    def wait_for_processing(self, evidence_id, timeout=30):
+        """Wait for NER processing to complete"""
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            response = requests.get(
+                f"{self.base_url}/evidence/{evidence_id}/",
+                headers=self.headers
+            )
+            evidence = response.json()
+            if evidence['status'] == 'tagged':
+                return evidence
+            time.sleep(2)
+        raise TimeoutError(f"Evidence {evidence_id} processing timeout")
+    
+    def verify_high_confidence_tags(self, evidence_id, threshold=0.7):
+        """Auto-verify high-confidence clause mappings"""
+        response = requests.get(
+            f"{self.base_url}/evidence/{evidence_id}/tagged_clauses/",
+            headers=self.headers
+        )
+        tagged = response.json()
+        
+        high_conf_ids = [
+            clause['id'] for clause in tagged['tagged_clauses']
+            if clause['confidence_score'] >= threshold
+        ]
+        
+        if high_conf_ids:
+            response = requests.post(
+                f"{self.base_url}/evidence/{evidence_id}/verify_tagging/",
+                headers=self.headers,
+                json={
+                    "clause_evidence_ids": high_conf_ids,
+                    "action": "verify"
+                }
+            )
+            return response.json()
+        return {"verified_count": 0}
+    
+    def generate_audit_report(self, report_data):
+        """Generate comprehensive audit report"""
+        response = requests.post(
+            f"{self.base_url}/audit-reports/generate_report/",
+            headers=self.headers,
+            json=report_data
+        )
+        return response.json()
+    
+    def get_gaps(self, standard_ids=None):
+        """Get compliance gaps"""
+        params = {}
+        if standard_ids:
+            params['standard_ids'] = ','.join(map(str, standard_ids))
+        
+        response = requests.get(
+            f"{self.base_url}/clause-evidence/gaps/",
+            headers=self.headers,
+            params=params
+        )
+        return response.json()
+
+
+# Initialize client
+client = AuditAssistantClient(
+    base_url="https://api.example.com",
+    tenant_id=123,
+    jwt_token="your_jwt_token"
+)
+
+# Evidence documents for initial registration
+evidence_documents = [
+    # Standard 1: Training and Assessment
+    {
+        "file": "policies/Assessment-Policy-2024.pdf",
+        "data": {
+            "evidence_number": "POL-001",
+            "title": "Assessment Policy 2024",
+            "description": "Comprehensive assessment policy covering validation, marking, and moderation",
+            "evidence_type": "policy",
+            "evidence_date": "2024-01-15",
+            "tags": '["assessment", "policy", "standard-1"]'
+        }
+    },
+    {
+        "file": "policies/Assessment-Validation-Procedure.docx",
+        "data": {
+            "evidence_number": "PROC-001",
+            "title": "Assessment Validation Procedure",
+            "description": "Step-by-step validation procedures for assessment instruments",
+            "evidence_type": "procedure",
+            "evidence_date": "2024-01-20",
+            "tags": '["validation", "procedure", "standard-1"]'
+        }
+    },
+    {
+        "file": "records/Validation-Register-2024.xlsx",
+        "data": {
+            "evidence_number": "REC-001",
+            "title": "Assessment Validation Register 2024",
+            "description": "Complete register of validation activities for 2024",
+            "evidence_type": "record",
+            "evidence_date": "2024-03-01",
+            "tags": '["validation", "register", "standard-1"]'
+        }
+    },
+    
+    # Standard 2: Trainer/Assessor Qualifications
+    {
+        "file": "qualifications/Trainer-Jane-Doe-TAE.pdf",
+        "data": {
+            "evidence_number": "QUAL-001",
+            "title": "Jane Doe - Certificate IV TAE",
+            "description": "TAE40116 qualification for lead trainer Jane Doe",
+            "evidence_type": "qualification",
+            "evidence_date": "2023-08-15",
+            "tags": '["trainer", "qualification", "TAE", "standard-2"]'
+        }
+    },
+    {
+        "file": "qualifications/Trainer-John-Smith-Industry-Cert.pdf",
+        "data": {
+            "evidence_number": "QUAL-002",
+            "title": "John Smith - Diploma of Business",
+            "description": "Industry qualification for business trainer John Smith",
+            "evidence_type": "qualification",
+            "evidence_date": "2022-11-30",
+            "tags": '["trainer", "qualification", "industry", "standard-2"]'
+        }
+    },
+    {
+        "file": "records/Professional-Development-Register.xlsx",
+        "data": {
+            "evidence_number": "REC-002",
+            "title": "Professional Development Register",
+            "description": "Complete PD activities for all trainers and assessors",
+            "evidence_type": "record",
+            "evidence_date": "2024-03-15",
+            "tags": '["professional-development", "trainers", "standard-2"]'
+        }
+    },
+    
+    # Standard 3: Physical and Financial Capacity
+    {
+        "file": "financial/Financial-Statements-2023.pdf",
+        "data": {
+            "evidence_number": "FIN-001",
+            "title": "Audited Financial Statements 2023",
+            "description": "Complete audited financial statements for 2023",
+            "evidence_type": "financial",
+            "evidence_date": "2023-12-31",
+            "tags": '["financial", "audit", "standard-3"]'
+        }
+    },
+    {
+        "file": "contracts/Facility-Lease-Agreement.pdf",
+        "data": {
+            "evidence_number": "CONT-001",
+            "title": "Training Facility Lease Agreement",
+            "description": "5-year lease for main training facility",
+            "evidence_type": "contract",
+            "evidence_date": "2023-07-01",
+            "tags": '["facility", "lease", "standard-3"]'
+        }
+    },
+    
+    # Standard 5: Complaints and Appeals
+    {
+        "file": "policies/Complaints-Appeals-Policy.pdf",
+        "data": {
+            "evidence_number": "POL-005",
+            "title": "Complaints and Appeals Policy",
+            "description": "Policy and procedures for handling complaints and appeals",
+            "evidence_type": "policy",
+            "evidence_date": "2024-01-10",
+            "tags": '["complaints", "appeals", "policy", "standard-5"]'
+        }
+    },
+    {
+        "file": "records/Complaints-Register-2024.xlsx",
+        "data": {
+            "evidence_number": "REC-005",
+            "title": "Complaints and Appeals Register",
+            "description": "Register tracking all complaints and appeals",
+            "evidence_type": "record",
+            "evidence_date": "2024-03-20",
+            "tags": '["complaints", "register", "standard-5"]'
+        }
+    },
+    
+    # Standard 8: Legal and Ethical Compliance
+    {
+        "file": "certificates/Insurance-Certificate-2024.pdf",
+        "data": {
+            "evidence_number": "CERT-001",
+            "title": "Professional Indemnity Insurance 2024",
+            "description": "PI insurance certificate covering 2024",
+            "evidence_type": "certificate",
+            "evidence_date": "2024-01-01",
+            "tags": '["insurance", "certificate", "standard-8"]'
+        }
+    }
+]
+
+print("=" * 60)
+print("INITIAL REGISTRATION: Evidence Upload")
+print("=" * 60)
+
+uploaded_evidence = []
+for i, doc in enumerate(evidence_documents, 1):
+    print(f"\n[{i}/{len(evidence_documents)}] Uploading: {doc['data']['title']}")
+    
+    # Upload
+    result = client.upload_evidence(doc['file'], doc['data'])
+    evidence_id = result['id']
+    print(f"  ✓ Uploaded (ID: {evidence_id}, Status: {result['status']})")
+    
+    # Wait for NER processing
+    print(f"  ⏳ Waiting for NER processing...")
+    evidence = client.wait_for_processing(evidence_id)
+    print(f"  ✓ NER complete: {len(evidence['ner_entities'])} entities detected")
+    
+    # Auto-verify high-confidence tags
+    verify_result = client.verify_high_confidence_tags(evidence_id)
+    print(f"  ✓ Verified {verify_result['verified_count']} high-confidence mappings")
+    
+    uploaded_evidence.append({
+        'id': evidence_id,
+        'title': doc['data']['title'],
+        'entities': len(evidence['ner_entities']),
+        'verified_mappings': verify_result['verified_count']
+    })
+
+print("\n" + "=" * 60)
+print(f"UPLOAD SUMMARY: {len(uploaded_evidence)} documents processed")
+print("=" * 60)
+for ev in uploaded_evidence:
+    print(f"  {ev['title']}: {ev['entities']} entities, {ev['verified_mappings']} verified mappings")
+
+# Check gaps before report generation
+print("\n" + "=" * 60)
+print("GAP ANALYSIS: Pre-Report")
+print("=" * 60)
+
+gap_data = client.get_gaps(standard_ids=[1, 2, 3, 4, 5, 6, 7, 8])
+print(f"\nCoverage: {gap_data['coverage_percentage']:.1f}%")
+print(f"Total clauses: {gap_data['total_clauses']}")
+print(f"Clauses with evidence: {gap_data['clauses_with_evidence']}")
+print(f"Clauses without evidence: {gap_data['clauses_without_evidence']}")
+
+# Group gaps by severity
+severity_counts = {}
+for gap in gap_data['gaps']:
+    severity = gap['severity']
+    severity_counts[severity] = severity_counts.get(severity, 0) + 1
+
+print("\nGaps by severity:")
+for severity in ['critical', 'major', 'minor']:
+    count = severity_counts.get(severity, 0)
+    if count > 0:
+        print(f"  🔴 {severity.upper()}: {count}")
+
+# Generate audit report
+print("\n" + "=" * 60)
+print("AUDIT REPORT GENERATION")
+print("=" * 60)
+
+report_data = {
+    "report_number": "AR-2024-INIT-REG",
+    "title": "Initial ASQA Registration - Audit Report",
+    "description": "Comprehensive audit for Excel Training Institute initial registration",
+    "asqa_standards": [1, 2, 3, 4, 5, 6, 7, 8],
+    "audit_period_start": (datetime.now() - timedelta(days=90)).date().isoformat(),
+    "audit_period_end": datetime.now().date().isoformat()
+}
+
+report = client.generate_audit_report(report_data)
+print(f"\n✓ Report generated (ID: {report['id']})")
+print(f"  Report number: {report['report_number']}")
+print(f"  Status: {report['status']}")
+print(f"\nCompliance Metrics:")
+print(f"  Overall compliance: {report['compliance_percentage']:.1f}%")
+print(f"  Critical compliance: {report['critical_compliance_percentage']:.1f}%")
+print(f"  Total clauses: {report['total_clauses']}")
+print(f"  Clauses covered: {report['clauses_with_evidence']}")
+print(f"\nEvidence Summary:")
+print(f"  Total evidence: {report['total_evidence_count']}")
+print(f"  Auto-tagged: {report['auto_tagged_count']}")
+print(f"  Manually tagged: {report['manually_tagged_count']}")
+print(f"  Verified: {report['verified_evidence_count']}")
+
+print("\n" + "=" * 60)
+print("✅ INITIAL REGISTRATION PREPARATION COMPLETE")
+print("=" * 60)
+print(f"Next steps:")
+print(f"  1. Review {gap_data['clauses_without_evidence']} remaining gaps")
+print(f"  2. Upload missing evidence documents")
+print(f"  3. Verify all auto-tagged clause mappings")
+print(f"  4. Submit audit report to ASQA")
+            </code>
+        </div>
+
+        <h3>Expected Output</h3>
+        <div class="code-block">
+            <code>
+============================================================
+INITIAL REGISTRATION: Evidence Upload
+============================================================
+
+[1/11] Uploading: Assessment Policy 2024
+  ✓ Uploaded (ID: 1, Status: processing)
+  ⏳ Waiting for NER processing...
+  ✓ NER complete: 18 entities detected
+  ✓ Verified 6 high-confidence mappings
+
+[2/11] Uploading: Assessment Validation Procedure
+  ✓ Uploaded (ID: 2, Status: processing)
+  ⏳ Waiting for NER processing...
+  ✓ NER complete: 12 entities detected
+  ✓ Verified 4 high-confidence mappings
+
+... [remaining uploads]
+
+============================================================
+UPLOAD SUMMARY: 11 documents processed
+============================================================
+  Assessment Policy 2024: 18 entities, 6 verified mappings
+  Assessment Validation Procedure: 12 entities, 4 verified mappings
+  ... [remaining summaries]
+
+============================================================
+GAP ANALYSIS: Pre-Report
+============================================================
+
+Coverage: 68.5%
+Total clauses: 150
+Clauses with evidence: 103
+Clauses without evidence: 47
+
+Gaps by severity:
+  🔴 CRITICAL: 5
+  🔴 MAJOR: 18
+  🔴 MINOR: 24
+
+============================================================
+AUDIT REPORT GENERATION
+============================================================
+
+✓ Report generated (ID: 1)
+  Report number: AR-2024-INIT-REG
+  Status: in_progress
+
+Compliance Metrics:
+  Overall compliance: 68.7%
+  Critical compliance: 88.9%
+  Total clauses: 150
+  Clauses covered: 103
+
+Evidence Summary:
+  Total evidence: 11
+  Auto-tagged: 9
+  Manually tagged: 2
+  Verified: 8
+
+============================================================
+✅ INITIAL REGISTRATION PREPARATION COMPLETE
+============================================================
+Next steps:
+  1. Review 47 remaining gaps
+  2. Upload missing evidence documents
+  3. Verify all auto-tagged clause mappings
+  4. Submit audit report to ASQA
+            </code>
+        </div>
+
+        <h2 id="gap-analysis">Example 2: Comprehensive Gap Analysis with Remediation</h2>
+        <p>
+            Identify and prioritize all compliance gaps, then systematically address them.
+        </p>
+
+        <div class="code-block">
+            <code>
+import requests
+from collections import defaultdict
+
+class GapAnalyzer:
+    """Analyze and remediate compliance gaps"""
+    
+    def __init__(self, base_url, tenant_id, jwt_token):
+        self.base_url = f"{base_url}/api/v1/tenants/{tenant_id}/audit-assistant"
+        self.headers = {"Authorization": f"Bearer {jwt_token}"}
+    
+    def get_comprehensive_gaps(self):
+        """Get gaps for all standards"""
+        response = requests.get(
+            f"{self.base_url}/clause-evidence/gaps/",
+            headers=self.headers,
+            params={"standard_ids": "1,2,3,4,5,6,7,8"}
+        )
+        return response.json()
+    
+    def analyze_by_standard(self, gap_data):
+        """Group gaps by standard"""
+        by_standard = defaultdict(list)
+        
+        for gap in gap_data['gaps']:
+            standard_num = gap['clause']['standard_number'].split('.')[0]
+            by_standard[standard_num].append(gap)
+        
+        return by_standard
+    
+    def prioritize_gaps(self, gaps):
+        """Sort gaps by severity (critical > major > minor)"""
+        severity_order = {'critical': 0, 'major': 1, 'minor': 2}
+        return sorted(gaps, key=lambda g: severity_order[g['severity']])
+    
+    def generate_action_plan(self, gap_data):
+        """Create structured action plan for gap remediation"""
+        by_standard = self.analyze_by_standard(gap_data)
+        action_plan = []
+        
+        for standard_num in sorted(by_standard.keys()):
+            gaps = by_standard[standard_num]
+            prioritized = self.prioritize_gaps(gaps)
+            
+            # Count by severity
+            severity_counts = defaultdict(int)
+            for gap in gaps:
+                severity_counts[gap['severity']] += 1
+            
+            action_plan.append({
+                "standard": f"Standard {standard_num}",
+                "total_gaps": len(gaps),
+                "critical": severity_counts['critical'],
+                "major": severity_counts['major'],
+                "minor": severity_counts['minor'],
+                "gaps": [
+                    {
+                        "clause": gap['clause']['clause_number'],
+                        "title": gap['clause']['title'],
+                        "severity": gap['severity'],
+                        "recommendation": gap['recommendation']
+                    }
+                    for gap in prioritized
+                ]
+            })
+        
+        return action_plan
+
+# Initialize analyzer
+analyzer = GapAnalyzer(
+    base_url="https://api.example.com",
+    tenant_id=123,
+    jwt_token="your_jwt_token"
+)
+
+print("=" * 80)
+print("COMPREHENSIVE GAP ANALYSIS")
+print("=" * 80)
+
+# Get gaps
+gap_data = analyzer.get_comprehensive_gaps()
+
+print(f"\n📊 Overall Compliance Status:")
+print(f"  Total clauses: {gap_data['total_clauses']}")
+print(f"  Clauses with evidence: {gap_data['clauses_with_evidence']}")
+print(f"  Clauses without evidence: {gap_data['clauses_without_evidence']}")
+print(f"  Coverage: {gap_data['coverage_percentage']:.1f}%")
+
+# Generate action plan
+action_plan = analyzer.generate_action_plan(gap_data)
+
+print("\n" + "=" * 80)
+print("GAP REMEDIATION ACTION PLAN")
+print("=" * 80)
+
+for standard_plan in action_plan:
+    print(f"\n{standard_plan['standard']}")
+    print(f"  Total gaps: {standard_plan['total_gaps']}")
+    print(f"  Critical: {standard_plan['critical']}, Major: {standard_plan['major']}, Minor: {standard_plan['minor']}")
+    
+    if standard_plan['gaps']:
+        print(f"\n  Priority Actions:")
+        for i, gap in enumerate(standard_plan['gaps'][:5], 1):  # Show top 5
+            severity_emoji = {"critical": "🔴", "major": "🟠", "minor": "🟡"}
+            print(f"    {severity_emoji[gap['severity']]} [{i}] Clause {gap['clause']}: {gap['title']}")
+            print(f"        → {gap['recommendation']}")
+
+# Export action plan
+import json
+from datetime import datetime
+
+export_data = {
+    "report_date": datetime.now().isoformat(),
+    "overall_coverage": gap_data['coverage_percentage'],
+    "total_gaps": gap_data['clauses_without_evidence'],
+    "action_plan": action_plan
+}
+
+with open('gap_action_plan.json', 'w') as f:
+    json.dump(export_data, f, indent=2)
+
+print("\n" + "=" * 80)
+print("✅ Action plan exported to gap_action_plan.json")
+print("=" * 80)
+            </code>
+        </div>
+
+        <h2 id="batch-processing">Example 3: Batch Evidence Processing</h2>
+        <p>
+            Process large numbers of evidence documents efficiently with concurrent uploads.
+        </p>
+
+        <div class="code-block">
+            <code>
+import requests
+import concurrent.futures
+from pathlib import Path
+import time
+
+class BatchProcessor:
+    """Efficiently process multiple evidence documents"""
+    
+    def __init__(self, base_url, tenant_id, jwt_token, max_workers=5):
+        self.base_url = f"{base_url}/api/v1/tenants/{tenant_id}/audit-assistant"
+        self.headers = {"Authorization": f"Bearer {jwt_token}"}
+        self.max_workers = max_workers
+    
+    def upload_single_evidence(self, file_path, evidence_data):
+        """Upload single evidence document"""
+        try:
+            with open(file_path, 'rb') as f:
+                files = {'file': f}
+                response = requests.post(
+                    f"{self.base_url}/evidence/upload/",
+                    headers=self.headers,
+                    files=files,
+                    data=evidence_data
+                )
+                result = response.json()
+                return {
+                    'success': True,
+                    'evidence_id': result['id'],
+                    'title': evidence_data['title'],
+                    'status': result['status']
+                }
+        except Exception as e:
+            return {
+                'success': False,
+                'title': evidence_data['title'],
+                'error': str(e)
+            }
+    
+    def batch_upload(self, evidence_list):
+        """Upload multiple evidence documents concurrently"""
+        results = []
+        
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            futures = [
+                executor.submit(
+                    self.upload_single_evidence,
+                    evidence['file_path'],
+                    evidence['data']
+                )
+                for evidence in evidence_list
+            ]
+            
+            for future in concurrent.futures.as_completed(futures):
+                results.append(future.result())
+        
+        return results
+    
+    def wait_for_all_processing(self, evidence_ids, timeout=60):
+        """Wait for all evidence to complete NER processing"""
+        start_time = time.time()
+        pending = set(evidence_ids)
+        completed = []
+        
+        while pending and (time.time() - start_time) < timeout:
+            for evidence_id in list(pending):
+                response = requests.get(
+                    f"{self.base_url}/evidence/{evidence_id}/",
+                    headers=self.headers
+                )
+                evidence = response.json()
+                
+                if evidence['status'] == 'tagged':
+                    pending.remove(evidence_id)
+                    completed.append(evidence_id)
+            
+            if pending:
+                time.sleep(2)
+        
+        return completed, list(pending)
+    
+    def batch_verify_tags(self, evidence_ids, confidence_threshold=0.7):
+        """Verify high-confidence tags for multiple evidence documents"""
+        verification_results = []
+        
+        for evidence_id in evidence_ids:
+            # Get tagged clauses
+            response = requests.get(
+                f"{self.base_url}/evidence/{evidence_id}/tagged_clauses/",
+                headers=self.headers
+            )
+            tagged = response.json()
+            
+            # Identify high-confidence mappings
+            high_conf_ids = [
+                clause['id'] for clause in tagged['tagged_clauses']
+                if clause['confidence_score'] >= confidence_threshold
+            ]
+            
+            # Verify
+            if high_conf_ids:
+                response = requests.post(
+                    f"{self.base_url}/evidence/{evidence_id}/verify_tagging/",
+                    headers=self.headers,
+                    json={
+                        "clause_evidence_ids": high_conf_ids,
+                        "action": "verify"
+                    }
+                )
+                result = response.json()
+                verification_results.append({
+                    'evidence_id': evidence_id,
+                    'verified_count': result['verified_count']
+                })
+        
+        return verification_results
+
+# Initialize processor
+processor = BatchProcessor(
+    base_url="https://api.example.com",
+    tenant_id=123,
+    jwt_token="your_jwt_token",
+    max_workers=5  # 5 concurrent uploads
+)
+
+# Prepare batch of evidence documents
+evidence_dir = Path("./evidence_bulk_upload")
+evidence_batch = [
+    {
+        "file_path": evidence_dir / f"policy-{i:02d}.pdf",
+        "data": {
+            "evidence_number": f"POL-{i:03d}",
+            "title": f"Policy Document {i:02d}",
+            "description": f"Compliance policy document {i:02d}",
+            "evidence_type": "policy",
+            "evidence_date": "2024-01-15",
+            "tags": f'["policy", "batch-{i//10}"]'
+        }
+    }
+    for i in range(1, 51)  # 50 policy documents
+]
+
+print("=" * 80)
+print(f"BATCH UPLOAD: {len(evidence_batch)} Evidence Documents")
+print("=" * 80)
+
+# Batch upload
+print(f"\n📤 Uploading {len(evidence_batch)} documents (max {processor.max_workers} concurrent)...")
+start_time = time.time()
+
+upload_results = processor.batch_upload(evidence_batch)
+
+upload_time = time.time() - start_time
+successful = [r for r in upload_results if r['success']]
+failed = [r for r in upload_results if not r['success']]
+
+print(f"\n✓ Upload complete in {upload_time:.1f} seconds")
+print(f"  Successful: {len(successful)}")
+print(f"  Failed: {len(failed)}")
+
+if failed:
+    print("\n❌ Failed uploads:")
+    for fail in failed[:5]:  # Show first 5 failures
+        print(f"  - {fail['title']}: {fail['error']}")
+
+# Wait for NER processing
+print(f"\n⏳ Waiting for NER processing on {len(successful)} documents...")
+evidence_ids = [r['evidence_id'] for r in successful]
+
+completed, pending = processor.wait_for_all_processing(evidence_ids, timeout=120)
+
+print(f"\n✓ NER processing complete")
+print(f"  Completed: {len(completed)}")
+print(f"  Pending: {len(pending)}")
+
+# Batch verify tags
+if completed:
+    print(f"\n✓ Auto-verifying high-confidence tags...")
+    verification_results = processor.batch_verify_tags(completed, confidence_threshold=0.7)
+    
+    total_verified = sum(r['verified_count'] for r in verification_results)
+    print(f"  Total mappings verified: {total_verified}")
+    print(f"  Average per document: {total_verified / len(verification_results):.1f}")
+
+print("\n" + "=" * 80)
+print("✅ BATCH PROCESSING COMPLETE")
+print("=" * 80)
+print(f"Processing statistics:")
+print(f"  Total time: {time.time() - start_time:.1f} seconds")
+print(f"  Upload rate: {len(successful) / upload_time:.1f} docs/sec")
+print(f"  Successfully processed: {len(completed)} / {len(evidence_batch)}")
+            </code>
+        </div>
+
+        <h2 id="policy-integration">Example 4: Policy Comparator Integration</h2>
+        <p>
+            Use Policy Comparator to identify policy gaps, then upload evidence to address them.
+        </p>
+
+        <div class="code-block">
+            <code>
+import requests
+
+class IntegratedComplianceManager:
+    """Manage compliance across Policy Comparator and Audit Assistant"""
+    
+    def __init__(self, base_url, tenant_id, jwt_token):
+        self.base_url = base_url
+        self.tenant_id = tenant_id
+        self.headers = {"Authorization": f"Bearer {jwt_token}"}
+        self.policy_api = f"{base_url}/api/v1/tenants/{tenant_id}/policy-comparator"
+        self.audit_api = f"{base_url}/api/v1/tenants/{tenant_id}/audit-assistant"
+    
+    def get_policy_gaps(self, standard_ids):
+        """Get policy gaps from Policy Comparator"""
+        response = requests.get(
+            f"{self.policy_api}/gaps/",
+            headers=self.headers,
+            params={"standard_ids": ','.join(map(str, standard_ids))}
+        )
+        return response.json()
+    
+    def get_evidence_gaps(self, standard_ids):
+        """Get evidence gaps from Audit Assistant"""
+        response = requests.get(
+            f"{self.audit_api}/clause-evidence/gaps/",
+            headers=self.headers,
+            params={"standard_ids": ','.join(map(str, standard_ids))}
+        )
+        return response.json()
+    
+    def cross_reference_gaps(self, policy_gaps, evidence_gaps):
+        """Identify overlapping gaps between policies and evidence"""
+        policy_clause_ids = {gap['clause']['id'] for gap in policy_gaps['gaps']}
+        evidence_clause_ids = {gap['clause']['id'] for gap in evidence_gaps['gaps']}
+        
+        # Gaps in both systems (critical)
+        critical_overlap = policy_clause_ids & evidence_clause_ids
+        
+        # Only in evidence (have policy, need evidence upload)
+        evidence_only = evidence_clause_ids - policy_clause_ids
+        
+        # Only in policy (need policy creation, already have evidence)
+        policy_only = policy_clause_ids - evidence_clause_ids
+        
+        return {
+            'critical_overlap': critical_overlap,
+            'evidence_only': evidence_only,
+            'policy_only': policy_only
+        }
+    
+    def upload_policy_as_evidence(self, policy_id):
+        """Upload RTO policy as evidence document"""
+        # Get policy details from Policy Comparator
+        response = requests.get(
+            f"{self.policy_api}/policies/{policy_id}/",
+            headers=self.headers
+        )
+        policy = response.json()
+        
+        # Upload policy document to Audit Assistant
+        with open(policy['file_path'], 'rb') as f:
+            files = {'file': f}
+            data = {
+                "evidence_number": f"POL-{policy['policy_number']}",
+                "title": policy['title'],
+                "description": f"Policy document: {policy['description']}",
+                "evidence_type": "policy",
+                "evidence_date": policy['effective_date'],
+                "tags": f'["policy", "imported-from-policy-comparator"]'
+            }
+            
+            response = requests.post(
+                f"{self.audit_api}/evidence/upload/",
+                headers=self.headers,
+                files=files,
+                data=data
+            )
+        
+        return response.json()
+
+# Initialize manager
+manager = IntegratedComplianceManager(
+    base_url="https://api.example.com",
+    tenant_id=123,
+    jwt_token="your_jwt_token"
+)
+
+print("=" * 80)
+print("INTEGRATED COMPLIANCE ANALYSIS")
+print("=" * 80)
+
+# Get gaps from both systems
+print("\n📋 Retrieving gaps from both systems...")
+policy_gaps = manager.get_policy_gaps([1, 2, 3, 4, 5, 6, 7, 8])
+evidence_gaps = manager.get_evidence_gaps([1, 2, 3, 4, 5, 6, 7, 8])
+
+print(f"\nPolicy Comparator:")
+print(f"  Policy gaps: {len(policy_gaps['gaps'])}")
+print(f"  Coverage: {policy_gaps['coverage_percentage']:.1f}%")
+
+print(f"\nAudit Assistant:")
+print(f"  Evidence gaps: {len(evidence_gaps['gaps'])}")
+print(f"  Coverage: {evidence_gaps['coverage_percentage']:.1f}%")
+
+# Cross-reference
+cross_ref = manager.cross_reference_gaps(policy_gaps, evidence_gaps)
+
+print("\n" + "=" * 80)
+print("CROSS-REFERENCE ANALYSIS")
+print("=" * 80)
+
+print(f"\n🔴 CRITICAL: Gaps in both systems (no policy AND no evidence):")
+print(f"  Count: {len(cross_ref['critical_overlap'])}")
+print("  Action: Create policy AND upload evidence")
+
+print(f"\n🟠 Evidence gaps only (have policy, need evidence):")
+print(f"  Count: {len(cross_ref['evidence_only'])}")
+print("  Action: Upload existing policy documents as evidence")
+
+print(f"\n🟡 Policy gaps only (have evidence, need policy):")
+print(f"  Count: {len(cross_ref['policy_only'])}")
+print("  Action: Create formal policies based on existing evidence")
+
+# Auto-import policies as evidence
+if cross_ref['evidence_only']:
+    print("\n" + "=" * 80)
+    print("AUTO-IMPORT: Uploading policies as evidence")
+    print("=" * 80)
+    
+    # Get list of RTO policies
+    response = requests.get(
+        f"{manager.policy_api}/policies/",
+        headers=manager.headers
+    )
+    policies = response.json()['results']
+    
+    imported_count = 0
+    for policy in policies[:5]:  # Import first 5 as example
+        try:
+            result = manager.upload_policy_as_evidence(policy['id'])
+            print(f"  ✓ Imported: {policy['title']} (Evidence ID: {result['id']})")
+            imported_count += 1
+        except Exception as e:
+            print(f"  ✗ Failed: {policy['title']} - {str(e)}")
+    
+    print(f"\n✅ Imported {imported_count} policies as evidence")
+
+print("\n" + "=" * 80)
+print("✅ INTEGRATED ANALYSIS COMPLETE")
+print("=" * 80)
+            </code>
+        </div>
+
+        <h2 id="automated-reporting">Example 5: Automated Quarterly Reporting</h2>
+        <p>
+            Scheduled script for automated quarterly compliance reporting.
+        </p>
+
+        <div class="code-block">
+            <code>
+import requests
+from datetime import datetime, timedelta
+import json
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+class QuarterlyReporter:
+    """Automated quarterly compliance reporting"""
+    
+    def __init__(self, base_url, tenant_id, jwt_token, email_config):
+        self.base_url = f"{base_url}/api/v1/tenants/{tenant_id}/audit-assistant"
+        self.headers = {"Authorization": f"Bearer {jwt_token}"}
+        self.email_config = email_config
+    
+    def get_quarter_dates(self):
+        """Calculate current quarter start/end dates"""
+        today = datetime.now()
+        quarter = (today.month - 1) // 3
+        year = today.year
+        
+        quarter_start = datetime(year, quarter * 3 + 1, 1)
+        
+        if quarter == 3:  # Q4
+            quarter_end = datetime(year, 12, 31)
+        else:
+            quarter_end = datetime(year, (quarter + 1) * 3 + 1, 1) - timedelta(days=1)
+        
+        return quarter_start.date(), quarter_end.date()
+    
+    def generate_quarterly_report(self):
+        """Generate comprehensive quarterly report"""
+        start_date, end_date = self.get_quarter_dates()
+        quarter_num = (datetime.now().month - 1) // 3 + 1
+        year = datetime.now().year
+        
+        # Generate report
+        response = requests.post(
+            f"{self.base_url}/audit-reports/generate_report/",
+            headers=self.headers,
+            json={
+                "report_number": f"QR-{year}-Q{quarter_num}",
+                "title": f"Q{quarter_num} {year} Quarterly Compliance Report",
+                "description": f"Automated quarterly report for Q{quarter_num} {year}",
+                "asqa_standards": [1, 2, 3, 4, 5, 6, 7, 8],
+                "audit_period_start": start_date.isoformat(),
+                "audit_period_end": end_date.isoformat()
+            }
+        )
+        return response.json()
+    
+    def get_detailed_report(self, report_id):
+        """Retrieve detailed report data"""
+        response = requests.get(
+            f"{self.base_url}/audit-reports/{report_id}/",
+            headers=self.headers
+        )
+        return response.json()
+    
+    def get_gaps(self):
+        """Get current compliance gaps"""
+        response = requests.get(
+            f"{self.base_url}/clause-evidence/gaps/",
+            headers=self.headers,
+            params={"standard_ids": "1,2,3,4,5,6,7,8"}
+        )
+        return response.json()
+    
+    def generate_summary_email(self, report, gap_data):
+        """Generate HTML email summary"""
+        quarter_num = (datetime.now().month - 1) // 3 + 1
+        year = datetime.now().year
+        
+        html = f"""
+        <html>
+          <body>
+            <h2>Q{quarter_num} {year} Compliance Summary</h2>
+            
+            <h3>📊 Overall Compliance</h3>
+            <ul>
+              <li><strong>Compliance Rate:</strong> {report['compliance_percentage']:.1f}%</li>
+              <li><strong>Critical Compliance:</strong> {report['critical_compliance_percentage']:.1f}%</li>
+              <li><strong>Total Clauses:</strong> {report['total_clauses']}</li>
+              <li><strong>Clauses Covered:</strong> {report['clauses_with_evidence']}</li>
+            </ul>
+            
+            <h3>📁 Evidence Summary</h3>
+            <ul>
+              <li><strong>Total Evidence:</strong> {report['total_evidence_count']}</li>
+              <li><strong>Auto-tagged:</strong> {report['auto_tagged_count']}</li>
+              <li><strong>Manually Tagged:</strong> {report['manually_tagged_count']}</li>
+              <li><strong>Verified:</strong> {report['verified_evidence_count']}</li>
+            </ul>
+            
+            <h3>⚠️ Compliance Gaps</h3>
+            <ul>
+              <li><strong>Total Gaps:</strong> {gap_data['clauses_without_evidence']}</li>
+              <li><strong>Critical:</strong> {len([g for g in gap_data['gaps'] if g['severity'] == 'critical'])}</li>
+              <li><strong>Major:</strong> {len([g for g in gap_data['gaps'] if g['severity'] == 'major'])}</li>
+              <li><strong>Minor:</strong> {len([g for g in gap_data['gaps'] if g['severity'] == 'minor'])}</li>
+            </ul>
+            
+            <h3>🎯 Action Items</h3>
+            <ul>
+              <li>Review and address {len([g for g in gap_data['gaps'] if g['severity'] == 'critical'])} critical gaps</li>
+              <li>Upload missing evidence documents</li>
+              <li>Verify {report['total_evidence_count'] - report['verified_evidence_count']} unverified evidence items</li>
+              <li>Complete quarterly compliance review with management</li>
+            </ul>
+            
+            <p>Full report available in the Audit Assistant dashboard.</p>
+          </body>
+        </html>
+        """
+        
+        return html
+    
+    def send_email_report(self, report, gap_data):
+        """Send email report to stakeholders"""
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"Q{(datetime.now().month - 1) // 3 + 1} {datetime.now().year} Compliance Report"
+        msg['From'] = self.email_config['from_email']
+        msg['To'] = ', '.join(self.email_config['to_emails'])
+        
+        html = self.generate_summary_email(report, gap_data)
+        msg.attach(MIMEText(html, 'html'))
+        
+        # Send email
+        with smtplib.SMTP(self.email_config['smtp_server'], self.email_config['smtp_port']) as server:
+            server.starttls()
+            server.login(self.email_config['username'], self.email_config['password'])
+            server.send_message(msg)
+
+# Initialize reporter
+email_config = {
+    'from_email': 'compliance@example.com',
+    'to_emails': ['ceo@example.com', 'compliance.officer@example.com', 'quality.manager@example.com'],
+    'smtp_server': 'smtp.example.com',
+    'smtp_port': 587,
+    'username': 'compliance@example.com',
+    'password': 'smtp_password'
+}
+
+reporter = QuarterlyReporter(
+    base_url="https://api.example.com",
+    tenant_id=123,
+    jwt_token="your_jwt_token",
+    email_config=email_config
+)
+
+print("=" * 80)
+print("QUARTERLY COMPLIANCE REPORT - AUTOMATED")
+print("=" * 80)
+
+# Generate report
+print("\n📋 Generating quarterly report...")
+start_date, end_date = reporter.get_quarter_dates()
+print(f"Period: {start_date} to {end_date}")
+
+report = reporter.generate_quarterly_report()
+print(f"✓ Report generated (ID: {report['id']})")
+
+# Get detailed data
+print("\n📊 Retrieving detailed report data...")
+detailed_report = reporter.get_detailed_report(report['id'])
+gap_data = reporter.get_gaps()
+
+print("\nCompliance Metrics:")
+print(f"  Overall: {report['compliance_percentage']:.1f}%")
+print(f"  Critical: {report['critical_compliance_percentage']:.1f}%")
+print(f"  Gaps: {gap_data['clauses_without_evidence']}")
+
+# Send email
+print("\n📧 Sending email report to stakeholders...")
+reporter.send_email_report(detailed_report, gap_data)
+print(f"✓ Email sent to: {', '.join(email_config['to_emails'])}")
+
+# Export to JSON
+print("\n💾 Exporting report to JSON...")
+export_data = {
+    "report_metadata": {
+        "report_id": report['id'],
+        "report_number": report['report_number'],
+        "period": f"{start_date} to {end_date}",
+        "generated": datetime.now().isoformat()
+    },
+    "compliance_summary": {
+        "overall_compliance": report['compliance_percentage'],
+        "critical_compliance": report['critical_compliance_percentage'],
+        "evidence_count": report['total_evidence_count']
+    },
+    "gaps": gap_data
+}
+
+filename = f"quarterly_report_{report['report_number']}.json"
+with open(filename, 'w') as f:
+    json.dump(export_data, f, indent=2)
+
+print(f"✓ Report exported to {filename}")
+
+print("\n" + "=" * 80)
+print("✅ QUARTERLY REPORTING COMPLETE")
+print("=" * 80)
+            </code>
+        </div>
+
+        <h2 id="django-integration">Example 6: Django Backend Integration</h2>
+        <p>
+            Integrate Audit Assistant into Django application backend.
+        </p>
+
+        <div class="code-block">
+            <code>
+# Django view example (views.py)
+from django.shortcuts import render, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+from .models import Evidence, ClauseEvidence, AuditReport
+from .serializers import EvidenceSerializer, AuditReportSerializer
+from .tasks import process_evidence_document  # Celery task
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload_evidence_view(request):
+    """
+    Upload evidence document with automatic NER processing
+    
+    Expected form data:
+    - file: Evidence file (PDF, DOCX, TXT, etc.)
+    - evidence_number: Unique identifier
+    - title: Document title
+    - evidence_type: Type (policy, procedure, etc.)
+    - evidence_date: Date document was created
+    """
+    try:
+        # Validate required fields
+        required_fields = ['evidence_number', 'title', 'evidence_type', 'evidence_date']
+        for field in required_fields:
+            if field not in request.data:
+                return Response(
+                    {"error": f"Missing required field: {field}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        # Check for duplicate evidence number
+        tenant = request.user.tenant
+        if Evidence.objects.filter(
+            tenant=tenant,
+            evidence_number=request.data['evidence_number']
+        ).exists():
+            return Response(
+                {"error": "Evidence with this number already exists"},
+                status=status.HTTP_409_CONFLICT
+            )
+        
+        # Create evidence instance
+        evidence = Evidence.objects.create(
+            tenant=tenant,
+            evidence_number=request.data['evidence_number'],
+            title=request.data['title'],
+            description=request.data.get('description', ''),
+            evidence_type=request.data['evidence_type'],
+            file=request.FILES['file'],
+            evidence_date=request.data['evidence_date'],
+            uploaded_by=request.user,
+            status='uploaded'
+        )
+        
+        # Add tags if provided
+        if 'tags' in request.data:
+            import json
+            evidence.tags = json.loads(request.data['tags'])
+            evidence.save()
+        
+        # Queue async NER processing
+        task = process_evidence_document.delay(evidence.id)
+        
+        logger.info(
+            f"Evidence {evidence.id} uploaded by {request.user.username}, "
+            f"NER task queued: {task.id}"
+        )
+        
+        return Response({
+            "id": evidence.id,
+            "evidence_number": evidence.evidence_number,
+            "title": evidence.title,
+            "status": evidence.status,
+            "message": "Evidence uploaded successfully. NER processing started.",
+            "task_id": task.id
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        logger.error(f"Error uploading evidence: {str(e)}", exc_info=True)
+        return Response(
+            {"error": "Failed to upload evidence", "detail": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_tagged_clauses_view(request, evidence_id):
+    """
+    Retrieve auto-tagged clauses for evidence document
+    
+    Returns:
+    - List of auto-tagged ASQA clauses with confidence scores
+    - Matched entities and keywords for each mapping
+    """
+    evidence = get_object_or_404(
+        Evidence,
+        id=evidence_id,
+        tenant=request.user.tenant
+    )
+    
+    # Get clause mappings ordered by confidence
+    clause_mappings = ClauseEvidence.objects.filter(
+        evidence=evidence
+    ).select_related('asqa_clause').order_by('-confidence_score')
+    
+    tagged_clauses = []
+    for mapping in clause_mappings:
+        tagged_clauses.append({
+            "id": mapping.id,
+            "asqa_clause": {
+                "id": mapping.asqa_clause.id,
+                "clause_number": mapping.asqa_clause.clause_number,
+                "title": mapping.asqa_clause.title,
+                "standard_number": mapping.asqa_clause.standard.standard_number
+            },
+            "mapping_type": mapping.mapping_type,
+            "confidence_score": mapping.confidence_score,
+            "matched_entities": mapping.matched_entities,
+            "matched_keywords": mapping.matched_keywords,
+            "is_verified": mapping.is_verified,
+            "created_at": mapping.created_at
+        })
+    
+    return Response({
+        "evidence_id": evidence.id,
+        "evidence_title": evidence.title,
+        "total_tagged_clauses": len(tagged_clauses),
+        "tagged_clauses": tagged_clauses
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_audit_report_view(request):
+    """
+    Generate comprehensive audit report
+    
+    Expected JSON body:
+    - report_number: Unique report identifier
+    - title: Report title
+    - asqa_standards: List of standard IDs
+    - audit_period_start: Start date (YYYY-MM-DD)
+    - audit_period_end: End date (YYYY-MM-DD)
+    """
+    try:
+        # Create audit report
+        report = AuditReport.objects.create(
+            tenant=request.user.tenant,
+            report_number=request.data['report_number'],
+            title=request.data['title'],
+            description=request.data.get('description', ''),
+            audit_period_start=request.data['audit_period_start'],
+            audit_period_end=request.data['audit_period_end'],
+            created_by=request.user,
+            status='in_progress'
+        )
+        
+        # Add selected standards
+        report.asqa_standards.set(request.data['asqa_standards'])
+        
+        # Calculate compliance metrics
+        report.calculate_metrics()
+        
+        logger.info(
+            f"Audit report {report.id} generated by {request.user.username}"
+        )
+        
+        serializer = AuditReportSerializer(report)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        logger.error(f"Error generating audit report: {str(e)}", exc_info=True)
+        return Response(
+            {"error": "Failed to generate audit report", "detail": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+# Celery task example (tasks.py)
+from celery import shared_task
+from .models import Evidence
+from .services import extract_text_from_file, detect_ner_entities, auto_tag_clauses
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+@shared_task(bind=True)
+def process_evidence_document(self, evidence_id):
+    """
+    Process evidence document: extract text, detect NER entities, auto-tag clauses
+    
+    Args:
+        evidence_id: ID of Evidence instance
+    """
+    try:
+        evidence = Evidence.objects.get(id=evidence_id)
+        
+        # Update status
+        evidence.status = 'processing'
+        evidence.save()
+        
+        # Extract text from file
+        logger.info(f"Extracting text from evidence {evidence_id}")
+        extracted_text = extract_text_from_file(evidence.file.path)
+        evidence.extracted_text = extracted_text
+        evidence.save()
+        
+        # Detect NER entities
+        logger.info(f"Detecting NER entities for evidence {evidence_id}")
+        ner_entities = detect_ner_entities(extracted_text)
+        evidence.ner_entities = ner_entities
+        evidence.ner_processed_at = timezone.now()
+        evidence.save()
+        
+        # Auto-tag clauses
+        logger.info(f"Auto-tagging clauses for evidence {evidence_id}")
+        auto_tag_clauses(evidence)
+        
+        # Update status
+        evidence.status = 'tagged'
+        evidence.save()
+        
+        logger.info(
+            f"Evidence {evidence_id} processed successfully: "
+            f"{len(ner_entities)} entities, "
+            f"{evidence.auto_tagged_clauses.count()} clauses tagged"
+        )
+        
+        return {
+            'evidence_id': evidence_id,
+            'status': 'success',
+            'entities_count': len(ner_entities),
+            'tagged_clauses_count': evidence.auto_tagged_clauses.count()
+        }
+        
+    except Evidence.DoesNotExist:
+        logger.error(f"Evidence {evidence_id} not found")
+        return {'evidence_id': evidence_id, 'status': 'error', 'error': 'Evidence not found'}
+        
+    except Exception as e:
+        logger.error(f"Error processing evidence {evidence_id}: {str(e)}", exc_info=True)
+        
+        # Update status to failed
+        try:
+            evidence = Evidence.objects.get(id=evidence_id)
+            evidence.status = 'uploaded'  # Reset to uploaded for retry
+            evidence.save()
+        except:
+            pass
+        
+        return {'evidence_id': evidence_id, 'status': 'error', 'error': str(e)}
+            </code>
+        </div>
+
+        <div class="success-box" style="margin-top: 3rem;">
+            <h3>💡 Example Best Practices</h3>
+            <ul>
+                <li><strong>Error Handling:</strong> Always wrap API calls in try-except blocks</li>
+                <li><strong>Async Processing:</strong> Use Celery for long-running NER tasks</li>
+                <li><strong>Batch Operations:</strong> Use concurrent uploads for multiple documents</li>
+                <li><strong>Integration:</strong> Cross-reference Policy Comparator and Audit Assistant data</li>
+                <li><strong>Automation:</strong> Schedule quarterly reports for continuous monitoring</li>
+                <li><strong>Verification:</strong> Auto-verify high-confidence tags (≥0.7) to save time</li>
+            </ul>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="workflows.html" class="btn btn-secondary">← Workflows</a>
+            <a href="roadmap.html" class="btn btn-primary">Roadmap →</a>
+        </div>
+    </div>
+</body>
+</html>

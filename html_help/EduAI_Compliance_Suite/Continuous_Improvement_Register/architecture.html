@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIR Architecture - NextCore AI Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Continuous Improvement Register</a> /
+            <strong>Architecture</strong>
+        </div>
+
+        <h1>🏗️ System Architecture</h1>
+
+        <div class="intro-section">
+            <p>
+                The Continuous Improvement Register is built on a modern, scalable architecture combining Django REST Framework, 
+                Celery async processing, PostgreSQL for data persistence, and AI-powered classification. This guide explains 
+                the system design, data flow, and key architectural decisions.
+            </p>
+        </div>
+
+        <h2>🎯 High-Level Architecture</h2>
+        
+        <div class="code-block">
+            <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                      Client Layer                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
+│  │ Web Frontend │  │  Mobile App  │  │  External    │     │
+│  │  (Next.js)   │  │   (React    │  │   Systems    │     │
+│  │              │  │   Native)    │  │   (API)      │     │
+│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘     │
+└─────────┼──────────────────┼──────────────────┼─────────────┘
+          │                  │                  │
+          └──────────────────┴──────────────────┘
+                            │
+          ┌─────────────────▼──────────────────┐
+          │     API Gateway / Load Balancer    │
+          └─────────────────┬──────────────────┘
+                            │
+          ┌─────────────────▼──────────────────┐
+          │       Django REST Framework        │
+          │   (apps/control-plane/             │
+          │    continuous_improvement/)        │
+          │                                    │
+          │  ┌────────────┐  ┌────────────┐   │
+          │  │  ViewSets  │  │ Serializers│   │
+          │  └─────┬──────┘  └──────┬─────┘   │
+          │        │                │         │
+          │  ┌─────▼────────────────▼─────┐   │
+          │  │      Business Logic        │   │
+          │  │   - Validation             │   │
+          │  │   - Authorization          │   │
+          │  │   - SLA Calculation        │   │
+          │  └─────┬────────────────┬─────┘   │
+          └────────┼────────────────┼─────────┘
+                   │                │
+        ┌──────────▼────────┐  ┌───▼──────────┐
+        │   PostgreSQL DB   │  │ Redis Queue  │
+        │  - Data Storage   │  │ - Task Queue │
+        │  - Transactions   │  │ - Caching    │
+        └──────────┬────────┘  └───┬──────────┘
+                   │                │
+        ┌──────────▼────────────────▼──────────┐
+        │        Celery Workers                │
+        │  - AI Classification                 │
+        │  - Summarization                     │
+        │  - KPI Computation                   │
+        │  - Notifications                     │
+        └──────────┬───────────────────────────┘
+                   │
+        ┌──────────▼───────────┐
+        │    External Services │
+        │  - OpenAI / Azure AI │
+        │  - Email / Slack     │
+        │  - S3 Storage        │
+        └──────────────────────┘</code></pre>
+        </div>
+
+        <h2>🗄️ Data Layer</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Core Models</h3>
+                <ul>
+                    <li><strong>ImprovementAction:</strong> Main entity with status, priority, category</li>
+                    <li><strong>ImprovementCategory:</strong> ASQA-aligned categorization</li>
+                    <li><strong>ActionTracking:</strong> Progress milestones and updates</li>
+                    <li><strong>ImprovementReview:</strong> Periodic register reviews</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Workflow Models</h3>
+                <ul>
+                    <li><strong>ActionStep:</strong> Detailed step tracking with owners</li>
+                    <li><strong>Comment:</strong> Threaded collaboration with mentions</li>
+                    <li><strong>Attachment:</strong> File attachments with hashing</li>
+                    <li><strong>Verification:</strong> Effectiveness verification records</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Compliance Models</h3>
+                <ul>
+                    <li><strong>ClauseLink:</strong> ASQA/ISO clause relationships</li>
+                    <li><strong>SLAPolicy:</strong> Service level agreements</li>
+                    <li><strong>KPISnapshot:</strong> Point-in-time metrics</li>
+                    <li><strong>TaxonomyLabel:</strong> Custom classification</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>AI & Audit</h3>
+                <ul>
+                    <li><strong>AIRun:</strong> AI operation audit trail</li>
+                    <li><strong>Embedding:</strong> Vector embeddings (pgvector)</li>
+                    <li><strong>Performance Metrics:</strong> Token usage, latency</li>
+                    <li><strong>Explainability:</strong> Confidence scores, keywords</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>🤖 AI Classification Pipeline</h2>
+        
+        <div class="info-box">
+            <h3>Classification Workflow</h3>
+            <ol>
+                <li><strong>Trigger:</strong> User calls <code>/actions/{id}/classify/</code> endpoint</li>
+                <li><strong>Data Extraction:</strong> System extracts action title, description, source, priority</li>
+                <li><strong>Context Building:</strong> Gathers related information (user, tenant, existing links)</li>
+                <li><strong>AI Invocation:</strong> Calls classification service (placeholder for GPT-4/Azure)</li>
+                <li><strong>Category Detection:</strong> Identifies best-fit category with confidence score</li>
+                <li><strong>Risk Assessment:</strong> Evaluates compliance impact and risk level</li>
+                <li><strong>Clause Linking:</strong> Matches to relevant ASQA/ISO clauses</li>
+                <li><strong>Keyword Extraction:</strong> Identifies key terms for traceability</li>
+                <li><strong>Result Persistence:</strong> Updates action, creates ClauseLinks, logs AIRun</li>
+                <li><strong>Response:</strong> Returns classification results with confidence metrics</li>
+            </ol>
+        </div>
+
+        <div class="code-block">
+            <h3>Classification Algorithm (Placeholder)</h3>
+            <pre><code>def classify_action(action_data):
+    """
+    AI classification placeholder - production will use GPT-4/Azure
+    """
+    # Extract text features
+    text = f"{action_data['title']} {action_data['description']}"
+    keywords = extract_keywords(text)
+    
+    # Categorization logic
+    category = match_category(keywords)
+    category_confidence = calculate_confidence(keywords, category)
+    
+    # Risk assessment
+    risk_factors = assess_risk_factors(action_data)
+    risk_level = determine_risk_level(risk_factors)
+    risk_confidence = calculate_risk_confidence(risk_factors)
+    
+    # Clause matching
+    clause_matches = match_clauses(keywords, category)
+    clause_links = [
+        {
+            "clause_id": match.clause_id,
+            "confidence": match.confidence,
+            "matched_keywords": match.keywords
+        }
+        for match in clause_matches
+    ]
+    
+    # Critical compliance flag
+    is_critical = any(
+        clause.is_critical_compliance
+        for clause in clause_matches
+    )
+    
+    return {
+        "category": category,
+        "confidence": category_confidence,
+        "risk_level": risk_level,
+        "risk_confidence": risk_confidence,
+        "is_critical_compliance": is_critical,
+        "clause_links": clause_links,
+        "keywords": keywords,
+        "reasoning": generate_reasoning(...)
+    }</code></pre>
+        </div>
+
+        <h2>⏰ SLA Policy Engine</h2>
+        
+        <div class="success-box">
+            <h3>SLA Calculation Process</h3>
+            <ol>
+                <li><strong>Policy Selection:</strong> Find applicable SLA policy based on priority, source, category</li>
+                <li><strong>Due Date Calculation:</strong> Add target_days to action created_at date</li>
+                <li><strong>Warning Threshold:</strong> Calculate warning date (due_date - warning_days_before)</li>
+                <li><strong>Compliance Monitoring:</strong> Check daily for approaching/breached SLAs</li>
+                <li><strong>Escalation Triggers:</strong> Auto-escalate when SLA is breached</li>
+                <li><strong>Notification Dispatch:</strong> Send alerts to owners, escalation targets</li>
+            </ol>
+        </div>
+
+        <div class="code-block">
+            <h3>SLA Policy Matching</h3>
+            <pre><code>def get_applicable_sla_policy(action):
+    """
+    Find the most specific SLA policy for an action
+    """
+    policies = SLAPolicy.objects.filter(
+        tenant=action.tenant,
+        is_active=True
+    )
+    
+    # Filter by priority
+    if action.priority:
+        policies = policies.filter(
+            applies_to_priorities__contains=[action.priority]
+        )
+    
+    # Filter by source
+    if action.source:
+        policies = policies.filter(
+            applies_to_sources__contains=[action.source]
+        )
+    
+    # Filter by category
+    if action.category:
+        policies = policies.filter(
+            applies_to_categories__contains=[action.category_id]
+        )
+    
+    # Return most specific policy (most filters matched)
+    return policies.order_by(
+        '-applies_to_categories__len',
+        '-applies_to_sources__len',
+        '-applies_to_priorities__len'
+    ).first()
+
+
+def calculate_due_date(action, policy):
+    """
+    Calculate action due date based on SLA policy
+    """
+    return action.created_at.date() + timedelta(days=policy.target_days)
+
+
+def check_sla_status(action):
+    """
+    Determine current SLA status
+    """
+    today = timezone.now().date()
+    
+    if not action.due_date:
+        return "no_sla"
+    
+    if action.status == "completed":
+        return "completed"
+    
+    if today > action.due_date:
+        return "overdue"
+    
+    policy = get_applicable_sla_policy(action)
+    warning_date = action.due_date - timedelta(
+        days=policy.warning_days_before
+    )
+    
+    if today >= warning_date:
+        return "at_risk"
+    
+    return "compliant"</code></pre>
+        </div>
+
+        <h2>📊 KPI Computation System</h2>
+        
+        <div class="info-box">
+            <h3>Periodic KPI Snapshots</h3>
+            <p>
+                KPISnapshot records are computed periodically (daily/weekly/monthly) to track trends over time. 
+                This enables historical analysis and performance dashboards.
+            </p>
+            
+            <h4>Computed Metrics</h4>
+            <div class="two-column-list">
+                <div>
+                    <strong>Count Metrics:</strong>
+                    <ul>
+                        <li>Total actions</li>
+                        <li>Open actions</li>
+                        <li>In progress actions</li>
+                        <li>Completed actions</li>
+                        <li>Overdue actions</li>
+                        <li>At risk actions</li>
+                        <li>Critical compliance actions</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong>Calculated Metrics:</strong>
+                    <ul>
+                        <li>Completion rate (%)</li>
+                        <li>Average completion days</li>
+                        <li>SLA breach rate (%)</li>
+                        <li>Average effectiveness score</li>
+                        <li>Verification success rate</li>
+                        <li>Category distribution</li>
+                        <li>Priority distribution</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <h2>🔄 Async Processing with Celery</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Task: classify_improvement_action</h3>
+                <p><strong>Trigger:</strong> User calls classify endpoint</p>
+                <p><strong>Duration:</strong> 2-5 seconds</p>
+                <p><strong>Operations:</strong></p>
+                <ul>
+                    <li>Fetch action data</li>
+                    <li>Call AI classification</li>
+                    <li>Update action fields</li>
+                    <li>Create ClauseLinks</li>
+                    <li>Log AIRun record</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Task: summarize_improvement_action</h3>
+                <p><strong>Trigger:</strong> User calls summarize endpoint</p>
+                <p><strong>Duration:</strong> 1-3 seconds</p>
+                <p><strong>Operations:</strong></p>
+                <ul>
+                    <li>Gather action context</li>
+                    <li>Call AI summarization</li>
+                    <li>Update ai_summary field</li>
+                    <li>Log AIRun record</li>
+                    <li>Return concise summary</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Task: compute_kpi_snapshots</h3>
+                <p><strong>Trigger:</strong> Scheduled (daily cron)</p>
+                <p><strong>Duration:</strong> 10-30 seconds</p>
+                <p><strong>Operations:</strong></p>
+                <ul>
+                    <li>Query all tenants</li>
+                    <li>Calculate metrics per tenant</li>
+                    <li>Create KPISnapshot records</li>
+                    <li>Update dashboard caches</li>
+                    <li>Send summary emails (optional)</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Task: send_sla_notifications</h3>
+                <p><strong>Trigger:</strong> Scheduled (hourly)</p>
+                <p><strong>Duration:</strong> 5-15 seconds</p>
+                <p><strong>Operations:</strong></p>
+                <ul>
+                    <li>Find at-risk actions</li>
+                    <li>Find overdue actions</li>
+                    <li>Send email/Slack alerts</li>
+                    <li>Log notification events</li>
+                    <li>Update notification timestamps</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>🔐 Multi-Tenancy Architecture</h2>
+        
+        <div class="success-box">
+            <h3>Tenant Isolation Strategy</h3>
+            <ul>
+                <li><strong>Database Level:</strong> All models include tenant ForeignKey for row-level isolation</li>
+                <li><strong>Query Filtering:</strong> All queries automatically filtered by request user's tenant</li>
+                <li><strong>API Middleware:</strong> Tenant context set from authentication token</li>
+                <li><strong>ViewSet Scoping:</strong> Custom get_queryset() methods enforce tenant boundaries</li>
+                <li><strong>Configuration Isolation:</strong> SLA policies, taxonomy labels, categories per tenant</li>
+                <li><strong>File Storage:</strong> S3 key prefixes include tenant ID for physical separation</li>
+                <li><strong>AI Runs:</strong> AI operation logs and embeddings scoped to tenant</li>
+            </ul>
+        </div>
+
+        <div class="code-block">
+            <h3>Tenant Scoping Example</h3>
+            <pre><code>class ImprovementActionViewSet(viewsets.ModelViewSet):
+    """
+    Automatically scope all queries to current tenant
+    """
+    serializer_class = ImprovementActionSerializer
+    
+    def get_queryset(self):
+        """
+        Filter by authenticated user's tenant
+        """
+        tenant = self.request.user.tenant
+        
+        return ImprovementAction.objects.filter(
+            tenant=tenant
+        ).select_related(
+            'category',
+            'identified_by',
+            'assigned_to'
+        ).prefetch_related(
+            'steps',
+            'comments',
+            'clause_links__clause'
+        )
+    
+    def perform_create(self, serializer):
+        """
+        Automatically set tenant on creation
+        """
+        serializer.save(
+            tenant=self.request.user.tenant,
+            identified_by=self.request.user
+        )</code></pre>
+        </div>
+
+        <h2>📡 Real-Time Updates (WebSocket)</h2>
+        
+        <div class="info-box">
+            <h3>Django Channels Integration (Planned)</h3>
+            <p>
+                Real-time updates will be delivered via WebSocket using Django Channels. This enables live 
+                dashboard updates, instant notifications, and collaborative features.
+            </p>
+            
+            <h4>Event Types</h4>
+            <ul>
+                <li><strong>action.created:</strong> New improvement action created</li>
+                <li><strong>action.updated:</strong> Action fields changed (status, priority, etc.)</li>
+                <li><strong>action.commented:</strong> New comment added (with @mentions)</li>
+                <li><strong>action.assigned:</strong> Action assigned to new owner</li>
+                <li><strong>step.completed:</strong> Workflow step marked complete</li>
+                <li><strong>sla.at_risk:</strong> Action approaching SLA deadline</li>
+                <li><strong>sla.breached:</strong> Action exceeded SLA deadline</li>
+                <li><strong>verification.completed:</strong> Effectiveness verification added</li>
+            </ul>
+        </div>
+
+        <h2>🔍 Search & Filtering</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Query Parameters</h3>
+                <ul>
+                    <li><code>?status=open,in_progress</code></li>
+                    <li><code>?priority=critical,high</code></li>
+                    <li><code>?category_id=5</code></li>
+                    <li><code>?assigned_to_id=42</code></li>
+                    <li><code>?source=audit</code></li>
+                    <li><code>?is_overdue=true</code></li>
+                    <li><code>?is_critical_compliance=true</code></li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Text Search</h3>
+                <ul>
+                    <li><code>?search=assessment</code></li>
+                    <li>Searches title and description</li>
+                    <li>PostgreSQL full-text search</li>
+                    <li>Case-insensitive matching</li>
+                    <li>Ranked results by relevance</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Date Filtering</h3>
+                <ul>
+                    <li><code>?created_after=2025-01-01</code></li>
+                    <li><code>?created_before=2025-12-31</code></li>
+                    <li><code>?due_date_before=2025-11-30</code></li>
+                    <li><code>?completed_after=2025-06-01</code></li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Sorting</h3>
+                <ul>
+                    <li><code>?ordering=-created_at</code> (newest first)</li>
+                    <li><code>?ordering=due_date</code> (soonest first)</li>
+                    <li><code>?ordering=-priority</code> (critical first)</li>
+                    <li><code>?ordering=action_number</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>📦 File Storage Architecture</h2>
+        
+        <div class="success-box">
+            <h3>Attachment Storage Strategy</h3>
+            <ul>
+                <li><strong>Development:</strong> Local filesystem in MEDIA_ROOT</li>
+                <li><strong>Production:</strong> AWS S3 with CloudFront CDN</li>
+                <li><strong>Path Structure:</strong> <code>tenant_{id}/cir/actions/{action_id}/{filename}</code></li>
+                <li><strong>Integrity:</strong> SHA-256 hash computed and stored for verification</li>
+                <li><strong>Metadata:</strong> File size, MIME type, upload timestamp tracked</li>
+                <li><strong>Access Control:</strong> Pre-signed URLs for time-limited access (S3)</li>
+                <li><strong>Virus Scanning:</strong> Optional ClamAV integration on upload</li>
+            </ul>
+        </div>
+
+        <h2>🔒 Security Considerations</h2>
+        
+        <div class="warning-box">
+            <h3>Security Measures</h3>
+            <ul>
+                <li><strong>Authentication:</strong> JWT tokens with refresh mechanism</li>
+                <li><strong>Authorization:</strong> Role-based permissions (view, edit, approve, delete)</li>
+                <li><strong>Tenant Isolation:</strong> Strict filtering prevents cross-tenant data access</li>
+                <li><strong>Input Validation:</strong> Serializer validation on all API inputs</li>
+                <li><strong>SQL Injection:</strong> Django ORM prevents SQL injection by default</li>
+                <li><strong>XSS Protection:</strong> Output encoding in templates and responses</li>
+                <li><strong>Rate Limiting:</strong> API throttling to prevent abuse</li>
+                <li><strong>Audit Logging:</strong> All actions logged with user, timestamp, IP address</li>
+                <li><strong>File Upload:</strong> File type validation, size limits, virus scanning</li>
+                <li><strong>Sensitive Data:</strong> Encryption at rest and in transit (TLS)</li>
+            </ul>
+        </div>
+
+        <h2>📈 Performance Optimization</h2>
+        
+        <div class="info-box">
+            <h3>Optimization Strategies</h3>
+            <div class="two-column-list">
+                <div>
+                    <h4>Database</h4>
+                    <ul>
+                        <li>Strategic indexes on foreign keys</li>
+                        <li>Composite indexes for common queries</li>
+                        <li>select_related() for single joins</li>
+                        <li>prefetch_related() for reverse joins</li>
+                        <li>Query result pagination (100 items max)</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Caching</h4>
+                    <ul>
+                        <li>Redis cache for dashboard stats</li>
+                        <li>Cache invalidation on updates</li>
+                        <li>ETags for HTTP caching</li>
+                        <li>CDN for static files</li>
+                        <li>QuerySet result caching</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <h2>🚀 Deployment Architecture</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Development</h3>
+                <ul>
+                    <li>Local Django runserver</li>
+                    <li>SQLite or PostgreSQL</li>
+                    <li>Celery worker (dev mode)</li>
+                    <li>Local file storage</li>
+                    <li>Debug toolbar enabled</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Staging</h3>
+                <ul>
+                    <li>Gunicorn + Nginx</li>
+                    <li>AWS RDS PostgreSQL</li>
+                    <li>Celery with Redis broker</li>
+                    <li>S3 file storage</li>
+                    <li>CloudWatch logging</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Production</h3>
+                <ul>
+                    <li>Kubernetes cluster (EKS)</li>
+                    <li>Multi-AZ RDS PostgreSQL</li>
+                    <li>ElastiCache Redis cluster</li>
+                    <li>S3 + CloudFront CDN</li>
+                    <li>Auto-scaling workers</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>Monitoring</h3>
+                <ul>
+                    <li>Application metrics (Prometheus)</li>
+                    <li>Error tracking (Sentry)</li>
+                    <li>Performance monitoring (New Relic)</li>
+                    <li>Log aggregation (CloudWatch)</li>
+                    <li>Uptime monitoring (Pingdom)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="cta-section">
+            <h2>Next Steps</h2>
+            <p>Now that you understand the architecture, explore the Data Models reference for detailed schema information, 
+            or check the API Reference for complete endpoint documentation.</p>
+            <a href="models.html" class="btn btn-primary">View Data Models →</a>
+            <a href="api-reference.html" class="btn btn-secondary">API Reference →</a>
+        </div>
+    </div>
+</body>
+</html>

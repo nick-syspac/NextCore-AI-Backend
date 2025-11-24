@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - Policy Comparator Documentation</title>
+    <link rel="stylesheet" href="../../shared/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="../../index.html">Documentation Home</a> /
+            <a href="../index.html">EduAI Compliance Suite</a> /
+            <a href="index.html">Policy Comparator</a> /
+            <strong>API Reference</strong>
+        </div>
+
+        <h1>🔌 API Reference</h1>
+        <p class="lead">
+            Complete REST API documentation for Policy Comparator endpoints, including request/response formats, 
+            filtering, pagination, and authentication.
+        </p>
+
+        <div class="toc-box">
+            <h3>API Endpoints</h3>
+            <ul>
+                <li><a href="#authentication">Authentication</a></li>
+                <li><a href="#asqa-standards">ASQA Standards API</a></li>
+                <li><a href="#asqa-clauses">ASQA Clauses API</a></li>
+                <li><a href="#policies">Policies API</a></li>
+                <li><a href="#comparison-sessions">Comparison Sessions API</a></li>
+                <li><a href="#error-handling">Error Handling</a></li>
+                <li><a href="#pagination">Pagination</a></li>
+            </ul>
+        </div>
+
+        <h2 id="authentication">🔐 Authentication</h2>
+        <p>All API endpoints require authentication using Bearer tokens:</p>
+        <div class="code-block">
+            <code>
+Authorization: Bearer YOUR_AUTH_TOKEN
+            </code>
+        </div>
+
+        <h3>Base URL</h3>
+        <div class="code-block">
+            <code>
+https://api.nextcore.ai/v1/{tenant_slug}/policy-comparator/
+            </code>
+        </div>
+
+        <h2 id="asqa-standards">📚 ASQA Standards API</h2>
+        <p><strong>ViewSet:</strong> ASQAStandardViewSet</p>
+
+        <h3>List Standards</h3>
+        <div class="endpoint">
+            <span class="http-method get">GET</span>
+            <span class="endpoint-path">/standards/</span>
+        </div>
+        <p>Retrieve list of ASQA standards with related clauses.</p>
+
+        <h4>Query Parameters</h4>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>standard_type</code></td>
+                        <td>string</td>
+                        <td>Filter by type (training_assessment, trainer_assessor, etc.)</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_active</code></td>
+                        <td>boolean</td>
+                        <td>Filter by active status (default: true)</td>
+                    </tr>
+                    <tr>
+                        <td><code>version</code></td>
+                        <td>string</td>
+                        <td>Filter by version (default: "2015")</td>
+                    </tr>
+                    <tr>
+                        <td><code>search</code></td>
+                        <td>string</td>
+                        <td>Search in standard_number, title, description</td>
+                    </tr>
+                    <tr>
+                        <td><code>ordering</code></td>
+                        <td>string</td>
+                        <td>Sort by: standard_number, created_at, -standard_number, -created_at</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>Example Request</h4>
+        <div class="code-block">
+            <code>
+GET /v1/{tenant_slug}/policy-comparator/standards/?standard_type=training_assessment
+Authorization: Bearer YOUR_TOKEN
+            </code>
+        </div>
+
+        <h4>Example Response</h4>
+        <div class="code-block">
+            <code>
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": 1,
+      "standard_number": "1.1",
+      "title": "Training and Assessment Strategies",
+      "description": "RTOs must have training and assessment strategies...",
+      "standard_type": "training_assessment",
+      "standard_type_display": "Training and Assessment",
+      "full_text": "The RTO's training and assessment strategies...",
+      "requirements": [
+        "Develop training and assessment strategies",
+        "Ensure consistency with training packages"
+      ],
+      "is_active": true,
+      "effective_date": "2015-01-01",
+      "version": "2015",
+      "created_at": "2025-10-28T10:00:00Z",
+      "updated_at": "2025-10-28T10:00:00Z",
+      "clauses": [
+        {
+          "id": 1,
+          "clause_number": "1.1.1",
+          "title": "Training and Assessment Strategy Requirements",
+          "clause_text": "The RTO must develop and implement...",
+          "compliance_level": "critical",
+          "keywords": ["training strategy", "assessment", "scope"]
+        }
+      ],
+      "clause_count": 3
+    }
+  ]
+}
+            </code>
+        </div>
+
+        <h3>Retrieve Standard</h3>
+        <div class="endpoint">
+            <span class="http-method get">GET</span>
+            <span class="endpoint-path">/standards/{id}/</span>
+        </div>
+        <p>Get details of a specific ASQA standard.</p>
+
+        <h3>Create Standard</h3>
+        <div class="endpoint">
+            <span class="http-method post">POST</span>
+            <span class="endpoint-path">/standards/</span>
+        </div>
+        <p>Create a new ASQA standard (admin only).</p>
+
+        <h3>Update Standard</h3>
+        <div class="endpoint">
+            <span class="http-method put">PUT</span>
+            <span class="endpoint-path">/standards/{id}/</span>
+        </div>
+        <p>Update an existing ASQA standard (admin only).</p>
+
+        <h3>Delete Standard</h3>
+        <div class="endpoint">
+            <span class="http-method delete">DELETE</span>
+            <span class="endpoint-path">/standards/{id}/</span>
+        </div>
+        <p>Delete an ASQA standard (admin only).</p>
+
+        <h2 id="asqa-clauses">📄 ASQA Clauses API</h2>
+        <p><strong>ViewSet:</strong> ASQAClauseViewSet</p>
+
+        <h3>List Clauses</h3>
+        <div class="endpoint">
+            <span class="http-method get">GET</span>
+            <span class="endpoint-path">/clauses/</span>
+        </div>
+        <p>Retrieve list of ASQA clauses.</p>
+
+        <h4>Query Parameters</h4>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>standard</code></td>
+                        <td>integer</td>
+                        <td>Filter by standard ID</td>
+                    </tr>
+                    <tr>
+                        <td><code>compliance_level</code></td>
+                        <td>string</td>
+                        <td>Filter by level (critical, essential, recommended)</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_active</code></td>
+                        <td>boolean</td>
+                        <td>Filter by active status</td>
+                    </tr>
+                    <tr>
+                        <td><code>search</code></td>
+                        <td>string</td>
+                        <td>Search in clause_number, title, clause_text</td>
+                    </tr>
+                    <tr>
+                        <td><code>ordering</code></td>
+                        <td>string</td>
+                        <td>Sort by: clause_number, created_at</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>Example Response</h4>
+        <div class="code-block">
+            <code>
+{
+  "count": 3,
+  "results": [
+    {
+      "id": 1,
+      "standard": 1,
+      "clause_number": "1.1.1",
+      "title": "Training and Assessment Strategy Requirements",
+      "clause_text": "The RTO must develop and implement a TAS...",
+      "evidence_required": ["TAS documents", "Implementation evidence"],
+      "keywords": ["training strategy", "assessment", "scope"],
+      "compliance_level": "critical",
+      "compliance_level_display": "Critical - Must comply",
+      "is_active": true,
+      "created_at": "2025-10-28T10:00:00Z",
+      "updated_at": "2025-10-28T10:00:00Z"
+    }
+  ]
+}
+            </code>
+        </div>
+
+        <h2 id="policies">📝 Policies API</h2>
+        <p><strong>ViewSet:</strong> PolicyViewSet</p>
+
+        <h3>List Policies</h3>
+        <div class="endpoint">
+            <span class="http-method get">GET</span>
+            <span class="endpoint-path">/policies/</span>
+        </div>
+        <p>List all policies for the tenant.</p>
+
+        <h4>Query Parameters</h4>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td>string</td>
+                        <td>Filter by status (draft, under_review, approved, archived)</td>
+                    </tr>
+                    <tr>
+                        <td><code>policy_type</code></td>
+                        <td>string</td>
+                        <td>Filter by type (training_delivery, assessment, etc.)</td>
+                    </tr>
+                    <tr>
+                        <td><code>search</code></td>
+                        <td>string</td>
+                        <td>Search in policy_number, title, description</td>
+                    </tr>
+                    <tr>
+                        <td><code>ordering</code></td>
+                        <td>string</td>
+                        <td>Sort by: created_at, updated_at, compliance_score</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>Example Response</h4>
+        <div class="code-block">
+            <code>
+{
+  "count": 1,
+  "results": [
+    {
+      "id": 1,
+      "tenant": 1,
+      "policy_number": "TAS-001",
+      "title": "Training and Assessment Strategy Policy",
+      "description": "Policy outlining TAS development requirements",
+      "policy_type": "training_delivery",
+      "policy_type_display": "Training and Delivery",
+      "content": "Training and Assessment Strategy Policy...",
+      "version": "1.0",
+      "status": "approved",
+      "status_display": "Approved",
+      "effective_date": "2025-11-01",
+      "review_date": "2026-11-01",
+      "last_compared_at": "2025-11-04T10:30:00Z",
+      "compliance_score": 86.7,
+      "file_path": "",
+      "created_by": 1,
+      "created_by_details": {
+        "id": 1,
+        "username": "admin",
+        "email": "admin@rto.edu.au"
+      },
+      "created_at": "2025-11-01T09:00:00Z",
+      "updated_at": "2025-11-04T10:30:00Z",
+      "comparison_count": 3,
+      "compliance_status": "compliant"
+    }
+  ]
+}
+            </code>
+        </div>
+
+        <h3>Create Policy</h3>
+        <div class="endpoint">
+            <span class="http-method post">POST</span>
+            <span class="endpoint-path">/policies/</span>
+        </div>
+        <p>Create a new policy.</p>
+
+        <h4>Request Body</h4>
+        <div class="code-block">
+            <code>
+{
+  "policy_number": "ASS-001",
+  "title": "Assessment Policy",
+  "description": "Policy for assessment practices",
+  "policy_type": "assessment",
+  "content": "Full policy text here...",
+  "version": "1.0",
+  "status": "draft",
+  "effective_date": "2025-12-01"
+}
+            </code>
+        </div>
+
+        <h3>Run Policy Comparison</h3>
+        <div class="endpoint">
+            <span class="http-method post">POST</span>
+            <span class="endpoint-path">/policies/{id}/compare/</span>
+        </div>
+        <p>Compare policy against ASQA standards using NLP analysis.</p>
+
+        <h4>Request Body</h4>
+        <div class="code-block">
+            <code>
+{
+  "policy_id": 1,
+  "standard_ids": [1, 2],  // Optional: specific standards, or omit for all
+  "session_name": "Initial Assessment Policy Comparison",
+  "use_nlp": true
+}
+            </code>
+        </div>
+
+        <h4>Response</h4>
+        <div class="code-block">
+            <code>
+{
+  "session": {
+    "id": 5,
+    "session_name": "Initial Assessment Policy Comparison",
+    "status": "completed",
+    "total_clauses_checked": 8,
+    "compliant_count": 5,
+    "partial_match_count": 2,
+    "gap_count": 1,
+    "overall_compliance_score": 80.0,
+    "processing_time_seconds": 0.87,
+    "created_at": "2025-11-04T11:00:00Z",
+    "completed_at": "2025-11-04T11:00:01Z"
+  },
+  "results_summary": {
+    "total_checked": 8,
+    "compliant": 5,
+    "partial_match": 2,
+    "gaps": 1,
+    "compliance_score": 80.0
+  },
+  "processing_time": 0.87,
+  "message": "Comparison completed in 0.87 seconds. Found 1 compliance gaps."
+}
+            </code>
+        </div>
+
+        <h3>Get Gap Analysis</h3>
+        <div class="endpoint">
+            <span class="http-method get">GET</span>
+            <span class="endpoint-path">/policies/{id}/gap_analysis/</span>
+        </div>
+        <p>Get detailed gap analysis with severity classification.</p>
+
+        <h4>Response</h4>
+        <div class="code-block">
+            <code>
+{
+  "policy": {
+    "id": 1,
+    "policy_number": "ASS-001",
+    "title": "Assessment Policy"
+  },
+  "summary": {
+    "total_gaps": 3,
+    "critical_gaps": 1,
+    "moderate_gaps": 1,
+    "minor_gaps": 1,
+    "compliance_score": 80.0
+  },
+  "critical_gaps": [
+    {
+      "clause": {
+        "id": 5,
+        "clause_number": "1.8",
+        "title": "Assessment Validation",
+        "compliance_level": "critical"
+      },
+      "similarity_score": 0.32,
+      "gap_severity": "no_match",
+      "recommendations": [
+        "Include references to: validation, moderation, assessment review",
+        "Add specific procedures and evidence requirements"
+      ],
+      "missing_keywords": ["validation", "moderation", "assessment review"]
+    }
+  ],
+  "moderate_gaps": [...],
+  "minor_gaps": [...]
+}
+            </code>
+        </div>
+
+        <h3>Get Comparison History</h3>
+        <div class="endpoint">
+            <span class="http-method get">GET</span>
+            <span class="endpoint-path">/policies/{id}/comparison_history/</span>
+        </div>
+        <p>Get historical comparison sessions for a policy.</p>
+
+        <h3>Get Comparison Results</h3>
+        <div class="endpoint">
+            <span class="http-method get">GET</span>
+            <span class="endpoint-path">/policies/{id}/results/</span>
+        </div>
+        <p>Get detailed comparison results with clause-level scores.</p>
+
+        <h4>Response</h4>
+        <div class="code-block">
+            <code>
+[
+  {
+    "id": 1,
+    "policy": 1,
+    "asqa_clause": 1,
+    "asqa_clause_details": {
+      "id": 1,
+      "clause_number": "1.1.1",
+      "title": "Training and Assessment Strategy Requirements",
+      "compliance_level": "critical"
+    },
+    "similarity_score": 0.85,
+    "match_type": "full",
+    "match_type_display": "Full Match",
+    "matched_text": "Our RTO develops comprehensive training and assessment...",
+    "gap_description": "Policy appears to fully address this ASQA clause.",
+    "recommendations": [],
+    "nlp_metadata": {
+      "keyword_score": 0.8,
+      "sequence_score": 0.87,
+      "phrase_score": 0.9,
+      "method": "hybrid_nlp"
+    },
+    "keywords_matched": ["training strategy", "assessment", "scope"],
+    "keywords_missing": [],
+    "has_sufficient_evidence": true,
+    "is_compliant": true,
+    "requires_action": false,
+    "comparison_date": "2025-11-04T11:00:00Z"
+  }
+]
+            </code>
+        </div>
+
+        <h2 id="comparison-sessions">🔄 Comparison Sessions API</h2>
+        <p><strong>ViewSet:</strong> ComparisonSessionViewSet (Read-Only)</p>
+
+        <h3>List Sessions</h3>
+        <div class="endpoint">
+            <span class="http-method get">GET</span>
+            <span class="endpoint-path">/sessions/</span>
+        </div>
+        <p>List comparison sessions for the tenant.</p>
+
+        <h4>Query Parameters</h4>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>status</code></td>
+                        <td>string</td>
+                        <td>Filter by status (pending, processing, completed, failed)</td>
+                    </tr>
+                    <tr>
+                        <td><code>policy</code></td>
+                        <td>integer</td>
+                        <td>Filter by policy ID</td>
+                    </tr>
+                    <tr>
+                        <td><code>ordering</code></td>
+                        <td>string</td>
+                        <td>Sort by: created_at, overall_compliance_score</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Retrieve Session</h3>
+        <div class="endpoint">
+            <span class="http-method get">GET</span>
+            <span class="endpoint-path">/sessions/{id}/</span>
+        </div>
+        <p>Get details of a specific comparison session.</p>
+
+        <h2 id="error-handling">⚠️ Error Handling</h2>
+        <p>The API uses standard HTTP status codes and returns error details in JSON format.</p>
+
+        <h3>HTTP Status Codes</h3>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Code</th>
+                        <th>Status</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="success-row">
+                        <td>200</td>
+                        <td>OK</td>
+                        <td>Request successful</td>
+                    </tr>
+                    <tr class="success-row">
+                        <td>201</td>
+                        <td>Created</td>
+                        <td>Resource created successfully</td>
+                    </tr>
+                    <tr class="success-row">
+                        <td>204</td>
+                        <td>No Content</td>
+                        <td>Successful deletion</td>
+                    </tr>
+                    <tr class="danger-row">
+                        <td>400</td>
+                        <td>Bad Request</td>
+                        <td>Invalid request data</td>
+                    </tr>
+                    <tr class="danger-row">
+                        <td>401</td>
+                        <td>Unauthorized</td>
+                        <td>Authentication required</td>
+                    </tr>
+                    <tr class="danger-row">
+                        <td>403</td>
+                        <td>Forbidden</td>
+                        <td>Insufficient permissions</td>
+                    </tr>
+                    <tr class="danger-row">
+                        <td>404</td>
+                        <td>Not Found</td>
+                        <td>Resource not found</td>
+                    </tr>
+                    <tr class="danger-row">
+                        <td>500</td>
+                        <td>Internal Server Error</td>
+                        <td>Server error</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Error Response Format</h3>
+        <div class="code-block">
+            <code>
+{
+  "error": "Validation error",
+  "details": {
+    "policy_number": ["This field is required."],
+    "content": ["This field may not be blank."]
+  }
+}
+            </code>
+        </div>
+
+        <h2 id="pagination">📄 Pagination</h2>
+        <p>List endpoints support pagination with the following parameters:</p>
+
+        <h3>Pagination Parameters</h3>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Default</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>page</code></td>
+                        <td>integer</td>
+                        <td>1</td>
+                        <td>Page number</td>
+                    </tr>
+                    <tr>
+                        <td><code>page_size</code></td>
+                        <td>integer</td>
+                        <td>20</td>
+                        <td>Number of results per page (max: 100)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Paginated Response Format</h3>
+        <div class="code-block">
+            <code>
+{
+  "count": 45,
+  "next": "https://api.nextcore.ai/v1/{tenant}/policies/?page=2",
+  "previous": null,
+  "results": [...]
+}
+            </code>
+        </div>
+
+        <h2>Complete Endpoint Summary</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Endpoint</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-get">GET</span></td>
+                        <td><code>/standards/</code></td>
+                        <td>List ASQA standards</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-get">GET</span></td>
+                        <td><code>/standards/{id}/</code></td>
+                        <td>Get standard details</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-post">POST</span></td>
+                        <td><code>/standards/</code></td>
+                        <td>Create standard</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-get">GET</span></td>
+                        <td><code>/clauses/</code></td>
+                        <td>List ASQA clauses</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-get">GET</span></td>
+                        <td><code>/clauses/{id}/</code></td>
+                        <td>Get clause details</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-get">GET</span></td>
+                        <td><code>/policies/</code></td>
+                        <td>List policies</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-get">GET</span></td>
+                        <td><code>/policies/{id}/</code></td>
+                        <td>Get policy details</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-post">POST</span></td>
+                        <td><code>/policies/</code></td>
+                        <td>Create policy</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-put">PUT</span></td>
+                        <td><code>/policies/{id}/</code></td>
+                        <td>Update policy</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-delete">DELETE</span></td>
+                        <td><code>/policies/{id}/</code></td>
+                        <td>Delete policy</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-post">POST</span></td>
+                        <td><code>/policies/{id}/compare/</code></td>
+                        <td>Run comparison</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-get">GET</span></td>
+                        <td><code>/policies/{id}/gap_analysis/</code></td>
+                        <td>Get gap analysis</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-get">GET</span></td>
+                        <td><code>/policies/{id}/comparison_history/</code></td>
+                        <td>Get comparison history</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-get">GET</span></td>
+                        <td><code>/policies/{id}/results/</code></td>
+                        <td>Get comparison results</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-get">GET</span></td>
+                        <td><code>/sessions/</code></td>
+                        <td>List comparison sessions</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-get">GET</span></td>
+                        <td><code>/sessions/{id}/</code></td>
+                        <td>Get session details</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="navigation-footer">
+            <a href="models.html" class="btn btn-secondary">← Data Models</a>
+            <a href="workflows.html" class="btn btn-primary">Workflows →</a>
+        </div>
+    </div>
+</body>
+</html>
