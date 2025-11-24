@@ -5,7 +5,8 @@ from .models import (
     TASTemplateSection, 
     TASTemplateSectionAssignment,
     TASVersion, 
-    TASGenerationLog
+    TASGenerationLog,
+    TASConversionSession
 )
 
 
