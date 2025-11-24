@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tas', '0003_compliancerule_facility_coursetas_immutablesnapshot_and_more'),
+        ('tas', '0005_tastemplatesectionassignment_and_more'),
         ('tenants', '0003_tenantapikey_description'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
